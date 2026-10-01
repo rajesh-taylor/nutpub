@@ -178,12 +178,88 @@ function pintSignal() {
   setTimeout(clink, 900);
 }
 
+// ---- The finale: a round for the band. The 402 asks for a locked token; this phone adds its own refund key.
+let finale = null;
+let reclaiming = false;
+
+async function roundForTheBand() {
+  unlockAudio();
+  say('Locking 21 sats to Longy…');
+  try {
+    const url = '/api/pledge';
+    const ask = await fetch(url, { headers: { 'X-Pass': pass } });
+    if (ask.status !== 402) {
+      const b = await ask.json().catch(() => ({}));
+      return say(b.error === 'round_paid' ? 'Longy’s already paid!' : b.detail || b.error);
+    }
+    const token = await wallet.pledge(ask.headers.get('X-Cashu'));
+    const res = await fetch(url, { headers: { 'X-Pass': pass, 'X-Cashu': token } });
+    const body = await res.json();
+    if (!res.ok) { trombone(); return say(body.detail || body.error); }
+    say('Pledged 21. If the room misses the goal, it comes home by itself at last orders.');
+  } catch (e) {
+    say(e.message.includes('Insufficient') ? 'Not enough sats on this phone.' : e.message);
+  }
+  refresh();
+}
+
+function showFinale(f) {
+  if (!f || !pass) return;
+  const was = finale?.state;
+  finale = f;
+  const mine = wallet.pledges().reduce((s, p) => s + p.amount, 0);
+  $('finale').hidden = !showState.t0;
+  $('goal').textContent = `Longy: ${f.total} / ${f.goal} sats`;
+  $('goal-bar').style.width = `${Math.min(100, (100 * f.total) / f.goal)}%`;
+  const left = Math.max(0, f.lastOrders - Math.floor(serverNow() / 1000));
+  $('last-orders').textContent = f.state === 'open' ? `Last orders in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '';
+  $('band').disabled = f.state !== 'open';
+  if (f.state === 'paid' && was !== 'paid') {
+    if (mine) wallet.forgetPledges(); // they went to Longy
+    $('paid-screen').hidden = false;
+    rain();
+    clink();
+  }
+  if (f.state === 'missed' && wallet.pledges().length && !reclaiming) comeHome();
+}
+
+// Missed: nobody presses refund. Retry every second until the mint's clock agrees it's past last orders.
+async function comeHome() {
+  reclaiming = true;
+  let back = 0;
+  for (let i = 0; i < 120 && wallet.pledges().length; i++) {
+    back += await wallet.reclaim().catch(() => 0);
+    if (wallet.pledges().length) await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
+  }
+  reclaiming = false;
+  if (back) {
+    say(`+${back} sats home. Every sat you pledged comes home.`);
+    clink();
+  }
+  refresh();
+}
+
+function rain() {
+  const box = $('rain');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span');
+    s.textContent = i % 3 ? '⚡' : '🟠';
+    s.style.left = `${Math.random() * 100}%`;
+    s.style.animationDelay = `${Math.random() * 2.5}s`;
+    s.style.fontSize = `${18 + Math.random() * 22}px`;
+    box.append(s);
+  }
+  setTimeout(() => box.replaceChildren(), 6000);
+}
+
 // ---- Curtains up: the server sends T0 over SSE (falls back to polling if the stream stalls).
 function listen() {
   const apply = (s) => {
     clockOffset = s.now - Date.now();
     const opening = s.t0 && !showState.t0;
     showState = s;
+    showFinale(s.finale);
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
     if (opening && pass && !resumed) startStream();
     if (s.t0 && pass) $('stream').hidden = false;
@@ -203,6 +279,8 @@ async function main() {
   await claimGift();
   await refresh();
   $('pint').onclick = () => freePint().catch((e) => say(e.message));
+  $('band').onclick = roundForTheBand;
+  $('paid-screen').onclick = () => ($('paid-screen').hidden = true);
   $('pint-signal').onclick = () => ($('pint-signal').hidden = true);
   $('judge').onclick = () => enter('judge');
   $('pleb').onclick = () => enter('pleb');

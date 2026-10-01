@@ -30,6 +30,17 @@ const post = (url) => fetch(url, { method: 'POST', headers: { 'X-Admin': key } }
 $('curtains').onclick = () => post('/api/curtains');
 $('newshow').onclick = () => confirm('Start a new show? Everyone has to pay at the door again.') && post('/api/new-show');
 const apply = (s) => {
+  const f = s.finale;
+  if (f) {
+    $('finale').hidden = !s.t0;
+    $('goal').textContent = f.state === 'paid' ? `⚡ Longy’s paid! ${f.total} sats` : `Longy: ${f.total} / ${f.goal} sats`;
+    const lit = Math.min(7, Math.floor((7 * f.total) / f.goal));
+    document.querySelectorAll('.lights i').forEach((el, i) => el.classList.toggle('on', i < lit));
+    const left = Math.max(0, f.lastOrders - Math.floor(s.now / 1000));
+    $('last-orders').textContent = f.state === 'open' ? `Last orders in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`
+      : f.state === 'missed' ? 'Missed. Every sat pledged is going home.' : '';
+    document.body.classList.toggle('paid', f.state === 'paid');
+  }
   $('phones').textContent = s.phones;
   $('headline').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Bring 2 more friends — let’s roll!';
   $('curtains').disabled = !!s.t0;

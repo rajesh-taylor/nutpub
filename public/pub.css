@@ -80,3 +80,13 @@ canvas { max-width: 100% !important; height: auto !important; }
 html[data-lang="en"] .pill [data-l="en"], html[data-lang="de"] .pill [data-l="de"] { background: var(--amber); color: var(--bg); }
 html[data-lang="en"] [lang="de"] { display: none !important; }
 html[data-lang="de"] .has-de { display: none !important; }
+
+/* Finale */
+.meter { height: 14px; border-radius: 7px; background: var(--panel); border: 1px solid #ffffff22; overflow: hidden; }
+#goal-bar { height: 100%; width: 0; background: linear-gradient(90deg, #f7931a, var(--amber)); transition: width .8s ease; }
+#paid-screen { position: fixed; inset: 0; z-index: 11; background: #f7931a; color: #1a0f00; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 40px; text-align: center; }
+#paid-screen .bolt { font-size: 140px; line-height: 1; }
+#paid-screen .small { color: #3a2200; font-size: 22px; }
+#rain { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+#rain span { position: absolute; top: -50px; animation: fall 2.8s linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(200deg); } }

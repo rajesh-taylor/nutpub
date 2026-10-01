@@ -32,6 +32,12 @@
     <p class="big" id="curtain">Curtains up soon.</p>
     <button id="pint" class="tier pint"><strong>🍺 Free pint</strong><span>First one’s on the house. Show the QR at the bar.</span></button>
     <canvas id="pint-qr" hidden></canvas>
+    <div id="finale" hidden>
+      <button id="band" class="tier"><strong>🎸 A round for the band</strong><span>21 sats to Longy. Goal missed? It comes home at last orders.</span></button>
+      <p id="goal" class="big"></p>
+      <div class="meter"><div id="goal-bar"></div></div>
+      <p id="last-orders" class="small"></p>
+    </div>
     <div id="stream" hidden>
       <button id="stop" class="plain">⏸ Stop paying</button>
       <ul id="ticks"></ul>
@@ -40,6 +46,8 @@
 
   <p id="status" role="status"></p>
 </main>
+<div id="paid-screen" hidden><div class="bolt">⚡</div><p>Longy’s paid!</p><p class="small" lang="de">Longy ist bezahlt!</p></div>
+<div id="rain" aria-hidden="true"></div>
 <div id="pint-signal" hidden>
   <svg class="pint" viewBox="0 0 200 320" role="img" aria-label="A pint being poured">
     <defs>

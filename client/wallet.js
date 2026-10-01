@@ -1,6 +1,7 @@
 // The phone's own Coco wallet (IndexedDB), shared by the fan pages.
 import { initializeCoco } from '@cashu/coco-core';
 import { IndexedDbRepositories } from '@cashu/coco-indexeddb';
+import { Wallet, getEncodedToken, decodePaymentRequest } from '@cashu/cashu-ts';
 
 const hex = (b) => [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 const unhex = (s) => Uint8Array.from(s.match(/../g), (h) => parseInt(h, 16));
@@ -15,6 +16,9 @@ function seed() {
   }
   return unhex(s);
 }
+
+const loadPledges = () => { try { return JSON.parse(localStorage.getItem('nutpub-pledges') || '[]'); } catch { return []; } };
+const savePledges = (list) => { try { localStorage.setItem('nutpub-pledges', JSON.stringify(list)); } catch {} };
 
 export const num = (a) => (a == null ? 0 : typeof a === 'object' ? Number(a.toString()) : Number(a));
 
@@ -62,5 +66,42 @@ export async function openWallet(kitty) {
       if (result.type !== 'inband') throw new Error(`unexpected transport ${result.type}`);
       return coco.wallet.encodeToken(result.token);
     },
+    // A pledge (NUT-24 with nut10): lock to the request's key and locktime, adding a fresh refund key of our own.
+    // The refund secret stays on this phone so it can take the pledge back after last orders.
+    async pledge(creq) {
+      const req = decodePaymentRequest(creq);
+      const lock = req.nut10;
+      const locktime = Number(lock.tags.find(([k]) => k === 'locktime')[1]);
+      const refund = await coco.keyring.generateKeyPair(true);
+      const prepared = await coco.ops.send.prepare({
+        mintUrl: kitty, amount: Number(req.amount),
+        target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data, locktime, refundKeys: [refund.publicKeyHex] } },
+      });
+      const { token } = await coco.ops.send.execute(prepared);
+      const encoded = coco.wallet.encodeToken(token);
+      const sk = [...refund.secretKey].map((x) => x.toString(16).padStart(2, '0')).join('');
+      savePledges([...loadPledges(), { token: encoded, sk, locktime, amount: Number(req.amount) }]);
+      return encoded;
+    },
+    pledges: () => loadPledges(),
+    // After last orders: sign each pledge's refund path (cashu-ts; Coco only uses the main lock key),
+    // then hand the fresh proofs back to Coco. Retries until the mint's clock has passed the locktime.
+    async reclaim() {
+      const w = new Wallet(kitty, { unit: 'sat' });
+      await w.loadMint();
+      let back = 0;
+      for (const p of loadPledges()) {
+        try {
+          const proofs = await w.receive(p.token, { privkey: p.sk });
+          await coco.wallet.receive(getEncodedToken({ mint: kitty, unit: 'sat', proofs }));
+          back += p.amount;
+          savePledges(loadPledges().filter((q) => q.token !== p.token));
+        } catch (e) {
+          if (/spent/i.test(e.message)) savePledges(loadPledges().filter((q) => q.token !== p.token)); // Longy took it
+        }
+      }
+      return back;
+    },
+    forgetPledges: () => savePledges([]),
   };
 }
