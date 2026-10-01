@@ -41,3 +41,5 @@
 - Hackathon wifi can block port 7844 (Cloudflare tunnels) **and** stop devices seeing each other. Phones may get no internet at all.
 - Android over USB: `adb reverse tcp:8787 tcp:8787`. The phone opens `http://localhost:8787`, which also counts as a secure origin.
 - If phones can only reach your server, relay the mint through it (`/kitty/*` → mint). In the page, wrap `window.fetch` so calls to the mint URL go to `/kitty`. **Tokens keep the real mint URL**, so the gate's `m` check and the gifts still match. Coco used only HTTP here (info, keysets, keys, swap, checkstate); refuse the mint WebSocket and it polls instead.
+- **QR codes must carry the public URL, never `location.origin`.** A page opened as `localhost` (USB, the laptop) draws QRs that point other phones at *their own* localhost. The server hands out the tunnel URL in `/api/config` and every QR uses it.
+- Cloudflare tunnels: try `--protocol http2` when QUIC (UDP 7844) is blocked but TCP 7844 is open. A guest wifi with a captive portal can leave a phone "connected" with no internet; check with `adb shell ping`.

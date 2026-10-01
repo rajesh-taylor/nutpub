@@ -9,8 +9,8 @@ const $ = (id) => document.getElementById(id);
 const ATTEMPTS = [
   {
     kind: 'suit', label: 'Pay in SuitCoin',
-    says: '“I’ll pay in SuitCoin. Printed in the City of London.”',
-    no: 'Not money the NutPub takes, Sir.', de: 'Das nimmt der NutPub nicht, mein Herr.',
+    says: '“I’ll pay in SuitCoin.”',
+    no: 'NutPub doesn’t accept Ministry of Fiat money.', de: 'Der NutPub nimmt kein Geld vom Ministerium für Fiat.',
     why: 'He printed his own money. The door only takes NutPub Mint money.',
   },
   {
@@ -23,7 +23,7 @@ const ATTEMPTS = [
     kind: 'relabel', label: 'Try again, with confidence',
     says: '“Same notes. Fresh confidence.”',
     no: 'Sir, this is NutPub.', de: 'Mein Herr, das ist der NutPub.',
-    why: 'You can relabel money. You can’t fake the signature.',
+    why: 'You can relabel the money. But you can’t fake the signature.',
   },
 ];
 let n = 0;

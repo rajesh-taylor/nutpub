@@ -11,7 +11,8 @@ async function gift(amount, who) {
   $('float').textContent = `house: ${body.balance ?? '?'} sats`;
   if (!res.ok) return ($('status').textContent = body.error);
   // The token rides in the # fragment: it never reaches our server's logs.
-  const url = `${location.origin}/#${body.token}`;
+  const { publicUrl } = await fetch('/api/config').then((r) => r.json());
+  const url = `${publicUrl || location.origin}/#${body.token}`;
   await QRCode.toCanvas($('qr'), url, { errorCorrectionLevel: 'L', margin: 1, width: 840 });
   $('qr').hidden = false;
   $('gift-label').textContent = `${amount} sats for a ${who}. Scan me.`;

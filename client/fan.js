@@ -148,7 +148,7 @@ async function freePint() {
     pintToken = body.token;
     watchPint(pintToken);
   }
-  await QRCode.toCanvas($('pint-qr'), `${location.origin}/bar.html#${pintToken}`, { errorCorrectionLevel: 'L', margin: 1, width: 640 });
+  await QRCode.toCanvas($('pint-qr'), `${config.publicUrl || location.origin}/bar.html#${pintToken}`, { errorCorrectionLevel: 'L', margin: 1, width: 640 });
   $('pint-qr').hidden = false;
   $('pint').textContent = 'Show this at the bar';
 }
