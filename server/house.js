@@ -39,20 +39,40 @@ export const take = (incoming, privkey) =>
   });
 
 // Fund the house over Lightning (NUT-04): a bolt11 from the Kitty, minted into the house once paid.
+// Open quotes are saved to disk and the server claims them itself, so a closed page never strands a payment.
+const QUOTES = FILE.replace('house-', 'quotes-');
+let quotes = {};
+try { quotes = JSON.parse(readFileSync(QUOTES, 'utf8')); } catch {}
+const saveQuotes = () => writeFileSync(QUOTES, JSON.stringify(quotes));
+
 export async function fundQuote(amount) {
   const q = await kitty.createMintQuoteBolt11(amount);
+  quotes[q.quote] = { amount, at: Date.now() };
+  saveQuotes();
   return { quote: q.quote, request: q.request, amount };
 }
 
 export const fundClaim = (quote, amount) =>
   serial(async () => {
     const q = await kitty.checkMintQuote('bolt11', quote);
+    if (q.state === 'ISSUED') { delete quotes[quote]; saveQuotes(); return { state: 'ISSUED', minted: 0 }; }
     if (q.state !== 'PAID') return { state: q.state };
     const fresh = await kitty.mintProofsBolt11(amount, quote);
     proofs.push(...fresh);
     save();
+    delete quotes[quote];
+    saveQuotes();
+    console.log(`house: +${amount} sats from Lightning (quote ${quote})`);
     return { state: 'ISSUED', minted: amount };
   });
+
+// Every 5 s, claim any paid quotes; forget unpaid ones after a day.
+setInterval(() => {
+  for (const [id, { amount, at }] of Object.entries(quotes)) {
+    if (Date.now() - at > 86_400_000) { delete quotes[id]; saveQuotes(); continue; }
+    fundClaim(id, amount).catch(() => {});
+  }
+}, 5000).unref();
 
 // A cashuB token for `amount` sats, with DLEQ proofs kept so the receiver can check them offline.
 // With `p2pk`, the sent proofs are locked (NUT-11), e.g. the free pint to the bar's key.

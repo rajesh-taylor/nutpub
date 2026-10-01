@@ -38,6 +38,8 @@ button.plain {
 .small { color: var(--muted); font-size: 15px; }
 #status { min-height: 1.4em; color: var(--amber); font-size: 20px; }
 [hidden] { display: none !important; }
+/* The qrcode library sets an inline pixel width on canvases: never let one overflow the screen. */
+canvas { max-width: 100% !important; height: auto !important; }
 #ticks { list-style: none; padding: 0; color: var(--muted); font-size: 16px; }
 #ticks li:first-child { color: var(--text); }
 #pint-qr { display: block; margin: 0 auto 16px; background: #fff; padding: 10px; border-radius: 12px; width: min(80vw, 320px) !important; height: auto !important; }
