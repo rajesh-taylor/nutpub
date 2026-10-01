@@ -12,6 +12,7 @@
 <header><span>🥜🎤 The NutPub</span><span id="balance">… sats</span></header>
 
 <main>
+  <aside id="chapter" aria-live="polite"><b id="chapter-title"></b><span id="chapter-line"></span></aside>
   <section id="loading" data-screen><p>Opening the doors…</p></section>
 
   <section id="door" data-screen hidden>
@@ -46,6 +47,16 @@
 
   <p id="status" role="status"></p>
 </main>
+<div id="closing" hidden>
+  <div class="photo"></div>
+  <div class="card">
+    <p class="kicker">Closing time</p>
+    <h1>Thanks for coming to the NutPub.</h1>
+    <p class="big">Drinkers identified: 0</p>
+    <a class="tier" href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener"><strong>⚡ Tip Longy on Fountain</strong><span>“Drip Fed Internet Blues”</span></a>
+    <button id="closing-x" class="plain">Back to the pub</button>
+  </div>
+</div>
 <div id="paid-screen" hidden><div class="bolt">⚡</div><p>Longy’s paid!</p><p class="small" lang="de">Longy ist bezahlt!</p></div>
 <div id="rain" aria-hidden="true"></div>
 <div id="pint-signal" hidden>

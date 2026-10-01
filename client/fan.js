@@ -26,6 +26,23 @@ let run = 0; // each start gets a number, so a stopped loop that wakes up late j
 const serverNow = () => Date.now() + clockOffset;
 const say = (text) => ($('status').textContent = text);
 
+// The night in chapters, so anyone watching knows which part of the story this phone is in.
+const CHAPTERS = {
+  door: ['1 · The door', 'Your gift is real ecash, now on this phone. Pay the door with it. Nobody asks your name.'],
+  inside: ['2 · Inside', 'You’re in. The first pint’s on the house while the band sets up.'],
+  playing: ['3 · Curtains up', 'Every 10 seconds this phone pays again. Stop paying and the music stops.'],
+  paid: ['4 · Longy’s paid!', 'The room hit the goal. His pledges are his, before he’s unplugged his guitar.'],
+  missed: ['4 · Last orders', 'Goal missed. Nobody presses refund: every pledge comes home by itself.'],
+};
+let chapterNow = '';
+function chapter(name) {
+  if (name === chapterNow) return;
+  chapterNow = name;
+  const [title, line] = CHAPTERS[name];
+  $('chapter-title').textContent = title;
+  $('chapter-line').textContent = line;
+}
+
 async function refresh() {
   $('balance').textContent = `${await wallet.balance()} sats`;
 }
@@ -63,6 +80,7 @@ async function enter(t) {
       $('in-tier').textContent = body.name;
       say('');
       show('inside');
+      chapter(showState.t0 ? 'playing' : 'inside');
       keepAwake();
       if (showState.t0) startStream();
     } else {
@@ -235,6 +253,7 @@ async function comeHome() {
   if (back) {
     say(`+${back} sats home. Every sat you pledged comes home.`);
     clink();
+    setTimeout(() => ($('closing').hidden = false), 4000);
   }
   refresh();
 }
@@ -262,6 +281,8 @@ function listen() {
     showFinale(s.finale);
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
     if (opening && pass && !resumed) startStream();
+    document.body.classList.toggle('playing', !!(s.t0 && pass));
+    if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
     if (s.t0 && pass) $('stream').hidden = false;
   };
   // SSE for speed, plus a 1-s poll: the Cloudflare tunnel holds SSE back, so the poll is what you get through it.
@@ -280,7 +301,9 @@ async function main() {
   await refresh();
   $('pint').onclick = () => freePint().catch((e) => say(e.message));
   $('band').onclick = roundForTheBand;
-  $('paid-screen').onclick = () => ($('paid-screen').hidden = true);
+  // Longy's paid: after the orange moment, closing time.
+  $('paid-screen').onclick = () => { $('paid-screen').hidden = true; $('closing').hidden = false; };
+  $('closing-x').onclick = () => ($('closing').hidden = true);
   $('pint-signal').onclick = () => ($('pint-signal').hidden = true);
   $('judge').onclick = () => enter('judge');
   $('pleb').onclick = () => enter('pleb');
@@ -300,11 +323,13 @@ async function main() {
     tier = b.tier;
     $('in-tier').textContent = b.name;
     show('inside');
+    chapter(showState.t0 ? 'playing' : 'inside');
     $('stop').textContent = '▶ Pay to listen';
     $('stream').hidden = !showState.t0;
     say('Welcome back. Tap ▶ to keep listening.');
   } else {
     show('door');
+    chapter('door');
   }
 }
 

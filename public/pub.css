@@ -90,3 +90,18 @@ html[data-lang="de"] .has-de { display: none !important; }
 #rain { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
 #rain span { position: absolute; top: -50px; animation: fall 2.8s linear forwards; }
 @keyframes fall { to { transform: translateY(110vh) rotate(200deg); } }
+
+/* Chapter banner: where we are in the night */
+#chapter { display: block; margin: 0 0 18px; padding: 10px 14px; border-left: 4px solid var(--amber); background: #ffffff0d; border-radius: 0 10px 10px 0; }
+#chapter:empty, #chapter:has(b:empty) { display: none; }
+#chapter b { display: block; color: var(--amber); font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
+#chapter span { display: block; font-size: 17px; }
+
+/* Longy on stage behind the playing screen (photo optional: missing file, plain background) */
+body.playing { background: linear-gradient(#0b1430e6, #0b1430f2 55%, var(--bg)), url(/img/longy-live.jpg) center top / cover fixed, var(--bg); }
+/* Closing time */
+#closing { position: fixed; inset: 0; z-index: 9; background: var(--bg); overflow: auto; }
+#closing .photo { height: 46vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-pint.jpg) center 30% / cover, #1a1206; }
+#closing .card { max-width: 520px; margin: -40px auto 0; padding: 0 16px 32px; position: relative; text-align: center; }
+#closing .kicker { color: var(--amber); letter-spacing: .12em; text-transform: uppercase; margin: 0; }
+#closing a.tier { text-decoration: none; text-align: left; }
