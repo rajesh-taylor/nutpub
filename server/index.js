@@ -7,14 +7,14 @@ import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } 
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
 import { printSuitCoin, suitToken, relabel } from './rupert.js';
-import { freePint, pour, resetPints, keys as nightKeys } from './pint.js';
+import { freePint, pour, resetPints, lastPint, keys as nightKeys } from './pint.js';
 import {
   SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, events, snapshot,
 } from './show.js';
 
 const app = express();
 app.disable('x-powered-by');
-app.use(express.static(fileURLToPath(new URL('../public', import.meta.url))));
+app.use(express.static(fileURLToPath(new URL('../public', import.meta.url)), { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
 
 // The Kitty, relayed: phones that can only reach us (USB, locked-down wifi) still reach the mint.
 // The page keeps the real mint URL in its tokens and only rewrites where it sends the request.
@@ -102,6 +102,7 @@ app.post('/api/bar/pour', express.text({ type: '*/*', limit: '16kb' }), async (r
   try { res.json(await pour(String(req.body || '').trim())); }
   catch (e) { res.status(e.code ? 400 : 502).json({ error: e.code || 'mint_refused', detail: e.message }); }
 });
+app.get('/api/pint/last', admin, (_req, res) => res.json(lastPint));
 app.get('/api/bar', (_req, res) => res.json({ pubkey: nightKeys.bar.pk }));
 
 app.get('/api/pass', (req, res) => {

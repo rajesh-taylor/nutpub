@@ -33,12 +33,13 @@ export function pintLock() {
     .toOptions();
 }
 
+export const lastPint = { token: null }; // for testing the bar without a camera (admin only)
 const issued = new Set(); // pass ids that already have their free pint
 export async function freePint(passId) {
   if (issued.has(passId)) throw Object.assign(new Error('one free pint per phone'), { code: 'already_given' });
   issued.add(passId);
   try {
-    return await give(PINT, pintLock());
+    return (lastPint.token = await give(PINT, pintLock()));
   } catch (e) {
     issued.delete(passId);
     throw e;
