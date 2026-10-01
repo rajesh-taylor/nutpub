@@ -5,13 +5,28 @@ import { unlockAudio, trombone } from './sound.js';
 const $ = (id) => document.getElementById(id);
 const host = (url) => { try { return new URL(url).host; } catch { return url; } };
 
-// Each attempt: what Rupert pays with, and what he says first.
+// Each attempt: what Rupert pays with, what he says, the door's answer (with German below it),
+// and one line for the room on what just happened.
 const ATTEMPTS = [
-  { kind: 'suit', label: 'Pay in SuitCoin', says: '“I’ll pay in SuitCoin. Printed it this morning.”' },
-  { kind: 'relabel', label: 'Relabel it as Minibits', says: '“Fine. It says Minibits now.”' },
-  { kind: 'relabel', label: 'Try again, with confidence', says: '“Same notes. Fresh confidence.”' },
+  {
+    kind: 'suit', label: 'Pay in SuitCoin',
+    says: '“I’ll pay in SuitCoin. Printed in the City of London.”',
+    no: 'Not money the NutPub takes, Sir.', de: 'Das nimmt der NutPub nicht, mein Herr.',
+    why: 'Rupert printed this himself, on his own mint. Easy: whoever runs the press prints as much as he likes. The door only takes notes signed by the Kitty.',
+  },
+  {
+    kind: 'relabel', label: 'Relabel it as Minibits',
+    says: '“Fine. It says Minibits now.”',
+    no: 'Still not allowed past the doormen.', de: 'Damit kommen Sie trotzdem nicht am Türsteher vorbei.',
+    why: 'Same notes, new label. But every real note carries a DLEQ proof: maths only the Kitty’s private key can make. The door checks it on the spot, without phoning the mint. Changing the label can’t forge the signature.',
+  },
+  {
+    kind: 'relabel', label: 'Try again, with confidence',
+    says: '“Same notes. Fresh confidence.”',
+    no: 'Sir, this is NutPub.', de: 'Mein Herr, das ist der NutPub.',
+    why: 'Copying fiat is an edit in someone else’s database. Copying ecash means forging a signature. And the sats behind the Kitty’s notes are bitcoin, whose supply anyone running a node can check.',
+  },
 ];
-const REFUSALS = ['Not money this NutPub takes!', 'Still not allowed past the doormen.', 'Sir, this is NutPub.'];
 let n = 0;
 
 function setButton() {
@@ -24,8 +39,7 @@ async function attempt() {
   const a = ATTEMPTS[Math.min(n, ATTEMPTS.length - 1)];
   $('try').disabled = true;
   $('says').textContent = a.says;
-  $('verdict').textContent = '';
-  $('why').textContent = '';
+  for (const id of ['verdict', 'verdict-de', 'explain', 'why']) $(id).textContent = '';
   try {
     // The door's 402: what it asks for.
     const ask = await fetch('/api/door?tier=judge');
@@ -41,7 +55,9 @@ async function attempt() {
       $('verdict').textContent = 'He got in?! (That should never happen.)';
     } else {
       trombone();
-      $('verdict').textContent = REFUSALS[Math.min(n, REFUSALS.length - 1)];
+      $('verdict').textContent = a.no;
+      $('verdict-de').textContent = a.de;
+      $('explain').textContent = a.why;
       $('why').textContent = `${res.status} ${body.error}: ${body.detail}`;
       document.body.classList.remove('refused');
       void document.body.offsetWidth;
@@ -56,5 +72,9 @@ async function attempt() {
 }
 
 $('try').onclick = attempt;
-$('reset').onclick = () => { n = 0; setButton(); $('verdict').textContent = ''; $('why').textContent = ''; $('says').textContent = ''; };
+$('reset').onclick = () => {
+  n = 0;
+  setButton();
+  for (const id of ['says', 'asks', 'verdict', 'verdict-de', 'explain', 'why']) $(id).textContent = '';
+};
 setButton();

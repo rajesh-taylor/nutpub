@@ -23,3 +23,14 @@ $('gift-friend').onclick = () => gift(21, 'friend');
 fetch('/api/house', { headers: { 'X-Admin': key } })
   .then((r) => r.json())
   .then((b) => ($('float').textContent = b.balance == null ? 'not signed in: add #k=…' : `house: ${b.balance} sats`));
+
+// Curtains up (manual) and the live count of phones in, over SSE.
+const post = (url) => fetch(url, { method: 'POST', headers: { 'X-Admin': key } }).then((r) => r.json());
+$('curtains').onclick = () => post('/api/curtains');
+$('newshow').onclick = () => confirm('Start a new show? Everyone has to pay at the door again.') && post('/api/new-show');
+new EventSource('/api/events').onmessage = (e) => {
+  const s = JSON.parse(e.data);
+  $('phones').textContent = s.phones;
+  $('headline').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Bring 2 more friends — let’s roll!';
+  $('curtains').disabled = !!s.t0;
+};

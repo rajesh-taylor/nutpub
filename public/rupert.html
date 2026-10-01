@@ -25,6 +25,9 @@
     border-radius: 12px; border: 2px solid var(--chalk); background: #2e3340; color: var(--chalk);
   }
   #try:disabled { opacity: 0.6; }
+  main { text-align: center; }
+  #verdict-de { color: #d9c08a; font-size: 18px; font-style: italic; min-height: 1.2em; margin: 0 0 14px; }
+  #explain { font-size: 17px; line-height: 1.35; min-height: 1.3em; margin: 0 auto 12px; max-width: 30em; }
   #says { font-style: italic; min-height: 1.4em; margin: 16px 0 0; }
   #asks { color: #b9b4a6; font-size: 15px; min-height: 1.2em; }
   #verdict { color: var(--amber); font-size: 30px; line-height: 1.15; min-height: 1.2em; margin: 14px 0 6px; }
@@ -47,6 +50,8 @@
   <p id="says"></p>
   <p id="asks"></p>
   <p id="verdict" role="status"></p>
+  <p id="verdict-de" lang="de"></p>
+  <p id="explain"></p>
   <p id="why"></p>
   <button id="reset" class="plain">Back to the first attempt</button>
 </main>

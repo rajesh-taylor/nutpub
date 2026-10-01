@@ -15,6 +15,7 @@
 
   <section id="door" data-screen hidden>
     <h1>If your sats ain’t signed, you ain’t coming in!</h1>
+    <p class="de" lang="de">Ohne Signatur kein Eintritt!</p>
     <button id="judge" class="tier">
       <strong>Ecash Idol Judges</strong><span id="judge-price"></span>
     </button>
@@ -27,7 +28,11 @@
   <section id="inside" data-screen hidden>
     <h1>You’re in.</h1>
     <p class="big" id="in-tier"></p>
-    <p>Curtains up soon.</p>
+    <p class="big" id="curtain">Curtains up soon.</p>
+    <div id="stream" hidden>
+      <button id="stop" class="plain">⏸ Stop paying</button>
+      <ul id="ticks"></ul>
+    </div>
   </section>
 
   <p id="status" role="status"></p>

@@ -5,6 +5,9 @@ import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } 
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
 import { printSuitCoin, suitToken, relabel } from './rupert.js';
+import {
+  SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, events, snapshot,
+} from './show.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -49,8 +52,43 @@ app.post('/api/gift', admin, async (req, res) => {
 // The door. "If your sats ain't signed, you ain't coming in!"
 app.get('/api/door', cashuGate((req) => TIERS[tierOf(req)].door, 'The NutPub door'), (req, res) => {
   const tier = tierOf(req);
-  res.json({ in: true, tier, name: TIERS[tier].name, paid: req.paid });
+  const pass = issuePass(tier);
+  // Plebs pay per 10 s from the start: their door payment is the segment that's live (or the first one).
+  if (tier === 'pleb') getPass(pass).paid.add(liveSegment() ?? 0);
+  res.json({ in: true, tier, name: TIERS[tier].name, paid: req.paid, pass });
 });
+
+// The stream: every 10-second segment is its own 402. Stop paying and the music stops.
+const passOf = (req) => getPass(req.get('X-Pass') || '');
+app.get(
+  '/api/segment/:n',
+  (req, res, next) => {
+    const pass = passOf(req);
+    if (!pass) return res.status(403).json({ error: 'no_pass', detail: 'Pay at the door first.' });
+    const n = Number(req.params.n);
+    const live = liveSegment();
+    if (live == null) return res.status(409).json({ error: 'curtains_down' });
+    if (!Number.isInteger(n) || n < live || n > live + 1) return res.status(409).json({ error: 'not_live', live });
+    req.segment = n;
+    if (pass.paid.has(n)) return sendSegment(req, res); // already paid for this one: same segment again
+    next();
+  },
+  cashuGate((req) => TIERS[passOf(req).tier].segment, 'The NutPub stream, 10 s'),
+  (req, res) => {
+    passOf(req).paid.add(req.segment);
+    sendSegment(req, res);
+  },
+);
+function sendSegment(req, res) {
+  const file = `seg-${String(req.segment % segmentCount()).padStart(3, '0')}.wav`;
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(file, { root: SEGMENT_DIR });
+}
+
+app.get('/api/events', events);
+app.get('/api/show', (_req, res) => res.json(snapshot()));
+app.post('/api/curtains', admin, (_req, res) => { curtainsUp(); res.json(snapshot()); });
+app.post('/api/new-show', admin, (_req, res) => { newShow(); res.json(snapshot()); });
 
 // Rupert's printing press. kind=suit: SuitCoin as printed; kind=relabel: the same notes relabelled as the Kitty.
 app.get('/api/rupert/print', async (req, res) => {
