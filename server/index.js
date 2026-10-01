@@ -104,6 +104,12 @@ app.post('/api/bar/pour', express.text({ type: '*/*', limit: '16kb' }), async (r
 });
 app.get('/api/bar', (_req, res) => res.json({ pubkey: nightKeys.bar.pk }));
 
+app.get('/api/pass', (req, res) => {
+  const p = passOf(req);
+  if (!p) return res.status(403).json({ error: 'no_pass' });
+  res.json({ tier: p.tier, name: TIERS[p.tier].name });
+});
+
 app.get('/api/events', events);
 app.get('/api/show', (_req, res) => res.json(snapshot()));
 app.post('/api/curtains', admin, (_req, res) => { curtainsUp(); res.json(snapshot()); });

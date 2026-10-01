@@ -20,6 +20,7 @@ let wallet, config, pass, tier;
 let showState = { t0: null };
 let clockOffset = 0; // server time minus this phone's time
 let streaming = false;
+let resumed = false; // came back after a reload: wait for a tap (iOS needs one before it plays sound)
 let run = 0; // each start gets a number, so a stopped loop that wakes up late just exits
 
 const serverNow = () => Date.now() + clockOffset;
@@ -58,6 +59,7 @@ async function enter(t) {
     const body = await res.json();
     if (res.ok) {
       ({ pass, tier } = body);
+      try { localStorage.setItem('nutpub-pass', pass); } catch {}
       $('in-tier').textContent = body.name;
       say('');
       show('inside');
@@ -183,7 +185,8 @@ function listen() {
     const opening = s.t0 && !showState.t0;
     showState = s;
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
-    if (opening && pass) startStream();
+    if (opening && pass && !resumed) startStream();
+    if (s.t0 && pass) $('stream').hidden = false;
   };
   // SSE for speed, plus a 1-s poll: the Cloudflare tunnel holds SSE back, so the poll is what you get through it.
   const es = new EventSource('/api/events');
@@ -208,7 +211,23 @@ async function main() {
     else { say(''); startStream(); }
   };
   listen();
-  show('door');
+  // Already paid at the door on this phone (and the show hasn't been reset)? Straight back in.
+  let saved = null;
+  try { saved = localStorage.getItem('nutpub-pass'); } catch {}
+  const back = saved && (await fetch('/api/pass', { headers: { 'X-Pass': saved } }));
+  if (back?.ok) {
+    const b = await back.json();
+    pass = saved;
+    resumed = true;
+    tier = b.tier;
+    $('in-tier').textContent = b.name;
+    show('inside');
+    $('stop').textContent = '▶ Pay to listen';
+    $('stream').hidden = !showState.t0;
+    say('Welcome back. Tap ▶ to keep listening.');
+  } else {
+    show('door');
+  }
 }
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden && pass) keepAwake(); });
