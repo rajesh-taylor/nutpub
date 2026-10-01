@@ -1,6 +1,8 @@
 // Fan page: the phone's wallet, the gift it arrived with, the door, and the paid stream.
 import { openWallet } from './wallet.js';
-import { unlockAudio, trombone } from './sound.js';
+import { unlockAudio, trombone, clink } from './sound.js';
+import QRCode from 'qrcode';
+import { Mint, hashToCurve, getDecodedToken } from '@cashu/cashu-ts';
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => document.querySelectorAll('[data-screen]').forEach((el) => (el.hidden = el.id !== id));
@@ -11,7 +13,7 @@ const LINES = {
   no_dleq: 'No hologram, no entry.',
   reused: 'That ecash has already been through this door.',
   too_little: 'Not enough sats for that tier.',
-  mint_unreachable: 'Can’t reach the Kitty. Try again.',
+  mint_unreachable: 'Can’t reach the NutPub Mint. Try again.',
 };
 
 let wallet, config, pass, tier;
@@ -135,6 +137,45 @@ function stopStream(why) {
   say(why ? `${why} If your sats ain’t signed, you ain’t coming in!` : 'Stopped paying. The music stops at the end of this segment.');
 }
 
+// ---- First pint's on the house. The QR only appears when you ask for it (it's a bearer voucher).
+let pintToken = null;
+async function freePint() {
+  unlockAudio();
+  if (!pintToken) {
+    const res = await fetch('/api/pint', { method: 'POST', headers: { 'X-Pass': pass } });
+    const body = await res.json();
+    if (!res.ok) return say(body.detail || body.error);
+    pintToken = body.token;
+    watchPint(pintToken);
+  }
+  await QRCode.toCanvas($('pint-qr'), `${location.origin}/bar.html#${pintToken}`, { errorCorrectionLevel: 'L', margin: 1, width: 640 });
+  $('pint-qr').hidden = false;
+  $('pint').textContent = 'Show this at the bar';
+}
+
+// The Pint Signal: this phone asks the mint (NUT-07) whether its pint has been spent. Nobody tells it.
+async function watchPint(token) {
+  const ids = (await fetch('/kitty/v1/keysets').then((r) => r.json())).keysets.map((k) => k.id);
+  const enc = new TextEncoder();
+  const Ys = getDecodedToken(token, ids).proofs.map((p) => hashToCurve(enc.encode(p.secret)).toHex(true));
+  const mint = new Mint(config.kitty);
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    try {
+      const { states } = await mint.check({ Ys });
+      if (states.every((st) => st.state === 'SPENT')) return pintSignal();
+    } catch {}
+  }
+}
+
+function pintSignal() {
+  $('pint-qr').hidden = true;
+  $('pint').hidden = true;
+  $('pint-signal').hidden = false;
+  clink();
+  setTimeout(clink, 900);
+}
+
 // ---- Curtains up: the server sends T0 over SSE (falls back to polling if the stream stalls).
 function listen() {
   const apply = (s) => {
@@ -160,6 +201,8 @@ async function main() {
   wallet = await openWallet(config.kitty);
   await claimGift();
   await refresh();
+  $('pint').onclick = () => freePint().catch((e) => say(e.message));
+  $('pint-signal').onclick = () => ($('pint-signal').hidden = true);
   $('judge').onclick = () => enter('judge');
   $('pleb').onclick = () => enter('pleb');
   $('stop').onclick = () => {

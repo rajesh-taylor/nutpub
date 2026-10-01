@@ -33,7 +33,7 @@ export function cashuGate(priceOf, label) {
     try { meta = getTokenMetadata(token.trim()); } catch (e) {
       return refuse(res, 400, 'bad_token', e.message);
     }
-    if (norm(meta.mint) !== KITTY_URL) return refuse(res, 400, 'wrong_mint', `${meta.mint} is not the Kitty`);
+    if (norm(meta.mint) !== KITTY_URL) return refuse(res, 400, 'wrong_mint', `${meta.mint} is not the NutPub Mint`);
     if ((meta.unit || 'sat') !== 'sat') return refuse(res, 400, 'wrong_unit', meta.unit);
     if (Number(meta.amount) < price) return refuse(res, 400, 'too_little', `${meta.amount} < ${price} sats`);
 
@@ -48,7 +48,7 @@ export function cashuGate(priceOf, label) {
     for (const p of proofs) {
       let ok = false;
       try { ok = hasValidDleq(p, kitty.getKeyset(p.id), { require: true }); } catch {}
-      if (!ok) return refuse(res, 400, 'bad_dleq', 'signature does not check out against the Kitty’s keys');
+      if (!ok) return refuse(res, 400, 'bad_dleq', 'signature does not match the NutPub Mint’s keys');
     }
 
     try {

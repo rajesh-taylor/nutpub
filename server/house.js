@@ -30,9 +30,9 @@ export async function initHouse() {
 export const balance = () => Number(sumProofs(proofs));
 
 // Swap incoming proofs for fresh ones (NUT-03). Throws the mint's error if any input is spent.
-export const take = (incoming) =>
+export const take = (incoming, privkey) =>
   serial(async () => {
-    const fresh = await kitty.receive(incoming);
+    const fresh = await kitty.receive(incoming, privkey ? { privkey } : undefined);
     proofs.push(...fresh);
     save();
     return fresh;
@@ -55,10 +55,12 @@ export const fundClaim = (quote, amount) =>
   });
 
 // A cashuB token for `amount` sats, with DLEQ proofs kept so the receiver can check them offline.
-export const give = (amount) =>
+// With `p2pk`, the sent proofs are locked (NUT-11), e.g. the free pint to the bar's key.
+export const give = (amount, p2pk) =>
   serial(async () => {
     if (balance() < amount) throw new Error(`house float too low (${balance()} sats)`);
-    const { keep, send } = await kitty.send(amount, proofs);
+    const op = kitty.ops.send(amount, proofs);
+    const { keep, send } = await (p2pk ? op.asP2PK(p2pk) : op).run();
     proofs = keep;
     save();
     return getEncodedToken({ mint: KITTY_URL, unit: 'sat', proofs: send });

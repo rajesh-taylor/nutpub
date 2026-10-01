@@ -22,13 +22,15 @@
     <button id="pleb" class="tier">
       <strong>Plebs</strong><span id="pleb-price"></span>
     </button>
-    <p class="small">The door takes ecash from the Kitty only. No names, no list.</p>
+    <p class="small">The door takes NutPub Mint ecash only. No names, no list.</p>
   </section>
 
   <section id="inside" data-screen hidden>
     <h1>You’re in.</h1>
     <p class="big" id="in-tier"></p>
     <p class="big" id="curtain">Curtains up soon.</p>
+    <button id="pint" class="tier pint"><strong>🍺 Free pint</strong><span>First one’s on the house. Show the QR at the bar.</span></button>
+    <canvas id="pint-qr" hidden></canvas>
     <div id="stream" hidden>
       <button id="stop" class="plain">⏸ Stop paying</button>
       <ul id="ticks"></ul>
@@ -37,6 +39,7 @@
 
   <p id="status" role="status"></p>
 </main>
+<div id="pint-signal" hidden><div class="glass"><div class="beer"></div><span>🍺</span></div><p>Poured. Cheers!</p></div>
 <script type="module" src="/js/fan.js"></script>
 </body>
 </html>

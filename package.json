@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild client/fan.js client/stage.js client/rupert.js client/fund.js --bundle --format=esm --target=es2022 --minify --sourcemap --outdir=public/js",
+    "build": "esbuild client/fan.js client/stage.js client/rupert.js client/fund.js client/bar.js --bundle --format=esm --target=es2022 --minify --sourcemap --outdir=public/js",
     "start": "npm run build && node server/index.js"
   },
   "dependencies": {

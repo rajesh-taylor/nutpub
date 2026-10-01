@@ -3,7 +3,6 @@ import { decodePaymentRequest } from '@cashu/cashu-ts';
 import { unlockAudio, trombone } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
-const host = (url) => { try { return new URL(url).host; } catch { return url; } };
 
 // Each attempt: what Rupert pays with, what he says, the door's answer (with German below it),
 // and one line for the room on what just happened.
@@ -12,19 +11,19 @@ const ATTEMPTS = [
     kind: 'suit', label: 'Pay in SuitCoin',
     says: '“I’ll pay in SuitCoin. Printed in the City of London.”',
     no: 'Not money the NutPub takes, Sir.', de: 'Das nimmt der NutPub nicht, mein Herr.',
-    why: 'Rupert printed this himself, on his own mint. Easy: whoever runs the press prints as much as he likes. The door only takes notes signed by the Kitty.',
+    why: 'He printed his own money. The door only takes NutPub Mint money.',
   },
   {
-    kind: 'relabel', label: 'Relabel it as Minibits',
-    says: '“Fine. It says Minibits now.”',
+    kind: 'relabel', label: 'Pretend it’s NutPub money',
+    says: '“Fine. It’s NutPub money now.”',
     no: 'Still not allowed past the doormen.', de: 'Damit kommen Sie trotzdem nicht am Türsteher vorbei.',
-    why: 'Same notes, new label. But every real note carries a DLEQ proof: maths only the Kitty’s private key can make. The door checks it on the spot, without phoning the mint. Changing the label can’t forge the signature.',
+    why: 'New label, fake signature. The door checks the maths on the spot.',
   },
   {
     kind: 'relabel', label: 'Try again, with confidence',
     says: '“Same notes. Fresh confidence.”',
     no: 'Sir, this is NutPub.', de: 'Mein Herr, das ist der NutPub.',
-    why: 'Copying fiat is an edit in someone else’s database. Copying ecash means forging a signature. And the sats behind the Kitty’s notes are bitcoin, whose supply anyone running a node can check.',
+    why: 'You can relabel money. You can’t fake the signature.',
   },
 ];
 let n = 0;
@@ -43,8 +42,7 @@ async function attempt() {
   try {
     // The door's 402: what it asks for.
     const ask = await fetch('/api/door?tier=judge');
-    const req = decodePaymentRequest(ask.headers.get('X-Cashu'));
-    $('asks').textContent = `Door asks: ${req.amount} ${req.unit} from ${req.mints.map(host).join(', ')}`;
+    decodePaymentRequest(ask.headers.get('X-Cashu')); // a real NUT-24 402, read like any wallet would
 
     // Rupert's printing press, then the retry with his "money" in X-Cashu.
     const { token, error } = await fetch(`/api/rupert/print?kind=${a.kind}`).then((r) => r.json());
@@ -75,6 +73,6 @@ $('try').onclick = attempt;
 $('reset').onclick = () => {
   n = 0;
   setButton();
-  for (const id of ['says', 'asks', 'verdict', 'verdict-de', 'explain', 'why']) $(id).textContent = '';
+  for (const id of ['says', 'verdict', 'verdict-de', 'explain', 'why']) $(id).textContent = '';
 };
 setButton();

@@ -5,6 +5,7 @@ import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } 
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
 import { printSuitCoin, suitToken, relabel } from './rupert.js';
+import { freePint, pour, resetPints, keys as nightKeys } from './pint.js';
 import {
   SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, events, snapshot,
 } from './show.js';
@@ -85,10 +86,24 @@ function sendSegment(req, res) {
   res.sendFile(file, { root: SEGMENT_DIR });
 }
 
+// First pint's on the house: a 21-sat token only the bar's key can pour. One per phone.
+app.post('/api/pint', async (req, res) => {
+  const id = req.get('X-Pass') || '';
+  if (!getPass(id)) return res.status(403).json({ error: 'no_pass', detail: 'Pay at the door first.' });
+  try { res.json({ token: await freePint(id) }); }
+  catch (e) { res.status(e.code ? 409 : 502).json({ error: e.code || 'house_dry', detail: e.message }); }
+});
+// The bar page posts what it scanned. "Already poured, mate." if it's been poured before.
+app.post('/api/bar/pour', express.text({ type: '*/*', limit: '16kb' }), async (req, res) => {
+  try { res.json(await pour(String(req.body || '').trim())); }
+  catch (e) { res.status(e.code ? 400 : 502).json({ error: e.code || 'mint_refused', detail: e.message }); }
+});
+app.get('/api/bar', (_req, res) => res.json({ pubkey: nightKeys.bar.pk }));
+
 app.get('/api/events', events);
 app.get('/api/show', (_req, res) => res.json(snapshot()));
 app.post('/api/curtains', admin, (_req, res) => { curtainsUp(); res.json(snapshot()); });
-app.post('/api/new-show', admin, (_req, res) => { newShow(); res.json(snapshot()); });
+app.post('/api/new-show', admin, (_req, res) => { newShow(); resetPints(); res.json(snapshot()); });
 
 // Rupert's printing press. kind=suit: SuitCoin as printed; kind=relabel: the same notes relabelled as the Kitty.
 app.get('/api/rupert/print', async (req, res) => {

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>NutPub Bar</title>
+<link rel="stylesheet" href="/pub.css">
+<style>
+  main { text-align: center; }
+  #pour { font-size: 34px; padding: 26px 40px; margin-top: 30px; }
+  #verdict { color: var(--amber); font-size: 40px; line-height: 1.1; margin: 30px 0 10px; }
+  #sub { color: var(--muted); }
+  body.poured { background: #1b1200; transition: background 1s; }
+</style>
+</head>
+<body>
+<header><span>🍺 The NutPub bar</span><span>pint QR in</span></header>
+<main>
+  <button id="pour" class="plain">🍺 Pour it</button>
+  <p id="verdict" role="status"></p>
+  <p id="sub"></p>
+</main>
+<script type="module" src="/js/bar.js"></script>
+</body>
+</html>

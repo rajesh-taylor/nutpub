@@ -47,3 +47,21 @@ export function trombone() {
     osc.stop(s + len + 0.02);
   }
 }
+
+// Glass clink: two bright partials that ring and fade.
+export function clink() {
+  const ac = unlockAudio();
+  const t0 = ac.currentTime + 0.02;
+  for (const [f, v, d] of [[2637, 0.25, 0.9], [3951, 0.15, 0.6], [5274, 0.08, 0.4]]) {
+    for (const at of [0, 0.16]) {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.frequency.value = f * (at ? 1.01 : 1);
+      g.gain.setValueAtTime(v * (at ? 0.6 : 1), t0 + at);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + d);
+      osc.connect(g).connect(ac.destination);
+      osc.start(t0 + at);
+      osc.stop(t0 + at + d + 0.05);
+    }
+  }
+}

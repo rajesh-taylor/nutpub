@@ -12,7 +12,7 @@ async function showFloat() {
 
 $('go').onclick = async () => {
   const amount = Number($('amount').value);
-  $('status').textContent = 'Asking the Kitty for an invoice…';
+  $('status').textContent = 'Asking the NutPub Mint for an invoice…';
   const q = await post(`/api/house/invoice?amount=${amount}`);
   if (!q.request) return ($('status').textContent = q.error);
   await QRCode.toCanvas($('qr'), q.request.toUpperCase(), { margin: 1, width: 760 });
