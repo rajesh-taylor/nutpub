@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>NutPub Stage</title>
+<link rel="stylesheet" href="/pub.css">
+<style>
+  main { text-align: center; }
+  #qr { background: #fff; padding: 14px; border-radius: 12px; width: min(80vw, 420px); height: auto; }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+</style>
+</head>
+<body>
+<header><span>🥜🎤 The NutPub · stage</span><span id="float">house: … sats</span></header>
+<main>
+  <h1>Bring 2 more friends — let’s roll!</h1>
+  <p class="big" id="gift-label">Scan for your gift</p>
+  <canvas id="qr" hidden></canvas>
+  <div class="row">
+    <button class="plain" id="gift-judge">Next gift · judge 105</button>
+    <button class="plain" id="gift-friend">Next gift · friend 21</button>
+  </div>
+  <p id="status" role="status"></p>
+</main>
+<script type="module" src="/js/stage.js"></script>
+</body>
+</html>

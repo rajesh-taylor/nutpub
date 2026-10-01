@@ -1,0 +1,19 @@
+{
+  "name": "nutpub",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild client/fan.js client/stage.js client/rupert.js client/fund.js --bundle --format=esm --target=es2022 --minify --sourcemap --outdir=public/js",
+    "start": "npm run build && node server/index.js"
+  },
+  "dependencies": {
+    "@cashu/cashu-ts": "5.0.0-rc.4",
+    "@cashu/coco-core": "2.0.0",
+    "@cashu/coco-indexeddb": "2.0.0",
+    "esbuild": "0.28.2",
+    "express": "5.2.1",
+    "qrcode": "1.5.4"
+  }
+}

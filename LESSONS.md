@@ -1,0 +1,43 @@
+# Lessons for Refueler (from The NutPub build, btc++ Berlin, 1 Oct 2026)
+
+## The 402 shape (NUT-24)
+- NUT-24 itself (re-read 1 Oct): 402 + `X-Cashu: creqA…` (or `creqB…`); retry with `X-Cashu: cashuB…`; 400 for wrong mint, wrong unit, too little, or a missing lock (`nut10`). **No transport field** (payment is in-band). It also says **wallets MUST support both creqA and creqB**. It says nothing about DLEQ, retries or replay: those are the server's choice.
+- cashu-ts rc.4: `new PaymentRequest(undefined, id, amount, 'sat', [mintUrl], description, true).toEncodedCreqA()`. `cdk-cli decode-request` reads it back cleanly (`i`, `a`, `u`, `s`, `m`, `d`; no `t`).
+- Set `Access-Control-Expose-Headers: X-Cashu` on the 402, or a cross-origin page can't read the request.
+- Put a JSON body on the 402 too (`amount`, `unit`, `mints`): curl users and humans read the body, wallets read the header.
+- Refusal order that keeps the mint out of it as long as possible: token parses → mint in `m` → unit → amount ≥ `a` (all from `getTokenMetadata`, no keyset lookup) → full decode against the mint's keyset ids → local replay set → DLEQ → swap.
+- Give each refusal its own `error` code (`wrong_mint`, `wrong_unit`, `too_little`, `unknown_keyset`, `reused`, `no_dleq`, `bad_dleq`, `mint_refused`, `mint_unreachable`). The page picks its words from the code; the spec only needs the 400.
+
+## Tokens and keysets
+- `getDecodedToken(token, keysetIds)` in rc.4 **needs the mint's full keyset id list** (v2 keyset ids are shortened inside cashuB). Read the metadata first with `getTokenMetadata(token)`, which doesn't need ids, so a token from a foreign mint gets `wrong_mint` instead of a decode error.
+- Minibits' active keyset is v2 (`01…`), input fee 0 (checked 15:55 Thu 1 Oct; mint now `cdk-mintd/0.17.7`).
+
+## DLEQ (NUT-12)
+- `hasValidDleq(proof, keyset, { require: true })`: the default (`require: false`) returns **true when the DLEQ is missing** (spec "verify if present"). For a door you want `require: true`, plus a separate `no_dleq` refusal so the error is honest.
+- `cdk-cli send` tokens carry DLEQ. `getEncodedToken(t, { removeDleq: true })` strips it (good for testing the `no_dleq` path).
+- A relabelled token (foreign mint's signatures, our mint's URL and keyset id) fails DLEQ offline, before any mint call. That's the "hologram".
+
+## Replay
+- In-memory set of accepted secrets catches reuse fast; after a restart the mint's own "Token Already Spent" on swap catches it. Map both to `reused`.
+
+## Tooling
+- `cdk-mintd` 0.18.1 won't start in a fresh folder until `cdk-mintd -w <dir> config init --new-mint --file config.toml`.
+- Cloudflare quick tunnels need port 7844 (UDP for QUIC, TCP for HTTP/2). Some networks (here, an iPhone hotspot) block both; the precheck in the log says so in the first second.
+
+## Coco 2.0.0 in the browser
+- NUT-24 payment in Coco is three calls, and it works in-band: `coco.paymentRequests.parse(creqA)` → `.prepare(req, { mintUrl })` → `.execute(prepared)` returns `{ type: 'inband', token }`; `coco.wallet.encodeToken(token)` gives the cashuB for `X-Cashu`. Coco's tokens **keep DLEQ**, so they pass a `require: true` gate.
+- `initializeCoco({ repo: new IndexedDbRepositories({ name }), seedGetter })`; call `await repo.init()` first. `seedGetter` must return 64 bytes. `coco.mint.addMint(url, { trusted: true })` before receiving.
+- Balances come back as Amount objects: `Number(x.toString())` before you print them. `balances.byMint()` keys are the mint URLs; compare without trailing slashes.
+- Bundle size with esbuild `--minify`: ~750 kB for Coco + IndexedDB + cashu-ts. Fine over a tunnel; don't put it on the critical path for the stage screen.
+
+## Gift tokens
+- A 105-sat gift (4 proofs with DLEQ) is a ~1,250-character cashuB. As a URL in a QR that's a dense code: use error correction L and draw it big.
+- Put the token after the `#` and `history.replaceState` it away on arrival: it never reaches the server's logs and doesn't sit in the address bar.
+
+## Web Audio
+- Create or resume the AudioContext at the very start of the tap handler, before any `await`, or iOS Safari stays silent. `navigator.audioSession.type = 'playback'` so the silent switch doesn't mute it.
+
+## Networks at a venue
+- Hackathon wifi can block port 7844 (Cloudflare tunnels) **and** stop devices seeing each other. Phones may get no internet at all.
+- Android over USB: `adb reverse tcp:8787 tcp:8787`. The phone opens `http://localhost:8787`, which also counts as a secure origin.
+- If phones can only reach your server, relay the mint through it (`/kitty/*` → mint). In the page, wrap `window.fetch` so calls to the mint URL go to `/kitty`. **Tokens keep the real mint URL**, so the gate's `m` check and the gifts still match. Coco used only HTTP here (info, keysets, keys, swap, checkstate); refuse the mint WebSocket and it polls instead.

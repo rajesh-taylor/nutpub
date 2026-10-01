@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>The NutPub</title>
+<link rel="stylesheet" href="/pub.css">
+</head>
+<body>
+<header><span>🥜🎤 The NutPub</span><span id="balance">… sats</span></header>
+
+<main>
+  <section id="loading" data-screen><p>Opening the doors…</p></section>
+
+  <section id="door" data-screen hidden>
+    <h1>If your sats ain’t signed, you ain’t coming in!</h1>
+    <button id="judge" class="tier">
+      <strong>Ecash Idol Judges</strong><span id="judge-price"></span>
+    </button>
+    <button id="pleb" class="tier">
+      <strong>Plebs</strong><span id="pleb-price"></span>
+    </button>
+    <p class="small">The door takes ecash from the Kitty only. No names, no list.</p>
+  </section>
+
+  <section id="inside" data-screen hidden>
+    <h1>You’re in.</h1>
+    <p class="big" id="in-tier"></p>
+    <p>Curtains up soon.</p>
+  </section>
+
+  <p id="status" role="status"></p>
+</main>
+<script type="module" src="/js/fan.js"></script>
+</body>
+</html>
