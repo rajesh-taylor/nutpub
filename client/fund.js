@@ -2,7 +2,7 @@
 import QRCode from 'qrcode';
 
 const $ = (id) => document.getElementById(id);
-const key = new URLSearchParams(location.hash.slice(1)).get('k') || '';
+const key = new URLSearchParams(location.hash.slice(1)).get('k') || (() => { try { return localStorage.getItem('nutpub-k'); } catch { return ''; } })() || '';
 const post = (url) => fetch(url, { method: 'POST', headers: { 'X-Admin': key } }).then((r) => r.json());
 
 async function showFloat() {
