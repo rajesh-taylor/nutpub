@@ -29,9 +29,12 @@ fetch('/api/house', { headers: { 'X-Admin': key } })
 const post = (url) => fetch(url, { method: 'POST', headers: { 'X-Admin': key } }).then((r) => r.json());
 $('curtains').onclick = () => post('/api/curtains');
 $('newshow').onclick = () => confirm('Start a new show? Everyone has to pay at the door again.') && post('/api/new-show');
-new EventSource('/api/events').onmessage = (e) => {
-  const s = JSON.parse(e.data);
+const apply = (s) => {
   $('phones').textContent = s.phones;
   $('headline').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Bring 2 more friends — let’s roll!';
   $('curtains').disabled = !!s.t0;
 };
+// SSE, plus a 1-s poll because the tunnel holds SSE back.
+new EventSource('/api/events').onmessage = (e) => apply(JSON.parse(e.data));
+const poll = () => fetch('/api/show').then((r) => r.json()).then(apply).catch(() => {}).finally(() => setTimeout(poll, 1000));
+poll();

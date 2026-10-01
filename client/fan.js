@@ -185,13 +185,11 @@ function listen() {
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
     if (opening && pass) startStream();
   };
+  // SSE for speed, plus a 1-s poll: the Cloudflare tunnel holds SSE back, so the poll is what you get through it.
   const es = new EventSource('/api/events');
   es.onmessage = (e) => apply(JSON.parse(e.data));
-  es.onerror = () => {
-    es.close();
-    const poll = () => fetch('/api/show').then((r) => r.json()).then(apply).catch(() => {}).finally(() => setTimeout(poll, 1000));
-    poll();
-  };
+  const poll = () => fetch('/api/show').then((r) => r.json()).then(apply).catch(() => {}).finally(() => setTimeout(poll, 1000));
+  poll();
 }
 
 async function main() {
