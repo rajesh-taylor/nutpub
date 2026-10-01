@@ -7,6 +7,7 @@ import {
 } from '@cashu/cashu-ts';
 import { KITTY_URL } from './config.js';
 import { kitty, kittyKeysetIds, give, take } from './house.js';
+import { show } from './show.js';
 
 const hex = (b) => Buffer.from(b).toString('hex');
 const KEYS = fileURLToPath(new URL('../data/keys.json', import.meta.url));
@@ -20,15 +21,23 @@ function loadKeys() {
   return keys;
 }
 export const keys = loadKeys();
+// Longy's key for tonight (our server signs for him: the takings screen is a private link, not a login).
+if (!keys.artist) {
+  const sk = createRandomSecretKey();
+  keys.artist = { sk: hex(sk), pk: hex(getPubKeyFromPrivKey(sk)) };
+  writeFileSync(KEYS, JSON.stringify(keys), { mode: 0o600 });
+}
 
 export const PINT = 21;
-const LAST_ORDERS_MIN = Number(process.env.LAST_ORDERS_MIN || 180);
-export const lastOrders = { at: Math.floor(Date.now() / 1000) + LAST_ORDERS_MIN * 60 }; // unix seconds
+// Last orders: LAST_ORDERS_MIN after curtains up (before curtains, counted from now). Unix seconds.
+const LAST_ORDERS_MIN = Number(process.env.LAST_ORDERS_MIN || 4);
+export const lastOrdersAt = () =>
+  Math.floor((show.t0 ?? Date.now() + 60_000) / 1000) + LAST_ORDERS_MIN * 60;
 
 export function pintLock() {
   return new P2PKBuilder()
     .addLockPubkey(keys.bar.pk)
-    .lockUntil(lastOrders.at)
+    .lockUntil(lastOrdersAt())
     .addRefundPubkey(keys.house.pk)
     .toOptions();
 }

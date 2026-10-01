@@ -33,9 +33,14 @@ export function newShow() {
   broadcast();
 }
 
-const state = () => ({ t0: show.t0, now: Date.now(), phones: passes.size, segmentMs: SEGMENT_MS });
+const extras = []; // other parts of the show (the finale) add their fields here
+export const addToState = (fn) => extras.push(fn);
+const state = () => Object.assign(
+  { t0: show.t0, now: Date.now(), phones: passes.size, segmentMs: SEGMENT_MS },
+  ...extras.map((fn) => fn(passes.size)),
+);
 
-function broadcast() {
+export function broadcast() {
   const msg = `data: ${JSON.stringify(state())}\n\n`;
   for (const res of clients) res.write(msg);
 }

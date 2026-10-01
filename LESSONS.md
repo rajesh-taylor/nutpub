@@ -44,3 +44,14 @@
 - **QR codes must carry the public URL, never `location.origin`.** A page opened as `localhost` (USB, the laptop) draws QRs that point other phones at *their own* localhost. The server hands out the tunnel URL in `/api/config` and every QR uses it.
 - Cloudflare tunnels: try `--protocol http2` when QUIC (UDP 7844) is blocked but TCP 7844 is open. A guest wifi with a captive portal can leave a phone "connected" with no internet; check with `adb shell ping`.
 - Cloudflare quick tunnels **hold SSE back** (nothing arrived in 5 s through the tunnel, instantly on localhost). Always run a 1-s poll alongside SSE.
+
+## Real money (Minibits back, Fri 00:50)
+- Checkpoint passed on Minibits: a real gift through the door, reuse refused, relabelled SuitCoin fails DLEQ against Minibits' real keys, the P2PK pint pours once.
+- **The Minibits app and the Minibits mint fail separately.** Tonight the app's own account login broke ("AUTH_ERROR … Please re-authenticate", Login did nothing) while the mint answered. Anything that only needs the mint (our gate, Coco wallets) kept working. Any Lightning wallet can pay a mint's NUT-04 invoice.
+- **Never let a page own a paid invoice.** Android pauses background tabs, so a page polling "is it paid yet?" can sit there with the sats paid and unclaimed. Save open quotes on the server and have it claim them.
+- A P2PK pint (3 proofs, locktime + refund tags) is ~1,800 characters with DLEQ. The bar never needs the DLEQ (it swaps), so strip it for the QR.
+
+## Locked pledges (P2PK + locktime + refund) with Coco 2.0.0
+- Send: `coco.ops.send.prepare({ mintUrl, amount, target: { type: 'p2pk', options: { kind: 'P2PK', data: lockPubkey, locktime, refundKeys: [refundPub] } } })`, then `execute`. Works.
+- **Coco won't take it back:** `coco.ops.send.reclaim(id)` → "Cannot rollback pending P2PK send operation", even after the locktime. `coco.wallet.receive(token)` → "Key pair not found for public key <lock key>": it only looks at the **main** lock key, never the refund path.
+- What works: keep the refund secret key (`coco.keyring.generateKeyPair(true)` returns it), and after the locktime call cashu-ts `wallet.receive(token, { privkey: refundSk })`. Then hand the fresh proofs back to Coco as a plain token.

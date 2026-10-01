@@ -83,5 +83,7 @@ export const give = (amount, p2pk) =>
     const { keep, send } = await (p2pk ? op.asP2PK(p2pk) : op).run();
     proofs = keep;
     save();
-    return getEncodedToken({ mint: KITTY_URL, unit: 'sat', proofs: send });
+    // A locked pint is only ever redeemed by our own bar (a swap at the mint), so its DLEQ data can go:
+    // that keeps its QR code smaller.
+    return getEncodedToken({ mint: KITTY_URL, unit: 'sat', proofs: send }, { removeDleq: !!p2pk });
   });
