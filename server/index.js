@@ -32,6 +32,9 @@ app.use('/kitty', express.raw({ type: '*/*', limit: '1mb' }), async (req, res) =
   }
 });
 
+// One line per money event, with the time, so the float can be accounted for afterwards.
+const log = (msg) => console.log(`${new Date().toTimeString().slice(0, 8)} ${msg}`);
+
 const tierOf = (req) => (TIERS[req.query.tier] ? req.query.tier : 'ticket');
 const admin = (req, res, next) =>
   req.get('X-Admin') === ADMIN_KEY ? next() : res.status(403).json({ error: 'forbidden' });
@@ -49,7 +52,9 @@ app.get('/api/config', (_req, res) => res.json({ kitty: KITTY_URL, tiers: TIERS,
 app.post('/api/gift', admin, async (req, res) => {
   const amount = Math.min(Math.max(Number(req.query.amount) || 21, 1), 210);
   try {
-    res.json({ token: await give(amount), balance: balance() });
+    const token = await give(amount);
+    log(`gift ${amount}, house ${balance()}`);
+    res.json({ token, balance: balance() });
   } catch (e) {
     res.status(409).json({ error: String(e.message || e), balance: balance() });
   }
@@ -59,6 +64,7 @@ app.post('/api/gift', admin, async (req, res) => {
 app.get('/api/door', cashuGate((req) => TIERS[tierOf(req)].door, 'The NutPub door'), (req, res) => {
   const tier = tierOf(req);
   const pass = issuePass(tier);
+  log(`door ${tier} +${req.paid}, house ${balance()}`);
   // Plebs pay per 10 s from the start: their door payment is the segment that's live (or the first one).
   if (tier === 'stream') getPass(pass).paid.add(liveSegment() ?? 0); // the pass's first 10 s
   res.json({ in: true, tier, name: TIERS[tier].name, paid: req.paid, pass });
@@ -103,12 +109,12 @@ app.post('/api/pint', async (req, res) => {
   const id = req.get('X-Pass') || '';
   if (!getPass(id)) return res.status(403).json({ error: 'no_pass', detail: 'Pay at the door first.' });
   if (getPass(id).tier !== 'ticket') return res.status(409).json({ error: 'not_in_room', detail: 'Free pints are for people in the room.' });
-  try { res.json({ token: await freePint(id) }); }
+  try { res.json({ token: await freePint(id) }); log(`pint issued, house ${balance()}`); }
   catch (e) { res.status(e.code ? 409 : 502).json({ error: e.code || 'house_dry', detail: e.message }); }
 });
 // The bar page posts what it scanned. "Already poured, mate." if it's been poured before.
 app.post('/api/bar/pour', express.text({ type: '*/*', limit: '16kb' }), async (req, res) => {
-  try { res.json(await pour(String(req.body || '').trim())); }
+  try { res.json(await pour(String(req.body || '').trim())); log(`pint poured, house ${balance()}`); }
   catch (e) { res.status(e.code ? 400 : 502).json({ error: e.code || 'mint_refused', detail: e.message }); }
 });
 app.get('/api/pint/last', admin, (_req, res) => res.json(lastPint));

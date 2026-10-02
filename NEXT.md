@@ -4,7 +4,7 @@
 0. Optional: `CURTAINS_AT=3` in `.env` makes curtains go up by themselves at 3 phones (the phones then say "lights up at 3"). Unset = stage button only.
 0. Free test run: a second server on the fake mint, `set -a; . ./.env; KITTY_URL=http://127.0.0.1:3338 PORT=8788 LAST_ORDERS_MIN=2 node server/index.js` (house tops up with fake sats via `/fund.html`; open `localhost:8788` in a browser).
 1. Mints: `cdk-mintd -w ~/cdk-suitcoin-mint` (SuitCoin, :3339). Fake Kitty fallback only: `cdk-mintd -w ~/cdk-fake-mint` (:3338).
-2. Server (Minibits): `cd ~/Documents/NutPub && set -a && . ./.env && npm start`
+2. Server (Minibits): `cd ~/Documents/NutPub && set -a && . ./.env && npm start >> data/server.log 2>&1 &` (append: the log now has one line per gift, door, pint and payout)
    - Fake mint instead: add `KITTY_URL=http://127.0.0.1:3338`. Shorter last orders for testing: `LAST_ORDERS_MIN=1`.
 3. Tunnel: `cloudflared tunnel --no-autoupdate --protocol http2 --url http://localhost:8787 > data/tunnel.log 2>&1 &`
    then `grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' data/tunnel.log | head -1 > data/tunnel.url` (QR codes read this file).
