@@ -28,7 +28,7 @@ const say = (text) => ($('status').textContent = text);
 
 // The night in chapters, so anyone watching knows which part of the story this phone is in.
 const CHAPTERS = {
-  door: ['1 · The door', 'That gift is real ecash, on your phone now. Pay your way in. Nobody asks your name.'],
+  door: ['1 · The door', 'That gift is real ecash, on your phone now. Pay your way in.'],
   inside: ['2 · Inside', 'First pint’s on the house while the support acts warm us up.'],
   playing: ['3 · Lights up', 'Longy’s on. Live from anywhere, 10 seconds at a time. Stop paying, the amp goes quiet.'],
   paid: ['4 · Longy’s paid', 'The room hit the goal. Paid before he’s even unplugged.'],

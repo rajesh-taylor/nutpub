@@ -33,3 +33,31 @@
 - Pixel can't reach the internet from Vanadium on venue wifi (check Vanadium's Network permission); bar page via USB works.
 - The tunnel URL changes on every restart; QR codes follow `data/tunnel.url`.
 - SSE doesn't pass the tunnel; pages poll every second.
+
+## Phone review, Thu night (Rajesh, Pixel + iPhone)
+Verdict: the flow works, the look doesn't. It reads cartoony and dated, not somewhere you'd send money. The keynote deck's gritty look is the brand; the pages must match it.
+
+### Brand direction (album-art rules)
+- **The wordmark is the band logo:** THE NUTPUB, top centre, big, condensed caps, tracked out. On every page, the same.
+- **One photo per screen, full bleed,** type over it, like an album cover. Grain + vignette over everything (reuse the deck's texture recipe, `nutpub-deck/textures.js`, `bg-a.jpg`).
+- **Two colours and the photo.** Deck palette: midnight `#0B1426`, deep `#050914`, amber `#D9953A`, cream `#EFE3C8`, smoke `#8E97AD`. Nothing else.
+- **Type is the identity:** one condensed poster face for headlines (caps, huge, tight), one quiet face for body, tracked caps for labels, mono for NUT stamps. DIN Condensed doesn't exist on Android/iOS, which is a big part of why the phones looked cartoony: self-host a condensed face (decision below).
+- **No emoji as UI.** Emoji make it look like a toy. Type and thin line icons only (keep 🍺⚡ for the celebration moments, maybe).
+- **Buttons are compact and centred:** outlined, caps, sized to their words, not full-width cards.
+- **Money screens are calm:** big clear prices, one action, no small print for anything that matters.
+
+### Fixes from the review
+- [x] Drop "Nobody asks your name." (chapter 1). Done Thu night.
+- [x] Drop "from anywhere" from the livestream button. Done Thu night.
+- [ ] Centre everything; THE NUTPUB wordmark top centre (it's the platform's index page). One top bar, not two (🥜 appears twice now).
+- [ ] Narrower buttons on phone and desktop.
+- [ ] Payment rail as two small buttons above the tickets: **Ecash / Lightning** and **Card (Stripe)**. Bitcoiners get it at a glance. Replaces the small-print line and the dashed card box.
+- [ ] The small-print line about names and receipts: the rail buttons say it now; if any of it stays, it's normal size.
+- [ ] "0 sats" top right means nothing to a judge. Make it a labelled pocket: "IN YOUR POCKET · 60 SATS", or hide until a gift lands.
+- [ ] EN/DE pill doesn't work (only the punchlines have German, so tapping it seems to do nothing). Flags 🇬🇧 🇩🇪 instead, and either translate every line or drop German for the expo (decision below).
+- [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
+
+### Decisions needed at breakfast
+1. **Headline font:** self-host a free condensed poster face (Bebas Neue or Oswald, both SIL Open Font Licence) as a file in the repo. It isn't in the fixed dependency list, so it needs a yes.
+2. **German:** full translation behind 🇬🇧/🇩🇪, or English only for the expo?
+3. **Wallet balance:** labelled pocket, or hidden until a gift lands?
