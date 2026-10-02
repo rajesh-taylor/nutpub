@@ -9,20 +9,21 @@
 <style>
   main { text-align: center; }
   #qr { background: #fff; padding: 12px; border-radius: 12px; width: min(86vw, 380px) !important; height: auto !important; }
-  #inv { word-break: break-all; font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
-  input { font: inherit; width: 8em; padding: 10px; border-radius: 10px; border: 2px solid var(--amber); background: var(--panel); color: var(--text); text-align: center; }
+  #inv { word-break: break-all; font: 12px var(--mono); color: var(--smoke); }
+  input { font: inherit; width: 8em; padding: 10px; border: 1.5px solid var(--amber); background: rgb(5 9 20 / .6); color: var(--cream); text-align: center; }
 </style>
 <script src="/nav.js" defer></script>
 </head>
 <body>
-<header><span>🥜🎤 House float</span><span id="float">… sats</span></header>
+<div class="backdrop" aria-hidden="true"></div>
+<p class="kicker pagename">House float · <span id="float">… sats</span></p>
 <main>
   <h1>Top up the house</h1>
   <p><input id="amount" type="number" value="3000" min="1" max="10000"> sats
-  <button class="plain" id="go">Make invoice</button></p>
+  <button class="btn quiet" id="go">Make invoice</button></p>
   <canvas id="qr" hidden></canvas>
   <p id="inv"></p>
-  <button class="plain" id="copy" hidden>Copy invoice</button>
+  <button class="btn quiet" id="copy" hidden>Copy invoice</button>
   <p id="status" role="status"></p>
 </main>
 <script type="module" src="/js/fund.js"></script>

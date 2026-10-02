@@ -43,8 +43,11 @@ function chapter(name) {
   $('chapter-line').textContent = line;
 }
 
+// The pocket: what this phone holds at the NutPub Mint. Hidden until there's something in it.
 async function refresh() {
-  $('balance').textContent = `${await wallet.balance()} sats`;
+  const n = await wallet.balance();
+  $('pocket-amt').textContent = `${n} sat${n === 1 ? '' : 's'}`;
+  $('pocket').hidden = !n;
 }
 
 async function claimGift() {
@@ -105,7 +108,7 @@ async function startStream() {
   const me = ++run;
   const ac = unlockAudio();
   $('stream').hidden = false;
-  $('stop').textContent = '⏸ Stop paying';
+  $('stop').textContent = 'Stop paying';
   const ms = showState.segmentMs;
   let n = Math.max(0, Math.floor((serverNow() - showState.t0) / ms));
 
@@ -154,7 +157,7 @@ function tick(n) {
 
 function stopStream(why) {
   streaming = false;
-  $('stop').textContent = '▶ Pay to listen';
+  $('stop').textContent = 'Play';
   say(why ? `${why} If your sats ain’t signed, you ain’t coming in!` : 'Stopped paying. The music stops at the end of this segment.');
 }
 
@@ -316,7 +319,7 @@ function listen() {
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
     if (opening && pass) lightsUp();
     if (opening && pass && !resumed && tier === 'stream') startStream();
-    document.body.classList.toggle('playing', !!(s.t0 && pass));
+    document.body.dataset.photo = s.t0 && pass ? 'live' : pass ? 'stage' : '';
     if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
     $('stream').hidden = !(s.t0 && pass && (tier === 'stream' || streaming || run > 0));
     $('tune').hidden = !(s.t0 && pass && tier === 'ticket' && !streaming && run === 0);
@@ -330,8 +333,15 @@ function listen() {
 
 async function main() {
   config = await fetch('/api/config').then((r) => r.json());
-  $('ticket-price').textContent = `${config.tiers.ticket.door} sats, once. Free first pint. Pay with sats.`;
-  $('stream-price').textContent = `${config.tiers.stream.segment} sat every 10 seconds. Stop paying, the amp goes quiet.`;
+  $('ticket-price').textContent = `${config.tiers.ticket.door} sats`;
+  $('stream-price').textContent = `${config.tiers.stream.segment} sat / 10 s`;
+  // The payment rail: ecash tonight; the card rail is a placeholder (it would learn who paid).
+  document.querySelectorAll('.rail button').forEach((b) => (b.onclick = () => {
+    const card = b.dataset.rail === 'card';
+    document.querySelectorAll('.rail button').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    document.body.classList.toggle('card', card);
+    $('rail-note').hidden = !card;
+  }));
   wallet = await openWallet(config.kitty);
   await claimGift();
   await refresh();
@@ -362,9 +372,9 @@ async function main() {
     $('in-tier').textContent = b.name;
     show('inside');
     chapter(showState.t0 ? 'playing' : 'inside');
-    $('stop').textContent = '▶ Pay to listen';
+    $('stop').textContent = 'Play';
     $('stream').hidden = !showState.t0;
-    say('Welcome back. Tap ▶ to keep listening.');
+    say('Welcome back. Tap Play to keep listening.');
   } else {
     show('door');
     chapter('door');

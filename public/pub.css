@@ -1,54 +1,160 @@
+/* The NutPub: album-art rules. Two colours and the photo; poster type; grain over everything. */
+@font-face {
+  font-family: "Bebas Neue";
+  src: url(/fonts/BebasNeue-Regular.ttf) format("truetype");
+  font-display: swap;
+}
 :root {
-  --bg: #0b1430;
-  --panel: #142048;
-  --amber: #f3b54a;
-  --text: #f6ead2;
-  --muted: #a99c84;
-  --red: #c8322f;
+  /* The deck's palette, and nothing else */
+  --midnight: #0b1426;
+  --deep: #050914;
+  --amber: #d9953a;
+  --cream: #efe3c8;
+  --smoke: #8e97ad;
+  --poster: "Bebas Neue", "DIN Condensed", "Arial Narrow", sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+  /* How dark the photo sits under the type (0 = the photo as shot) */
+  --shade: .62;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  background: var(--bg);
-  color: var(--text);
-  font: 18px/1.4 "DIN Condensed", "Avenir Next Condensed", system-ui, sans-serif;
-  padding: 0 16px env(safe-area-inset-bottom);
+  background: var(--deep);
+  color: var(--cream);
+  font: 17px/1.45 var(--body);
+  -webkit-font-smoothing: antialiased;
+  text-align: center;
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
 }
-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 0; color: var(--amber); font-size: 20px;
-  border-bottom: 1px solid #ffffff1a;
-}
-main { max-width: 520px; margin: 0 auto; padding: 24px 0; }
-h1 { color: var(--amber); font-size: 34px; line-height: 1.1; margin: 8px 0 24px; }
-.tier {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-  width: 100%; margin: 0 0 14px; padding: 18px 20px;
-  background: var(--panel); color: var(--text); border: 2px solid var(--amber);
-  border-radius: 14px; font: inherit; text-align: left; cursor: pointer;
-}
-.tier strong { color: var(--amber); font-size: 24px; }
-.tier:active { transform: scale(0.98); }
-button.plain {
-  font: inherit; padding: 12px 18px; border-radius: 10px; border: 2px solid var(--amber);
-  background: transparent; color: var(--amber);
-}
-.big { font-size: 28px; color: var(--amber); }
-.small { color: var(--muted); font-size: 15px; }
-#status { min-height: 1.4em; color: var(--amber); font-size: 20px; }
 [hidden] { display: none !important; }
+main { max-width: 520px; margin: 0 auto; padding: 8px 0 24px; }
+
+/* ---- The photo behind each screen (full bleed), the vignette and the grain */
+body { --photo: url(/img/longy-live.jpg); }
+body[data-photo="stage"] { --photo: url(/img/longy-stage.jpg); }
+body[data-photo="none"] { --photo: none; }
+body[data-photo="live"] { --shade: .5; }
+.backdrop { position: fixed; inset: 0; z-index: -1; background: var(--deep); overflow: hidden; }
+.backdrop::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 130% 95% at 50% 38%, transparent 40%, rgb(5 9 20 / .9) 100%),
+    linear-gradient(rgb(5 9 20 / .55), transparent 22%, transparent 60%, rgb(5 9 20 / .7)),
+    linear-gradient(rgb(5 9 20 / var(--shade)), rgb(5 9 20 / var(--shade))),
+    var(--photo) center 18% / cover no-repeat,
+    var(--deep);
+  transition: background .8s;
+}
+/* Film grain: one small noise tile, blended over whatever is under it. */
+.backdrop::after, .grain::after {
+  content: ""; position: absolute; inset: -50%; pointer-events: none; z-index: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2 0 0 0 -.5 2 0 0 0 -.5 2 0 0 0 -.5 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 200px 200px;
+  opacity: .5; mix-blend-mode: overlay;
+}
+
+/* ---- Type */
+h1 {
+  font: 400 clamp(44px, 13vw, 78px)/.9 var(--poster);
+  letter-spacing: .015em; text-transform: uppercase; color: var(--cream);
+  margin: 10px 0 18px; text-shadow: 0 2px 28px var(--deep);
+}
+h1 em { font-style: normal; color: var(--amber); }
+.kicker, #chapter b {
+  display: block; margin: 0; color: var(--amber);
+  font: 600 12px/1.4 var(--body); letter-spacing: .28em; text-transform: uppercase;
+}
+.lede, .big { font: 400 32px/1.05 var(--poster); letter-spacing: .03em; color: var(--cream); margin: 10px 0; }
+.note, .small { color: var(--smoke); font-size: 15px; }
+.stamp { font: 12px/1.3 var(--mono); color: var(--smoke); letter-spacing: .02em; }
+#status { min-height: 1.45em; margin: 14px auto 0; max-width: 28em; color: var(--cream); }
+
+/* ---- Top bar: THE NUTPUB in the middle, presenter arrows left, flags right. The same on every page. */
+.topnav {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  max-width: 900px; margin: 0 auto; padding: max(12px, env(safe-area-inset-top)) 0 6px;
+}
+.wordmark {
+  grid-column: 2; color: var(--cream); text-decoration: none; white-space: nowrap;
+  font: 400 clamp(30px, 9.4vw, 46px)/1 var(--poster); letter-spacing: .22em; padding-left: .22em;
+}
+.topnav .left { grid-column: 1; justify-self: start; display: flex; gap: 6px; }
+.topnav .right { grid-column: 3; justify-self: end; display: flex; gap: 2px; }
+.topnav .step {
+  display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--amber);
+  color: var(--amber); text-decoration: none; font-size: 20px; line-height: 1;
+}
+.topnav .flag { background: none; border: 0; padding: 4px 3px; font-size: 20px; line-height: 1; opacity: .35; cursor: pointer; filter: grayscale(.6); }
+html[data-lang="en"] .flag[data-l="en"], html[data-lang="de"] .flag[data-l="de"] { opacity: 1; filter: none; }
+html[data-lang="en"] [lang="de"] { display: none !important; }
+html[data-lang="de"] .has-de { display: none !important; }
+.pagename { margin: 0 0 6px; }
+#pocket { margin: 2px 0 0; }
+#pocket b { color: var(--cream); font-weight: 600; }
+
+/* ---- Buttons: outlined, caps, sized to their words, centred */
+.actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 18px 0; }
+.btn, button.plain {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-width: 200px; max-width: 100%; padding: 11px 20px; margin: 0;
+  font: 600 13px/1.25 var(--body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
+  color: var(--cream); background: rgb(5 9 20 / .55); border: 1.5px solid var(--amber); border-radius: 2px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn .price { font: 400 36px/1 var(--poster); letter-spacing: .04em; color: var(--amber); }
+.btn small { font-weight: 400; font-size: 13px; letter-spacing: .04em; text-transform: none; color: var(--smoke); }
+.btn:active, button.plain:active { background: var(--amber); color: var(--deep); }
+.btn:active .price, .btn:active small { color: var(--deep); }
+.btn:disabled, button.plain:disabled { opacity: .4; cursor: default; }
+.btn.quiet, button.plain { min-width: 0; padding: 9px 16px; border-color: rgb(239 227 200 / .35); }
+
+/* Payment rail: two small switches above the tickets */
+.rail { display: inline-flex; margin: 6px auto 0; border: 1px solid rgb(239 227 200 / .3); }
+.rail button {
+  padding: 7px 11px; border: 0; background: rgb(5 9 20 / .5); color: var(--smoke);
+  font: 600 10px/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+}
+.rail button[aria-checked="true"] { background: var(--amber); color: var(--deep); }
+#rail-note { max-width: 24em; margin: 12px auto 0; color: var(--cream); }
+body.card .ticket { opacity: .35; pointer-events: none; }
+
+/* Chapter: where we are in the night */
+#chapter { margin: 4px auto 6px; max-width: 30em; }
+#chapter:has(b:empty) { display: none; }
+#chapter span { display: block; margin-top: 4px; color: var(--cream); opacity: .85; font-size: 15px; }
+
 /* The qrcode library sets an inline pixel width on canvases: never let one overflow the screen. */
 canvas { max-width: 100% !important; height: auto !important; }
-#ticks { list-style: none; padding: 0; color: var(--muted); font-size: 16px; }
-#ticks li:first-child { color: var(--text); }
-#pint-qr { display: block; margin: 0 auto 16px; background: #fff; padding: 10px; border-radius: 12px; width: min(80vw, 320px) !important; height: auto !important; }
+#pint-qr { display: block; margin: 0 auto 16px; background: #fff; padding: 10px; width: min(80vw, 320px) !important; height: auto !important; }
+
+/* The stream */
+#ticks { list-style: none; padding: 0; color: var(--smoke); font: 13px/1.6 var(--mono); }
+#ticks li:first-child { color: var(--cream); }
+
+/* ---- Finale */
+.meter { height: 3px; max-width: 320px; margin: 8px auto; background: rgb(239 227 200 / .15); overflow: hidden; }
+#goal-bar { height: 100%; width: 0; background: var(--amber); transition: width .8s ease; }
+#paid-screen {
+  position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 38%, #f1c27a, var(--amber) 45%, #6b4310); color: var(--deep); text-align: center;
+}
+#paid-screen p { margin: 0; font: 400 clamp(64px, 20vw, 140px)/.9 var(--poster); letter-spacing: .02em; text-transform: uppercase; }
+#paid-screen .bolt { font-size: 120px; line-height: 1; margin-bottom: 8px; }
+#paid-screen .small { font: 600 14px/1.4 var(--body); letter-spacing: .28em; color: #3a2508; margin-top: 14px; }
+#rain { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+#rain span { position: absolute; top: -50px; animation: fall 2.8s linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(200deg); } }
+
+/* ---- Pint Signal */
 #pint-signal {
   position: fixed; inset: 0; background: #000; z-index: 10;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-  color: var(--amber); font-size: 30px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
 }
-#pint-signal .pint { width: min(62vw, 280px); height: auto; overflow: visible; }
+#pint-signal p { margin: 0; font: 400 44px/1 var(--poster); letter-spacing: .06em; color: var(--amber); }
+#pint-signal .pint { width: min(62vw, 46vh, 280px); height: auto; overflow: visible; }
 #pint-signal .fill { animation: pour 2.6s cubic-bezier(.3,.7,.4,1) forwards; transform: translateY(250px); }
 #pint-signal .bubbles circle { animation: rise 2.2s linear infinite; }
 #pint-signal .bubbles circle:nth-child(2n) { animation-duration: 1.7s; animation-delay: -.6s; }
@@ -57,8 +163,8 @@ canvas { max-width: 100% !important; height: auto !important; }
 #pint-signal .drips path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: drip 1.8s 2.8s ease-in forwards; }
 #pint-signal .drips path:nth-child(2) { animation-delay: 3.1s; animation-duration: 2.4s; }
 #pint-signal .drips path:nth-child(3) { animation-delay: 3.4s; }
-#pint-signal .ipa { font: 700 46px "DIN Condensed", "Avenir Next Condensed", system-ui, sans-serif; fill: none; stroke: #1a0f00; stroke-width: 1.6; letter-spacing: 4px; }
-#pint-signal .ipa-small { font: 600 8.5px system-ui, sans-serif; fill: #1a0f00; letter-spacing: 0.6px; }
+#pint-signal .ipa { font: 400 52px var(--poster); fill: none; stroke: #1a0f00; stroke-width: 1.6; letter-spacing: 4px; }
+#pint-signal .ipa-small { font: 600 8.5px var(--body); fill: #1a0f00; letter-spacing: 0.6px; }
 @keyframes pour { to { transform: translateY(0); } }
 @keyframes rise { to { transform: translateY(-200px); opacity: 0; } }
 @keyframes head { to { transform: scaleY(1); } }
@@ -69,53 +175,24 @@ canvas { max-width: 100% !important; height: auto !important; }
   #pint-signal .bubbles circle { animation: none; }
 }
 
-/* Top bar: home, demo steps (presenter only), EN/DE */
-.topnav { display: flex; align-items: center; gap: 10px; padding: 10px 0 0; font-size: 18px; }
-.topnav a { color: var(--amber); text-decoration: none; }
-.topnav .home { font-size: 22px; }
-.topnav .step { display: grid; place-items: center; width: 40px; height: 40px; border: 2px solid var(--amber); border-radius: 50%; font-size: 26px; line-height: 1; }
-.topnav .where { flex: 1; text-align: center; color: var(--muted); font-size: 15px; }
-.topnav .pill { display: flex; padding: 3px; border: 2px solid var(--amber); border-radius: 999px; background: transparent; font: inherit; font-size: 14px; cursor: pointer; }
-.topnav .pill span { padding: 4px 10px; border-radius: 999px; color: var(--amber); }
-html[data-lang="en"] .pill [data-l="en"], html[data-lang="de"] .pill [data-l="de"] { background: var(--amber); color: var(--bg); }
-html[data-lang="en"] [lang="de"] { display: none !important; }
-html[data-lang="de"] .has-de { display: none !important; }
+/* ---- Full-screen photo moments: last orders, closing time */
+#closing, #last-call { position: fixed; inset: 0; z-index: 9; background: var(--deep); overflow: auto; }
+#last-call { z-index: 10; }
+.moment .photo { position: relative; height: 52vh; overflow: hidden; }
+.moment .photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 50%, var(--deep)), var(--photo) center 22% / cover no-repeat; }
+#closing .photo { --photo: url(/img/longy-cheers.jpg); }
+#last-call .photo { --photo: url(/img/longy-lastorders.jpg); filter: grayscale(1); }
+.moment .card { max-width: 520px; margin: -56px auto 0; padding: 0 16px 32px; position: relative; }
 
-/* Finale */
-.meter { height: 14px; border-radius: 7px; background: var(--panel); border: 1px solid #ffffff22; overflow: hidden; }
-#goal-bar { height: 100%; width: 0; background: linear-gradient(90deg, #c9771a, var(--amber)); transition: width .8s ease; }
-#paid-screen { position: fixed; inset: 0; z-index: 11; background: radial-gradient(circle at 50% 35%, #ffd77a, var(--amber) 45%, #8a4a0c); color: #1a0f00; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 40px; text-align: center; }
-#paid-screen .bolt { font-size: 140px; line-height: 1; }
-#paid-screen .small { color: #3a2200; font-size: 22px; }
-#rain { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
-#rain span { position: absolute; top: -50px; animation: fall 2.8s linear forwards; }
-@keyframes fall { to { transform: translateY(110vh) rotate(200deg); } }
-
-/* Chapter banner: where we are in the night */
-#chapter { display: block; margin: 0 0 18px; padding: 10px 14px; border-left: 4px solid var(--amber); background: #ffffff0d; border-radius: 0 10px 10px 0; }
-#chapter:empty, #chapter:has(b:empty) { display: none; }
-#chapter b { display: block; color: var(--amber); font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
-#chapter span { display: block; font-size: 17px; }
-
-/* Longy on stage behind the playing screen (photo optional: missing file, plain background) */
-body.playing { background: linear-gradient(#0b1430e6, #0b1430f2 55%, var(--bg)), url(/img/longy-live.jpg) center top / cover fixed, var(--bg); }
-/* Closing time */
-#closing { position: fixed; inset: 0; z-index: 9; background: var(--bg); overflow: auto; }
-#closing .photo { height: 46vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-cheers.jpg) center 20% / cover, #1a1206; }
-#closing .card { max-width: 520px; margin: -40px auto 0; padding: 0 16px 32px; position: relative; text-align: center; }
-#closing .kicker { color: var(--amber); letter-spacing: .12em; text-transform: uppercase; margin: 0; }
-#closing a.tier { text-decoration: none; text-align: left; }
-.card-rail { opacity: .55; border-style: dashed; cursor: not-allowed; }
-
-/* Lights up: black, three beacons (one per guest in the room), then Longy */
-#lights-up { position: fixed; inset: 0; z-index: 13; pointer-events: none; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6vh 16px 7vh; }
+/* ---- Lights up: black, the stage lights (one per guest in the room), then Longy */
+#lights-up { position: fixed; inset: 0; z-index: 13; pointer-events: none; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6vh 16px 7vh; overflow: hidden; }
 #lights-up::before { content: ""; position: absolute; inset: 0; background: linear-gradient(#0009, #0000 30%, #0000 55%, #000c 92%), url(/img/longy-live.jpg) center 15% / cover; opacity: 0; }
-#lights-up .presents { position: relative; margin: 0; color: var(--amber); letter-spacing: .32em; font-size: 15px; opacity: 0; }
+#lights-up .presents { position: relative; margin: 0; color: var(--amber); letter-spacing: .32em; font: 600 13px/1.3 var(--body); opacity: 0; }
 #lights-up .rig { position: relative; display: flex; gap: 34px; margin-top: -30vh; }
-#lights-up .rig i { width: 58px; height: 58px; border-radius: 50%; background: #161616; box-shadow: inset 0 0 0 3px #2a2a2a; }
+#lights-up .rig i { width: 58px; height: 58px; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #262626; }
 #lights-up .who { position: relative; text-align: center; opacity: 0; }
-#lights-up .who b { display: block; font-size: 72px; line-height: .9; letter-spacing: .14em; color: var(--text); text-shadow: 0 2px 18px #000; }
-#lights-up .who span { color: var(--amber); letter-spacing: .24em; text-transform: uppercase; font-size: 16px; }
+#lights-up .who b { display: block; font: 400 104px/.85 var(--poster); letter-spacing: .1em; padding-left: .1em; color: var(--cream); text-shadow: 0 2px 18px #000; }
+#lights-up .who span { color: var(--amber); letter-spacing: .3em; text-transform: uppercase; font: 600 13px/1.3 var(--body); }
 #lights-up.go .presents { animation: up .8s .1s ease-out forwards; }
 #lights-up.go .rig i { animation: lamp .5s .7s ease-out forwards; }
 #lights-up.go .rig i:nth-child(2) { animation-delay: 1.2s; } #lights-up.go .rig i:nth-child(3) { animation-delay: 1.7s; }
@@ -123,13 +200,8 @@ body.playing { background: linear-gradient(#0b1430e6, #0b1430f2 55%, var(--bg)),
 #lights-up.go::before { animation: up 1.6s 2.3s ease-out forwards; }
 #lights-up.go .who { animation: up 1s 3s ease-out forwards; }
 #lights-up.go:not(.hold) { animation: out .8s 6.5s ease-in forwards; }
-@keyframes lamp { to { background: radial-gradient(circle at 40% 35%, #fff6d0, var(--amber) 55%, #c9771a); box-shadow: 0 0 40px 14px #f3b54a99; } }
+@keyframes lamp { to { background: radial-gradient(circle at 40% 35%, #fff3d6, var(--amber) 55%, #8a5a1c); box-shadow: 0 0 40px 14px rgb(217 149 58 / .6); } }
 @keyframes fade { to { opacity: 0; } }
 @keyframes up { to { opacity: 1; } }
 @keyframes out { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #lights-up.go *, #lights-up.go::before { animation-duration: .01s !important; animation-delay: 0s !important; } }
-/* Last orders: the free pint nudge */
-#last-call { position: fixed; inset: 0; z-index: 10; background: var(--bg); overflow: auto; }
-#last-call .photo { height: 50vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-lastorders.jpg) center 25% / cover, #111; filter: grayscale(1); }
-#last-call .card { max-width: 520px; margin: -40px auto 0; padding: 0 16px 32px; position: relative; text-align: center; }
-#last-call .kicker { color: var(--amber); letter-spacing: .12em; text-transform: uppercase; margin: 0; }

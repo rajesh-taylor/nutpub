@@ -10,22 +10,23 @@
   main { text-align: center; }
   #qr { background: #fff; padding: 14px; border-radius: 12px; width: min(88vw, 70vh, 640px) !important; height: auto !important; }
   .lights { display: flex; gap: 14px; justify-content: center; margin: 10px 0; }
-  .lights i { width: 34px; height: 34px; border-radius: 50%; background: #2a2f45; box-shadow: inset 0 0 0 2px #ffffff22; transition: background .6s, box-shadow .6s; }
-  .lights i.on { background: radial-gradient(circle at 40% 35%, #fff6d0, var(--amber) 55%, #c9771a); box-shadow: 0 0 24px 6px #f3b54a88; }
-  body.paid { background: radial-gradient(circle at 50% 30%, #ffd77a, var(--amber) 45%, #8a4a0c); transition: background 1s; }
-  body.paid h1, body.paid .big { color: #1a0f00; }
+  .lights i { width: 34px; height: 34px; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 2px #262626; transition: background .6s, box-shadow .6s; }
+  .lights i.on { background: radial-gradient(circle at 40% 35%, #fff3d6, var(--amber) 55%, #8a5a1c); box-shadow: 0 0 24px 6px rgb(217 149 58 / .55); }
+  body.paid .backdrop::before { background: radial-gradient(circle at 50% 38%, #f1c27a, var(--amber) 45%, #6b4310); }
+  body.paid h1, body.paid .big, body.paid .kicker { color: var(--deep); text-shadow: none; }
   .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
 </style>
 <script src="/nav.js" defer></script>
 </head>
 <body>
-<header><span>🥜🎤 The NutPub · stage</span><span id="float">house: … sats</span></header>
+<div class="backdrop" aria-hidden="true"></div>
+<p class="kicker pagename">Stage · <span id="float">house: … sats</span></p>
 <main>
   <h1 id="headline">Bring 2 more friends — let’s roll!</h1>
   <p class="big"><span id="phones">0</span> phones in</p>
   <div class="row">
-    <button class="plain" id="curtains">Curtains up</button>
-    <button class="plain" id="newshow">New show</button>
+    <button class="btn quiet" id="curtains">Curtains up</button>
+    <button class="btn quiet" id="newshow">New show</button>
   </div>
   <section id="finale" hidden>
     <p class="big" id="goal"></p>
@@ -35,8 +36,8 @@
   <p class="big" id="gift-label">Scan for your gift</p>
   <canvas id="qr" hidden></canvas>
   <div class="row">
-    <button class="plain" id="gift-judge">Next gift · guest 105</button>
-    <button class="plain" id="gift-friend">Next gift · friend 21</button>
+    <button class="btn quiet" id="gift-judge">Next gift · guest 105</button>
+    <button class="btn quiet" id="gift-friend">Next gift · friend 21</button>
   </div>
   <p id="status" role="status"></p>
 </main>

@@ -56,11 +56,11 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 ### Fixes from the review
 - [x] Drop "Nobody asks your name." (chapter 1). Done Thu night.
 - [x] Drop "from anywhere" from the livestream button. Done Thu night.
-- [ ] Centre everything; THE NUTPUB wordmark top centre (it's the platform's index page). One top bar, not two (🥜 appears twice now).
-- [ ] Narrower buttons on phone and desktop.
-- [ ] Payment rail as two small buttons above the tickets: **Ecash / Lightning** and **Card (Stripe)**. Bitcoiners get it at a glance. Replaces the small-print line and the dashed card box.
-- [ ] The small-print line about names and receipts: the rail buttons say it now; if any of it stays, it's normal size.
-- [ ] "0 sats" top right means nothing to a judge. Make it a labelled pocket: "IN YOUR POCKET · 60 SATS", or hide until a gift lands.
+- [x] Centre everything; THE NUTPUB wordmark top centre, one top bar on every page (Fri 07:50).
+- [x] Narrower buttons: outlined, caps, sized to their words (Fri 07:50).
+- [x] (Fri 07:50) Payment rail as two small buttons above the tickets: **Ecash / Lightning** and **Card (Stripe)**. Bitcoiners get it at a glance. Replaces the small-print line and the dashed card box.
+- [x] (Fri 07:50; the card note is normal size) The small-print line about names and receipts: the rail buttons say it now; if any of it stays, it's normal size.
+- [x] (Fri 07:50: "IN YOUR POCKET · 105 SATS" under the wordmark, hidden at 0) "0 sats" top right means nothing to a judge. Make it a labelled pocket: "IN YOUR POCKET · 60 SATS", or hide until a gift lands.
 - [ ] EN/DE pill doesn't work (only the punchlines have German, so tapping it seems to do nothing). Flags 🇬🇧 🇩🇪 instead, and either translate every line or drop German for the expo (decision below).
 - [ ] After a gift lands, say what to do next in big type ("105 sats in your pocket. Pick a ticket or a pass.").
 - [ ] **The phone should show the room, not just the stage screen:** "2 phones in · lights up at 3", a small row of lamps that fills as people arrive. Judges hold the phone, not the Mac.

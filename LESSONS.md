@@ -43,6 +43,7 @@
 - If phones can only reach your server, relay the mint through it (`/kitty/*` → mint). In the page, wrap `window.fetch` so calls to the mint URL go to `/kitty`. **Tokens keep the real mint URL**, so the gate's `m` check and the gifts still match. Coco used only HTTP here (info, keysets, keys, swap, checkstate); refuse the mint WebSocket and it polls instead.
 - **QR codes must carry the public URL, never `location.origin`.** A page opened as `localhost` (USB, the laptop) draws QRs that point other phones at *their own* localhost. The server hands out the tunnel URL in `/api/config` and every QR uses it.
 - Cloudflare tunnels: try `--protocol http2` when QUIC (UDP 7844) is blocked but TCP 7844 is open. A guest wifi with a captive portal can leave a phone "connected" with no internet; check with `adb shell ping`.
+- **Quick tunnels don't last the night.** Ours died after ~8 h ("Unauthorized: Tunnel not found" in the log, retrying for ever while the process stays up). Check the log, not just `ps`, before a demo; restart it and let every QR follow the URL file.
 - Cloudflare quick tunnels **hold SSE back** (nothing arrived in 5 s through the tunnel, instantly on localhost). Always run a 1-s poll alongside SSE.
 
 ## Real money (Minibits back, Fri 00:50)
@@ -55,3 +56,9 @@
 - Send: `coco.ops.send.prepare({ mintUrl, amount, target: { type: 'p2pk', options: { kind: 'P2PK', data: lockPubkey, locktime, refundKeys: [refundPub] } } })`, then `execute`. Works.
 - **Coco won't take it back:** `coco.ops.send.reclaim(id)` → "Cannot rollback pending P2PK send operation", even after the locktime. `coco.wallet.receive(token)` → "Key pair not found for public key <lock key>": it only looks at the **main** lock key, never the refund path.
 - What works: keep the refund secret key (`coco.keyring.generateKeyPair(true)` returns it), and after the locktime call cashu-ts `wallet.receive(token, { privkey: refundSk })`. Then hand the fresh proofs back to Coco as a plain token.
+
+## Making a web page look like the brand (Fri 2 Oct)
+- **System fonts are the cartoon.** DIN Condensed is a Mac font; Android and iOS fall back to a wide system face and the poster look is gone. Self-host one condensed face (Bebas Neue, SIL OFL, 61 KB) with its licence file next to it.
+- **Grain without a file:** an SVG `feTurbulence` tile as a CSS data URI, blended with `mix-blend-mode: overlay`. Grey noise has to vary around mid-grey (scale the channel, e.g. `2·R − 0.5`): flat mid-grey under overlay changes nothing.
+- **Put grain and vignette under the content, not over it.** Over the top they'd dim QR codes and blur small type.
+- **`background-attachment: fixed` doesn't work on iOS Safari.** Use a `position: fixed` layer at `z-index: -1` for a full-bleed photo.

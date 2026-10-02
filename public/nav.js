@@ -1,4 +1,5 @@
-// Top bar on every page: 🥜 home, EN/DE pill, and (on the presenter's devices only) ‹ › through the demo steps.
+// Top bar on every page: THE NUTPUB wordmark (home) in the middle, 🇬🇧/🇩🇪 on the right, and on the
+// presenter's devices only, ‹ › through the demo steps on the left.
 (() => {
   const STEPS = [
     ['/stage.html', 'Stage', true],
@@ -16,6 +17,7 @@
 
   const lang = store('nutpub-lang') || 'en';
   document.documentElement.dataset.lang = lang;
+  document.documentElement.lang = lang;
 
   const bar = document.createElement('nav');
   bar.className = 'topnav';
@@ -27,18 +29,19 @@
   const name = (i) => STEPS[(i + STEPS.length) % STEPS.length][1];
 
   bar.innerHTML = `
-    <a class="home" href="/" aria-label="NutPub home">🥜</a>
-    ${key && here >= 0 ? `
+    <div class="left">${key && here >= 0 ? `
       <a class="step" href="${link(here - 1)}" aria-label="Back to ${name(here - 1)}">‹</a>
-      <span class="where">${here + 1}/${STEPS.length} ${name(here)}</span>
-      <a class="step" href="${link(here + 1)}" aria-label="On to ${name(here + 1)}">›</a>` : '<span class="where"></span>'}
-    <button class="pill" type="button" aria-label="Language">
-      <span data-l="en">EN</span><span data-l="de">DE</span>
-    </button>`;
-  bar.querySelector('.pill').onclick = () => {
-    const next = document.documentElement.dataset.lang === 'en' ? 'de' : 'en';
-    document.documentElement.dataset.lang = next;
-    store('nutpub-lang', next);
-  };
+      <a class="step" href="${link(here + 1)}" aria-label="On to ${name(here + 1)}">›</a>` : ''}</div>
+    <a class="wordmark" href="/" aria-label="The NutPub, home">THE NUTPUB</a>
+    <div class="right">
+      <button class="flag" type="button" data-l="en" aria-label="English">🇬🇧</button>
+      <button class="flag" type="button" data-l="de" aria-label="Deutsch">🇩🇪</button>
+    </div>`;
+  bar.querySelectorAll('.flag').forEach((b) => (b.onclick = () => {
+    document.documentElement.dataset.lang = b.dataset.l;
+    document.documentElement.lang = b.dataset.l;
+    store('nutpub-lang', b.dataset.l);
+    dispatchEvent(new Event('nutpub-lang'));
+  }));
   document.body.prepend(bar);
 })();
