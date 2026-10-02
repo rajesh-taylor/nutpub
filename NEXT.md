@@ -16,6 +16,11 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
+## Fri 10:40 Berlin
+- **Layout (Rajesh):** every tab has the brand on top (THE NUTPUB, flags, chapter tag only); the chapter sentences are gone from the phones (they live in the script now); the night's words sit at the bottom over the photo, tickets side by side above the tab bar; Pocket and Longy keep the wordmark on top.
+- **Cloudflare caches CSS/JS in browsers for 4 h** (our zone's Browser Cache TTL overrides `no-cache`). The server now stamps every page's CSS/JS links with `?v=<build time>`, so a rebuild reaches phones on the next page load.
+- Next session prompt: `KICKOFF-2.md` (local only).
+
 ## Fri 10:20 Berlin
 - **Photos (Rajesh):** door = 6 (peggy-5-1372, rustic); Now playing crossfades 2, 3, 4 (fp-32, fp-37, peggy-17-8266), lights up ends on 2; last-orders nudge uses 7 (fp-31, can raised, B&W). Set in `data/heroes.json` (not in git). Rajesh's Send said 1, 2, 4, 6, 7; his message said 2, 3, 4: used the message, check.
 - **Pixel tabs:** keep `localhost:8787/?v=3` (USB fan tab, 87 sats); close Hero Picker, the old bar tab, Thursday's photo picker. Close non-NutPub tabs before the expo (the scrcpy mirror shows the tab switcher). Tabs Claude opens carry a red TEST / DESIGN WORK ONLY strip.

@@ -1,6 +1,6 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
 const TUNNEL_FILE = fileURLToPath(new URL('../data/tunnel.url', import.meta.url));
 import { KITTY_URL, PORT, ADMIN_KEY, TIERS, CURTAINS_AT } from './config.js';
 import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } from './house.js';
@@ -15,7 +15,20 @@ import {
 
 const app = express();
 app.disable('x-powered-by');
-app.use(express.static(fileURLToPath(new URL('../public', import.meta.url)), { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
+const PUBLIC = fileURLToPath(new URL('../public', import.meta.url));
+// Cloudflare (our zone's Browser Cache TTL) tells browsers to keep CSS and JS for 4 hours, whatever we send.
+// So every page links its CSS and JS with ?v=<last build time>: a new build is a new URL, and phones get it at once.
+const version = () => Math.max(...['pub.css', 'nav.js', ...readdirSync(`${PUBLIC}/js`).map((f) => `js/${f}`)]
+  .map((f) => statSync(`${PUBLIC}/${f}`).mtimeMs)).toString(36);
+app.get(/^\/(?:[a-z]+\.html)?$/, (req, res, next) => {
+  const file = req.path === '/' ? 'index.html' : req.path.slice(1);
+  let html;
+  try { html = readFileSync(`${PUBLIC}/${file}`, 'utf8'); } catch { return next(); }
+  const v = version();
+  res.set('Cache-Control', 'no-cache').type('html')
+    .send(html.replace(/(["'])(\/(?:pub\.css|nav\.js|js\/[a-z]+\.js))\1/g, `$1$2?v=${v}$1`));
+});
+app.use(express.static(PUBLIC, { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
 
 // The Kitty, relayed: phones that can only reach us (USB, locked-down wifi) still reach the mint.
 // The page keeps the real mint URL in its tokens and only rewrites where it sends the request.
