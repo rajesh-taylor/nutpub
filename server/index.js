@@ -132,6 +132,18 @@ function sendSegment(req, res) {
   res.sendFile(file, { root: SEGMENT_DIR });
 }
 
+// The picture for a 10-second segment: only for a pass that has paid for that segment's sound (no second charge).
+const VIDEO_DIR = fileURLToPath(new URL('../media/video', import.meta.url));
+const videoCount = () => { try { return readdirSync(VIDEO_DIR).filter((f) => f.endsWith('.mp4')).length; } catch { return 0; } };
+app.get('/api/video/:n', (req, res) => {
+  const pass = passOf(req);
+  const n = Number(req.params.n);
+  if (!pass || !pass.paid.has(n)) return res.status(403).json({ error: 'not_paid', detail: 'Pay for this 10 seconds first.' });
+  if (!videoCount()) return res.status(404).json({ error: 'no_video' });
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(`vid-${String(n % videoCount()).padStart(3, '0')}.mp4`, { root: VIDEO_DIR });
+});
+
 // First pint's on the house: a 21-sat token only the bar's key can pour. One per phone.
 app.post('/api/pint', async (req, res) => {
   const id = req.get('X-Pass') || '';

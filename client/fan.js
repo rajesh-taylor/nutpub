@@ -223,6 +223,7 @@ async function startStream() {
     const late = (serverNow() - startsAt) / 1000;
     if (late > 0) src.start(0, Math.min(late, buf.duration - 0.05));
     else src.start(ac.currentTime - late);
+    showVideo(n, startsAt, me);
     player(true);
     refresh();
     n++;
@@ -277,6 +278,29 @@ async function tip() {
   refresh();
 }
 
+// The picture for a paid segment, shown when its sound starts (the server only hands it to a pass that paid for it).
+async function showVideo(n, startsAt, me) {
+  try {
+    const r = await fetch(`/api/video/${n}`, { headers: { 'X-Pass': pass } });
+    if (!r.ok) return;
+    const url = URL.createObjectURL(await r.blob());
+    const go = () => {
+      if (!streaming || me !== run) return URL.revokeObjectURL(url);
+      const v = $('vid');
+      const old = v.src;
+      v.onloadedmetadata = () => {
+        v.currentTime = Math.max(0, Math.min((serverNow() - startsAt) / 1000, v.duration - 0.1));
+        v.play().catch(() => {});
+      };
+      v.src = url;
+      v.hidden = false;
+      if (old.startsWith('blob:')) URL.revokeObjectURL(old);
+    };
+    const wait = startsAt - serverNow();
+    if (wait > 0) setTimeout(go, wait); else go();
+  } catch {}
+}
+
 // Stop paying: the music fades out now, not at the end of what was already bought.
 function stopStream(why) {
   streaming = false;
@@ -287,6 +311,8 @@ function stopStream(why) {
     sources = [];
     master = null;
   }
+  $('vid').pause();
+  $('vid').hidden = true;
   player(false);
   say(why ? 'stop.why' : paidTo ? 'stopped' : 'stopped.none', { why: t(why), t: mmss(paidTo) });
 }
