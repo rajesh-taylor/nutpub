@@ -74,6 +74,10 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
 - [x] Lights up redesigned Thu night (seen on the Pixel, looks right): THE NUTPUB PRESENTS top centre, three big beacons, Longy's photo much brighter, LONGY · LIVE AT THE NUTPUB along the bottom so his face is clear. Preview: `/?preview=lights` (tap to replay).
 - [ ] **Pick the hero photo:** `/photos.html` cycles 12 portrait candidates, 8 s each (tap to skip); the tag top right names the file. Rajesh to choose at breakfast.
+- [ ] **Photo shortlist** (picker, Thu night): fp-29, fp-32, fp-37, peggy-17-8266, peggy-32-5864 (B&W), peggy-5-1372 for the hero; **fp-31 (can raised) is the free-pint prompt**. Closing-time photo to choose.
+- [ ] **Say "stage lights", not "beacons"** (beacons is Lord of the Rings, from the old name). One light per judge; more judges, more lights, in different sizes, twinkling.
+- [ ] **A/B test at breakfast:** (A) the photo slides play as soon as the page opens, and the stage lights fire once the 3 judges have spent their gifts at the door; vs (B) today's lights-then-photo.
+- [ ] **A separate sequence for livestream viewers** (no door, no pint): this needs the livestream website page up at the same time.
 - [ ] **The three beacons get their own screen**, before any photo: one per judge as they come in (demo only). Only then Longy's images.
 - [ ] Peggy Sue's photos are only 800 px web copies (from the deck); for real use, export the originals.
 - [x] Title over the beacons is now **NEW MUSIC NUDGE UNIT** (was "The NutPub presents").
