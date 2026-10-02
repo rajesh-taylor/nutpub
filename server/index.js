@@ -72,16 +72,23 @@ app.get(
     const pass = passOf(req);
     if (!pass) return res.status(403).json({ error: 'no_pass', detail: 'Pay at the door first.' });
     const n = Number(req.params.n);
+    req.segment = n;
+    // Already paid for this one: the same segment again, charged once (Basement58: a retry after a lost reply,
+    // even if the show has moved on while the phone was out of signal).
+    if (pass.paid.has(n)) return sendSegment(req, res);
     const live = liveSegment();
     if (live == null) return res.status(409).json({ error: 'curtains_down' });
     if (!Number.isInteger(n) || n < live || n > live + 1) return res.status(409).json({ error: 'not_live', live });
-    req.segment = n;
-    if (pass.paid.has(n)) return sendSegment(req, res); // already paid for this one: same segment again
     next();
   },
   cashuGate((req) => TIERS[passOf(req).tier].segment, 'The NutPub stream, 10 s'),
-  (req, res) => {
+  async (req, res) => {
     passOf(req).paid.add(req.segment);
+    // Basement58 (presenter's phone only): paid, but the reply is held long enough for the phone to lose it.
+    if (req.get('X-Basement')) {
+      console.log(`basement: segment ${req.segment} paid; holding the reply 5 s`);
+      await new Promise((r) => setTimeout(r, 5000));
+    }
     sendSegment(req, res);
   },
 );

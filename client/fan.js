@@ -64,13 +64,52 @@ async function claimGift() {
 
 // NUT-24 round trip: ask, get a 402 with a creqA, pay it in-band, ask again with the cashuB.
 // What was paid goes on this phone's own tally for the night (Pocket).
-async function paidFetch(url, headers = {}, kind = '', amount = 0) {
+// With `retry`, a lost reply is asked for again with the same token (Basement58): same request, same answer,
+// charged once. `basement` makes the server hold its reply so this phone loses it on purpose (presenter only).
+async function paidFetch(url, headers = {}, kind = '', amount = 0, { retry = false, basement = false } = {}) {
   const res = await fetch(url, { headers });
   if (res.status !== 402) return res;
   const token = await wallet.pay(res.headers.get('X-Cashu'));
-  const paid = await fetch(url, { headers: { ...headers, 'X-Cashu': token } });
+  const paid = retry ? await sendAgain(url, { ...headers, 'X-Cashu': token }, basement)
+    : await fetch(url, { headers: { ...headers, 'X-Cashu': token } });
   if (paid.ok && kind) spend(kind, amount);
+  paid.token = token;
   return paid;
+}
+async function sendAgain(url, headers, basement) {
+  let lost = false;
+  for (let i = 0; i < 90; i++) {
+    const ctrl = new AbortController();
+    const h = basement && i === 0 ? { ...headers, 'X-Basement': '1' } : headers;
+    if (basement && i === 0) setTimeout(() => ctrl.abort(), 2000);
+    try {
+      const res = await fetch(url, { headers: h, signal: ctrl.signal });
+      res.retried = lost;
+      return res;
+    } catch {
+      if (!lost) say('basement.lost', {}, true);
+      lost = true;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  throw new Error(t('basement.gone'));
+}
+
+// ---- Basement58, on the presenter's phone: arm it, the next payment's reply goes missing, the phone asks again.
+const presenter = (() => { try { return !!localStorage.getItem('nutpub-k'); } catch { return false; } })();
+let basementArmed = false;
+let lastPaidSeg = null; // { n, token } of the payment that came back after a retry
+const paidSegs = new Set();
+async function sameTokenNextSong() {
+  if (!lastPaidSeg) return;
+  unlockAudio();
+  const live = Math.floor((serverNow() - showState.t0) / showState.segmentMs);
+  const n = [live, live + 1, live + 2].find((k) => !paidSegs.has(k) && k !== lastPaidSeg.n);
+  const res = await fetch(`/api/segment/${n}`, { headers: { 'X-Pass': pass, 'X-Cashu': lastPaidSeg.token } });
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 400 && body.error === 'reused') { trombone(); say('basement.refused', {}, true); }
+  else say(body.error || `${res.status}`);
+  $('next-same').hidden = true;
 }
 
 async function enter(which) {
@@ -129,6 +168,7 @@ async function startStream() {
   master.connect(ac.destination);
   const out = master;
   $('stream').hidden = false;
+  $('basement').hidden = !presenter;
   player(true);
   const ms = showState.segmentMs;
   let n = Math.max(0, Math.floor((serverNow() - showState.t0) / ms));
@@ -141,7 +181,15 @@ async function startStream() {
 
     let res;
     try {
-      res = await paidFetch(`/api/segment/${n}`, { 'X-Pass': pass }, 'stream', config.tiers[tier].segment);
+      const basement = basementArmed;
+      basementArmed = false;
+      $('basement').classList.remove('armed');
+      res = await paidFetch(`/api/segment/${n}`, { 'X-Pass': pass }, 'stream', config.tiers[tier].segment, { retry: true, basement });
+      if (res.ok && res.retried) {
+        lastPaidSeg = { n, token: res.token };
+        say('basement.same', {}, true);
+        $('next-same').hidden = false;
+      }
     } catch (e) {
       stopStream(e.message.includes('Insufficient') ? 'out.of.sats' : e.message);
       break;
@@ -156,6 +204,7 @@ async function startStream() {
       break;
     }
     paidTo = Math.max(paidTo, (n + 1) * ms / 1000);
+    paidSegs.add(n);
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
     if (!streaming || me !== run) break; // stopped while it was on its way: don't start it
     const src = ac.createBufferSource();
@@ -419,6 +468,12 @@ async function main() {
   $('ticket').onclick = () => enter('ticket');
   $('stream-pass').onclick = () => enter('stream');
   $('tune').onclick = () => { unlockAudio(); $('tune').hidden = true; startStream(); };
+  $('basement').onclick = () => {
+    basementArmed = !basementArmed;
+    $('basement').classList.toggle('armed', basementArmed);
+    say(basementArmed ? 'basement.armed' : '');
+  };
+  $('next-same').onclick = () => sameTokenNextSong().catch((e) => say(e.message));
   $('stop').onclick = () => {
     if (streaming) stopStream();
     else { say(''); startStream(); }

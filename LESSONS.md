@@ -71,3 +71,9 @@
 - The fee reserve comes off the top: quote, read `fee_reserve`, ask for less until `amount + fee_reserve` fits the takings. Then swap to exactly that (`wallet.ops.send(need, proofs)`) and melt only those, so the change is just the unused reserve.
 - On the fake mint, a melt to one of its own invoices settles internally: a free end-to-end test of the melt path.
 - **Kill a dev server by its listening socket, not by port:** `lsof -ti tcp:PORT` also lists clients (here the browser pane). Use `lsof -nP -iTCP:PORT -sTCP:LISTEN -t`.
+
+## Basement58: retry is safe, reuse isn't (Fri 2 Oct)
+- Bind the payment to the thing it bought. Our gate already remembers each pass's paid segments, so a retry for the same segment answers again without touching the token, and the same token for any other segment hits the replay set and gets `reused`. **Check "already paid for this" before "is it still live?"**, or a phone that comes back late gets a 409 for something it paid for.
+- To demo a lost reply without trusting venue wifi or airplane mode: the server holds its reply 5 s, the phone aborts at 2 s (`AbortController`), then retries with the same token. A real network cut takes the same code path.
+- Only retry where the server is idempotent. Our door issues a new pass per request, so a door retry would be refused as `reused`; that's exactly the gap the Base58 proposal describes.
+- A status line at the bottom of a long page is invisible. Pin it just above the tab bar.
