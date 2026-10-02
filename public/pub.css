@@ -291,7 +291,7 @@ body:has(.bottombar) { padding-bottom: calc(84px + env(safe-area-inset-bottom));
 #basement.armed { background: var(--amber); color: var(--deep); }
 
 /* ---- The livestream player: a 16:9 frame (Longy's photo, a LIVE dot, the clock, a level meter from the audio) */
-.screen { max-width: 520px; margin: 2px auto 16px; }
+.screen { width: 100%; max-width: 520px; margin: 2px auto 16px; } /* width: in a flex column, auto margins would shrink it to 0 */
 .frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; border: 1px solid rgb(239 227 200 / .15); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .frame .pic { position: absolute; inset: -6%; background: linear-gradient(transparent 55%, rgb(0 0 0 / .65)), url(/img/longy-live.jpg) center 22% / cover; animation: drift 40s ease-in-out infinite alternate; }
 @keyframes drift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.12) translate(-3%, 2%); } }
