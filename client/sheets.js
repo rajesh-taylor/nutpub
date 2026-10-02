@@ -10,6 +10,7 @@ const load = () => { try { return JSON.parse(localStorage.getItem('nutpub-spent'
 const save = (l) => { try { localStorage.setItem('nutpub-spent', JSON.stringify(l)); } catch {} };
 export function spend(kind, n) { const l = load(); l[kind] = (l[kind] || 0) + n; save(l); renderLedger(); }
 export function resetSpend() { save({}); renderLedger(); }
+export const spent = (kind) => load()[kind] || 0;
 
 function renderLedger() {
   const l = load();

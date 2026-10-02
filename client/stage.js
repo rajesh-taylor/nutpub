@@ -45,7 +45,7 @@ const apply = (s) => {
       : f.state === 'missed' ? t('stage.missed') : '';
     document.body.classList.toggle('paid', f.state === 'paid');
   }
-  $('phones').textContent = t('stage.phones', { n: s.phones });
+  $('phones').textContent = t(s.phones === 1 ? 'room.phone' : 'stage.phones', { n: s.phones });
   $('headline').textContent = t(s.t0 ? 'curtain.now' : 'stage.bring');
   $('curtains').disabled = !!s.t0;
 };

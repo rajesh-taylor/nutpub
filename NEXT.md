@@ -1,6 +1,8 @@
 # Next session (Fri 2 Oct)
 
 ## Start everything (Mac)
+0. Optional: `CURTAINS_AT=3` in `.env` makes curtains go up by themselves at 3 phones (the phones then say "lights up at 3"). Unset = stage button only.
+0. Free test run: a second server on the fake mint, `set -a; . ./.env; KITTY_URL=http://127.0.0.1:3338 PORT=8788 LAST_ORDERS_MIN=2 node server/index.js` (house tops up with fake sats via `/fund.html`; open `localhost:8788` in a browser).
 1. Mints: `cdk-mintd -w ~/cdk-suitcoin-mint` (SuitCoin, :3339). Fake Kitty fallback only: `cdk-mintd -w ~/cdk-fake-mint` (:3338).
 2. Server (Minibits): `cd ~/Documents/NutPub && set -a && . ./.env && npm start`
    - Fake mint instead: add `KITTY_URL=http://127.0.0.1:3338`. Shorter last orders for testing: `LAST_ORDERS_MIN=1`.
@@ -63,15 +65,15 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [x] (Fri 07:30: "IN YOUR POCKET · 105 SATS" under the wordmark, hidden at 0) "0 sats" top right means nothing to a judge. Make it a labelled pocket: "IN YOUR POCKET · 60 SATS", or hide until a gift lands.
 - [x] (Fri 07:37: flags 🇬🇧 🇩🇪, every guest line in `client/i18n.js`: door, inside, finale, moments, stage, bar, Rupert) EN/DE pill doesn't work (only the punchlines have German, so tapping it seems to do nothing). Flags 🇬🇧 🇩🇪 instead, and either translate every line or drop German for the expo (decision below).
 - [x] (Fri 07:37) After a gift lands, say what to do next in big type ("105 sats in your pocket. Pick a ticket or a pass.").
-- [ ] **The phone should show the room, not just the stage screen:** "2 phones in · lights up at 3", a small row of lamps that fills as people arrive. Judges hold the phone, not the Mac.
-- [ ] **Stop paying must feel immediate:** fade the music out at once on Stop; say "Stopped. You'd paid up to 0:40; nothing more is charged." (Today it plays out the paid segment plus the one bought 3 s ahead, up to ~13 s.)
+- [x] (Fri 07:58: one stage light per phone, twinkling, mixed sizes; "lights up at 3" only shows if `CURTAINS_AT` is set) **The phone should show the room, not just the stage screen:** "2 phones in · lights up at 3", a small row of lamps that fills as people arrive. Judges hold the phone, not the Mac.
+- [x] (Fri 07:58) **Stop paying must feel immediate:** fade the music out at once on Stop; say "Stopped. You'd paid up to 0:40; nothing more is charged." (Today it plays out the paid segment plus the one bought 3 s ahead, up to ~13 s.)
 - [ ] **Lights up:** lamps scattered like a real rig (different sizes, heights, angles, a few tilted spots with beams), not a neat row. **Hold Longy's photo bright for 5–6 s**, then settle into Now playing with the same photo behind (less darkened). It's our best first image.
-- [ ] **Less on screen while playing:** drop the per-segment ✓ list; show one running total ("This set: 12 sats"). Redesign "Pay to listen" (awful): proper player controls in the brand.
+- [x] (Fri 07:58: round play/stop button, "This set: 12 sats", no tick list; "You're in" gives way to Now playing) **Less on screen while playing:** drop the per-segment ✓ list; show one running total ("This set: 12 sats"). Redesign "Pay to listen" (awful): proper player controls in the brand.
 - [ ] The placeholder tone is off-putting: keep it only until Longy's file arrives.
 - [ ] **Livestream player on the phone:** portrait = small 16:9 player at the top, the night below; turn the phone landscape = full screen, one tap brings up controls, including a **Tip** button with a confirm step.
 - [ ] **Website player (responsive):** player with a YouTube-style live chat (the green room) to the right on desktop, below on phones.
 - [ ] **The pre-show fills the room:** each phone that comes in lights one lamp (up to 7), on every phone and the stage. At lights up the house goes dark, then a premiere sequence, synced on every phone by T0: lamps fire in turn (a drum roll), Longy's photo fades up between the flashes, and it ends **static on the photo** with one card placed well: show start time, merch, next shows, or the green room.
-- [ ] **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
+- [x] (Fri 07:58: fades back after ~6 s; glass sized by height too) **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
 - [x] Lights up redesigned Thu night (seen on the Pixel, looks right): THE NUTPUB PRESENTS top centre, three big beacons, Longy's photo much brighter, LONGY · LIVE AT THE NUTPUB along the bottom so his face is clear. Preview: `/?preview=lights` (tap to replay).
 - [ ] **Pick the hero photo:** `/photos.html` cycles 12 portrait candidates, 8 s each (tap to skip); the tag top right names the file. Rajesh to choose at breakfast.
 - [ ] **Photo shortlist** (picker, Thu night): fp-29, fp-32, fp-37, peggy-17-8266, peggy-32-5864 (B&W), peggy-5-1372 for the hero; **fp-31 (can raised) is the free-pint prompt**. Closing-time photo to choose.
@@ -82,7 +84,7 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] Peggy Sue's photos are only 800 px web copies (from the deck); for real use, export the originals.
 - [x] Title over the beacons is now **NEW MUSIC NUDGE UNIT** (was "The NutPub presents").
 - [ ] **One beacon per guest:** the three beacons light as each judge comes through the door (pre-show, on every phone and the stage), then the premiere at lights up. Three judges at the expo = three beacons.
-- [ ] Bar page on a fan's phone says "Scan a pint QR from a fan's phone": it's the bar's screen, so keep it off the guest arrows (presenter only).
+- [x] (the arrows were already presenter-only; the bar page is only reached from a pint QR) Bar page on a fan's phone says "Scan a pint QR from a fan's phone": it's the bar's screen, so keep it off the guest arrows (presenter only).
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
 
 ### Decided Thu night

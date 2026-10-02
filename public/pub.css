@@ -36,7 +36,7 @@ main { max-width: 520px; margin: 0 auto; padding: 8px 0 24px; }
 body { --photo: url(/img/longy-live.jpg); }
 body[data-photo="stage"] { --photo: url(/img/longy-stage.jpg); }
 body[data-photo="none"] { --photo: none; }
-body[data-photo="live"] { --shade: .5; }
+body[data-photo="live"] { --shade: .4; }
 .backdrop { position: fixed; inset: 0; z-index: -1; background: var(--deep); overflow: hidden; }
 .backdrop::before {
   content: ""; position: absolute; inset: 0;
@@ -130,13 +130,33 @@ body.card .ticket { opacity: .35; pointer-events: none; }
 canvas { max-width: 100% !important; height: auto !important; }
 #pint-qr { display: block; margin: 0 auto 16px; background: #fff; padding: 10px; width: min(80vw, 320px) !important; height: auto !important; }
 
-/* The stream */
-#ticks { list-style: none; padding: 0; color: var(--smoke); font: 13px/1.6 var(--mono); }
-#ticks li:first-child { color: var(--cream); }
+/* The stream: one round play/stop, one running total */
+.player { margin: 26px auto 0; }
+.playbtn {
+  display: grid; place-items: center; width: 78px; height: 78px; margin: 10px auto 6px; border-radius: 50%;
+  border: 1.5px solid var(--amber); background: rgb(5 9 20 / .55); cursor: pointer;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); -webkit-tap-highlight-color: transparent;
+}
+.playbtn svg { width: 30px; height: 30px; fill: var(--amber); }
+.playbtn .i-stop, .playbtn.on .i-play { display: none; }
+.playbtn.on .i-stop { display: inline; }
+.playbtn:active { background: var(--amber); }
+.playbtn:active svg { fill: var(--deep); }
+.kicker.quiet { color: var(--smoke); }
+
+/* Stage lights: one per phone in the room before the show; seven for the goal */
+.lamps { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; max-width: 320px; margin: 18px auto 10px; }
+.lamps i { width: 22px; height: 22px; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 2px #262626; transition: background .6s, box-shadow .6s; }
+.lamps i:nth-child(3n+2) { width: 30px; height: 30px; }
+.lamps i:nth-child(4n+3) { width: 16px; height: 16px; }
+.lamps.goal i { width: 26px; height: 26px; }
+.lamps i.on { background: radial-gradient(circle at 40% 35%, #fff3d6, var(--amber) 55%, #8a5a1c); box-shadow: 0 0 18px 4px rgb(217 149 58 / .5); animation: twinkle 2.6s ease-in-out infinite; }
+.lamps i.on:nth-child(2n) { animation-delay: -1.1s; }
+.lamps i.on:nth-child(3n) { animation-delay: -1.9s; animation-duration: 3.4s; }
+@keyframes twinkle { 50% { opacity: .75; } }
+@media (prefers-reduced-motion: reduce) { .lamps i.on { animation: none; } }
 
 /* ---- Finale */
-.meter { height: 3px; max-width: 320px; margin: 8px auto; background: rgb(239 227 200 / .15); overflow: hidden; }
-#goal-bar { height: 100%; width: 0; background: var(--amber); transition: width .8s ease; }
 #paid-screen {
   position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(circle at 50% 38%, #f1c27a, var(--amber) 45%, #6b4310); color: var(--deep); text-align: center;
@@ -155,6 +175,7 @@ canvas { max-width: 100% !important; height: auto !important; }
 }
 #pint-signal p { margin: 0; font: 400 44px/1 var(--poster); letter-spacing: .06em; color: var(--amber); }
 #pint-signal .pint { width: min(62vw, 46vh, 280px); height: auto; overflow: visible; }
+#pint-signal.leaving { opacity: 0; transition: opacity .8s ease-in; }
 #pint-signal .fill { animation: pour 2.6s cubic-bezier(.3,.7,.4,1) forwards; transform: translateY(250px); }
 #pint-signal .bubbles circle { animation: rise 2.2s linear infinite; }
 #pint-signal .bubbles circle:nth-child(2n) { animation-duration: 1.7s; animation-delay: -.6s; }
@@ -199,7 +220,7 @@ canvas { max-width: 100% !important; height: auto !important; }
 #lights-up.go .rig { animation: fade 1.2s 2.6s ease-in forwards; }
 #lights-up.go::before { animation: up 1.6s 2.3s ease-out forwards; }
 #lights-up.go .who { animation: up 1s 3s ease-out forwards; }
-#lights-up.go:not(.hold) { animation: out .8s 6.5s ease-in forwards; }
+#lights-up.go:not(.hold) { animation: out .8s 9s ease-in forwards; }
 @keyframes lamp { to { background: radial-gradient(circle at 40% 35%, #fff3d6, var(--amber) 55%, #8a5a1c); box-shadow: 0 0 40px 14px rgb(217 149 58 / .6); } }
 @keyframes fade { to { opacity: 0; } }
 @keyframes up { to { opacity: 1; } }

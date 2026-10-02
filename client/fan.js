@@ -4,7 +4,7 @@ import { unlockAudio, trombone, clink } from './sound.js';
 import QRCode from 'qrcode';
 import { Mint, hashToCurve, getDecodedToken } from '@cashu/cashu-ts';
 import { t, has, sats, onLang } from './i18n.js';
-import { initSheets, spend, resetSpend } from './sheets.js';
+import { initSheets, spend, spent, resetSpend } from './sheets.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => document.querySelectorAll('[data-screen]').forEach((el) => (el.hidden = el.id !== id));
@@ -105,13 +105,31 @@ async function keepAwake() {
 }
 
 // ---- The stream: buy each 10-second segment just before it plays, and schedule it on the shared clock.
+// Everything the stream plays goes through one gain, so Stop can fade it out at once.
+let master = null;
+let sources = [];
+let paidTo = 0; // seconds of the set this phone has paid for
+const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+function player(on) {
+  $('stop').classList.toggle('on', on);
+  $('stop').setAttribute('aria-label', t(on ? 'stop' : 'play'));
+  $('stop-label').textContent = t(on ? 'stop' : 'play');
+  $('player-kicker').textContent = t('player.kicker', { n: config.tiers[tier || 'stream'].segment });
+  const n = spent('stream');
+  $('set-total').textContent = n ? t('set.total', { sats: sats(n) }) : '';
+}
+
 async function startStream() {
   if (streaming || !pass) return;
   streaming = true;
   const me = ++run;
   const ac = unlockAudio();
+  master = ac.createGain();
+  master.connect(ac.destination);
+  const out = master;
   $('stream').hidden = false;
-  $('stop').textContent = t('stop');
+  player(true);
   const ms = showState.segmentMs;
   let n = Math.max(0, Math.floor((serverNow() - showState.t0) / ms));
 
@@ -137,31 +155,35 @@ async function startStream() {
       stopStream(body.error ? refusal(body) : t('seg.refused', { status: res.status }));
       break;
     }
+    paidTo = Math.max(paidTo, (n + 1) * ms / 1000);
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
+    if (!streaming || me !== run) break; // stopped while it was on its way: don't start it
     const src = ac.createBufferSource();
     src.buffer = buf;
-    src.connect(ac.destination);
+    src.connect(out);
+    sources.push(src);
+    src.onended = () => (sources = sources.filter((x) => x !== src));
     const late = (serverNow() - startsAt) / 1000;
     if (late > 0) src.start(0, Math.min(late, buf.duration - 0.05));
     else src.start(ac.currentTime - late);
-    tick(n);
+    player(true);
     refresh();
     n++;
   }
 }
 
-function tick(n) {
-  const price = config.tiers[tier].segment;
-  const from = n * 10;
-  const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  $('ticks').insertAdjacentHTML('afterbegin', `<li>${mmss(from)}–${mmss(from + 10)} · ${price} sat${price > 1 ? 's' : ''} ✓</li>`);
-  while ($('ticks').children.length > 5) $('ticks').lastChild.remove();
-}
-
+// Stop paying: the music fades out now, not at the end of what was already bought.
 function stopStream(why) {
   streaming = false;
-  $('stop').textContent = t('play');
-  say(why ? 'stop.why' : 'stopped', { why: t(why) });
+  if (master) {
+    const ac = unlockAudio();
+    master.gain.setTargetAtTime(0, ac.currentTime, 0.12);
+    for (const s of sources) { try { s.stop(ac.currentTime + 0.7); } catch {} }
+    sources = [];
+    master = null;
+  }
+  player(false);
+  say(why ? 'stop.why' : paidTo ? 'stopped' : 'stopped.none', { why: t(why), t: mmss(paidTo) });
 }
 
 // ---- First pint's on the house. The QR only appears when you ask for it (it's a bearer voucher).
@@ -203,6 +225,9 @@ function pintSignal() {
   $('pint-signal').hidden = false;
   clink();
   setTimeout(clink, 900);
+  // After the pour, back to Longy by itself.
+  setTimeout(() => $('pint-signal').classList.add('leaving'), 5600);
+  setTimeout(() => { $('pint-signal').hidden = true; $('pint-signal').classList.remove('leaving'); }, 6500);
 }
 
 // ---- The finale: a round for the band. The 402 asks for a locked token; this phone adds its own refund key.
@@ -238,7 +263,8 @@ function showFinale(f) {
   const mine = wallet.pledges().reduce((s, p) => s + p.amount, 0);
   $('finale').hidden = !showState.t0;
   $('goal').textContent = t('goal', { total: f.total, goal: f.goal });
-  $('goal-bar').style.width = `${Math.min(100, (100 * f.total) / f.goal)}%`;
+  const lit = f.state === 'paid' ? 7 : Math.min(7, Math.floor((7 * f.total) / f.goal));
+  document.querySelectorAll('#goal-lamps i').forEach((el, i) => el.classList.toggle('on', i < lit));
   const left = Math.max(0, f.lastOrders - Math.floor(serverNow() / 1000));
   $('last-orders').textContent = f.state === 'open' ? t('last.in', { t: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` }) : '';
   $('band').disabled = f.state !== 'open';
@@ -292,7 +318,7 @@ function lightsUp(hold = false) {
   el.classList.remove('go');
   void el.offsetWidth;
   el.classList.add('go');
-  if (!hold) setTimeout(() => (el.hidden = true), 7400);
+  if (!hold) setTimeout(() => (el.hidden = true), 9900);
 }
 // Design preview: /?preview=lights plays lights up and stays on Longy (tap to replay).
 if (new URLSearchParams(location.search).get('preview') === 'lights') {
@@ -314,6 +340,18 @@ function lastCall(f) {
   $('last-call').hidden = false;
 }
 
+// Before curtains up, the phone shows the room filling: one stage light per phone through the door.
+let lampsDrawn = 0;
+function room(s) {
+  $('room').hidden = !(pass && !s.t0);
+  if ($('room').hidden) return;
+  const at = config.curtainsAt || 0;
+  const want = Math.min(21, Math.max(s.phones, at, 3));
+  if (want !== lampsDrawn) { $('room-lamps').innerHTML = '<i></i>'.repeat(want); lampsDrawn = want; }
+  $('room-lamps').querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < s.phones));
+  $('room-line').textContent = t(s.phones === 1 ? 'room.phone' : 'room.phones', { n: s.phones }) + (at ? ` · ${t('room.at', { n: at })}` : '');
+}
+
 // ---- Curtains up: the server sends T0 over SSE (falls back to polling if the stream stalls).
 function listen() {
   const apply = (s) => {
@@ -322,9 +360,12 @@ function listen() {
     showState = s;
     showFinale(s.finale);
     $('curtain').textContent = t(s.t0 ? 'curtain.now' : 'curtain.soon');
+    // Once Longy's on, the show is the headline, not the ticket.
+    $('in-h1').hidden = $('in-tier').hidden = !!s.t0;
     if (opening && pass) lightsUp();
     if (opening && pass && !resumed && tier === 'stream') startStream();
     document.body.dataset.photo = s.t0 && pass ? 'live' : pass ? 'stage' : '';
+    room(s);
     if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
     $('stream').hidden = !(s.t0 && pass && (tier === 'stream' || streaming || run > 0));
     $('tune').hidden = !(s.t0 && pass && tier === 'ticket' && !streaming && run === 0);
@@ -350,7 +391,7 @@ async function main() {
     chapterNow = '';
     if (name) chapter(name);
     if (tier) $('in-tier').textContent = t(`tier.${tier}`);
-    $('stop').textContent = t(streaming ? 'stop' : 'play');
+    if (tier) player(streaming);
     say(...lastSay);
     if (wallet) refresh();
   });
@@ -392,9 +433,9 @@ async function main() {
     $('in-tier').textContent = t(`tier.${tier}`);
     show('inside');
     chapter(showState.t0 ? 'playing' : 'inside');
-    $('stop').textContent = t('play');
+    player(false);
     $('stream').hidden = !showState.t0;
-    say('welcome');
+    say(tier === 'stream' ? 'welcome' : 'welcome.in');
   } else {
     show('door');
     chapter('door');

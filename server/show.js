@@ -2,6 +2,7 @@
 import { randomBytes } from 'node:crypto';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { CURTAINS_AT } from './config.js';
 
 export const SEGMENT_MS = 10_000;
 export const SEGMENT_DIR = fileURLToPath(new URL('../media/segments/', import.meta.url));
@@ -14,7 +15,8 @@ export const show = { t0: null };
 export function issuePass(tier) {
   const id = randomBytes(12).toString('hex');
   passes.set(id, { tier, paid: new Set() });
-  broadcast();
+  if (CURTAINS_AT && passes.size >= CURTAINS_AT && show.t0 == null) curtainsUp();
+  else broadcast();
   return id;
 }
 export const getPass = (id) => passes.get(id);

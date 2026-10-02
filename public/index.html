@@ -29,9 +29,13 @@
   </section>
 
   <section id="inside" data-screen hidden>
-    <h1 data-t="in.h1">You’re in.</h1>
+    <h1 id="in-h1" data-t="in.h1">You’re in.</h1>
     <p class="kicker" id="in-tier"></p>
     <p class="lede" id="curtain">Curtains up soon.</p>
+    <div id="room" hidden>
+      <div class="lamps" id="room-lamps" aria-hidden="true"></div>
+      <p class="note" id="room-line"></p>
+    </div>
     <div class="actions">
       <button id="pint" class="btn"><span data-t="pint.btn">Free pint</span><small data-t="pint.sub">first one’s on the house</small></button>
     </div>
@@ -40,16 +44,20 @@
       <div class="actions">
         <button id="band" class="btn"><span data-t="band.btn">A round for the band</span><small data-t="band.sub">21 sats · comes home if we miss</small></button>
       </div>
+      <div class="lamps goal" id="goal-lamps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <p id="goal" class="lede"></p>
-      <div class="meter"><div id="goal-bar"></div></div>
       <p id="last-orders" class="note"></p>
     </div>
     <div class="actions">
       <button id="tune" class="btn" hidden><span data-t="tune.btn">Tune into the livestream</span><small data-t="tune.sub">1 sat every 10 seconds · a fresh 402 each time</small></button>
     </div>
-    <div id="stream" hidden>
-      <div class="actions"><button id="stop" class="btn">Stop paying</button></div>
-      <ul id="ticks"></ul>
+    <div id="stream" class="player" hidden>
+      <p class="kicker" id="player-kicker"></p>
+      <button id="stop" class="playbtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z"/><rect class="i-stop" x="7" y="7" width="10" height="10"/></svg>
+      </button>
+      <p class="kicker quiet" id="stop-label"></p>
+      <p class="lede" id="set-total"></p>
     </div>
   </section>
 

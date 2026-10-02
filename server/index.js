@@ -2,7 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 const TUNNEL_FILE = fileURLToPath(new URL('../data/tunnel.url', import.meta.url));
-import { KITTY_URL, PORT, ADMIN_KEY, TIERS } from './config.js';
+import { KITTY_URL, PORT, ADMIN_KEY, TIERS, CURTAINS_AT } from './config.js';
 import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } from './house.js';
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
@@ -43,7 +43,7 @@ app.get('/api/health', async (_req, res) => {
 
 // The public address for QR codes: the tunnel URL if one is running, else whatever the page was loaded from.
 const publicUrl = () => { try { return readFileSync(TUNNEL_FILE, 'utf8').trim() || null; } catch { return null; } };
-app.get('/api/config', (_req, res) => res.json({ kitty: KITTY_URL, tiers: TIERS, publicUrl: publicUrl() }));
+app.get('/api/config', (_req, res) => res.json({ kitty: KITTY_URL, tiers: TIERS, publicUrl: publicUrl(), curtainsAt: CURTAINS_AT }));
 
 // A gift: live ecash from the house float, shown as a QR on the stage screen (admin only).
 app.post('/api/gift', admin, async (req, res) => {
