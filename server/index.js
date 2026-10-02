@@ -8,7 +8,7 @@ import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
 import { printSuitCoin, suitToken, relabel } from './rupert.js';
 import { freePint, pour, resetPints, lastPint, keys as nightKeys } from './pint.js';
-import { pledgeGate, finaleState, resetRound, sendToLongy } from './finale.js';
+import { pledgeGate, finaleState, resetRound, sendToLongy, tipLongy } from './finale.js';
 import {
   SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, lightsDown, events, snapshot, addToState, broadcast,
 } from './show.js';
@@ -130,6 +130,20 @@ app.get('/api/pass', (req, res) => {
 addToState((phones) => ({ finale: finaleState(phones) }));
 app.get('/api/pledge', (req, res, next) => (passOf(req) ? next() : res.status(403).json({ error: 'no_pass' })),
   pledgeGate(() => snapshot().phones, broadcast));
+
+// A tip for Longy from the livestream: its own 402, then the amount moves to his takings.
+const TIP = 21;
+app.get('/api/tip', (req, res, next) => (passOf(req) ? next() : res.status(403).json({ error: 'no_pass' })),
+  cashuGate(() => TIP, 'A tip for Longy'),
+  async (req, res) => {
+    try {
+      const tips = await tipLongy(req.paid);
+      log(`tip +${req.paid} to Longy (tips ${tips}), house ${balance()}`);
+      res.json({ tipped: req.paid, tips });
+    } catch (e) {
+      res.status(502).json({ error: 'tip_failed', detail: String(e.message || e) });
+    }
+  });
 
 // Retry the Lightning leg by hand (e.g. Longy's address was down).
 app.post('/api/payout', admin, async (_req, res) => res.json(await sendToLongy()));

@@ -29,6 +29,27 @@
   </section>
 
   <section id="inside" data-screen hidden>
+    <!-- The livestream, as a player: portrait = a 16:9 frame up here; landscape = full screen. Tap for controls. -->
+    <div id="screen" class="screen" hidden>
+      <div class="frame" id="frame">
+        <div class="pic"></div>
+        <span class="live"><i></i><b data-t="live">Live</b></span>
+        <span class="clock" id="screen-clock"></span>
+        <canvas id="level" width="240" height="28" aria-hidden="true"></canvas>
+        <div class="controls" id="controls">
+          <button type="button" class="ctl" id="ctl-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z"/><rect class="i-stop" x="7" y="7" width="10" height="10"/></svg></button>
+          <button type="button" class="ctl" id="ctl-mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="i-wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="1.6"/><path class="i-x" d="M16 9l5 6M21 9l-5 6" fill="none" stroke-width="1.6"/></svg></button>
+          <button type="button" class="btn quiet" id="ctl-tip" data-t="tip.btn">Tip 21</button>
+        </div>
+        <div class="confirm" id="tip-confirm" hidden>
+          <p data-t="tip.ask">Tip Longy 21 sats? It goes to him, not the pub.</p>
+          <div class="chips">
+            <button type="button" class="btn" id="tip-yes" data-t="tip.yes">Tip 21 sats</button>
+            <button type="button" class="btn quiet" id="tip-no" data-t="tip.no">Not now</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <h1 id="in-h1" data-t="in.h1">You’re in.</h1>
     <p class="kicker" id="in-tier"></p>
     <p class="lede" id="curtain">Curtains up soon.</p>

@@ -37,6 +37,7 @@ body { --photo: url(/img/longy-live.jpg); }
 body[data-photo="stage"] { --photo: url(/img/longy-stage.jpg); }
 body[data-photo="none"] { --photo: none; }
 body[data-photo="live"] { --shade: .4; }
+body.streaming { --shade: .75; }
 .backdrop { position: fixed; inset: 0; z-index: -1; background: var(--deep); overflow: hidden; }
 .backdrop::before {
   content: ""; position: absolute; inset: 0;
@@ -281,3 +282,31 @@ body:has(.bottombar) { padding-bottom: calc(84px + env(safe-area-inset-bottom));
 .sheet.artist .kicker { margin-top: 22px; }
 .sheet.artist .note { margin: 4px 0 0; }
 #basement.armed { background: var(--amber); color: var(--deep); }
+
+/* ---- The livestream player: a 16:9 frame (Longy's photo, a LIVE dot, the clock, a level meter from the audio) */
+.screen { max-width: 520px; margin: 2px auto 16px; }
+.frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; border: 1px solid rgb(239 227 200 / .15); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.frame .pic { position: absolute; inset: -6%; background: linear-gradient(transparent 55%, rgb(0 0 0 / .65)), url(/img/longy-live.jpg) center 22% / cover; animation: drift 40s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.12) translate(-3%, 2%); } }
+.frame .live { position: absolute; left: 10px; top: 9px; display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--body); letter-spacing: .24em; text-transform: uppercase; color: var(--cream); }
+.frame .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: twinkle 2s ease-in-out infinite; }
+.frame .clock { position: absolute; right: 10px; top: 9px; font: 12px/1 var(--mono); color: var(--cream); }
+.frame #level { position: absolute; left: 10px; bottom: 8px; width: 120px; height: 14px; }
+.frame .controls { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 14px; background: rgb(5 9 20 / .55); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.frame.show .controls { opacity: 1; pointer-events: auto; }
+.ctl { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid var(--amber); background: rgb(5 9 20 / .6); cursor: pointer; }
+.ctl svg { width: 24px; height: 24px; fill: var(--amber); stroke: var(--amber); }
+#ctl-play .i-stop, #ctl-play.on .i-play { display: none; }
+#ctl-play.on .i-stop { display: inline; }
+#ctl-mute .i-x, #ctl-mute.muted .i-wave { display: none; }
+#ctl-mute.muted .i-x { display: inline; }
+.frame .confirm { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; background: rgb(5 9 20 / .9); }
+.frame .confirm p { margin: 0 0 6px; max-width: 22em; }
+.frame .confirm .chips { margin: 6px 0 0; }
+@media (prefers-reduced-motion: reduce) { .frame .pic { animation: none; } }
+/* Turn the phone: the player fills the screen; one tap brings the controls up. */
+@media (orientation: landscape) and (max-height: 540px) {
+  body.streaming .screen { position: fixed; inset: 0; z-index: 9; margin: 0; max-width: none; background: #000; }
+  body.streaming .frame { width: 100%; height: 100%; aspect-ratio: auto; border: 0; }
+  body.streaming .frame #level { width: 200px; height: 22px; }
+}

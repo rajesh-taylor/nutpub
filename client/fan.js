@@ -152,6 +152,8 @@ const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 function player(on) {
   $('stop').classList.toggle('on', on);
+  $('ctl-play').classList.toggle('on', on);
+  $('ctl-play').setAttribute('aria-label', t(on ? 'stop' : 'play'));
   $('stop').setAttribute('aria-label', t(on ? 'stop' : 'play'));
   $('stop-label').textContent = t(on ? 'stop' : 'play');
   $('player-kicker').textContent = t('player.kicker', { n: config.tiers[tier || 'stream'].segment });
@@ -165,8 +167,12 @@ async function startStream() {
   const me = ++run;
   const ac = unlockAudio();
   master = ac.createGain();
-  master.connect(ac.destination);
+  master.gain.value = muted ? 0 : 1;
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 256;
+  master.connect(analyser).connect(ac.destination);
   const out = master;
+  requestAnimationFrame(drawLevel);
   $('stream').hidden = false;
   $('basement').hidden = !presenter;
   player(true);
@@ -219,6 +225,54 @@ async function startStream() {
     refresh();
     n++;
   }
+}
+
+// ---- The player frame: a level meter from the real audio, mute, and a tip with a confirm step.
+let analyser = null;
+let muted = false;
+function drawLevel() {
+  const c = $('level');
+  const g = c.getContext('2d');
+  g.clearRect(0, 0, c.width, c.height);
+  if (!streaming || !analyser) return;
+  const bins = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(bins);
+  const bars = 20;
+  const w = c.width / bars;
+  g.fillStyle = '#d9953a';
+  for (let i = 0; i < bars; i++) {
+    const k = 1 + Math.floor(((i / bars) ** 2) * 60); // spread the bars over the low end, where music lives
+    const h = Math.max(2, (bins[k] / 255) * c.height);
+    g.fillRect(i * w + 1, c.height - h, w - 2, h);
+  }
+  requestAnimationFrame(drawLevel);
+}
+let controlsTimer;
+function showControls() {
+  $('frame').classList.add('show');
+  clearTimeout(controlsTimer);
+  controlsTimer = setTimeout(() => $('frame').classList.remove('show'), 3500);
+}
+function mute() {
+  muted = !muted;
+  $('ctl-mute').classList.toggle('muted', muted);
+  $('ctl-mute').setAttribute('aria-label', t(muted ? 'unmute' : 'mute'));
+  if (master) master.gain.setTargetAtTime(muted ? 0 : 1, unlockAudio().currentTime, 0.05);
+  say(muted ? 'mute' : '');
+}
+async function tip() {
+  unlockAudio();
+  $('tip-confirm').hidden = true;
+  try {
+    const res = await paidFetch('/api/tip', { 'X-Pass': pass }, 'tips', 21);
+    const body = await res.json();
+    if (!res.ok) { trombone(); return say(refusal(body)); }
+    clink();
+    say('tip.done', { n: body.tipped }, true);
+  } catch (e) {
+    say(e.message.includes('Insufficient') ? 'no.sats' : e.message);
+  }
+  refresh();
 }
 
 // Stop paying: the music fades out now, not at the end of what was already bought.
@@ -420,6 +474,9 @@ function listen() {
     room(s);
     if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
     $('stream').hidden = !(s.t0 && pass && (tier === 'stream' || streaming || run > 0));
+    $('screen').hidden = $('stream').hidden;
+    document.body.classList.toggle('streaming', !$('screen').hidden);
+    if (s.t0) $('screen-clock').textContent = mmss(Math.max(0, Math.floor((serverNow() - s.t0) / 1000)));
     $('tune').hidden = !(s.t0 && pass && tier === 'ticket' && !streaming && run === 0);
   };
   // SSE for speed, plus a 1-s poll: the Cloudflare tunnel holds SSE back, so the poll is what you get through it.
@@ -478,6 +535,12 @@ async function main() {
     if (streaming) stopStream();
     else { say(''); startStream(); }
   };
+  $('frame').onclick = (e) => { if (e.target === $('frame') || e.target.closest('.pic, .live, .clock, #level')) showControls(); };
+  $('ctl-play').onclick = () => { showControls(); $('stop').onclick(); };
+  $('ctl-mute').onclick = () => { showControls(); mute(); };
+  $('ctl-tip').onclick = () => { clearTimeout(controlsTimer); $('tip-confirm').hidden = false; };
+  $('tip-yes').onclick = () => tip();
+  $('tip-no').onclick = () => ($('tip-confirm').hidden = true);
   listen();
   // Already paid at the door on this phone (and the show hasn't been reset)? Straight back in.
   let saved = null;

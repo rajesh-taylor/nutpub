@@ -10,7 +10,7 @@ import {
   sumProofs,
 } from '@cashu/cashu-ts';
 import { KITTY_URL } from './config.js';
-import { kitty, kittyKeysetIds } from './house.js';
+import { kitty, kittyKeysetIds, give } from './house.js';
 import { keys, lastOrdersAt } from './pint.js';
 import { show } from './show.js';
 import { payout, payLongy, resetPayout } from './payout.js';
@@ -18,7 +18,7 @@ import { payout, payLongy, resetPayout } from './payout.js';
 export const PLEDGE = 21;
 const ARTIST_FILE = fileURLToPath(new URL(`../data/artist-${KITTY_URL.replace(/\W+/g, '_')}.json`, import.meta.url));
 
-export const round = { pledges: [], state: 'open', goal: null, paidAt: null };
+export const round = { pledges: [], state: 'open', goal: null, paidAt: null, tips: 0 };
 let artistProofs = [];
 try { artistProofs = JSON.parse(readFileSync(ARTIST_FILE, 'utf8')); } catch {}
 
@@ -31,7 +31,7 @@ export function finaleState(phones) {
   return {
     state: round.state, total: total(), goal: goalFor(phones), pledges: round.pledges.length,
     lastOrders: lastOrdersAt(), artist: keys.artist.pk, artistTakings: Number(sumProofs(artistProofs)),
-    payout: { state: payout.state, sats: payout.sats },
+    payout: { state: payout.state, sats: payout.sats }, tips: round.tips,
   };
 }
 
@@ -40,6 +40,7 @@ export function resetRound() {
   round.state = 'open';
   round.goal = null;
   round.paidAt = null;
+  round.tips = 0;
   resetPayout();
 }
 
@@ -132,7 +133,19 @@ async function claim() {
 // The pages see it on their next poll.
 export async function sendToLongy() {
   if (payout.state === 'sending' || payout.state === 'off') return payout;
-  artistProofs = await payLongy(artistProofs);
+  const paying = artistProofs;
+  artistProofs = []; // a tip that lands mid-payout goes in here and isn't lost
+  const left = await payLongy(paying);
+  artistProofs = [...left, ...artistProofs];
   writeFileSync(ARTIST_FILE, JSON.stringify(artistProofs));
   return payout;
+}
+
+// A tip from the livestream: the door's gate took it into the house; the same amount moves to Longy's takings.
+export async function tipLongy(amount) {
+  const token = await give(amount);
+  artistProofs.push(...getDecodedToken(token, kittyKeysetIds).proofs);
+  writeFileSync(ARTIST_FILE, JSON.stringify(artistProofs));
+  round.tips += amount;
+  return round.tips;
 }

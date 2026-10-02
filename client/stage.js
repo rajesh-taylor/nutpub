@@ -65,6 +65,7 @@ const apply = (s) => {
       : f.state === 'paid' && p.state === 'sent' ? t('paid.ln', { sats: sats(p.sats) })
       : f.state === 'paid' && p.state === 'sending' ? t('paid.sending')
       : f.state === 'paid' && p.state === 'failed' ? t('paid.failed') : '';
+    $('tips').textContent = f.tips ? t('stage.tips', { sats: sats(f.tips) }) : '';
     document.body.classList.toggle('paid', f.state === 'paid');
   }
   $('phones').textContent = t(s.phones === 1 ? 'room.phone' : 'stage.phones', { n: s.phones });
