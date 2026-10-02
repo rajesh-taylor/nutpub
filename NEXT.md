@@ -1,5 +1,8 @@
 # Next session (Fri 2 Oct)
 
+> **Clocks (found Fri 09:05 Berlin):** the Mac and the Pixel are on **UK time (Europe/London)**; Berlin is an hour ahead. Expo **15:30 Berlin = 14:30 on the Mac/Pixel**. Times marked "Fri 07:xx/08:xx" below are UK time. From 09:05 on, times are Berlin time.
+> **btc++ submission:** no deadline published (2025: 2½ h before the expo, i.e. 13:00 Berlin). Create the project on btcpp.dev early, submit a v1 by ~11:00 Berlin, update later.
+
 ## Start everything (Mac)
 0. Optional: `CURTAINS_AT=3` in `.env` makes curtains go up by themselves at 3 phones (the phones then say "lights up at 3"). Unset = stage button only.
 0. Free test run: a second server on the fake mint, `set -a; . ./.env; KITTY_URL=http://127.0.0.1:3338 PORT=8788 LAST_ORDERS_MIN=2 node server/index.js` (house tops up with fake sats via `/fund.html`; open `localhost:8788` in a browser).
