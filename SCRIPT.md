@@ -37,6 +37,18 @@ Mac: **Next gift · guest 105** → judge 1 scans with the camera → *105 sats 
 
 **Last orders with a pint unpoured** (a judge never tapped Free pint): their phone says *Your free pint's still behind the bar. When the bell rings it goes back to the house. That's the lock on it, not us.* Say it as it shows, then **Show me my pint** and pour.
 
+
+## Short version: one judge, livestream only (desk judging, Fri afternoon)
+
+| Who taps what | Story (say it) | Step out: the NUT |
+|---|---|---|
+| Mac: **New show** → **Curtains up** → **Next gift · guest 105**. Judge scans. | Gift line (above). | — |
+| Judge: **Livestream pass · 1 sat**. Straight into the player; Longy's video in ~10 s; sideways = full screen. | "You're at home. Longy's on, 10 seconds at a time. Stop paying, the amp goes quiet." | **NUT-24**: every 10 seconds is its own 402; the phone pays it inside the request. The picture for those 10 s is only handed to a phone that paid for them. |
+| Judge: **Stop paying**, then **Play** again. | "Stopped. Nothing more is charged." | — |
+| You, iPhone: Rupert, three taps (optional). | Rupert lines. | **NUT-12** (DLEQ offline). |
+| Judge: **A round for the band · 21** (goal 21 with one phone) → **Longy's paid!** | "A round for the band, from home." | **NUT-18 + nut10**: the 402 requires a locked token, to Longy, with a refund key the phone made. Missed goal → it comes home by itself (NUT-11 refund). |
+| Judge: tap the amber screen → closing time; point at **Pocket → Take it home**. | "Drinkers identified: zero." | **NUT-04** top-up, if asked. |
+
 ## Where the ecash lives (say it right, to judges and to anyone watching)
 
 > "Your sats live in a wallet inside the browser on your phone, at this web address. Close the tab and they're still there: open nutpub.rajeshtaylor.com again. They're gone if you clear your browsing data, use a private window, or open it in another browser or phone; and on iPhone, Safari wipes a site after 7 days without a visit. So take it home: Pocket → Take it home moves them into Minibits or cashu.me. And the mint is custodial: pub money, not savings."
