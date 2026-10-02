@@ -13,6 +13,23 @@
 
 ---
 
+## Desk flow (loose): one judge, their own phone, ~3 minutes
+
+**The story in one line:** a night out needs money to do four jobs: **get you in, pay as you go, chip in for the band, and come home with you.** Each job is a NUT, and the judge watches each one happen on their own phone. (Rupert stays in the background: show him only if asked about counterfeits.)
+
+| The job | Judge taps | What they see | The NUT, in one plain sentence |
+|---|---|---|---|
+| **0. Money in your hand** | Scan the gift QR | *105 sats in your pocket* | **NUT-00 to 03**: ecash is notes the mint signed blind; your phone holds them, no account, and the mint can't tell whose they are. |
+| **1. Get you in** | **Livestream pass · 1 sat** | Straight into the player | **NUT-24 + NUT-18**: the server answers "402, payment required" with a payment request; the phone pays inside the same web request. **NUT-12**: the door checks the mint's signature on the note itself, offline. |
+| **2. Pay as you go** | Watch; then **Stop paying**, **Play** | Longy's video; *This set: n sats* climbs 1 per 10 s; Stop = silence at once | **NUT-24, every 10 seconds**: each 10 s of sound and picture is its own 402. No subscription, no card on file: stop paying and it stops. |
+| *(Basement58, your Pixel tab)* | **Basement** | *Same payment, same song. Charged once.* → *Refused* | **Our Base58 proposal** for NUT-24: a lost reply is retried with the same token; a token can't buy a second song. |
+| **3. Chip in for the band** | **A round for the band · 21** | Lamps fill; **Longy's paid!** (goal = 21 × phones) | **NUT-18 `nut10` + NUT-11**: the 402 *requires* a locked token: to Longy's key, a locktime at last orders, and a refund key the phone made for itself. Goal missed? After last orders each phone takes its own back: no refund desk. **NUT-07**: the server checks the pledges are unspent without taking them. |
+| **4. Come home with you** | **Pocket** → **Top up 100** → then **Take it home** | +100 (the test mint's Lightning pays itself); then one note to paste into any Cashu wallet | **NUT-04**: Lightning in, ecash out. **Take it home**: the whole pocket as one bearer note. **NUT-05** (Lightning out) pays the artist; it's off today so the screen never claims a payment that didn't happen. |
+
+**Close:** "Drinkers identified: zero. Every NUT on this list is standard Cashu, on any mint; the one thing that isn't, retry-safe 402s, is our Base58 proposal."
+
+**Ticket in the room instead of the pass** (if there's time): the free pint shows **NUT-11** locked to the bar's key and **NUT-07** (the phone lights up when the mint says it's spent).
+
 ## The pre-story: the gift (as they walk up; before the clock if you can)
 
 **Say (two sentences):**
