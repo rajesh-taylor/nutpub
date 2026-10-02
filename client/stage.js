@@ -19,6 +19,7 @@ async function gift(amount, who) {
   const url = `${publicUrl || location.origin}/#${body.token}`;
   await QRCode.toCanvas($('qr'), url, { errorCorrectionLevel: 'L', margin: 1, width: 840 });
   $('qr').hidden = false;
+  $('gift-label').hidden = false;
   $('gift-label').removeAttribute('data-t');
   $('gift-label').textContent = t(`gift.${who}`, { n: amount });
   $('status').textContent = '';
@@ -48,6 +49,8 @@ let last = null;
 let lamps = 0;
 const apply = (s) => {
   if (last && !last.t0 && s.t0) lightsUp();
+  // Curtains up: the gift QR makes way for the show (Next gift brings it back).
+  if (s.t0 && !last?.t0) { $('qr').hidden = true; $('gift-label').hidden = true; }
   last = s;
   document.body.dataset.photo = s.t0 ? 'live' : 'stage';
   // Before the show: one stage light per phone through the door.
