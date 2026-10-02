@@ -26,7 +26,7 @@
 7. Rehearse the 3-minute script twice with a stopwatch.
 
 ## Agreed late Thu (not built yet)
-- Stage screen: longy-stage before the show; lights up on the stage too.
+- [x] (Fri 07:56) Stage screen: longy-stage before the show, one lamp per phone; lights up on the stage too.
 - Livestream countdown page with longy-countdown (Old Blue Last 2), dimmed: "Longy's on in 12:34".
 - Placeholder livestream site + "Embed this show" box (see DESIGN.md, Tier 4).
 - Raffle and time-locked prize ticket: spec only (DESIGN.md).

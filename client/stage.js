@@ -31,9 +31,27 @@ fetch('/api/house', { headers: { 'X-Admin': key } })
 const post = (url) => fetch(url, { method: 'POST', headers: { 'X-Admin': key } }).then((r) => r.json());
 $('curtains').onclick = () => post('/api/curtains');
 $('newshow').onclick = () => confirm(t('stage.confirm')) && post('/api/new-show');
+// Lights up on the stage too, the moment the curtains open (the same sequence as the phones).
+function lightsUp() {
+  const el = $('lights-up');
+  el.hidden = false;
+  el.classList.remove('go');
+  void el.offsetWidth;
+  el.classList.add('go');
+  setTimeout(() => (el.hidden = true), 9900);
+}
+
 let last = null;
+let lamps = 0;
 const apply = (s) => {
+  if (last && !last.t0 && s.t0) lightsUp();
   last = s;
+  document.body.dataset.photo = s.t0 ? 'live' : 'stage';
+  // Before the show: one stage light per phone through the door.
+  $('room-lamps').hidden = !!s.t0;
+  const want = Math.min(21, Math.max(s.phones, 3));
+  if (want !== lamps) { $('room-lamps').innerHTML = '<i></i>'.repeat(want); lamps = want; }
+  $('room-lamps').querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < s.phones));
   const f = s.finale;
   if (f) {
     $('finale').hidden = !s.t0;
