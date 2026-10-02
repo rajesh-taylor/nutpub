@@ -34,27 +34,48 @@ const LAST_ORDERS_MIN = Number(process.env.LAST_ORDERS_MIN || 4);
 export const lastOrdersAt = () =>
   Math.floor((show.t0 ?? Date.now() + 60_000) / 1000) + LAST_ORDERS_MIN * 60;
 
-export function pintLock() {
+export function pintLock(locktime = lastOrdersAt()) {
   return new P2PKBuilder()
     .addLockPubkey(keys.bar.pk)
-    .lockUntil(lastOrdersAt())
+    .lockUntil(locktime)
     .addRefundPubkey(keys.house.pk)
     .toOptions();
 }
 
 export const lastPint = { token: null }; // for testing the bar without a camera (admin only)
 const issued = new Set(); // pass ids that already have their free pint
+const unpoured = new Map(); // pint token -> its locktime, until the bar pours it or the house takes it back
 export async function freePint(passId) {
   if (issued.has(passId)) throw Object.assign(new Error('one free pint per phone'), { code: 'already_given' });
   issued.add(passId);
   try {
-    return (lastPint.token = await give(PINT, pintLock()));
+    const locktime = lastOrdersAt();
+    lastPint.token = await give(PINT, pintLock(locktime));
+    unpoured.set(lastPint.token, locktime);
+    return lastPint.token;
   } catch (e) {
     issued.delete(passId);
     throw e;
   }
 }
 export const resetPints = () => issued.clear();
+
+// Last orders: any pint nobody poured goes back to the house, through the lock's refund path (NUT-11) signed
+// with the house's key. Only after the show's own last orders too, so it never races a late pour.
+setInterval(async () => {
+  const now = Math.floor(Date.now() / 1000);
+  for (const [token, locktime] of unpoured) {
+    if (now < Math.max(locktime, lastOrdersAt()) + 5) continue;
+    try {
+      await take(getDecodedToken(token, kittyKeysetIds).proofs, keys.house.sk);
+      unpoured.delete(token);
+      console.log(`${new Date().toTimeString().slice(0, 8)} pint back to the house +${PINT}`);
+    } catch (e) {
+      if (/spent/i.test(String(e.message))) unpoured.delete(token); // poured after all
+      // otherwise the mint's clock isn't there yet: try again next time
+    }
+  }
+}, 5000).unref();
 
 // The bar pours: check it really is a pint for this bar, then sign with the bar's key and swap.
 export async function pour(token) {
@@ -69,6 +90,7 @@ export async function pour(token) {
   }
   try {
     await take(proofs, keys.bar.sk);
+    unpoured.delete(token);
   } catch (e) {
     if (/spent/i.test(String(e.message))) throw Object.assign(new Error('already poured'), { code: 'already_poured' });
     throw e;

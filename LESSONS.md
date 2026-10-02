@@ -77,3 +77,7 @@
 - To demo a lost reply without trusting venue wifi or airplane mode: the server holds its reply 5 s, the phone aborts at 2 s (`AbortController`), then retries with the same token. A real network cut takes the same code path.
 - Only retry where the server is idempotent. Our door issues a new pass per request, so a door retry would be refused as `reused`; that's exactly the gap the Base58 proposal describes.
 - A status line at the bottom of a long page is invisible. Pin it just above the tab bar.
+
+## Say only what the code does (Fri 2 Oct)
+- The last-orders screen said an unpoured pint "goes back to the house". The lock allowed it (refund key = the house's), but nothing ever took it back. Now the server sweeps unpoured pints after last orders with the house's refund key, retrying until the mint's clock agrees. Read every on-screen promise against the code before a demo.
+- **Check the clocks.** The Mac and the Pixel were on UK time in Berlin. The event page's countdown was the only thing in Berlin time.
