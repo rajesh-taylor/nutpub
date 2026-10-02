@@ -16,6 +16,12 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
+## Fri 15:35 Berlin (desk judging)
+- **Mint today: the Mac's fake mint** (Minibits timed out at 15:00). Server: `KITTY_URL=http://127.0.0.1:3338 LONGY_LN=` (payout off: no fake "paid over Lightning"). Full flow passed on the Pixel: gift, door, pint, curtains, Longy's paid, closing time.
+- **Livestream audio = Longy live at Peggy Sue's** (30 s clip from Rajesh's Desktop, 3 segments, loops; `media/` not in git). No restart needed: the server counts segments per request. Old tone in `media/segments-old`.
+- **A server restart forgets every pass** (in memory): phones go back to the door. Don't restart mid-group.
+- Stage hides the gift QR at curtains up.
+
 ## Fri 12:25 Berlin
 - **btc++ project not created yet** (12:15: page says 0 projects, no deadline, expo countdown 3 h). Create project needs Rajesh's sign-in (GitHub / passkey); then paste SUBMISSION.md (Demo URL is now the fixed address).
 - **SCRIPT.md rewritten as a beat sheet:** who taps what, story line, and a "step out" NUT aside per beat (24, 12, 11 + locktime + refund, 07, Base58, 18/nut10, 05, 04). The chapter lines that left the phones are spoken now. **Order changed:** free pint *before* curtains up ("while the support acts warm us up"). KYC Kebab Shack: one line at closing, not demoed.

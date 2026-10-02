@@ -49,6 +49,6 @@ The Pocket page says the same (🇬🇧 and 🇩🇪), with the address filled i
 - **The NUT-04 aside** is the first to go: say it only if asked.
 - **KYC Kebab Shack:** not demoed in the 3 minutes. One line at closing; the judges can open it themselves afterwards.
 
-**Only say it if it's on screen:** "paid over Lightning" (needs *Went to Longy over Lightning ✓*), "Longy's track" (needs the file; otherwise "a placeholder tone tonight").
+**Only say it if it's on screen:** "paid over Lightning" (needs *Went to Longy over Lightning ✓*), "Longy live" (today: a 30-second clip of him at Peggy Sue's, on a loop).
 
 **If something breaks:** Rupert down (SuitCoin mint off) → skip to inside. Pint QR won't open on the Pixel (no internet in Vanadium) → skip the pint, say the NUT-11 aside anyway. Basement58 doesn't drop → say the line, show `PROPOSAL.md`. Goal misses → that's the refund story, tell it. Fixed address down (`curl -sI https://nutpub.rajeshtaylor.com` says 530) → check `data/tunnel-named.log`: cloudflared reconnects by itself within ~30 s once the Mac is back online.
