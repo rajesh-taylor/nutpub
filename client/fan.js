@@ -268,6 +268,9 @@ function showFinale(f) {
   const left = Math.max(0, f.lastOrders - Math.floor(serverNow() / 1000));
   $('last-orders').textContent = f.state === 'open' ? t('last.in', { t: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` }) : '';
   $('band').disabled = f.state !== 'open';
+  const p = f.payout || {};
+  $('paid-screen').querySelector('.small').textContent = t(
+    p.state === 'sent' ? 'paid.ln' : p.state === 'sending' ? 'paid.sending' : 'paid.small', { sats: sats(p.sats) });
   if (f.state === 'paid' && was !== 'paid') {
     if (mine) wallet.forgetPledges(); // they went to Longy
     $('paid-screen').hidden = false;

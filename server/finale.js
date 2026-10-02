@@ -13,6 +13,7 @@ import { KITTY_URL } from './config.js';
 import { kitty, kittyKeysetIds } from './house.js';
 import { keys, lastOrdersAt } from './pint.js';
 import { show } from './show.js';
+import { payout, payLongy, resetPayout } from './payout.js';
 
 export const PLEDGE = 21;
 const ARTIST_FILE = fileURLToPath(new URL(`../data/artist-${KITTY_URL.replace(/\W+/g, '_')}.json`, import.meta.url));
@@ -30,6 +31,7 @@ export function finaleState(phones) {
   return {
     state: round.state, total: total(), goal: goalFor(phones), pledges: round.pledges.length,
     lastOrders: lastOrdersAt(), artist: keys.artist.pk, artistTakings: Number(sumProofs(artistProofs)),
+    payout: { state: payout.state, sats: payout.sats },
   };
 }
 
@@ -38,6 +40,7 @@ export function resetRound() {
   round.state = 'open';
   round.goal = null;
   round.paidAt = null;
+  resetPayout();
 }
 
 const refuse = (res, code, detail) => res.status(400).json({ error: code, detail });
@@ -120,5 +123,16 @@ async function claim() {
   } catch (e) {
     round.state = 'open';
     console.error('finale: claim failed', e.message);
+    return;
   }
+  sendToLongy();
+}
+
+// Then over Lightning to his address (if one is set). What's left (change, or everything on failure) stays his.
+// The pages see it on their next poll.
+export async function sendToLongy() {
+  if (payout.state === 'sending' || payout.state === 'off') return payout;
+  artistProofs = await payLongy(artistProofs);
+  writeFileSync(ARTIST_FILE, JSON.stringify(artistProofs));
+  return payout;
 }

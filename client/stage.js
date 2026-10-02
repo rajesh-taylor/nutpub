@@ -1,6 +1,6 @@
 // Stage screen: gift QRs from the house float. Private link: /stage.html#k=<ADMIN_KEY>
 import QRCode from 'qrcode';
-import { t, onLang } from './i18n.js';
+import { t, sats, onLang } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const key = new URLSearchParams(location.hash.slice(1)).get('k') || (() => { try { return localStorage.getItem('nutpub-k'); } catch { return ''; } })() || '';
@@ -41,8 +41,12 @@ const apply = (s) => {
     const lit = Math.min(7, Math.floor((7 * f.total) / f.goal));
     document.querySelectorAll('.lights i').forEach((el, i) => el.classList.toggle('on', i < lit));
     const left = Math.max(0, f.lastOrders - Math.floor(s.now / 1000));
+    const p = f.payout || {};
     $('last-orders').textContent = f.state === 'open' ? t('last.in', { t: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` })
-      : f.state === 'missed' ? t('stage.missed') : '';
+      : f.state === 'missed' ? t('stage.missed')
+      : f.state === 'paid' && p.state === 'sent' ? t('paid.ln', { sats: sats(p.sats) })
+      : f.state === 'paid' && p.state === 'sending' ? t('paid.sending')
+      : f.state === 'paid' && p.state === 'failed' ? t('paid.failed') : '';
     document.body.classList.toggle('paid', f.state === 'paid');
   }
   $('phones').textContent = t(s.phones === 1 ? 'room.phone' : 'stage.phones', { n: s.phones });

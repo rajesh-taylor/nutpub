@@ -65,3 +65,9 @@
 - **Translate from one table, by key.** Keep each status line as a key plus its numbers (`say('home', { n: 21 })`), not as finished text, so the 🇩🇪 flag can say the last thing again in German. Unknown keys pass through, so raw server errors still show.
 - **Lightning top-up in a browser wallet with Coco 2.0.0:** `coco.quotes.mint.create({ mintUrl, amount, method: 'bolt11' })` → `coco.ops.mint.prepare({ quote, amount })` gives `{ id, request }`. Coco stores it in IndexedDB and its processor mints once paid, even after a reload; `coco.ops.mint.checkPayment(id)` settles it now. That's the "never let a page own a paid invoice" rule, solved by the library.
 - **Watch for shadowed names when you add a translate function called `t`.** An old `enter(t)` parameter quietly turned `t('…')` into "t is not a function" inside that one function.
+
+## Paying the artist over Lightning (NUT-05), Fri 2 Oct
+- Lightning address → invoice: `GET https://<domain>/.well-known/lnurlp/<user>` gives `callback`, `minSendable`/`maxSendable` (msat); `GET callback?amount=<msat>` gives `pr`. Fetching an invoice pays nothing, so it's safe to test.
+- The fee reserve comes off the top: quote, read `fee_reserve`, ask for less until `amount + fee_reserve` fits the takings. Then swap to exactly that (`wallet.ops.send(need, proofs)`) and melt only those, so the change is just the unused reserve.
+- On the fake mint, a melt to one of its own invoices settles internally: a free end-to-end test of the melt path.
+- **Kill a dev server by its listening socket, not by port:** `lsof -ti tcp:PORT` also lists clients (here the browser pane). Use `lsof -nP -iTCP:PORT -sTCP:LISTEN -t`.

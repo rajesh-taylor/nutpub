@@ -8,7 +8,7 @@ import { getDecodedToken } from '@cashu/cashu-ts';
 import { cashuGate } from './gate.js';
 import { printSuitCoin, suitToken, relabel } from './rupert.js';
 import { freePint, pour, resetPints, lastPint, keys as nightKeys } from './pint.js';
-import { pledgeGate, finaleState, resetRound } from './finale.js';
+import { pledgeGate, finaleState, resetRound, sendToLongy } from './finale.js';
 import {
   SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, lightsDown, events, snapshot, addToState, broadcast,
 } from './show.js';
@@ -117,6 +117,9 @@ app.get('/api/pass', (req, res) => {
 addToState((phones) => ({ finale: finaleState(phones) }));
 app.get('/api/pledge', (req, res, next) => (passOf(req) ? next() : res.status(403).json({ error: 'no_pass' })),
   pledgeGate(() => snapshot().phones, broadcast));
+
+// Retry the Lightning leg by hand (e.g. Longy's address was down).
+app.post('/api/payout', admin, async (_req, res) => res.json(await sendToLongy()));
 
 app.get('/api/events', events);
 app.get('/api/show', (_req, res) => res.json(snapshot()));
