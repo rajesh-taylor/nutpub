@@ -46,8 +46,35 @@ function lightsUp() {
 }
 
 let last = null;
+// Longy's picture on the stage, in step with the phones: one 10-second piece per segment, swapped on the boundary.
+let vidTimer = null;
+let showT0 = null;
+let skew = 0; // server clock minus ours
+async function stageVideo() {
+  clearTimeout(vidTimer);
+  if (!showT0) { $('stage-screen').hidden = true; $('vid').pause(); return; }
+  const now = Date.now() + skew;
+  const n = Math.max(0, Math.floor((now - showT0) / 10000));
+  try {
+    const r = await fetch(`/api/stage/video/${n}`, { headers: { 'X-Admin': key } });
+    if (r.ok) {
+      const v = $('vid');
+      const old = v.src;
+      v.muted = true;
+      v.src = URL.createObjectURL(await r.blob());
+      v.onloadedmetadata = () => { v.currentTime = Math.min(Math.max(0, (Date.now() + skew - showT0) / 1000 - n * 10), v.duration - 0.1); };
+      v.play().catch(() => {});
+      $('stage-screen').hidden = false;
+      if (old.startsWith('blob:')) URL.revokeObjectURL(old);
+    }
+  } catch {}
+  vidTimer = setTimeout(stageVideo, Math.max(200, showT0 + (n + 1) * 10000 - (Date.now() + skew)));
+}
+
 let lamps = 0;
 const apply = (s) => {
+  skew = s.now - Date.now();
+  if ((s.t0 || null) !== showT0) { showT0 = s.t0 || null; stageVideo(); }
   if (last && !last.t0 && s.t0) lightsUp();
   // Curtains up: the gift QR makes way for the show (Next gift brings it back).
   if (s.t0 && !last?.t0) { $('qr').hidden = true; $('gift-label').hidden = true; }

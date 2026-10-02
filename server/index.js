@@ -135,6 +135,12 @@ function sendSegment(req, res) {
 // The picture for a 10-second segment: only for a pass that has paid for that segment's sound (no second charge).
 const VIDEO_DIR = fileURLToPath(new URL('../media/video', import.meta.url));
 const videoCount = () => { try { return readdirSync(VIDEO_DIR).filter((f) => f.endsWith('.mp4')).length; } catch { return 0; } };
+// The stage screen in the room shows the same picture (the venue's own screen: admin key, no payment).
+app.get('/api/stage/video/:n', admin, (req, res) => {
+  if (!videoCount()) return res.status(404).json({ error: 'no_video' });
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(`vid-${String(Number(req.params.n) % videoCount()).padStart(3, '0')}.mp4`, { root: VIDEO_DIR });
+});
 app.get('/api/video/:n', (req, res) => {
   const pass = passOf(req);
   const n = Number(req.params.n);

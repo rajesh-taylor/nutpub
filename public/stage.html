@@ -15,6 +15,7 @@
   body.paid .backdrop::before { background: radial-gradient(circle at 50% 38%, #f1c27a, var(--amber) 45%, #6b4310); }
   body.paid h1, body.paid .big, body.paid .kicker { color: var(--deep); text-shadow: none; }
   .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+  .stage-screen { max-width: min(900px, 92vw); }
   #room-lamps { max-width: 520px; gap: 18px; }
   #room-lamps i { width: 34px; height: 34px; }
   #room-lamps i:nth-child(3n+2) { width: 46px; height: 46px; }
@@ -27,6 +28,7 @@
 <p class="kicker pagename"><span data-t="stage.name">Stage</span> · <span id="float">house: … sats</span></p>
 <main>
   <h1 id="headline"></h1>
+  <div class="screen stage-screen" id="stage-screen" hidden><div class="frame"><video id="vid" muted playsinline autoplay></video></div></div>
   <p class="big" id="phones"></p>
   <div class="lamps" id="room-lamps" aria-hidden="true"></div>
   <div class="row">
