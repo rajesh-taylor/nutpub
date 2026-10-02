@@ -4,6 +4,7 @@ import { unlockAudio, trombone, clink } from './sound.js';
 import QRCode from 'qrcode';
 import { Mint, hashToCurve, getDecodedToken } from '@cashu/cashu-ts';
 import { t, has, sats, onLang } from './i18n.js';
+import { initSheets, spend, resetSpend } from './sheets.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => document.querySelectorAll('[data-screen]').forEach((el) => (el.hidden = el.id !== id));
@@ -41,8 +42,8 @@ function chapter(name) {
 // The pocket: what this phone holds at the NutPub Mint. Hidden until there's something in it.
 async function refresh() {
   const n = await wallet.balance();
-  $('pocket-amt').textContent = sats(n);
-  $('pocket').hidden = !n;
+  $('pocket-amt').textContent = n;
+  $('pocket-big').textContent = sats(n);
 }
 
 async function claimGift() {
@@ -62,18 +63,22 @@ async function claimGift() {
 }
 
 // NUT-24 round trip: ask, get a 402 with a creqA, pay it in-band, ask again with the cashuB.
-async function paidFetch(url, headers = {}) {
+// What was paid goes on this phone's own tally for the night (Pocket).
+async function paidFetch(url, headers = {}, kind = '', amount = 0) {
   const res = await fetch(url, { headers });
   if (res.status !== 402) return res;
   const token = await wallet.pay(res.headers.get('X-Cashu'));
-  return fetch(url, { headers: { ...headers, 'X-Cashu': token } });
+  const paid = await fetch(url, { headers: { ...headers, 'X-Cashu': token } });
+  if (paid.ok && kind) spend(kind, amount);
+  return paid;
 }
 
-async function enter(t) {
+async function enter(which) {
   unlockAudio();
   say('knocking');
   try {
-    const res = await paidFetch(`/api/door?tier=${t}`);
+    resetSpend(); // a new pass is a new night
+    const res = await paidFetch(`/api/door?tier=${which}`, {}, which === 'ticket' ? 'door' : 'stream', config.tiers[which].door);
     const body = await res.json();
     if (res.ok) {
       ({ pass, tier } = body);
@@ -118,7 +123,7 @@ async function startStream() {
 
     let res;
     try {
-      res = await paidFetch(`/api/segment/${n}`, { 'X-Pass': pass });
+      res = await paidFetch(`/api/segment/${n}`, { 'X-Pass': pass }, 'stream', config.tiers[tier].segment);
     } catch (e) {
       stopStream(e.message.includes('Insufficient') ? 'out.of.sats' : e.message);
       break;
@@ -218,6 +223,7 @@ async function roundForTheBand() {
     const res = await fetch(url, { headers: { 'X-Pass': pass, 'X-Cashu': token } });
     const body = await res.json();
     if (!res.ok) { trombone(); return say(refusal(body)); }
+    spend('pledges', 21);
     say('pledged');
   } catch (e) {
     say(e.message.includes('Insufficient') ? 'no.sats' : e.message);
@@ -256,6 +262,7 @@ async function comeHome() {
   }
   reclaiming = false;
   if (back) {
+    spend('pledges', -back);
     say('home', { n: back }, true);
     clink();
     setTimeout(() => ($('closing').hidden = false), 4000);
@@ -355,6 +362,7 @@ async function main() {
     $('rail-note').hidden = !card;
   }));
   wallet = await openWallet(config.kitty);
+  initSheets(wallet, config, refresh);
   await claimGift();
   await refresh();
   $('pint').onclick = () => freePint().catch((e) => say(e.message));

@@ -10,7 +10,6 @@
 </head>
 <body>
 <div class="backdrop" aria-hidden="true"></div>
-<p id="pocket" class="kicker" hidden><span data-t="pocket">In your pocket ·</span> <b id="pocket-amt">0 sats</b></p>
 
 <main>
   <aside id="chapter" aria-live="polite"><b id="chapter-title"></b><span id="chapter-line"></span></aside>
@@ -56,6 +55,57 @@
 
   <p id="status" role="status"></p>
 </main>
+
+<!-- Pocket: this phone's wallet. One wallet for the ticket, the stream, the pint and the band. -->
+<section id="sheet-pocket" class="sheet" hidden aria-labelledby="pocket-title">
+  <p class="kicker" id="pocket-title" data-t="pocket.title">In your pocket</p>
+  <p class="huge" id="pocket-big">0 sats</p>
+  <p class="note" id="pocket-mint"></p>
+  <dl class="ledger" id="ledger"></dl>
+  <p class="kicker" data-t="topup.title">Top up</p>
+  <div class="chips" id="topup-amounts">
+    <button type="button" class="btn quiet" data-amt="100">100</button>
+    <button type="button" class="btn quiet" data-amt="500">500</button>
+    <button type="button" class="btn quiet" data-amt="1000">1,000</button>
+  </div>
+  <div id="invoice" hidden>
+    <canvas id="invoice-qr"></canvas>
+    <div class="chips">
+      <a class="btn quiet" id="invoice-open" data-t="topup.open">Open in wallet</a>
+      <button type="button" class="btn quiet" id="invoice-copy" data-t="topup.copy">Copy invoice</button>
+    </div>
+    <p class="note" id="invoice-status"></p>
+  </div>
+  <details class="paste">
+    <summary data-t="paste.title">Paste ecash</summary>
+    <textarea id="paste-token" rows="3" placeholder="cashuB…" spellcheck="false" autocapitalize="off"></textarea>
+    <button type="button" class="btn quiet" id="paste-go" data-t="paste.go">Receive</button>
+  </details>
+  <p class="note" id="pocket-status" role="status"></p>
+  <p class="note phone-only" data-t="pocket.phone">This wallet lives on this phone, in this browser. Clearing the browser clears it.</p>
+</section>
+
+<!-- Longy: the artist page -->
+<section id="sheet-longy" class="sheet artist" hidden aria-labelledby="longy-title">
+  <div class="photo"></div>
+  <div class="card">
+    <h1 id="longy-title">Longy</h1>
+    <p data-t="longy.bio">Rock ’n’ roll from Southend.<br>Tonight’s track: “Drip Fed Internet Blues”.</p>
+    <div class="actions">
+      <a class="btn" href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener"><span data-t="closing.tip">Tip Longy on Fountain</span><small data-t="longy.tip.sub">streams and boosts, on Fountain</small></a>
+    </div>
+    <p class="kicker" data-t="longy.next">Next shows</p>
+    <p class="note" data-t="longy.next.tbc">To be announced.</p>
+    <p class="kicker" data-t="longy.merch">Merch</p>
+    <p class="note" data-t="longy.merch.tbc">Coming soon.</p>
+  </div>
+</section>
+
+<nav class="bottombar" aria-label="The NutPub">
+  <button type="button" data-sheet="pocket"><span data-t="bar.pocket">Pocket</span><b id="pocket-amt">0</b></button>
+  <button type="button" data-sheet="" aria-current="true"><span data-t="bar.night">The night</span><b>&nbsp;</b></button>
+  <button type="button" data-sheet="longy"><span data-t="bar.longy">Longy</span><b>&nbsp;</b></button>
+</nav>
 <div id="lights-up" hidden aria-hidden="true">
   <p class="presents">NEW MUSIC NUDGE UNIT</p>
   <div class="rig"><i></i><i></i><i></i></div>

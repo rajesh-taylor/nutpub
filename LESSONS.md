@@ -63,3 +63,5 @@
 - **Put grain and vignette under the content, not over it.** Over the top they'd dim QR codes and blur small type.
 - **`background-attachment: fixed` doesn't work on iOS Safari.** Use a `position: fixed` layer at `z-index: -1` for a full-bleed photo.
 - **Translate from one table, by key.** Keep each status line as a key plus its numbers (`say('home', { n: 21 })`), not as finished text, so the 🇩🇪 flag can say the last thing again in German. Unknown keys pass through, so raw server errors still show.
+- **Lightning top-up in a browser wallet with Coco 2.0.0:** `coco.quotes.mint.create({ mintUrl, amount, method: 'bolt11' })` → `coco.ops.mint.prepare({ quote, amount })` gives `{ id, request }`. Coco stores it in IndexedDB and its processor mints once paid, even after a reload; `coco.ops.mint.checkPayment(id)` settles it now. That's the "never let a page own a paid invoice" rule, solved by the library.
+- **Watch for shadowed names when you add a translate function called `t`.** An old `enter(t)` parameter quietly turned `t('…')` into "t is not a function" inside that one function.

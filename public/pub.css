@@ -206,3 +206,47 @@ canvas { max-width: 100% !important; height: auto !important; }
 @keyframes out { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #lights-up.go *, #lights-up.go::before { animation-duration: .01s !important; animation-delay: 0s !important; } }
 #status.loud { font: 400 34px/1 var(--poster); letter-spacing: .03em; color: var(--amber); text-transform: uppercase; }
+
+/* ---- Bottom bar: Pocket · The night · Longy (the fan page) */
+body:has(.bottombar) { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.bottombar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 8;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: rgb(5 9 20 / .88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-top: 1px solid rgb(239 227 200 / .12);
+}
+.bottombar button {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px;
+  background: none; border: 0; color: var(--smoke); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  font: 600 11px/1.2 var(--body); letter-spacing: .2em; text-transform: uppercase;
+}
+.bottombar b { font: 400 24px/1 var(--poster); letter-spacing: .04em; color: var(--cream); }
+.bottombar button[aria-current="true"] { color: var(--amber); }
+.bottombar button[aria-current="true"]::after { content: ""; width: 18px; height: 2px; margin-top: 3px; background: var(--amber); }
+
+/* Sheets: full screen over the night, under the bar */
+.sheet {
+  position: fixed; inset: 0; z-index: 7; overflow: auto; background: var(--deep);
+  padding: max(24px, env(safe-area-inset-top)) 20px calc(96px + env(safe-area-inset-bottom));
+}
+.sheet > * { max-width: 480px; margin-left: auto; margin-right: auto; }
+.huge { font: 400 clamp(72px, 24vw, 128px)/.9 var(--poster); letter-spacing: .02em; margin: 8px auto 4px; color: var(--cream); }
+.ledger { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; max-width: 280px; margin: 22px auto 28px; text-align: left; font-size: 15px; }
+.ledger dt { color: var(--smoke); }
+.ledger dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.ledger .total { border-top: 1px solid rgb(239 227 200 / .2); padding-top: 6px; color: var(--cream); }
+.ledger .none { grid-column: 1 / -1; text-align: center; }
+.chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
+.chips .btn { min-width: 76px; }
+#invoice-qr { display: block; margin: 0 auto 6px; background: #fff; padding: 10px; width: min(78vw, 300px) !important; height: auto !important; }
+.paste { margin: 8px auto 18px; }
+.paste summary { cursor: pointer; color: var(--amber); font: 600 12px/1.4 var(--body); letter-spacing: .28em; text-transform: uppercase; list-style: none; }
+.paste summary::-webkit-details-marker { display: none; }
+.paste textarea { display: block; width: 100%; margin: 12px 0 10px; padding: 10px; background: rgb(239 227 200 / .06); color: var(--cream); border: 1px solid rgb(239 227 200 / .25); font: 13px/1.3 var(--mono); }
+.sheet.artist { padding: 0 0 calc(96px + env(safe-area-inset-bottom)); }
+.sheet.artist .photo { position: relative; max-width: none; height: 56vh; }
+.sheet.artist .photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 45%, var(--deep)), url(/img/longy-cheers.jpg) center 20% / cover no-repeat; }
+.sheet.artist .card { position: relative; margin-top: -70px; padding: 0 20px; }
+.sheet.artist .kicker { margin-top: 22px; }
+.sheet.artist .note { margin: 4px 0 0; }

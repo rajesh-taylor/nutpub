@@ -58,6 +58,18 @@ export async function openWallet(kitty) {
       return num(mine?.[1]?.spendable);
     },
     receive: (token) => coco.wallet.receive(token),
+    // Top up over Lightning (NUT-04). Coco keeps the quote in IndexedDB and mints it once it's paid, even after
+    // a reload, so the page never owns a paid invoice on its own. check() asks now instead of waiting.
+    async topup(amount) {
+      const quote = await coco.quotes.mint.create({ mintUrl: kitty, amount, method: 'bolt11' });
+      const op = await coco.ops.mint.prepare({ quote, amount });
+      return { id: op.id, request: op.request };
+    },
+    async topupDone(id) {
+      await coco.ops.mint.checkPayment(id).catch(() => {});
+      return (await coco.ops.mint.get(id))?.state === 'finalized';
+    },
+    on: (event, fn) => coco.on(event, fn),
     // Pay a NUT-18 request in-band (NUT-24): returns the cashuB string for the X-Cashu header.
     async pay(creq) {
       const req = await coco.paymentRequests.parse(creq);
