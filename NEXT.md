@@ -16,12 +16,18 @@
 
 ## To do, in order
 1. Longy's audio file → `scripts/segments.sh <file>` (placeholder tone until then).
-2. Longy's photos: Rajesh to name the two files → `scripts/photo.sh <file> longy-live` and `… longy-pint`.
+2. Photos are in `public/img/` (git-ignored until Rajesh says they can be public): longy-live (Now playing, lights up), longy-cheers (closing time), longy-lastorders (B&W pint nudge, **only an 800 px copy: need the original**), longy-stage and longy-countdown (stage screen and livestream countdown, not wired yet).
 3. Payout to Longy: melt (NUT-05) his claimed pledges to his Lightning address (need the address).
 4. Basement58 (retry rule) — 40 min max, else the proposal text only.
 5. KYC Kebab Shack (Rupert, read-only, on the phones).
 6. README with the §13 declarations, PROPOSAL.md, then the btc++ form (due 15:00).
 7. Rehearse the 3-minute script twice with a stopwatch.
+
+## Agreed late Thu (not built yet)
+- Stage screen: longy-stage before the show; lights up on the stage too.
+- Livestream countdown page with longy-countdown (Old Blue Last 2), dimmed: "Longy's on in 12:34".
+- Placeholder livestream site + "Embed this show" box (see DESIGN.md, Tier 4).
+- Raffle and time-locked prize ticket: spec only (DESIGN.md).
 
 ## Known rough edges
 - Pixel can't reach the internet from Vanadium on venue wifi (check Vanadium's Network permission); bar page via USB works.

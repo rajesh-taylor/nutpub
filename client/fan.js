@@ -190,6 +190,8 @@ async function watchPint(token) {
 }
 
 function pintSignal() {
+  pintPoured = true;
+  $('last-call').hidden = true;
   $('pint-qr').hidden = true;
   $('pint').hidden = true;
   $('pint-signal').hidden = false;
@@ -240,6 +242,7 @@ function showFinale(f) {
     clink();
   }
   if (f.state === 'missed' && wallet.pledges().length && !reclaiming) comeHome();
+  lastCall(f);
 }
 
 // Missed: nobody presses refund. Retry every second until the mint's clock agrees it's past last orders.
@@ -273,6 +276,27 @@ function rain() {
   setTimeout(() => box.replaceChildren(), 6000);
 }
 
+// Lights up: the rig fades in one lamp at a time, then Longy. (Reduced motion: a plain fade.)
+function lightsUp() {
+  const el = $('lights-up');
+  el.hidden = false;
+  el.classList.remove('go');
+  void el.offsetWidth;
+  el.classList.add('go');
+  setTimeout(() => (el.hidden = true), 4200);
+}
+
+// Last orders, pint unclaimed: a nudge (its lock sends it back to the house when the bell rings).
+let pintPoured = false;
+let nudged = false;
+function lastCall(f) {
+  if (nudged || pintPoured || tier !== 'ticket' || f.state !== 'open') return;
+  const left = f.lastOrders - Math.floor(serverNow() / 1000);
+  if (left > 60 || left < 0) return;
+  nudged = true;
+  $('last-call').hidden = false;
+}
+
 // ---- Curtains up: the server sends T0 over SSE (falls back to polling if the stream stalls).
 function listen() {
   const apply = (s) => {
@@ -281,6 +305,7 @@ function listen() {
     showState = s;
     showFinale(s.finale);
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
+    if (opening && pass) lightsUp();
     if (opening && pass && !resumed && tier === 'stream') startStream();
     document.body.classList.toggle('playing', !!(s.t0 && pass));
     if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
@@ -306,6 +331,7 @@ async function main() {
   // Longy's paid: after the orange moment, closing time.
   $('paid-screen').onclick = () => { $('paid-screen').hidden = true; $('closing').hidden = false; };
   $('closing-x').onclick = () => ($('closing').hidden = true);
+  $('last-call-x').onclick = () => { $('last-call').hidden = true; freePint().catch((e) => say(e.message)); };
   $('pint-signal').onclick = () => ($('pint-signal').hidden = true);
   $('ticket').onclick = () => enter('ticket');
   $('stream-pass').onclick = () => enter('stream');

@@ -33,4 +33,14 @@ For people on a laptop or iPad who can't be in the room. Like Fountain and zap.s
 
 **Messages with sats (like boostagrams):** a message travels beside the payment, never inside it, signed with a name-for-the-night key (see "Identity by choice" in the build plan). The artist sees "Merry Mempool · 21 sats · Encore!"; the mint never sees the words.
 
+**The green room (livestream):** pass holders message each other; the host reads the best out between songs. Every 15 minutes a card for Longy's next show, merch (tees, limited posters) and gift a ticket.
+
+**Gift a ticket:** a ticket is a bearer token, the same as tonight's gift QR. Send it like any ecash.
+
+**The raffle (instead of "top tipper", which would mean adding up one fan's tips):** every 21-sat boost is an entry; entries close halfway through the show; the winner's key appears on screen before the last song. The prize is a ticket to Longy's next show **locked to the winner's key (NUT-11), with a locktime: unused by the next show, it goes back to the venue.** Same lock as the pint and the pledges: one primitive, three jobs.
+
+**Embed it anywhere:** venues and artists paste one line, `<iframe src="https://…/embed/<show>">`, and the player, the 402 meter and the tip button live inside it. No MCP needed for that. Later, an MCP server could let AI agents list shows and buy passes (the 402 is already machine-friendly). Venues want more nights booked than artists can play: a shareable link plus an embed is the pitch.
+
+**Prices published ahead:** the weekly listing shows each night's ticket and pass price; the 402 asks for exactly that.
+
 **Before building:** a one-page design spec (layouts at 375 px, 768 px and 1440 px), then build.

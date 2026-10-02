@@ -101,8 +101,33 @@ html[data-lang="de"] .has-de { display: none !important; }
 body.playing { background: linear-gradient(#0b1430e6, #0b1430f2 55%, var(--bg)), url(/img/longy-live.jpg) center top / cover fixed, var(--bg); }
 /* Closing time */
 #closing { position: fixed; inset: 0; z-index: 9; background: var(--bg); overflow: auto; }
-#closing .photo { height: 46vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-pint.jpg) center 30% / cover, #1a1206; }
+#closing .photo { height: 46vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-cheers.jpg) center 20% / cover, #1a1206; }
 #closing .card { max-width: 520px; margin: -40px auto 0; padding: 0 16px 32px; position: relative; text-align: center; }
 #closing .kicker { color: var(--amber); letter-spacing: .12em; text-transform: uppercase; margin: 0; }
 #closing a.tier { text-decoration: none; text-align: left; }
 .card-rail { opacity: .55; border-style: dashed; cursor: not-allowed; }
+
+/* Lights up: black, then the rig, lamp by lamp, then Longy */
+#lights-up { position: fixed; inset: 0; z-index: 13; pointer-events: none; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+#lights-up::before { content: ""; position: absolute; inset: 0; background: linear-gradient(#0006, #000 90%), url(/img/longy-live.jpg) center top / cover; opacity: 0; }
+#lights-up .rig { position: relative; display: flex; gap: 12px; }
+#lights-up .rig i { width: 26px; height: 26px; border-radius: 50%; background: #1a1a1a; }
+#lights-up .who { position: relative; text-align: center; opacity: 0; }
+#lights-up .who b { display: block; font-size: 64px; letter-spacing: .14em; color: var(--text); }
+#lights-up .who span { color: var(--amber); letter-spacing: .2em; text-transform: uppercase; font-size: 16px; }
+#lights-up.go .rig i { animation: lamp .5s ease-out forwards; }
+#lights-up.go .rig i:nth-child(2) { animation-delay: .25s; } #lights-up.go .rig i:nth-child(3) { animation-delay: .5s; }
+#lights-up.go .rig i:nth-child(4) { animation-delay: .75s; } #lights-up.go .rig i:nth-child(5) { animation-delay: 1s; }
+#lights-up.go .rig i:nth-child(6) { animation-delay: 1.25s; } #lights-up.go .rig i:nth-child(7) { animation-delay: 1.5s; }
+#lights-up.go::before { animation: up 1.4s 1.8s ease-out forwards; }
+#lights-up.go .who { animation: up 1s 2.2s ease-out forwards; }
+#lights-up.go { animation: out .6s 3.6s ease-in forwards; }
+@keyframes lamp { to { background: radial-gradient(circle at 40% 35%, #fff6d0, var(--amber) 55%, #c9771a); box-shadow: 0 0 26px 8px #f3b54a99; } }
+@keyframes up { to { opacity: 1; } }
+@keyframes out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #lights-up.go .rig i, #lights-up.go::before, #lights-up.go .who { animation-duration: .01s; animation-delay: 0s; } }
+/* Last orders: the free pint nudge */
+#last-call { position: fixed; inset: 0; z-index: 10; background: var(--bg); overflow: auto; }
+#last-call .photo { height: 50vh; background: linear-gradient(transparent 55%, var(--bg)), url(/img/longy-lastorders.jpg) center 25% / cover, #111; filter: grayscale(1); }
+#last-call .card { max-width: 520px; margin: -40px auto 0; padding: 0 16px 32px; position: relative; text-align: center; }
+#last-call .kicker { color: var(--amber); letter-spacing: .12em; text-transform: uppercase; margin: 0; }
