@@ -29,6 +29,10 @@
 - Placeholder livestream site + "Embed this show" box (see DESIGN.md, Tier 4).
 - Raffle and time-locked prize ticket: spec only (DESIGN.md).
 
+## Budget and the room
+- The float only needs to cover **3 judges** (gift ~105 each ≈ 315 sats). If shortlisted, the **first 10 from the crowd** at the finals. Not 3,000.
+- At the finals, the Pixel is mirrored (scrcpy) to the MacBook on the projector: the crowd sees our phone's screen.
+
 ## Numo (bar till)
 Decided Thu night: **free pints stay on our bar page.** Numo can't redeem P2PK (its receive passes no signing keys), and the free pint is locked to the bar's key. Numo is the till for *paid* pints from the menu (Tier 2 in the plan: fork, rename, webhook ticker). Only if time allows after the redesign; it's a nice "the bar runs Numo" line, not a demo beat.
 
@@ -70,6 +74,8 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
 - [x] Lights up redesigned Thu night (seen on the Pixel, looks right): THE NUTPUB PRESENTS top centre, three big beacons, Longy's photo much brighter, LONGY · LIVE AT THE NUTPUB along the bottom so his face is clear. Preview: `/?preview=lights` (tap to replay).
 - [ ] **Pick the hero photo:** `/photos.html` cycles 12 portrait candidates, 8 s each (tap to skip); the tag top right names the file. Rajesh to choose at breakfast.
+- [ ] **The three beacons get their own screen**, before any photo: one per judge as they come in (demo only). Only then Longy's images.
+- [ ] Peggy Sue's photos are only 800 px web copies (from the deck); for real use, export the originals.
 - [x] Title over the beacons is now **NEW MUSIC NUDGE UNIT** (was "The NutPub presents").
 - [ ] **One beacon per guest:** the three beacons light as each judge comes through the door (pre-show, on every phone and the stage), then the premiere at lights up. Three judges at the expo = three beacons.
 - [ ] Bar page on a fan's phone says "Scan a pint QR from a fan's phone": it's the bar's screen, so keep it off the guest arrows (presenter only).
