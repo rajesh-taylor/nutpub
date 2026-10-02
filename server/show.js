@@ -27,6 +27,11 @@ export function curtainsUp() {
   show.t0 ??= Math.ceil((Date.now() + 2000) / 1000) * 1000;
   broadcast();
 }
+// Lights down again but keep everyone in (for rehearsals: run the finale twice without paying the door twice).
+export function lightsDown() {
+  show.t0 = null;
+  broadcast();
+}
 export function newShow() {
   show.t0 = null;
   passes.clear();

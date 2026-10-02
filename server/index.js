@@ -10,7 +10,7 @@ import { printSuitCoin, suitToken, relabel } from './rupert.js';
 import { freePint, pour, resetPints, lastPint, keys as nightKeys } from './pint.js';
 import { pledgeGate, finaleState, resetRound } from './finale.js';
 import {
-  SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, events, snapshot, addToState, broadcast,
+  SEGMENT_DIR, segmentCount, issuePass, getPass, liveSegment, curtainsUp, newShow, lightsDown, events, snapshot, addToState, broadcast,
 } from './show.js';
 
 const app = express();
@@ -121,6 +121,7 @@ app.get('/api/pledge', (req, res, next) => (passOf(req) ? next() : res.status(40
 app.get('/api/events', events);
 app.get('/api/show', (_req, res) => res.json(snapshot()));
 app.post('/api/curtains', admin, (_req, res) => { curtainsUp(); res.json(snapshot()); });
+app.post('/api/rehearse', admin, (_req, res) => { lightsDown(); resetRound(); res.json(snapshot()); });
 app.post('/api/new-show', admin, (_req, res) => { newShow(); resetPints(); resetRound(); res.json(snapshot()); });
 
 // Rupert's printing press. kind=suit: SuitCoin as printed; kind=relabel: the same notes relabelled as the Kitty.

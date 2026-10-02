@@ -29,6 +29,9 @@
 - Placeholder livestream site + "Embed this show" box (see DESIGN.md, Tier 4).
 - Raffle and time-locked prize ticket: spec only (DESIGN.md).
 
+## Numo (bar till)
+Decided Thu night: **free pints stay on our bar page.** Numo can't redeem P2PK (its receive passes no signing keys), and the free pint is locked to the bar's key. Numo is the till for *paid* pints from the menu (Tier 2 in the plan: fork, rename, webhook ticker). Only if time allows after the redesign; it's a nice "the bar runs Numo" line, not a demo beat.
+
 ## Known rough edges
 - Pixel can't reach the internet from Vanadium on venue wifi (check Vanadium's Network permission); bar page via USB works.
 - The tunnel URL changes on every restart; QR codes follow `data/tunnel.url`.
@@ -64,6 +67,10 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] **Livestream player on the phone:** portrait = small 16:9 player at the top, the night below; turn the phone landscape = full screen, one tap brings up controls, including a **Tip** button with a confirm step.
 - [ ] **Website player (responsive):** player with a YouTube-style live chat (the green room) to the right on desktop, below on phones.
 - [ ] **The pre-show fills the room:** each phone that comes in lights one lamp (up to 7), on every phone and the stage. At lights up the house goes dark, then a premiere sequence, synced on every phone by T0: lamps fire in turn (a drum roll), Longy's photo fades up between the flashes, and it ends **static on the photo** with one card placed well: show start time, merch, next shows, or the green room.
+- [ ] **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
+- [x] Lights up redesigned Thu night (seen on the Pixel, looks right): THE NUTPUB PRESENTS top centre, three big beacons, Longy's photo much brighter, LONGY · LIVE AT THE NUTPUB along the bottom so his face is clear. Preview: `/?preview=lights` (tap to replay).
+- [ ] **One beacon per guest:** the three beacons light as each judge comes through the door (pre-show, on every phone and the stage), then the premiere at lights up. Three judges at the expo = three beacons.
+- [ ] Bar page on a fan's phone says "Scan a pint QR from a fan's phone": it's the bar's screen, so keep it off the guest arrows (presenter only).
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
 
 ### Decided Thu night

@@ -277,13 +277,22 @@ function rain() {
 }
 
 // Lights up: the rig fades in one lamp at a time, then Longy. (Reduced motion: a plain fade.)
-function lightsUp() {
+function lightsUp(hold = false) {
   const el = $('lights-up');
+  el.classList.toggle('hold', hold);
   el.hidden = false;
   el.classList.remove('go');
   void el.offsetWidth;
   el.classList.add('go');
-  setTimeout(() => (el.hidden = true), 4200);
+  if (!hold) setTimeout(() => (el.hidden = true), 7400);
+}
+// Design preview: /?preview=lights plays lights up and stays on Longy (tap to replay).
+if (new URLSearchParams(location.search).get('preview') === 'lights') {
+  addEventListener('load', () => {
+    lightsUp(true);
+    $('lights-up').style.pointerEvents = 'auto';
+    $('lights-up').onclick = () => lightsUp(true);
+  });
 }
 
 // Last orders, pint unclaimed: a nudge (its lock sends it back to the house when the bell rings).
