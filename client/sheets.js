@@ -118,8 +118,10 @@ export function initSheets(w, cfg, refresh, { tip } = {}) {
   longy(tip);
   const host = new URL(config.kitty).host;
   const mintLine = () => t('pocket.mint', { at: host.includes('minibits') ? 'Minibits' : t('pocket.test') });
-  $('pocket-mint').textContent = mintLine();
-  onLang(() => { $('pocket-mint').textContent = mintLine(); renderLedger(); });
+  const phoneLine = () => t('pocket.phone', { addr: location.host }) + (host.includes('minibits') ? ' ' + t('pocket.custody') : '');
+  const lines = () => { $('pocket-mint').textContent = mintLine(); $('pocket-phone').textContent = phoneLine(); };
+  lines();
+  onLang(() => { lines(); renderLedger(); });
   document.querySelectorAll('.bottombar button').forEach((b) => (b.onclick = () => {
     openSheet(b.dataset.sheet);
     if (!b.dataset.sheet) scrollTo({ top: 0, behavior: 'smooth' });

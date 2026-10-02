@@ -12,7 +12,7 @@ A pub where the tickets, the bar and the band all take ecash. Everyone gets paid
 https://github.com/rajesh-taylor/nutpub
 
 **Demo URL**
-(leave empty: the tunnel address changes on restart; the demo is live at the expo)
+https://nutpub.rajeshtaylor.com (live during the expo; the stage screen needs the admin key)
 
 **What you built**
 The problem: paying for a night out leaves a trail. Ticket sites know who goes to every gig, card payments carry your name, and bands get paid weeks later, if at all.
@@ -43,7 +43,7 @@ Cashu's new HTTP 402 (NUT-24) runs a whole night at the pub, on the judges' own 
 
 **Team:** Rajesh Taylor.
 
-**Repository:** _(GitHub URL once pushed)_
+**Repository:** https://github.com/rajesh-taylor/nutpub
 
 **Demo:** live at the expo, Talks Stage. _(Fallback video URL, if recorded.)_
 

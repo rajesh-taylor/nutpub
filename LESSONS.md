@@ -88,3 +88,7 @@
 - **Store every bearer token you hand out until it's settled.** Thursday's unpoured pints were only in the server's memory; a restart lost them, and with them the house's right to take them back.
 - **A fixed address with a Cloudflare named tunnel** (your own domain on Cloudflare): `cloudflared tunnel login` (once, in the browser) → `cloudflared tunnel create nutpub` → `cloudflared tunnel route dns nutpub nutpub.example.com` → `cloudflared tunnel run --url http://localhost:8787 nutpub`. Ten minutes, and wallets, bookmarks and QR codes stop breaking on restart.
 - **Your CDN may overrule your cache headers.** Our Cloudflare zone's Browser Cache TTL turned `Cache-Control: no-cache` into `max-age=14400` for CSS and JS, so phones kept old code for 4 hours. Version asset URLs (`/app.js?v=<build>`) from the server and stop worrying.
+
+## Rehearsal maths (Fri 2 Oct)
+- **Count the room, not the passes.** The goal was 21 × passes and the stage drew a lamp per pass, so the presenter's own tab (needed for the Basement58 demo) quietly raised the goal past what the three judges could pledge. Mark crew passes (the door request carries the admin key) and count guests only.
+- **Say where a browser wallet lives, precisely.** Closing the tab loses nothing; clearing site data, a private window, another browser or device, or Safari's 7-day storage limit does. Say it on the page and in the pitch, and give a way out (Take it home).

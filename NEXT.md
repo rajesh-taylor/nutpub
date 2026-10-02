@@ -16,6 +16,13 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
+## Fri 12:25 Berlin
+- **btc++ project not created yet** (12:15: page says 0 projects, no deadline, expo countdown 3 h). Create project needs Rajesh's sign-in (GitHub / passkey); then paste SUBMISSION.md (Demo URL is now the fixed address).
+- **SCRIPT.md rewritten as a beat sheet:** who taps what, story line, and a "step out" NUT aside per beat (24, 12, 11 + locktime + refund, 07, Base58, 18/nut10, 05, 04). The chapter lines that left the phones are spoken now. **Order changed:** free pint *before* curtains up ("while the support acts warm us up"). KYC Kebab Shack: one line at closing, not demoed.
+- **Crew pass:** the presenter tab's door payment carries X-Admin; its pass lights no lamp and doesn't raise the goal (before: the Pixel's Basement58 pass made 4 phones, goal 84, and three judges' 63 missed). Tested on the fake mint (presenter → 0 phones, guest → 1).
+- **Pocket wording:** where the sats live (this browser, this address; closing the tab is fine; clearing data, private window, another browser/phone, Safari's 7 days are not), take it home, and the mint is custodial (Minibits only). 🇬🇧 + 🇩🇪.
+- **Mac lost the network 12:13–12:16 Berlin**: the fixed address gave 530; cloudflared reconnected by itself.
+
 ## Fri 10:40 Berlin
 - **Layout (Rajesh):** every tab has the brand on top (THE NUTPUB, flags, chapter tag only); the chapter sentences are gone from the phones (they live in the script now); the night's words sit at the bottom over the photo, tickets side by side above the tab bar; Pocket and Longy keep the wordmark on top.
 - **Cloudflare caches CSS/JS in browsers for 4 h** (our zone's Browser Cache TTL overrides `no-cache`). The server now stamps every page's CSS/JS links with `?v=<build time>`, so a rebuild reaches phones on the next page load.

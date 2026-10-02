@@ -90,8 +90,9 @@ app.post('/api/gift', admin, async (req, res) => {
 // The door. "If your sats ain't signed, you ain't coming in!"
 app.get('/api/door', cashuGate((req) => TIERS[tierOf(req)].door, 'The NutPub door'), (req, res) => {
   const tier = tierOf(req);
-  const pass = issuePass(tier);
-  log(`door ${tier} +${req.paid}, house ${balance()}`);
+  const crew = req.get('X-Admin') === ADMIN_KEY; // the presenter's tab
+  const pass = issuePass(tier, crew);
+  log(`door ${tier}${crew ? ' (crew)' : ''} +${req.paid}, house ${balance()}`);
   // Plebs pay per 10 s from the start: their door payment is the segment that's live (or the first one).
   if (tier === 'stream') getPass(pass).paid.add(liveSegment() ?? 0); // the pass's first 10 s
   res.json({ in: true, tier, name: TIERS[tier].name, paid: req.paid, pass });

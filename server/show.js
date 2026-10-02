@@ -8,14 +8,16 @@ export const SEGMENT_MS = 10_000;
 export const SEGMENT_DIR = fileURLToPath(new URL('../media/segments/', import.meta.url));
 export const segmentCount = () => readdirSync(SEGMENT_DIR).filter((f) => f.endsWith('.wav')).length;
 
-const passes = new Map(); // pass id -> { tier, paid: Set of segment numbers }
+const passes = new Map(); // pass id -> { tier, paid: Set of segment numbers, crew }
+// The room is the guests: the presenter's own tab (crew) doesn't light a lamp or raise the goal.
+const guests = () => [...passes.values()].filter((p) => !p.crew).length;
 const clients = new Set(); // open SSE responses
 export const show = { t0: null };
 
-export function issuePass(tier) {
+export function issuePass(tier, crew = false) {
   const id = randomBytes(12).toString('hex');
-  passes.set(id, { tier, paid: new Set() });
-  if (CURTAINS_AT && passes.size >= CURTAINS_AT && show.t0 == null) curtainsUp();
+  passes.set(id, { tier, paid: new Set(), crew });
+  if (CURTAINS_AT && guests() >= CURTAINS_AT && show.t0 == null) curtainsUp();
   else broadcast();
   return id;
 }
@@ -43,8 +45,8 @@ export function newShow() {
 const extras = []; // other parts of the show (the finale) add their fields here
 export const addToState = (fn) => extras.push(fn);
 const state = () => Object.assign(
-  { t0: show.t0, now: Date.now(), phones: passes.size, segmentMs: SEGMENT_MS },
-  ...extras.map((fn) => fn(passes.size)),
+  { t0: show.t0, now: Date.now(), phones: guests(), segmentMs: SEGMENT_MS },
+  ...extras.map((fn) => fn(guests())),
 );
 
 export function broadcast() {

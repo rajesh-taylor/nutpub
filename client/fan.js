@@ -118,7 +118,8 @@ async function enter(which) {
   say('knocking');
   try {
     resetSpend(); // a new pass is a new night
-    const res = await paidFetch(`/api/door?tier=${which}`, {}, which === 'ticket' ? 'door' : 'stream', config.tiers[which].door);
+    const crew = presenter ? { 'X-Admin': localStorage.getItem('nutpub-k') } : {}; // not counted as a guest
+    const res = await paidFetch(`/api/door?tier=${which}`, crew, which === 'ticket' ? 'door' : 'stream', config.tiers[which].door);
     const body = await res.json();
     if (res.ok) {
       ({ pass, tier } = body);
