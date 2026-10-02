@@ -57,7 +57,16 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] EN/DE pill doesn't work (only the punchlines have German, so tapping it seems to do nothing). Flags 🇬🇧 🇩🇪 instead, and either translate every line or drop German for the expo (decision below).
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
 
-### Decisions needed at breakfast
-1. **Headline font:** self-host a free condensed poster face (Bebas Neue or Oswald, both SIL Open Font Licence) as a file in the repo. It isn't in the fixed dependency list, so it needs a yes.
-2. **German:** full translation behind 🇬🇧/🇩🇪, or English only for the expo?
-3. **Wallet balance:** labelled pocket, or hidden until a gift lands?
+### Decided Thu night
+1. **Font: yes.** Self-host a free condensed poster face (Bebas Neue or Oswald, SIL OFL) as a file in the repo, with its licence file.
+2. **German: yes, full translation** behind 🇬🇧 / 🇩🇪 flags. Every line, not just the punchlines. Berlin, lots of German devs: it shows we're inclusive.
+3. **Bottom bar with three buttons** (phone), the same for judges in the room and viewers at home:
+   - **Pocket** (left): balance in big type, which mint it's at ("NutPub Mint · Minibits"), what tonight has cost so far (door, stream, pledges, tips), top up (Lightning invoice or paste ecash), and later "take it home" (withdraw to your own wallet). One wallet for the ticket, the stream, the pint and the tips.
+   - **The night** (centre, home): the live screen, now playing, the next action. Each chapter has a small "what just happened?" that opens the plain-English explanation (402, DLEQ, P2PK, locktime). Info lives with the story, not in a separate menu, so judges learn as they go.
+   - **Longy** (right): the artist page. Photo, two lines of bio, tip on Fountain, next shows, merch. The venue is the NutPub wordmark at the top.
+4. **Viewer must-haves we'd missed:**
+   - **A spending cap for the livestream**: "stop at 60 sats" (default 60, adjustable). People will only leave a meter running if it can't run away.
+   - **A running meter:** "This set so far: 12 sats".
+   - **Sound state:** a clear "tap for sound" on iPhone, and mute.
+   - **Connection state:** "Offline: the music stops, nothing is charged".
+   - **The wallet lives on this phone:** say so in Pocket, and offer "take it home" before people clear their browser.
