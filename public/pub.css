@@ -52,8 +52,10 @@ body.streaming { --shade: .75; }
 /* The door's hero photos, crossfading slowly (picked on /pick.html) */
 .backdrop .slide { position: absolute; inset: 0; background: center 18% / cover no-repeat; opacity: 0; transition: opacity 1.8s ease; }
 .backdrop .slide.on { opacity: 1; }
-body.heroes:not([data-photo="stage"]):not([data-photo="live"]) { --photo: none; }
-body:is([data-photo="stage"], [data-photo="live"]) .backdrop .slide { display: none; }
+body.heroes-door:not([data-photo="stage"]):not([data-photo="live"]) { --photo: none; }
+body.heroes-live[data-photo="live"] { --photo: none; }
+body:is([data-photo="stage"], [data-photo="live"]) .backdrop .slide.door,
+body:not([data-photo="live"]) .backdrop .slide.live { display: none; }
 /* Film grain: one small noise tile, blended over whatever is under it. */
 .backdrop::after, .grain::after {
   content: ""; position: absolute; inset: -50%; pointer-events: none; z-index: 2;
@@ -217,12 +219,12 @@ canvas { max-width: 100% !important; height: auto !important; }
 .moment .photo { position: relative; height: 52vh; overflow: hidden; }
 .moment .photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 50%, var(--deep)), var(--photo) center 22% / cover no-repeat; }
 #closing .photo { --photo: url(/img/longy-cheers.jpg); }
-#last-call .photo { --photo: url(/img/longy-lastorders.jpg); filter: grayscale(1); }
+#last-call .photo { --photo: var(--lastorders, url(/img/longy-lastorders.jpg)); filter: grayscale(1); }
 .moment .card { max-width: 520px; margin: -56px auto 0; padding: 0 16px 32px; position: relative; }
 
 /* ---- Lights up: black, the stage lights (one per guest in the room), then Longy */
 #lights-up { position: fixed; inset: 0; z-index: 13; pointer-events: none; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6vh 16px 7vh; overflow: hidden; }
-#lights-up::before { content: ""; position: absolute; inset: 0; background: linear-gradient(#0009, #0000 30%, #0000 55%, #000c 92%), url(/img/longy-live.jpg) center 15% / cover; opacity: 0; }
+#lights-up::before { content: ""; position: absolute; inset: 0; background: linear-gradient(#0009, #0000 30%, #0000 55%, #000c 92%), var(--lights, url(/img/longy-live.jpg)) center 15% / cover; opacity: 0; }
 #lights-up .presents { position: relative; margin: 0; color: var(--amber); letter-spacing: .32em; font: 600 13px/1.3 var(--body); opacity: 0; }
 #lights-up .rig { position: relative; display: flex; gap: 34px; margin-top: -30vh; }
 #lights-up .rig i { width: 58px; height: 58px; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #262626; }
@@ -330,3 +332,6 @@ body:has(.bottombar) { padding-bottom: calc(84px + env(safe-area-inset-bottom));
 .sheet.artist .card { margin-top: 0; padding-top: 14px; }
 #home-qr { display: block; margin: 4px auto; background: #fff; padding: 10px; width: min(78vw, 300px) !important; height: auto !important; }
 .sheet a:not(.btn) { color: var(--amber); text-underline-offset: 3px; }
+
+/* A tab opened for testing or design work only (?tab=test / ?tab=design) */
+.tabtag { position: sticky; top: 0; z-index: 20; margin: 0 -16px; padding: 6px 10px; background: #c0392b; color: #fff; font: 700 12px/1.3 var(--body); letter-spacing: .14em; text-align: center; }

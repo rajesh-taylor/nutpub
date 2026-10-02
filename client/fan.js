@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { Mint, hashToCurve, getDecodedToken } from '@cashu/cashu-ts';
 import { t, has, sats, onLang } from './i18n.js';
 import { initSheets, spend, spent, resetSpend } from './sheets.js';
+import { heroes } from './heroes.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => document.querySelectorAll('[data-screen]').forEach((el) => (el.hidden = el.id !== id));
@@ -446,28 +447,6 @@ function lastCall(f) {
   $('last-call').hidden = false;
 }
 
-// The door's hero: one photo, or a slow crossfade through the ones picked on /pick.html (7 s each).
-function heroes(files) {
-  if (!files.length) return;
-  const box = document.querySelector('.backdrop');
-  const slides = files.map((f) => {
-    const d = document.createElement('div');
-    d.className = 'slide';
-    d.style.backgroundImage = `url(/img/${f}.jpg)`;
-    box.prepend(d);
-    return d;
-  });
-  document.body.classList.add('heroes');
-  let k = 0;
-  slides[0].classList.add('on');
-  if (slides.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  setInterval(() => {
-    slides[k].classList.remove('on');
-    k = (k + 1) % slides.length;
-    slides[k].classList.add('on');
-  }, 7000);
-}
-
 // Before curtains up, the phone shows the room filling: one stage light per phone through the door.
 let lampsDrawn = 0;
 function room(s) {
@@ -515,7 +494,7 @@ async function main() {
     $('stream-price').textContent = t('per.seg', { n: config.tiers.stream.segment });
   };
   prices();
-  heroes(config.heroes || []);
+  heroes(config.heroes || {});
   // 🇬🇧/🇩🇪: say everything again in the other language.
   onLang(() => {
     prices();

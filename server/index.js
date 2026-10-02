@@ -48,7 +48,11 @@ app.get('/api/health', async (_req, res) => {
 const publicUrl = () => { try { return readFileSync(TUNNEL_FILE, 'utf8').trim() || null; } catch { return null; } };
 // The hero photos for the door, as picked on /pick.html (files under public/img, which stays out of git).
 const PICKS_FILE = fileURLToPath(new URL('../data/picks.json', import.meta.url));
-const heroes = () => { try { return JSON.parse(readFileSync(PICKS_FILE, 'utf8')).files || []; } catch { return []; } };
+const HEROES_FILE = fileURLToPath(new URL('../data/heroes.json', import.meta.url));
+const heroes = () => {
+  try { return JSON.parse(readFileSync(HEROES_FILE, 'utf8')); } catch {}
+  try { return { door: JSON.parse(readFileSync(PICKS_FILE, 'utf8')).files || [] }; } catch { return {}; }
+};
 app.post('/api/picks', express.json({ limit: '4kb' }), (req, res) => {
   const files = (req.body?.files || []).filter((f) => /^[a-z0-9/-]+$/i.test(f)).slice(0, 12);
   writeFileSync(PICKS_FILE, JSON.stringify({ picks: req.body?.picks || [], files, at: new Date().toISOString() }));

@@ -9,10 +9,18 @@
 1. Mints: `cdk-mintd -w ~/cdk-suitcoin-mint` (SuitCoin, :3339). Fake Kitty fallback only: `cdk-mintd -w ~/cdk-fake-mint` (:3338).
 2. Server (Minibits): `cd ~/Documents/NutPub && set -a && . ./.env && npm start >> data/server.log 2>&1 &` (append: the log now has one line per gift, door, pint and payout)
    - Fake mint instead: add `KITTY_URL=http://127.0.0.1:3338`. Shorter last orders for testing: `LAST_ORDERS_MIN=1`.
-3. Tunnel: `cloudflared tunnel --no-autoupdate --protocol http2 --url http://localhost:8787 > data/tunnel.log 2>&1 &`
-   then `grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' data/tunnel.log | head -1 > data/tunnel.url` (QR codes read this file).
+3. Tunnel (**fixed address since Fri 10:15 Berlin: https://nutpub.rajeshtaylor.com**, named tunnel `nutpub`, credentials in `~/.cloudflared/`):
+   `cloudflared tunnel --no-autoupdate --protocol http2 run --url http://localhost:8787 nutpub > data/tunnel-named.log 2>&1 &`
+   `data/tunnel.url` holds `https://nutpub.rajeshtaylor.com` (QR codes read this file). The address never changes, so phone wallets survive restarts.
+   Old quick tunnel (`duties-modeling-aimed-seas…`) still running only until its phone wallets are swept (Pocket → Take it home); then stop it.
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
+
+## Fri 10:20 Berlin
+- **Photos (Rajesh):** door = 6 (peggy-5-1372, rustic); Now playing crossfades 2, 3, 4 (fp-32, fp-37, peggy-17-8266), lights up ends on 2; last-orders nudge uses 7 (fp-31, can raised, B&W). Set in `data/heroes.json` (not in git). Rajesh's Send said 1, 2, 4, 6, 7; his message said 2, 3, 4: used the message, check.
+- **Pixel tabs:** keep `localhost:8787/?v=3` (USB fan tab, 87 sats); close Hero Picker, the old bar tab, Thursday's photo picker. Close non-NutPub tabs before the expo (the scrcpy mirror shows the tab switcher). Tabs Claude opens carry a red TEST / DESIGN WORK ONLY strip.
+- **Longy's Lightning address:** none yet (only keysend, which a mint can't pay). Payout stays on `rajesh@minibits.cash`.
+- **Not before the expo:** API / MCP / embed card for venues and artists (finals pack, if shortlisted).
 
 ## Fri 10:00 Berlin
 - **Repo public:** https://github.com/rajesh-taylor/nutpub (KICKOFF.md stripped from all history; it stays on disk, git-ignored).

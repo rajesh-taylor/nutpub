@@ -44,4 +44,13 @@
     dispatchEvent(new Event('nutpub-lang'));
   }));
   document.body.prepend(bar);
+
+  // Tabs Claude opens for testing or design say so across the top (?tab=test or ?tab=design): close them later.
+  const tag = new URLSearchParams(location.search).get('tab');
+  if (tag) {
+    const strip = document.createElement('div');
+    strip.className = 'tabtag';
+    strip.textContent = tag === 'design' ? 'DESIGN WORK ONLY · close this tab later' : 'TEST · close this tab later';
+    document.body.prepend(strip);
+  }
 })();
