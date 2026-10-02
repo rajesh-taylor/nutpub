@@ -282,18 +282,22 @@ async function tip() {
 async function showVideo(n, startsAt, me) {
   try {
     const r = await fetch(`/api/video/${n}`, { headers: { 'X-Pass': pass } });
-    if (!r.ok) return;
+    if (!r.ok) return say(`Video: ${r.status}`);
     const url = URL.createObjectURL(await r.blob());
     const go = () => {
       if (!streaming || me !== run) return URL.revokeObjectURL(url);
       const v = $('vid');
       const old = v.src;
+      v.muted = true;
+      v.playsInline = true;
       v.onloadedmetadata = () => {
-        v.currentTime = Math.max(0, Math.min((serverNow() - startsAt) / 1000, v.duration - 0.1));
-        v.play().catch(() => {});
+        const late = (serverNow() - startsAt) / 1000;
+        if (late > 0.3) v.currentTime = Math.min(late, v.duration - 0.1);
       };
+      v.onerror = () => say(`Video: ${v.error?.message || v.error?.code}`);
       v.src = url;
       v.hidden = false;
+      v.play().catch((e) => say(`Video: ${e.name}`));
       if (old.startsWith('blob:')) URL.revokeObjectURL(old);
     };
     const wait = startsAt - serverNow();
