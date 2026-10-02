@@ -297,7 +297,7 @@ async function showVideo(n, startsAt, me) {
       v.onerror = () => say(`Video: ${v.error?.message || v.error?.code}`);
       v.src = url;
       v.hidden = false;
-      v.play().catch((e) => say(`Video: ${e.name}`));
+      v.play().catch((e) => say(e.name === 'NotAllowedError' ? 'Tap the picture to start the video.' : `Video: ${e.name}`));
       if (old.startsWith('blob:')) URL.revokeObjectURL(old);
     };
     const wait = startsAt - serverNow();
@@ -568,7 +568,7 @@ async function main() {
     if (streaming) stopStream();
     else { say(''); startStream(); }
   };
-  $('frame').onclick = (e) => { if (e.target === $('frame') || e.target.closest('.pic, .live, .clock, #level')) showControls(); };
+  $('frame').onclick = (e) => { if (e.target === $('frame') || e.target.closest('.pic, video, .live, .clock, #level')) showControls(); };
   $('ctl-play').onclick = () => { showControls(); $('stop').onclick(); };
   $('ctl-mute').onclick = () => { showControls(); mute(); };
   $('ctl-tip').onclick = () => { clearTimeout(controlsTimer); $('tip-confirm').hidden = false; };
@@ -599,6 +599,11 @@ async function main() {
   }
 }
 
+// iPhone (Low Power Mode, or Safari's own rules) may refuse to start video without a tap: any tap starts it.
+document.addEventListener('click', () => {
+  const v = $('vid');
+  if (streaming && !v.hidden && v.paused && v.src) v.play().catch(() => {});
+}, true);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && pass) keepAwake();
   if (!document.hidden && streaming && $('vid').paused && !$('vid').hidden) $('vid').play().catch(() => {});
