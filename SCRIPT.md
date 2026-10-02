@@ -13,6 +13,23 @@
 
 ---
 
+## FINAL desk flow (Fri 16:25 Berlin): Pixel at home, iPhone in the room, Mac = stage. No Rupert, no pint.
+
+**Once:** on the Pixel open `nutpub.rajeshtaylor.com/stage.html#k=<ADMIN_KEY>` (marks it presenter: Basement button, counts as crew), then back to the fan tab.
+**Before each judge:** Mac stage → **New show**; reload both phones.
+
+| # | Who taps what | Say | NUT |
+|---|---|---|---|
+| 0 | Mac: **Next gift · guest 105** (or the phones' own sats) | "105 sats of ecash in a wallet in the browser. No app, no account. A test mint on my laptop today; the same code runs on Minibits." | **00–03**: notes signed blind; the mint can't tell whose they are. |
+| 1 | Pixel: **Livestream pass · 1 sat**. iPhone: **Ticket · 21** | "Same night, two ways in: at home and in the room." | **24 + 18**: 402 with a payment request, paid in the same request. **12**: the door checks the mint's signature offline. |
+| 2 | Mac: **Curtains up** | "Longy's on." | — |
+| 3 | Pixel: video plays, *This set* +1 per 10 s; sideways = full screen; **Stop paying** → **Play** | "At home, a fresh 402 every ten seconds. Stop paying, the amp goes quiet. The iPhone in the room paid once." | **24 every 10 s**: the picture only goes to a phone that paid for those 10 s. |
+| 4 | Pixel: **Basement** → *Signal lost… asking again with the same payment* → *Same payment, same song. Charged once.* → **Same payment, next song?** → 🎺 *Refused* | "Basement bar: the signal drops right after you pay. Did it go through? Same payment, same song: charged once. Same payment for the next song: no." | **Base58 proposal** (NUT-24 addendum): a token is bound to the request it paid for. Retry safe, reuse refused. |
+| 5 | iPhone (and Pixel): **A round for the band · 21** → **Longy's paid!** | "21 each; it only goes to Longy if the room hits the goal. Miss it and it comes home by itself at last orders." | **18 `nut10` + 11**: the 402 requires a locked token, to Longy, locktime at last orders, refund key made by the phone. **07**: pledges checked unspent, not taken. |
+| 6 | Either: **Pocket → Take it home** | "Your change is yours: it lives in this browser; Take it home moves it into any Cashu wallet." | **04** Lightning in; **05** pays the artist (off today). |
+
+**Close:** "Drinkers identified: zero. Standard Cashu on any mint. The one new thing, retry-safe 402s, is our Base58 proposal."
+
 ## Desk flow (loose): one judge, their own phone, ~3 minutes
 
 **The story in one line:** a night out needs money to do four jobs: **get you in, pay as you go, chip in for the band, and come home with you.** Each job is a NUT, and the judge watches each one happen on their own phone. (Rupert stays in the background: show him only if asked about counterfeits.)
