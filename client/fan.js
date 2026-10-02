@@ -587,6 +587,7 @@ async function main() {
     chapter(showState.t0 ? 'playing' : 'inside');
     player(false);
     $('stream').hidden = !showState.t0;
+    $('pint').hidden = tier !== 'ticket'; // the free pint is for people in the room, not at home
     say(tier === 'stream' ? 'welcome' : 'welcome.in');
   } else {
     show('door');
@@ -594,6 +595,9 @@ async function main() {
   }
 }
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && pass) keepAwake(); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && pass) keepAwake();
+  if (!document.hidden && streaming && $('vid').paused && !$('vid').hidden) $('vid').play().catch(() => {});
+});
 window.addEventListener('hashchange', () => claimGift().then(refresh));
 main().catch((e) => say('wallet.fail', { msg: e.message }));
