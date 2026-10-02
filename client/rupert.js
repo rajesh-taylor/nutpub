@@ -5,6 +5,26 @@ import { t, onLang } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
+// Suit mode is the costume: pinstripes that bulge outwards round a pot belly, braces, buttons down the middle.
+function suit() {
+  const W = 400, H = 800, cx = W / 2;
+  const bulge = (x) => {
+    const out = (x - cx) * 0.24; // how far this line is pushed out at the widest point of the belly
+    return `M${x} 0 V${H * 0.5} C${x} ${H * 0.64} ${x + out} ${H * 0.68} ${x + out} ${H * 0.8} S${x} ${H * 0.96} ${x} ${H}`;
+  };
+  let stripes = '';
+  for (let x = 4; x < W; x += 14) stripes += `<path d="${bulge(x)}"/>`;
+  let buttons = '';
+  for (let y = 190; y < H; y += 92) buttons += `<circle cx="${cx}" cy="${y}" r="4.5"/>`;
+  document.body.insertAdjacentHTML('afterbegin', `<svg class="suit" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <g class="stripes">${stripes}</g>
+    <path class="shirt" d="M${cx - 16} 150 L${cx} 128 L${cx + 16} 150 V${H} H${cx - 16} Z"/>
+    <g class="buttons">${buttons}</g>
+    <g class="braces"><path d="${bulge(cx - 74)}"/><path d="${bulge(cx + 74)}"/></g>
+  </svg>`);
+}
+suit();
+
 // Each attempt: what Rupert pays with, what he says (r1.says…), the door's answer (r1.no…) and one line
 // for the room on what just happened (r1.why…). The words live in i18n.js.
 const ATTEMPTS = [{ kind: 'suit', k: 'r1' }, { kind: 'relabel', k: 'r2' }, { kind: 'relabel', k: 'r3' }];

@@ -7,11 +7,16 @@
 <link rel="stylesheet" href="/pub.css">
 <style>
   :root { --suit: #23262e; --stripe: #6b7080; --chalk: #e9e6dc; }
-  body {
-    background-color: var(--suit);
-    background-image: repeating-linear-gradient(90deg, transparent 0 22px, var(--stripe) 22px 23px);
-    color: var(--chalk);
-  }
+  body { background-color: var(--suit); color: var(--chalk); }
+  /* The suit itself: pinstripes bulging round a pot belly, braces, shirt buttons (drawn by rupert.js) */
+  .suit { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; }
+  .suit .stripes { stroke: var(--stripe); stroke-width: 1.1; fill: none; }
+  .suit .braces { stroke: #7d2b35; stroke-width: 16; fill: none; }
+  .suit .shirt { fill: var(--chalk); }
+  .suit .buttons { fill: #9a968a; }
+  .pig { width: 112px; height: auto; display: block; margin: 0 auto; }
+  /* The door's answers sit on dark cloth so the shirt never shows through the words */
+  #says:not(:empty), #verdict:not(:empty), #explain:not(:empty), #why:not(:empty) { display: table; margin-left: auto; margin-right: auto; padding: 4px 12px; background: rgb(26 28 34 / .92); }
   header { color: var(--chalk); border-color: #ffffff22; }
   .card {
     background: #1a1c22ee; border: 1px solid #ffffff22; border-radius: 16px;
@@ -42,7 +47,19 @@
 <p class="kicker pagename" style="color:var(--chalk)" data-t="rupert.mode">Suit mode</p>
 <main>
   <div class="card">
-    <div class="who">🤵</div>
+    <svg class="pig" viewBox="0 0 120 112" role="img" aria-label="Rupert">
+      <path d="M27 42 L22 17 L45 29 Z M93 42 L98 17 L75 29 Z" fill="#e7a3a0"/>
+      <circle cx="60" cy="60" r="36" fill="#f2bbb8"/>
+      <ellipse cx="60" cy="22" rx="40" ry="6" fill="#121318"/>
+      <path d="M33 22 C33 2 87 2 87 22 Z" fill="#121318"/>
+      <circle cx="46" cy="53" r="10" fill="#ffffff30" stroke="#121318" stroke-width="3"/>
+      <circle cx="74" cy="53" r="10" fill="#ffffff30" stroke="#121318" stroke-width="3"/>
+      <path d="M56 53 H64 M36 51 L26 47 M84 51 L94 47" stroke="#121318" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="46" cy="54" r="3" fill="#121318"/><circle cx="74" cy="54" r="3" fill="#121318"/>
+      <ellipse cx="60" cy="76" rx="15" ry="10" fill="#e39592"/>
+      <ellipse cx="55" cy="76" rx="3" ry="4" fill="#94504d"/><ellipse cx="65" cy="76" rx="3" ry="4" fill="#94504d"/>
+      <path d="M50 90 Q60 94 71 88" stroke="#94504d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
     <p class="name" data-t="rupert.name">Rupert, from the Ministry of Fiat</p>
     <p class="dept" data-t="rupert.dept">21 SuitCoin, freshly printed</p>
   </div>
