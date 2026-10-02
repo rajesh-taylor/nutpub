@@ -59,6 +59,11 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] **The phone should show the room, not just the stage screen:** "2 phones in · lights up at 3", a small row of lamps that fills as people arrive. Judges hold the phone, not the Mac.
 - [ ] **Stop paying must feel immediate:** fade the music out at once on Stop; say "Stopped. You'd paid up to 0:40; nothing more is charged." (Today it plays out the paid segment plus the one bought 3 s ahead, up to ~13 s.)
 - [ ] **Lights up:** lamps scattered like a real rig (different sizes, heights, angles, a few tilted spots with beams), not a neat row. **Hold Longy's photo bright for 5–6 s**, then settle into Now playing with the same photo behind (less darkened). It's our best first image.
+- [ ] **Less on screen while playing:** drop the per-segment ✓ list; show one running total ("This set: 12 sats"). Redesign "Pay to listen" (awful): proper player controls in the brand.
+- [ ] The placeholder tone is off-putting: keep it only until Longy's file arrives.
+- [ ] **Livestream player on the phone:** portrait = small 16:9 player at the top, the night below; turn the phone landscape = full screen, one tap brings up controls, including a **Tip** button with a confirm step.
+- [ ] **Website player (responsive):** player with a YouTube-style live chat (the green room) to the right on desktop, below on phones.
+- [ ] **The pre-show fills the room:** each phone that comes in lights one lamp (up to 7), on every phone and the stage. At lights up the house goes dark, then a premiere sequence, synced on every phone by T0: lamps fire in turn (a drum roll), Longy's photo fades up between the flashes, and it ends **static on the photo** with one card placed well: show start time, merch, next shows, or the green room.
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
 
 ### Decided Thu night
