@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>KYC Kebab Shack</title>
+<link rel="stylesheet" href="/pub.css">
+<style>
+  :root { --suit: #23262e; --stripe: #6b7080; --chalk: #e9e6dc; }
+  body {
+    background-color: var(--suit);
+    background-image: repeating-linear-gradient(90deg, transparent 0 22px, var(--stripe) 22px 23px);
+    color: var(--chalk);
+  }
+  .shack { margin: 6px auto 0; font: 400 clamp(46px, 14vw, 80px)/.88 var(--poster); letter-spacing: .02em; text-transform: uppercase; color: var(--amber); }
+  .score { margin: 18px auto 4px; }
+  .score b { display: block; font: 400 clamp(84px, 26vw, 140px)/.85 var(--poster); color: var(--chalk); transition: color .4s; }
+  .score.low b { color: var(--amber); }
+  .toppings { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 360px; margin: 10px auto 18px; padding: 0; list-style: none; }
+  .toppings li { padding: 5px 10px; border: 1px solid rgb(233 230 220 / .35); font: 600 11px/1.2 var(--body); letter-spacing: .16em; text-transform: uppercase; transition: opacity .6s, transform .6s; }
+  .toppings li.gone { opacity: .25; text-decoration: line-through; transform: translateY(6px); }
+  .banner { position: relative; max-width: 420px; margin: 0 auto; padding: 18px 18px 20px; background: #1a1c22f2; border: 1px solid rgb(233 230 220 / .25); text-align: left; overflow: hidden; min-height: 250px; }
+  .banner h2 { margin: 0 0 8px; font: 400 30px/1 var(--poster); letter-spacing: .02em; text-transform: uppercase; }
+  .banner .field { margin: 10px 0 16px; padding: 10px 12px; background: rgb(233 230 220 / .08); border: 1px dashed rgb(233 230 220 / .35); font: 14px/1.35 var(--mono); }
+  .banner .says { font-style: italic; color: #b9b4a6; margin: 0 0 14px; }
+  .banner .row { display: flex; gap: 10px; align-items: center; }
+  .banner .row .btn { white-space: nowrap; padding: 11px 14px; }
+  #accept { background: var(--amber); color: var(--deep); border-color: var(--amber); min-width: 0; }
+  #reject { min-width: 0; transition: transform .18s ease-out; border-color: rgb(233 230 220 / .4); }
+  .napkin { max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid rgb(233 230 220 / .3); background: #f3efe4; color: #23262e; }
+  .napkin h2 { margin: 0 0 6px; font: 400 40px/1 var(--poster); text-transform: uppercase; }
+  .napkin p { margin: 8px 0; }
+  .fine { color: #b9b4a6; font-size: 13px; max-width: 30em; margin: 18px auto 0; }
+  @media (prefers-reduced-motion: reduce) { #reject, .toppings li { transition: none; } }
+</style>
+<script src="/nav.js" defer></script>
+</head>
+<body>
+<main>
+  <p class="kicker" style="color:var(--chalk)" data-t="kebab.kicker">The walk home</p>
+  <h1 class="shack" data-t="kebab.title">KYC Kebab Shack</h1>
+  <div class="score" id="score-box"><span class="kicker" data-t="kebab.score">Doner Credit Score™</span><b id="score">850</b></div>
+  <ul class="toppings" id="toppings"></ul>
+
+  <section id="voucher" class="banner">
+    <h2 data-t="kebab.voucher.h">Free doner with every ID</h2>
+    <p data-t="kebab.voucher.p">Rupert, from the Ministry of Fiat, is finally somewhere that wants to know everything about him.</p>
+    <div class="actions"><button class="btn" id="start" data-t="kebab.voucher.go">Claim Rupert’s doner</button></div>
+  </section>
+
+  <section id="step" class="banner" hidden>
+    <p class="kicker" id="step-n"></p>
+    <h2 id="step-h"></h2>
+    <div class="field" id="step-field"></div>
+    <p class="says" id="step-says"></p>
+    <div class="row">
+      <button class="btn" id="accept" data-t="kebab.accept">Accept all</button>
+      <button class="btn quiet" id="reject" data-t="kebab.reject">Reject all</button>
+    </div>
+  </section>
+
+  <section id="end" hidden>
+    <div class="napkin">
+      <h2 data-t="kebab.end.h">Here’s your napkin</h2>
+      <p data-t="kebab.end.p1">Doner Credit Score™: 0. No toppings left, no doner. One napkin, lightly used.</p>
+      <p><i data-t="kebab.end.says">“Marvellous. They know absolutely everything about me.”</i></p>
+    </div>
+    <p class="lede" style="color:var(--chalk)" data-t="kebab.end.pub">Back at the NutPub: drinkers identified, 0.</p>
+    <div class="actions"><a class="btn" href="/" data-t="kebab.back">Back to the pub</a></div>
+  </section>
+
+  <p class="fine" data-t="kebab.fine">A joke page. Nothing here is sent anywhere; Rupert and his details are made up.</p>
+</main>
+<script type="module" src="/js/kebab.js"></script>
+</body>
+</html>
