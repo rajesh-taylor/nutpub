@@ -14,7 +14,7 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
-## Where we are (Fri 09:25 Berlin)
+## Where we are (Fri 09:15 Berlin)
 - **Built this morning, all committed and tested end to end on the fake mint (port 8788):** design pass (Bebas Neue, deck palette, grain, wordmark, compact buttons, rail, pocket), full 🇬🇧/🇩🇪, bottom bar (Pocket with Lightning top-up, Longy page), phone fixes, payout code (off until `LONGY_LN`), Basement58, KYC Kebab Shack, livestream player with tips, unpoured pints back to the house, stage lights per phone, README / PROPOSAL / SUBMISSION / SCRIPT drafts. Finale tested both ways (paid; missed → +21 home).
 - **Waiting on Rajesh:** hero photo + A/B; Longy's audio file; `LONGY_LN`; Longy's bio, next shows, merch; **float top-up (166 sats; ~320 per group of 3)**; was the 145-sat drop at 08:53 Berlin you?; GitHub repo (name, public?, KICKOFF.md and the LESSONS.md title mention Refueler); create the btc++ project early.
 - **Then:** the real-money run on the phones (Minibits), rehearse SCRIPT.md twice.

@@ -1,6 +1,6 @@
 # Backlog (Tier C polish, only if time allows)
 
-## Rupert's look (from Rajesh, Thu 16:25): built Fri 09:35 Berlin (SVG pig in a bowler with spectacles, braces, buttons, pinstripes bulging round the belly)
+## Rupert's look (from Rajesh, Thu 16:25): built Fri 09:17 Berlin (SVG pig in a bowler with spectacles, braces, buttons, pinstripes bulging round the belly)
 - Emoji: a pig's face with spectacles instead of 🤵.
 - Shirt buttons running down the middle of the screen.
 - A pot belly: bend the pinstripes outwards in the bottom half of the screen, like a belly pushing the suit out. Maybe a belt.
