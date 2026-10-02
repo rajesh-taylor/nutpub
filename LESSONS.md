@@ -92,3 +92,10 @@
 ## Rehearsal maths (Fri 2 Oct)
 - **Count the room, not the passes.** The goal was 21 × passes and the stage drew a lamp per pass, so the presenter's own tab (needed for the Basement58 demo) quietly raised the goal past what the three judges could pledge. Mark crew passes (the door request carries the admin key) and count guests only.
 - **Say where a browser wallet lives, precisely.** Closing the tab loses nothing; clearing site data, a private window, another browser or device, or Safari's 7-day storage limit does. Say it on the page and in the pitch, and give a way out (Take it home).
+
+## Desk judging (Fri 2 Oct, afternoon)
+- **A box whose children are all absolutely positioned has no width of its own.** In a flex column with `margin: auto`, our 16:9 player shrank to 0 px: the sound played, the picture was there, nobody could see it. Give such boxes `width: 100%`.
+- **iPhone Safari may refuse to start even a muted video** (Low Power Mode). Let any tap on the player start it, and say so on screen.
+- **Gate the picture with the sound.** The video for a 10-second segment is served only to a pass that paid for that segment: no second 402, no free stream.
+- **Keep passes somewhere a restart can't wipe, or don't restart mid-group.** Ours live in memory, so every restart sent the phones back to the door.
+- **Third-party mints go down at the worst time.** Minibits timed out 30 min before judging; the local fake mint (relayed through our server) kept the demo alive. Have the fallback one command away.
