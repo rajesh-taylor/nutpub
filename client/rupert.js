@@ -17,7 +17,7 @@ const ATTEMPTS = [
     kind: 'relabel', label: 'Pretend it’s NutPub money',
     says: '“Fine. It’s NutPub money now.”',
     no: 'Still not allowed past the doormen.', de: 'Damit kommen Sie trotzdem nicht am Türsteher vorbei.',
-    why: 'New label, fake signature. The door checks the maths on the spot.',
+    why: 'Fake label. The door ran the UV pen (the mint’s maths proof) without phoning the mint. Counterfeit.',
   },
   {
     kind: 'relabel', label: 'Try again, with confidence',
@@ -41,13 +41,13 @@ async function attempt() {
   for (const id of ['verdict', 'verdict-de', 'explain', 'why']) $(id).textContent = '';
   try {
     // The door's 402: what it asks for.
-    const ask = await fetch('/api/door?tier=judge');
+    const ask = await fetch('/api/door?tier=ticket');
     decodePaymentRequest(ask.headers.get('X-Cashu')); // a real NUT-24 402, read like any wallet would
 
     // Rupert's printing press, then the retry with his "money" in X-Cashu.
     const { token, error } = await fetch(`/api/rupert/print?kind=${a.kind}`).then((r) => r.json());
     if (!token) throw new Error(error || 'the press jammed');
-    const res = await fetch('/api/door?tier=judge', { headers: { 'X-Cashu': token } });
+    const res = await fetch('/api/door?tier=ticket', { headers: { 'X-Cashu': token } });
     const body = await res.json();
     if (res.ok) {
       $('verdict').textContent = 'He got in?! (That should never happen.)';

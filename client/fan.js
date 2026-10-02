@@ -28,11 +28,11 @@ const say = (text) => ($('status').textContent = text);
 
 // The night in chapters, so anyone watching knows which part of the story this phone is in.
 const CHAPTERS = {
-  door: ['1 · The door', 'Your gift is real ecash, now on this phone. Pay the door with it. Nobody asks your name.'],
-  inside: ['2 · Inside', 'You’re in. The first pint’s on the house while the band sets up.'],
-  playing: ['3 · Curtains up', 'Every 10 seconds this phone pays again. Stop paying and the music stops.'],
-  paid: ['4 · Longy’s paid!', 'The room hit the goal. His pledges are his, before he’s unplugged his guitar.'],
-  missed: ['4 · Last orders', 'Goal missed. Nobody presses refund: every pledge comes home by itself.'],
+  door: ['1 · The door', 'That gift is real ecash, on your phone now. Pay your way in. Nobody asks your name.'],
+  inside: ['2 · Inside', 'First pint’s on the house while the support acts warm us up.'],
+  playing: ['3 · Lights up', 'Longy’s on. Live from anywhere, 10 seconds at a time. Stop paying, the amp goes quiet.'],
+  paid: ['4 · Longy’s paid', 'The room hit the goal. Paid before he’s even unplugged.'],
+  missed: ['4 · Last orders', 'Missed it. Every sat goes home on its own. No refund desk, no queue.'],
 };
 let chapterNow = '';
 function chapter(name) {
@@ -82,7 +82,8 @@ async function enter(t) {
       show('inside');
       chapter(showState.t0 ? 'playing' : 'inside');
       keepAwake();
-      if (showState.t0) startStream();
+      $('pint').hidden = tier !== 'ticket';
+      if (showState.t0 && tier === 'stream') startStream();
     } else {
       trombone();
       say(LINES[body.error] || body.detail || body.error);
@@ -263,7 +264,7 @@ function rain() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   for (let i = 0; i < 36; i++) {
     const s = document.createElement('span');
-    s.textContent = i % 3 ? '⚡' : '🟠';
+    s.textContent = i % 3 ? '⚡' : '🍺';
     s.style.left = `${Math.random() * 100}%`;
     s.style.animationDelay = `${Math.random() * 2.5}s`;
     s.style.fontSize = `${18 + Math.random() * 22}px`;
@@ -280,10 +281,11 @@ function listen() {
     showState = s;
     showFinale(s.finale);
     $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
-    if (opening && pass && !resumed) startStream();
+    if (opening && pass && !resumed && tier === 'stream') startStream();
     document.body.classList.toggle('playing', !!(s.t0 && pass));
     if (pass) chapter(s.finale?.state === 'paid' ? 'paid' : s.finale?.state === 'missed' ? 'missed' : s.t0 ? 'playing' : 'inside');
-    if (s.t0 && pass) $('stream').hidden = false;
+    $('stream').hidden = !(s.t0 && pass && (tier === 'stream' || streaming || run > 0));
+    $('tune').hidden = !(s.t0 && pass && tier === 'ticket' && !streaming && run === 0);
   };
   // SSE for speed, plus a 1-s poll: the Cloudflare tunnel holds SSE back, so the poll is what you get through it.
   const es = new EventSource('/api/events');
@@ -294,8 +296,8 @@ function listen() {
 
 async function main() {
   config = await fetch('/api/config').then((r) => r.json());
-  $('judge-price').textContent = `${config.tiers.judge.door} sats in, then ${config.tiers.judge.segment} sat / 10 s`;
-  $('pleb-price').textContent = `${config.tiers.pleb.segment} sats / 10 s`;
+  $('ticket-price').textContent = `${config.tiers.ticket.door} sats, once. Free first pint. Pay with sats.`;
+  $('stream-price').textContent = `${config.tiers.stream.segment} sat every 10 seconds. Stop paying, the amp goes quiet.`;
   wallet = await openWallet(config.kitty);
   await claimGift();
   await refresh();
@@ -305,8 +307,9 @@ async function main() {
   $('paid-screen').onclick = () => { $('paid-screen').hidden = true; $('closing').hidden = false; };
   $('closing-x').onclick = () => ($('closing').hidden = true);
   $('pint-signal').onclick = () => ($('pint-signal').hidden = true);
-  $('judge').onclick = () => enter('judge');
-  $('pleb').onclick = () => enter('pleb');
+  $('ticket').onclick = () => enter('ticket');
+  $('stream-pass').onclick = () => enter('stream');
+  $('tune').onclick = () => { unlockAudio(); $('tune').hidden = true; startStream(); };
   $('stop').onclick = () => {
     if (streaming) stopStream();
     else { say(''); startStream(); }

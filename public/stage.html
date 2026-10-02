@@ -12,7 +12,7 @@
   .lights { display: flex; gap: 14px; justify-content: center; margin: 10px 0; }
   .lights i { width: 34px; height: 34px; border-radius: 50%; background: #2a2f45; box-shadow: inset 0 0 0 2px #ffffff22; transition: background .6s, box-shadow .6s; }
   .lights i.on { background: radial-gradient(circle at 40% 35%, #fff6d0, var(--amber) 55%, #c9771a); box-shadow: 0 0 24px 6px #f3b54a88; }
-  body.paid { background: #f7931a; transition: background 1s; }
+  body.paid { background: radial-gradient(circle at 50% 30%, #ffd77a, var(--amber) 45%, #8a4a0c); transition: background 1s; }
   body.paid h1, body.paid .big { color: #1a0f00; }
   .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
 </style>
@@ -35,7 +35,7 @@
   <p class="big" id="gift-label">Scan for your gift</p>
   <canvas id="qr" hidden></canvas>
   <div class="row">
-    <button class="plain" id="gift-judge">Next gift · judge 105</button>
+    <button class="plain" id="gift-judge">Next gift · guest 105</button>
     <button class="plain" id="gift-friend">Next gift · friend 21</button>
   </div>
   <p id="status" role="status"></p>

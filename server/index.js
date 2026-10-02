@@ -32,7 +32,7 @@ app.use('/kitty', express.raw({ type: '*/*', limit: '1mb' }), async (req, res) =
   }
 });
 
-const tierOf =(req) => (TIERS[req.query.tier] ? req.query.tier : 'pleb');
+const tierOf = (req) => (TIERS[req.query.tier] ? req.query.tier : 'ticket');
 const admin = (req, res, next) =>
   req.get('X-Admin') === ADMIN_KEY ? next() : res.status(403).json({ error: 'forbidden' });
 
@@ -60,7 +60,7 @@ app.get('/api/door', cashuGate((req) => TIERS[tierOf(req)].door, 'The NutPub doo
   const tier = tierOf(req);
   const pass = issuePass(tier);
   // Plebs pay per 10 s from the start: their door payment is the segment that's live (or the first one).
-  if (tier === 'pleb') getPass(pass).paid.add(liveSegment() ?? 0);
+  if (tier === 'stream') getPass(pass).paid.add(liveSegment() ?? 0); // the pass's first 10 s
   res.json({ in: true, tier, name: TIERS[tier].name, paid: req.paid, pass });
 });
 
@@ -95,6 +95,7 @@ function sendSegment(req, res) {
 app.post('/api/pint', async (req, res) => {
   const id = req.get('X-Pass') || '';
   if (!getPass(id)) return res.status(403).json({ error: 'no_pass', detail: 'Pay at the door first.' });
+  if (getPass(id).tier !== 'ticket') return res.status(409).json({ error: 'not_in_room', detail: 'Free pints are for people in the room.' });
   try { res.json({ token: await freePint(id) }); }
   catch (e) { res.status(e.code ? 409 : 502).json({ error: e.code || 'house_dry', detail: e.message }); }
 });

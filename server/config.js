@@ -8,7 +8,9 @@ export const PORT = Number(process.env.PORT || 8787);
 // Private links (stage, gifts) carry this after the #. Set ADMIN_KEY to keep it across restarts.
 export const ADMIN_KEY = process.env.ADMIN_KEY || randomBytes(12).toString('hex');
 
+// Ticket: in the room, pay once (free first pint, a round for the band). Livestream pass: watch from anywhere,
+// pay as you go. A ticket holder can tune into the livestream too, at the pass rate.
 export const TIERS = {
-  judge: { name: 'Ecash Idol Judges', door: 21, segment: 1 },
-  pleb: { name: 'Plebs', door: 4, segment: 4 },
+  ticket: { name: 'Ticket', door: 21, segment: 1 },
+  stream: { name: 'Livestream pass', door: 1, segment: 1 },
 };

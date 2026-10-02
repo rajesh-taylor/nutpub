@@ -19,7 +19,7 @@ async function gift(amount, who) {
   $('status').textContent = '';
 }
 
-$('gift-judge').onclick = () => gift(105, 'judge');
+$('gift-judge').onclick = () => gift(105, 'guest');
 $('gift-friend').onclick = () => gift(21, 'friend');
 fetch('/api/house', { headers: { 'X-Admin': key } })
   .then((r) => r.json())

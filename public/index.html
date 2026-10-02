@@ -18,13 +18,16 @@
   <section id="door" data-screen hidden>
     <h1 class="has-de">If your sats ain’t signed, you ain’t coming in!</h1>
     <h1 lang="de">Ohne Signatur kein Eintritt!</h1>
-    <button id="judge" class="tier">
-      <strong>Ecash Idol Judges</strong><span id="judge-price"></span>
+    <button id="ticket" class="tier">
+      <strong>🎟️ Ticket · in the room</strong><span id="ticket-price"></span>
     </button>
-    <button id="pleb" class="tier">
-      <strong>Plebs</strong><span id="pleb-price"></span>
+    <button id="stream-pass" class="tier">
+      <strong>📺 Livestream pass · from anywhere</strong><span id="stream-price"></span>
     </button>
-    <p class="small">The door takes NutPub Mint ecash only. No names, no list.</p>
+    <button class="tier card-rail" type="button" aria-disabled="true">
+      <strong>💳 Pay by card</strong><span>Stripe, for everyone else. Placeholder tonight: card payments aren’t switched on.</span>
+    </button>
+    <p class="small">Sats at this door: NutPub Mint ecash, no names, no list. Card payers get a receipt with their name on it; that’s how cards work.</p>
   </section>
 
   <section id="inside" data-screen hidden>
@@ -39,6 +42,7 @@
       <div class="meter"><div id="goal-bar"></div></div>
       <p id="last-orders" class="small"></p>
     </div>
+    <button id="tune" class="tier" hidden><strong>📺 Tune into the livestream</strong><span>1 sat every 10 seconds: how your mates at home watch. A fresh 402 each time.</span></button>
     <div id="stream" hidden>
       <button id="stop" class="plain">⏸ Stop paying</button>
       <ul id="ticks"></ul>
