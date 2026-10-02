@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hero Picker</title>
+<link rel="stylesheet" href="/pub.css">
+<style>
+  body { margin: 0; padding: 0; background: #000; overflow: hidden; min-height: 100dvh; }
+  .slide { position: fixed; inset: 0; background: center 18% / cover no-repeat; opacity: 0; transition: opacity .6s ease; }
+  .slide.on { opacity: 1; }
+  /* "Door view": the shade and the headline as the door shows them, to judge legibility */
+  .door { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 0 16px;
+    background: radial-gradient(ellipse 130% 95% at 50% 38%, transparent 40%, rgb(5 9 20 / .9) 100%), linear-gradient(rgb(5 9 20 / .55), transparent 22%, transparent 60%, rgb(5 9 20 / .7)), rgb(5 9 20 / .62); }
+  body.words .door { display: flex; }
+  .num { position: fixed; left: 14px; top: max(14px, env(safe-area-inset-top)); z-index: 3; font: 400 64px/1 var(--poster); color: var(--cream); text-shadow: 0 2px 12px #000; }
+  .num small { display: block; font: 12px/1.4 var(--mono); color: var(--cream); opacity: .8; }
+  .num.picked { color: var(--amber); }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    padding: 10px 10px calc(12px + env(safe-area-inset-bottom)); background: rgb(5 9 20 / .8); }
+  .bar .btn { min-width: 0; padding: 10px 14px; }
+  #star.on { background: var(--amber); color: var(--deep); }
+  #picks { position: fixed; right: 14px; top: max(18px, env(safe-area-inset-top)); z-index: 3; text-align: right; font: 600 12px/1.4 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--amber); text-shadow: 0 1px 8px #000; }
+  .tap { position: fixed; top: 0; bottom: 110px; width: 50%; z-index: 2; }
+  .tap.l { left: 0; } .tap.r { right: 0; }
+</style>
+</head>
+<body>
+<div id="slides"></div>
+<div class="door"><h1>If your sats ain’t <em>signed</em>, you ain’t coming in!</h1></div>
+<div class="num" id="num"></div>
+<div id="picks"></div>
+<div class="tap l" id="prev"></div><div class="tap r" id="next"></div>
+<div class="bar">
+  <button class="btn quiet" id="back">‹ Back</button>
+  <button class="btn" id="star">★ Pick</button>
+  <button class="btn quiet" id="words">Door view</button>
+  <button class="btn quiet" id="send">Send picks</button>
+  <button class="btn quiet" id="fwd">Next ›</button>
+</div>
+<script>
+  // Hero picker: every candidate full screen, no stage lights. Tap right/left (or the buttons) to move,
+  // ★ to pick, "Door view" to see it under the door's words, "Send picks" saves them on the server.
+  const FILES = [
+    'candidates/fp-29', 'candidates/fp-32', 'candidates/fp-37', 'candidates/peggy-17-8266', 'candidates/peggy-32-5864',
+    'candidates/peggy-5-1372', 'candidates/fp-31', 'longy-live', 'longy-stage', 'longy-countdown', 'longy-cheers',
+  ];
+  const $ = (id) => document.getElementById(id);
+  const slides = FILES.map((f) => {
+    const d = document.createElement('div');
+    d.className = 'slide';
+    d.style.backgroundImage = `url(/img/${f}.jpg)`;
+    $('slides').append(d);
+    return d;
+  });
+  let picks = [];
+  try { picks = JSON.parse(localStorage.getItem('nutpub-picks') || '[]'); } catch {}
+  let i = 0;
+  function show() {
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    const picked = picks.includes(i + 1);
+    $('num').innerHTML = `${i + 1}<small>${FILES[i].replace('candidates/', '')} · ${i + 1} of ${FILES.length}</small>`;
+    $('num').classList.toggle('picked', picked);
+    $('star').classList.toggle('on', picked);
+    $('picks').textContent = picks.length ? `Picks: ${picks.join(' · ')}` : '';
+  }
+  const go = (d) => { i = (i + d + FILES.length) % FILES.length; show(); };
+  $('next').onclick = $('fwd').onclick = () => go(1);
+  $('prev').onclick = $('back').onclick = () => go(-1);
+  $('words').onclick = () => document.body.classList.toggle('words');
+  $('star').onclick = () => {
+    const n = i + 1;
+    picks = picks.includes(n) ? picks.filter((x) => x !== n) : [...picks, n].sort((a, b) => a - b);
+    try { localStorage.setItem('nutpub-picks', JSON.stringify(picks)); } catch {}
+    show();
+  };
+  $('send').onclick = async () => {
+    const files = picks.map((n) => FILES[n - 1]);
+    const r = await fetch('/api/picks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ picks, files }) });
+    $('send').textContent = r.ok ? `Sent ${picks.length} ✓` : 'Not sent';
+  };
+  show();
+</script>
+</body>
+</html>

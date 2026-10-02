@@ -1,6 +1,6 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 const TUNNEL_FILE = fileURLToPath(new URL('../data/tunnel.url', import.meta.url));
 import { KITTY_URL, PORT, ADMIN_KEY, TIERS, CURTAINS_AT } from './config.js';
 import { initHouse, balance, take, give, kittyKeysetIds, fundQuote, fundClaim } from './house.js';
@@ -46,7 +46,17 @@ app.get('/api/health', async (_req, res) => {
 
 // The public address for QR codes: the tunnel URL if one is running, else whatever the page was loaded from.
 const publicUrl = () => { try { return readFileSync(TUNNEL_FILE, 'utf8').trim() || null; } catch { return null; } };
-app.get('/api/config', (_req, res) => res.json({ kitty: KITTY_URL, tiers: TIERS, publicUrl: publicUrl(), curtainsAt: CURTAINS_AT }));
+// The hero photos for the door, as picked on /pick.html (files under public/img, which stays out of git).
+const PICKS_FILE = fileURLToPath(new URL('../data/picks.json', import.meta.url));
+const heroes = () => { try { return JSON.parse(readFileSync(PICKS_FILE, 'utf8')).files || []; } catch { return []; } };
+app.post('/api/picks', express.json({ limit: '4kb' }), (req, res) => {
+  const files = (req.body?.files || []).filter((f) => /^[a-z0-9/-]+$/i.test(f)).slice(0, 12);
+  writeFileSync(PICKS_FILE, JSON.stringify({ picks: req.body?.picks || [], files, at: new Date().toISOString() }));
+  log(`hero picks: ${(req.body?.picks || []).join(', ')}`);
+  res.json({ ok: true, files });
+});
+
+app.get('/api/config', (_req, res) => res.json({ kitty: KITTY_URL, tiers: TIERS, publicUrl: publicUrl(), curtainsAt: CURTAINS_AT, heroes: heroes() }));
 
 // A gift: live ecash from the house float, shown as a QR on the stage screen (admin only).
 app.post('/api/gift', admin, async (req, res) => {

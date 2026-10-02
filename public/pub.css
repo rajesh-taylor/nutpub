@@ -45,13 +45,18 @@ body.streaming { --shade: .75; }
     radial-gradient(ellipse 130% 95% at 50% 38%, transparent 40%, rgb(5 9 20 / .9) 100%),
     linear-gradient(rgb(5 9 20 / .55), transparent 22%, transparent 60%, rgb(5 9 20 / .7)),
     linear-gradient(rgb(5 9 20 / var(--shade)), rgb(5 9 20 / var(--shade))),
-    var(--photo) center 18% / cover no-repeat,
-    var(--deep);
+    var(--photo) center 18% / cover no-repeat;
   transition: background .8s;
+  z-index: 1;
 }
+/* The door's hero photos, crossfading slowly (picked on /pick.html) */
+.backdrop .slide { position: absolute; inset: 0; background: center 18% / cover no-repeat; opacity: 0; transition: opacity 1.8s ease; }
+.backdrop .slide.on { opacity: 1; }
+body.heroes:not([data-photo="stage"]):not([data-photo="live"]) { --photo: none; }
+body:is([data-photo="stage"], [data-photo="live"]) .backdrop .slide { display: none; }
 /* Film grain: one small noise tile, blended over whatever is under it. */
 .backdrop::after, .grain::after {
-  content: ""; position: absolute; inset: -50%; pointer-events: none; z-index: 1;
+  content: ""; position: absolute; inset: -50%; pointer-events: none; z-index: 2;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2 0 0 0 -.5 2 0 0 0 -.5 2 0 0 0 -.5 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 200px 200px;
   opacity: .5; mix-blend-mode: overlay;
 }

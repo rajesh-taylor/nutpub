@@ -14,6 +14,12 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
+## Fri 10:00 Berlin
+- **Repo public:** https://github.com/rajesh-taylor/nutpub (KICKOFF.md stripped from all history; it stays on disk, git-ignored).
+- **Payout on:** `LONGY_LN=rajesh@minibits.cash` in `.env` (Rajesh's own Minibits for now; swap for Longy's Lightning address later, then restart the server). LNURL checked: it hands out invoices.
+- **Hero picker:** `localhost:8787/pick.html` on the Pixel (11 photos, no stage lights, ★ to pick, "Door view", "Send picks"). Picks land in `data/picks.json`; the door crossfades through them (7 s each). No picks = longy-live as before.
+- **Tunnel addresses so far:** `data/tunnels.log`. A fixed address is possible: rajeshtaylor.com is on Cloudflare (named tunnel `nutpub.rajeshtaylor.com`; needs Rajesh's `cloudflared tunnel login`).
+
 ## Fri 09:50 Berlin: Rajesh's review, done
 - Rail: **Lightning (BTC)** | **Stripe card**. Tickets side by side on laptops (stacked on phones). Free pint no longer hinted at the door (ticket says "pay once, you're in"; the pint is the surprise inside).
 - Longy page: photo as a centred column, words below it, three buttons in a row: **Next shows · Tip Longy (21 sats from your pocket, tap twice) · Merch**; Fountain is a small link underneath.
