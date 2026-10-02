@@ -14,6 +14,13 @@
 4. Pixel over USB: `adb reverse tcp:8787 tcp:8787` (redo after replugging).
 5. Stage: `<tunnel>/stage.html#k=<ADMIN_KEY from .env>`. Float top-up: `/fund.html`.
 
+## Fri 09:50 Berlin: Rajesh's review, done
+- Rail: **Lightning (BTC)** | **Stripe card**. Tickets side by side on laptops (stacked on phones). Free pint no longer hinted at the door (ticket says "pay once, you're in"; the pint is the surprise inside).
+- Longy page: photo as a centred column, words below it, three buttons in a row: **Next shows · Tip Longy (21 sats from your pocket, tap twice) · Merch**; Fountain is a small link underneath.
+- Pocket: **Take it home** (whole pocket as one note: QR + copy, for the Minibits app). Float page: **paste ecash back into the house**.
+- Bar page with no pint: "The bar's open. Point this phone's camera at a free-pint QR."
+- Where the test sats went: house 166; phone wallets per web address (Pixel `localhost:8787`: 87; today's tunnel address: sweep with Take it home); wallets on last night's tunnel address are stranded; Thursday's unpoured pints were lost on restart. None went to the fake mint.
+
 ## Where we are (Fri 09:15 Berlin)
 - **Built this morning, all committed and tested end to end on the fake mint (port 8788):** design pass (Bebas Neue, deck palette, grain, wordmark, compact buttons, rail, pocket), full 🇬🇧/🇩🇪, bottom bar (Pocket with Lightning top-up, Longy page), phone fixes, payout code (off until `LONGY_LN`), Basement58, KYC Kebab Shack, livestream player with tips, unpoured pints back to the house, stage lights per phone, README / PROPOSAL / SUBMISSION / SCRIPT drafts. Finale tested both ways (paid; missed → +21 home).
 - **Waiting on Rajesh:** hero photo + A/B; Longy's audio file; `LONGY_LN`; Longy's bio, next shows, merch; **float top-up (166 sats; ~320 per group of 3)**; was the 145-sat drop at 08:53 Berlin you?; GitHub repo (name, public?, KICKOFF.md and the LESSONS.md title mention Refueler); create the btc++ project early.

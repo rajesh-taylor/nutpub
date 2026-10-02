@@ -310,3 +310,18 @@ body:has(.bottombar) { padding-bottom: calc(84px + env(safe-area-inset-bottom));
   body.streaming .frame { width: 100%; height: 100%; aspect-ratio: auto; border: 0; }
   body.streaming .frame #level { width: 200px; height: 22px; }
 }
+
+/* Tickets side by side when there's room (laptops); stacked on phones */
+@media (min-width: 560px) {
+  .actions.tickets { flex-direction: row; justify-content: center; align-items: stretch; }
+  .actions.tickets .btn { width: 290px; }
+}
+/* Longy: the photo as a column on wide screens, the words below it, three buttons in a row */
+.trio { display: flex; justify-content: center; align-items: stretch; gap: 8px; margin: 18px auto 6px; }
+.trio .btn { min-width: 0; flex: 1 1 0; max-width: 200px; padding: 10px 8px; font-size: 11px; letter-spacing: .14em; }
+.trio .btn small { font-size: 11px; }
+#longy-more:empty { display: none; }
+.sheet.artist .photo { max-width: 560px; margin: 0 auto; height: min(52vh, 460px); }
+.sheet.artist .card { margin-top: 0; padding-top: 14px; }
+#home-qr { display: block; margin: 4px auto; background: #fff; padding: 10px; width: min(78vw, 300px) !important; height: auto !important; }
+.sheet a:not(.btn) { color: var(--amber); text-underline-offset: 3px; }

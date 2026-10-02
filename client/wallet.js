@@ -70,6 +70,14 @@ export async function openWallet(kitty) {
       return (await coco.ops.mint.get(id))?.state === 'finalized';
     },
     on: (event, fn) => coco.on(event, fn),
+    // Take it home: everything in this phone's pocket as one cashuB, for any Cashu wallet.
+    async takeHome() {
+      const amount = await this.balance();
+      if (!amount) return null;
+      const prepared = await coco.ops.send.prepare({ mintUrl: kitty, amount });
+      const { token } = await coco.ops.send.execute(prepared);
+      return { amount, token: coco.wallet.encodeToken(token) };
+    },
     // Pay a NUT-18 request in-band (NUT-24): returns the cashuB string for the X-Cashu header.
     async pay(creq) {
       const req = await coco.paymentRequests.parse(creq);

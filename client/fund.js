@@ -33,3 +33,13 @@ $('go').onclick = async () => {
   }
 };
 showFloat();
+
+// Ecash back into the house (e.g. a phone's "Take it home" note from a test run).
+$('give-back').onclick = async () => {
+  const token = $('token').value.trim();
+  if (!token) return;
+  $('status').textContent = 'Taking it into the house…';
+  const r = await fetch('/api/house/fund', { method: 'POST', headers: { 'X-Admin': key, 'X-Cashu': token } }).then((x) => x.json());
+  $('status').textContent = r.error ? r.error : `In the house. Float: ${r.balance} sats.`;
+  if (!r.error) { $('token').value = ''; showFloat(); }
+};

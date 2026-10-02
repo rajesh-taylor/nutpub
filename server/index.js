@@ -133,8 +133,7 @@ app.get('/api/pledge', (req, res, next) => (passOf(req) ? next() : res.status(40
 
 // A tip for Longy from the livestream: its own 402, then the amount moves to his takings.
 const TIP = 21;
-app.get('/api/tip', (req, res, next) => (passOf(req) ? next() : res.status(403).json({ error: 'no_pass' })),
-  cashuGate(() => TIP, 'A tip for Longy'),
+app.get('/api/tip', cashuGate(() => TIP, 'A tip for Longy'),
   async (req, res) => {
     try {
       const tips = await tipLongy(req.paid);

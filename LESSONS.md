@@ -81,3 +81,8 @@
 ## Say only what the code does (Fri 2 Oct)
 - The last-orders screen said an unpoured pint "goes back to the house". The lock allowed it (refund key = the house's), but nothing ever took it back. Now the server sweeps unpoured pints after last orders with the house's refund key, retrying until the mint's clock agrees. Read every on-screen promise against the code before a demo.
 - **Check the clocks.** The Mac and the Pixel were on UK time in Berlin. The event page's countdown was the only thing in Berlin time.
+
+## Browser wallets belong to a web address (Fri 2 Oct)
+- **A browser wallet lives on the address it was opened at.** `localhost:8787` and the tunnel address are two different wallets on the same phone, and every quick-tunnel restart is a new address. When last night's tunnel died, the sats in the phones' wallets on that address became unreachable (still unspent at the mint, but the page that holds their keys can't load).
+- So: **sweep test wallets before restarting a tunnel** ("Take it home" in Pocket → paste into the Minibits app or the float page), and for anything that has to survive, use a stable address (a named tunnel on your own domain).
+- **Store every bearer token you hand out until it's settled.** Thursday's unpoured pints were only in the server's memory; a restart lost them, and with them the house's right to take them back.

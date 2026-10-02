@@ -27,7 +27,7 @@ function openSheet(name) {
   open = name;
   for (const s of ['pocket', 'longy']) $(`sheet-${s}`).hidden = s !== name;
   document.querySelectorAll('.bottombar button').forEach((b) => b.setAttribute('aria-current', String(b.dataset.sheet === name)));
-  if (name === 'pocket') { renderLedger(); refreshPocket(); }
+  if (name === 'pocket') { renderLedger(); refreshPocket(); $('home').hidden = true; }
 }
 
 // Top up: a Lightning invoice from the NutPub Mint, paid from any wallet.
@@ -71,10 +71,51 @@ async function paste() {
   refreshPocket();
 }
 
-export function initSheets(w, cfg, refresh) {
+// Take it home: the whole pocket as one bearer note (QR + copy), for the Minibits app or any Cashu wallet.
+async function takeHome() {
+  $('pocket-status').textContent = '';
+  try {
+    const out = await wallet.takeHome();
+    if (!out) return ($('pocket-status').textContent = t('home.empty'));
+    await QRCode.toCanvas($('home-qr'), out.token, { errorCorrectionLevel: 'L', margin: 1, width: 720 });
+    $('home').hidden = false;
+    $('home-copy').onclick = () => navigator.clipboard?.writeText(out.token).then(() => ($('pocket-status').textContent = t('home.copied')));
+    $('pocket-status').textContent = t('home.made', { sats: sats(out.amount) });
+  } catch (e) {
+    $('pocket-status').textContent = e.message;
+  }
+  refreshPocket();
+}
+
+// The Longy page: next shows and merch open a line below; the tip asks twice (tap, then tap again).
+let tipArmed = 0;
+function longy(tip) {
+  const more = (key) => () => {
+    const el = $('longy-more');
+    const same = el.dataset.k === key;
+    el.dataset.k = same ? '' : key;
+    el.textContent = same ? '' : t(key);
+  };
+  $('longy-next').onclick = more('longy.next.tbc');
+  $('longy-merch').onclick = more('longy.merch.tbc');
+  $('longy-tip').onclick = () => {
+    if (Date.now() - tipArmed > 4000) {
+      tipArmed = Date.now();
+      $('longy-tip').querySelector('small').textContent = t('longy.tip.again');
+      return;
+    }
+    tipArmed = 0;
+    $('longy-tip').querySelector('small').textContent = t('longy.tip.sub');
+    tip();
+  };
+}
+
+export function initSheets(w, cfg, refresh, { tip } = {}) {
   wallet = w;
   config = cfg;
   refreshPocket = refresh;
+  $('home-go').onclick = takeHome;
+  longy(tip);
   const host = new URL(config.kitty).host;
   const mintLine = () => t('pocket.mint', { at: host.includes('minibits') ? 'Minibits' : t('pocket.test') });
   $('pocket-mint').textContent = mintLine();

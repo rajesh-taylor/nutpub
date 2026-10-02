@@ -264,7 +264,7 @@ async function tip() {
   unlockAudio();
   $('tip-confirm').hidden = true;
   try {
-    const res = await paidFetch('/api/tip', { 'X-Pass': pass }, 'tips', 21);
+    const res = await paidFetch('/api/tip', pass ? { 'X-Pass': pass } : {}, 'tips', 21);
     const body = await res.json();
     if (!res.ok) { trombone(); return say(refusal(body)); }
     clink();
@@ -512,7 +512,7 @@ async function main() {
     $('rail-note').hidden = !card;
   }));
   wallet = await openWallet(config.kitty);
-  initSheets(wallet, config, refresh);
+  initSheets(wallet, config, refresh, { tip });
   await claimGift();
   await refresh();
   $('pint').onclick = () => freePint().catch((e) => say(e.message));
@@ -542,6 +542,8 @@ async function main() {
   $('tip-yes').onclick = () => tip();
   $('tip-no').onclick = () => ($('tip-confirm').hidden = true);
   listen();
+  // Pledges from an earlier night whose locktime has passed: take them back now (refund key on this phone).
+  if (wallet.pledges().some((p) => p.locktime < Date.now() / 1000)) comeHome();
   // Already paid at the door on this phone (and the show hasn't been reset)? Straight back in.
   let saved = null;
   try { saved = localStorage.getItem('nutpub-pass'); } catch {}

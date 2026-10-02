@@ -22,8 +22,8 @@
       <button type="button" role="radio" aria-checked="false" data-rail="card" data-t="rail.card">Card · Stripe</button>
     </div>
     <p id="rail-note" data-t="rail.note" hidden>Card payments aren’t switched on tonight. Ecash only: no names, no list.</p>
-    <div class="actions">
-      <button id="ticket" class="btn ticket"><span data-t="ticket.label">Ticket · in the room</span><b class="price" id="ticket-price"></b><small data-t="ticket.sub">once · free first pint</small></button>
+    <div class="actions tickets">
+      <button id="ticket" class="btn ticket"><span data-t="ticket.label">Ticket · in the room</span><b class="price" id="ticket-price"></b><small data-t="ticket.sub">pay once, you’re in</small></button>
       <button id="stream-pass" class="btn ticket"><span data-t="pass.label">Livestream pass</span><b class="price" id="stream-price"></b><small data-t="pass.sub">stop paying, the amp goes quiet</small></button>
     </div>
   </section>
@@ -114,6 +114,12 @@
     <textarea id="paste-token" rows="3" placeholder="cashuB…" spellcheck="false" autocapitalize="off"></textarea>
     <button type="button" class="btn quiet" id="paste-go" data-t="paste.go">Receive</button>
   </details>
+  <div class="chips"><button type="button" class="btn quiet" id="home-go" data-t="home.btn">Take it home</button></div>
+  <div id="home" hidden>
+    <canvas id="home-qr"></canvas>
+    <div class="chips"><button type="button" class="btn quiet" id="home-copy" data-t="home.copy">Copy ecash</button></div>
+    <p class="note" data-t="home.note">Paste it into any Cashu wallet (Minibits, cashu.me). It’s a bearer note: whoever pastes it first gets it.</p>
+  </div>
   <p class="note" id="pocket-status" role="status"></p>
   <p class="note phone-only" data-t="pocket.phone">This wallet lives on this phone, in this browser. Clearing the browser clears it.</p>
 </section>
@@ -124,13 +130,13 @@
   <div class="card">
     <h1 id="longy-title">Longy</h1>
     <p data-t="longy.bio">Rock ’n’ roll from Southend.<br>Tonight’s track: “Drip Fed Internet Blues”.</p>
-    <div class="actions">
-      <a class="btn" href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener"><span data-t="closing.tip">Tip Longy on Fountain</span><small data-t="longy.tip.sub">streams and boosts, on Fountain</small></a>
+    <div class="trio">
+      <button type="button" class="btn quiet" id="longy-next" data-t="longy.next">Next shows</button>
+      <button type="button" class="btn" id="longy-tip"><span data-t="longy.tip">Tip Longy</span><small data-t="longy.tip.sub">21 sats, NutPub Lightning</small></button>
+      <button type="button" class="btn quiet" id="longy-merch" data-t="longy.merch">Merch</button>
     </div>
-    <p class="kicker" data-t="longy.next">Next shows</p>
-    <p class="note" data-t="longy.next.tbc">To be announced.</p>
-    <p class="kicker" data-t="longy.merch">Merch</p>
-    <p class="note" data-t="longy.merch.tbc">Coming soon.</p>
+    <p class="note" id="longy-more"></p>
+    <p class="note"><a href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener" data-t="longy.fountain">Or tip him on Fountain ↗</a></p>
   </div>
 </section>
 
