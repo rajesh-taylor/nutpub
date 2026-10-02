@@ -3,18 +3,13 @@ import { openWallet } from './wallet.js';
 import { unlockAudio, trombone, clink } from './sound.js';
 import QRCode from 'qrcode';
 import { Mint, hashToCurve, getDecodedToken } from '@cashu/cashu-ts';
+import { t, has, sats, onLang } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => document.querySelectorAll('[data-screen]').forEach((el) => (el.hidden = el.id !== id));
 
-const LINES = {
-  wrong_mint: 'Not money this NutPub takes!',
-  bad_dleq: 'Still not allowed past the doormen.',
-  no_dleq: 'No hologram, no entry.',
-  reused: 'That ecash has already been through this door.',
-  too_little: 'Not enough sats for that tier.',
-  mint_unreachable: 'Can’t reach the NutPub Mint. Try again.',
-};
+// A refusal from the gate: its code has a line in i18n.js; anything else, say what the server said.
+const refusal = (body) => (has(body.error) ? body.error : body.detail || body.error);
 
 let wallet, config, pass, tier;
 let showState = { t0: null };
@@ -24,29 +19,29 @@ let resumed = false; // came back after a reload: wait for a tap (iOS needs one 
 let run = 0; // each start gets a number, so a stopped loop that wakes up late just exits
 
 const serverNow = () => Date.now() + clockOffset;
-const say = (text) => ($('status').textContent = text);
+// The status line. Keys are looked up in i18n.js (so a language switch can say it again); raw text passes through.
+let lastSay = [''];
+function say(key, vars = {}, loud = false) {
+  lastSay = [key, vars, loud];
+  $('status').innerHTML = '';
+  $('status').textContent = key ? t(key, vars) : '';
+  $('status').classList.toggle('loud', loud);
+}
 
 // The night in chapters, so anyone watching knows which part of the story this phone is in.
-const CHAPTERS = {
-  door: ['1 · The door', 'That gift is real ecash, on your phone now. Pay your way in.'],
-  inside: ['2 · Inside', 'First pint’s on the house while the support acts warm us up.'],
-  playing: ['3 · Lights up', 'Longy’s on. Live from anywhere, 10 seconds at a time. Stop paying, the amp goes quiet.'],
-  paid: ['4 · Longy’s paid', 'The room hit the goal. Paid before he’s even unplugged.'],
-  missed: ['4 · Last orders', 'Missed it. Every sat goes home on its own. No refund desk, no queue.'],
-};
 let chapterNow = '';
+let gifted = false; // a gift landed on this phone
 function chapter(name) {
   if (name === chapterNow) return;
   chapterNow = name;
-  const [title, line] = CHAPTERS[name];
-  $('chapter-title').textContent = title;
-  $('chapter-line').textContent = line;
+  $('chapter-title').textContent = t(`ch.${name}.t`);
+  $('chapter-line').textContent = t(name === 'door' && gifted ? 'ch.door.gift' : `ch.${name}.l`);
 }
 
 // The pocket: what this phone holds at the NutPub Mint. Hidden until there's something in it.
 async function refresh() {
   const n = await wallet.balance();
-  $('pocket-amt').textContent = `${n} sat${n === 1 ? '' : 's'}`;
+  $('pocket-amt').textContent = sats(n);
   $('pocket').hidden = !n;
 }
 
@@ -54,12 +49,15 @@ async function claimGift() {
   const token = decodeURIComponent(location.hash.slice(1));
   if (!token.startsWith('cashuB') && !token.startsWith('cashuA')) return;
   history.replaceState(null, '', location.pathname); // the gift is live money: don't leave it in the address bar
-  say('Opening your gift…');
+  say('gift.opening');
   try {
     await wallet.receive(token);
-    say('Gift received. Pick your tier.');
+    gifted = true;
+    chapterNow = '';
+    if (!pass) chapter('door');
+    say('gift.landed', { n: await wallet.balance() }, true);
   } catch (e) {
-    say(`That gift didn’t open: ${e.message}`);
+    say('gift.fail', { msg: e.message });
   }
 }
 
@@ -73,14 +71,14 @@ async function paidFetch(url, headers = {}) {
 
 async function enter(t) {
   unlockAudio();
-  say('Knocking…');
+  say('knocking');
   try {
     const res = await paidFetch(`/api/door?tier=${t}`);
     const body = await res.json();
     if (res.ok) {
       ({ pass, tier } = body);
       try { localStorage.setItem('nutpub-pass', pass); } catch {}
-      $('in-tier').textContent = body.name;
+      $('in-tier').textContent = t(`tier.${tier}`);
       say('');
       show('inside');
       chapter(showState.t0 ? 'playing' : 'inside');
@@ -89,10 +87,10 @@ async function enter(t) {
       if (showState.t0 && tier === 'stream') startStream();
     } else {
       trombone();
-      say(LINES[body.error] || body.detail || body.error);
+      say(refusal(body));
     }
   } catch (e) {
-    say(e.message.includes('Insufficient') ? 'Not enough sats on this phone.' : e.message);
+    say(e.message.includes('Insufficient') ? 'no.sats' : e.message);
   }
   refresh();
 }
@@ -108,7 +106,7 @@ async function startStream() {
   const me = ++run;
   const ac = unlockAudio();
   $('stream').hidden = false;
-  $('stop').textContent = 'Stop paying';
+  $('stop').textContent = t('stop');
   const ms = showState.segmentMs;
   let n = Math.max(0, Math.floor((serverNow() - showState.t0) / ms));
 
@@ -122,7 +120,7 @@ async function startStream() {
     try {
       res = await paidFetch(`/api/segment/${n}`, { 'X-Pass': pass });
     } catch (e) {
-      stopStream(e.message.includes('Insufficient') ? 'Out of sats. The music stops here.' : e.message);
+      stopStream(e.message.includes('Insufficient') ? 'out.of.sats' : e.message);
       break;
     }
     if (res.status === 409) { // fell behind: jump to the live segment
@@ -131,7 +129,7 @@ async function startStream() {
     }
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      stopStream(LINES[body.error] || body.detail || `segment refused (${res.status})`);
+      stopStream(body.error ? refusal(body) : t('seg.refused', { status: res.status }));
       break;
     }
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
@@ -157,8 +155,8 @@ function tick(n) {
 
 function stopStream(why) {
   streaming = false;
-  $('stop').textContent = 'Play';
-  say(why ? `${why} If your sats ain’t signed, you ain’t coming in!` : 'Stopped paying. The music stops at the end of this segment.');
+  $('stop').textContent = t('play');
+  say(why ? 'stop.why' : 'stopped', { why: t(why) });
 }
 
 // ---- First pint's on the house. The QR only appears when you ask for it (it's a bearer voucher).
@@ -168,13 +166,13 @@ async function freePint() {
   if (!pintToken) {
     const res = await fetch('/api/pint', { method: 'POST', headers: { 'X-Pass': pass } });
     const body = await res.json();
-    if (!res.ok) return say(body.detail || body.error);
+    if (!res.ok) return say(refusal(body));
     pintToken = body.token;
     watchPint(pintToken);
   }
   await QRCode.toCanvas($('pint-qr'), `${config.publicUrl || location.origin}/bar.html#${pintToken}`, { errorCorrectionLevel: 'L', margin: 1, width: 640 });
   $('pint-qr').hidden = false;
-  $('pint').textContent = 'Show this at the bar';
+  $('pint').innerHTML = `<span data-t="pint.show">${t('pint.show')}</span>`;
 }
 
 // The Pint Signal: this phone asks the mint (NUT-07) whether its pint has been spent. Nobody tells it.
@@ -208,21 +206,21 @@ let reclaiming = false;
 
 async function roundForTheBand() {
   unlockAudio();
-  say('Locking 21 sats to Longy…');
+  say('pledging');
   try {
     const url = '/api/pledge';
     const ask = await fetch(url, { headers: { 'X-Pass': pass } });
     if (ask.status !== 402) {
       const b = await ask.json().catch(() => ({}));
-      return say(b.error === 'round_paid' ? 'Longy’s already paid!' : b.detail || b.error);
+      return say(b.error === 'round_paid' ? 'round.paid' : refusal(b));
     }
     const token = await wallet.pledge(ask.headers.get('X-Cashu'));
     const res = await fetch(url, { headers: { 'X-Pass': pass, 'X-Cashu': token } });
     const body = await res.json();
-    if (!res.ok) { trombone(); return say(body.detail || body.error); }
-    say('Pledged 21. If the room misses the goal, it comes home by itself at last orders.');
+    if (!res.ok) { trombone(); return say(refusal(body)); }
+    say('pledged');
   } catch (e) {
-    say(e.message.includes('Insufficient') ? 'Not enough sats on this phone.' : e.message);
+    say(e.message.includes('Insufficient') ? 'no.sats' : e.message);
   }
   refresh();
 }
@@ -233,10 +231,10 @@ function showFinale(f) {
   finale = f;
   const mine = wallet.pledges().reduce((s, p) => s + p.amount, 0);
   $('finale').hidden = !showState.t0;
-  $('goal').textContent = `Longy: ${f.total} / ${f.goal} sats`;
+  $('goal').textContent = t('goal', { total: f.total, goal: f.goal });
   $('goal-bar').style.width = `${Math.min(100, (100 * f.total) / f.goal)}%`;
   const left = Math.max(0, f.lastOrders - Math.floor(serverNow() / 1000));
-  $('last-orders').textContent = f.state === 'open' ? `Last orders in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '';
+  $('last-orders').textContent = f.state === 'open' ? t('last.in', { t: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` }) : '';
   $('band').disabled = f.state !== 'open';
   if (f.state === 'paid' && was !== 'paid') {
     if (mine) wallet.forgetPledges(); // they went to Longy
@@ -258,7 +256,7 @@ async function comeHome() {
   }
   reclaiming = false;
   if (back) {
-    say(`+${back} sats home. Every sat you pledged comes home.`);
+    say('home', { n: back }, true);
     clink();
     setTimeout(() => ($('closing').hidden = false), 4000);
   }
@@ -316,7 +314,7 @@ function listen() {
     const opening = s.t0 && !showState.t0;
     showState = s;
     showFinale(s.finale);
-    $('curtain').textContent = s.t0 ? 'NOW PLAYING: Longy' : 'Curtains up soon.';
+    $('curtain').textContent = t(s.t0 ? 'curtain.now' : 'curtain.soon');
     if (opening && pass) lightsUp();
     if (opening && pass && !resumed && tier === 'stream') startStream();
     document.body.dataset.photo = s.t0 && pass ? 'live' : pass ? 'stage' : '';
@@ -333,8 +331,22 @@ function listen() {
 
 async function main() {
   config = await fetch('/api/config').then((r) => r.json());
-  $('ticket-price').textContent = `${config.tiers.ticket.door} sats`;
-  $('stream-price').textContent = `${config.tiers.stream.segment} sat / 10 s`;
+  const prices = () => {
+    $('ticket-price').textContent = sats(config.tiers.ticket.door);
+    $('stream-price').textContent = t('per.seg', { n: config.tiers.stream.segment });
+  };
+  prices();
+  // 🇬🇧/🇩🇪: say everything again in the other language.
+  onLang(() => {
+    prices();
+    const name = chapterNow;
+    chapterNow = '';
+    if (name) chapter(name);
+    if (tier) $('in-tier').textContent = t(`tier.${tier}`);
+    $('stop').textContent = t(streaming ? 'stop' : 'play');
+    say(...lastSay);
+    if (wallet) refresh();
+  });
   // The payment rail: ecash tonight; the card rail is a placeholder (it would learn who paid).
   document.querySelectorAll('.rail button').forEach((b) => (b.onclick = () => {
     const card = b.dataset.rail === 'card';
@@ -369,12 +381,12 @@ async function main() {
     pass = saved;
     resumed = true;
     tier = b.tier;
-    $('in-tier').textContent = b.name;
+    $('in-tier').textContent = t(`tier.${tier}`);
     show('inside');
     chapter(showState.t0 ? 'playing' : 'inside');
-    $('stop').textContent = 'Play';
+    $('stop').textContent = t('play');
     $('stream').hidden = !showState.t0;
-    say('Welcome back. Tap Play to keep listening.');
+    say('welcome');
   } else {
     show('door');
     chapter('door');
@@ -383,4 +395,4 @@ async function main() {
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden && pass) keepAwake(); });
 window.addEventListener('hashchange', () => claimGift().then(refresh));
-main().catch((e) => say(`Wallet failed to start: ${e.message}`));
+main().catch((e) => say('wallet.fail', { msg: e.message }));

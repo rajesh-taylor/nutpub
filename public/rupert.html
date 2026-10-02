@@ -21,39 +21,37 @@
   .name { font-size: 26px; margin: 8px 0 0; }
   .dept { color: #b9b4a6; font-size: 16px; }
   #try {
-    width: 100%; margin-top: 18px; padding: 18px; font: inherit; font-size: 22px;
-    border-radius: 12px; border: 2px solid var(--chalk); background: #2e3340; color: var(--chalk);
+    margin-top: 18px; padding: 14px 26px; font: 600 14px/1.2 var(--body); letter-spacing: .16em; text-transform: uppercase;
+    border-radius: 2px; border: 1.5px solid var(--chalk); background: #2e3340; color: var(--chalk);
   }
   #try:disabled { opacity: 0.6; }
   main { text-align: center; }
-  #verdict-de { color: var(--amber); font-size: 30px; line-height: 1.15; min-height: 1.2em; margin: 14px 0 6px; }
   #explain { font-size: 17px; line-height: 1.35; min-height: 1.3em; margin: 0 auto 12px; max-width: 30em; }
   #says { font-style: italic; min-height: 1.4em; margin: 16px 0 0; }
   #asks { color: #b9b4a6; font-size: 15px; min-height: 1.2em; }
-  #verdict { color: var(--amber); font-size: 30px; line-height: 1.15; min-height: 1.2em; margin: 14px 0 6px; }
-  #why { color: #b9b4a6; font: 13px/1.3 ui-monospace, Menlo, monospace; word-break: break-word; min-height: 1.3em; }
+  #verdict { color: var(--amber); font: 400 40px/1 var(--poster); letter-spacing: .02em; text-transform: uppercase; min-height: 1em; margin: 14px 0 6px; }
+  #why { color: #b9b4a6; font: 13px/1.3 var(--mono); word-break: break-word; min-height: 1.3em; }
   #reset { margin-top: 18px; font-size: 14px; padding: 8px 12px; border-color: #ffffff44; color: #b9b4a6; }
-  body.refused #verdict, body.refused #verdict-de { animation: shake 0.5s; }
+  body.refused #verdict { animation: shake 0.5s; }
   @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
   @media (prefers-reduced-motion: reduce) { body.refused #verdict { animation: none; } }
 </style>
 <script src="/nav.js" defer></script>
 </head>
 <body>
-<p class="kicker pagename" style="color:var(--chalk)">Suit mode</p>
+<p class="kicker pagename" style="color:var(--chalk)" data-t="rupert.mode">Suit mode</p>
 <main>
   <div class="card">
     <div class="who">🤵</div>
-    <p class="name">Rupert, from the Ministry of Fiat</p>
-    <p class="dept">21 SuitCoin, freshly printed</p>
+    <p class="name" data-t="rupert.name">Rupert, from the Ministry of Fiat</p>
+    <p class="dept" data-t="rupert.dept">21 SuitCoin, freshly printed</p>
   </div>
   <button id="try"></button>
   <p id="says"></p>
-  <p id="verdict" class="has-de" role="status"></p>
-  <p id="verdict-de" lang="de"></p>
+  <p id="verdict" role="status"></p>
   <p id="explain"></p>
   <p id="why"></p>
-  <button id="reset" class="plain">Back to the first attempt</button>
+  <button id="reset" class="plain" data-t="rupert.reset">Back to the first attempt</button>
 </main>
 <script type="module" src="/js/rupert.js"></script>
 </body>

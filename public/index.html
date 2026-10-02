@@ -10,44 +10,43 @@
 </head>
 <body>
 <div class="backdrop" aria-hidden="true"></div>
-<p id="pocket" class="kicker" hidden>In your pocket · <b id="pocket-amt">0 sats</b></p>
+<p id="pocket" class="kicker" hidden><span data-t="pocket">In your pocket ·</span> <b id="pocket-amt">0 sats</b></p>
 
 <main>
   <aside id="chapter" aria-live="polite"><b id="chapter-title"></b><span id="chapter-line"></span></aside>
-  <section id="loading" data-screen><p class="lede">Opening the doors…</p></section>
+  <section id="loading" data-screen><p class="lede" data-t="loading">Opening the doors…</p></section>
 
   <section id="door" data-screen hidden>
-    <h1 class="has-de">If your sats ain’t <em>signed</em>, you ain’t coming in!</h1>
-    <h1 lang="de">Ohne <em>Signatur</em> kein Eintritt!</h1>
+    <h1 data-t="door.h1">If your sats ain’t <em>signed</em>, you ain’t coming in!</h1>
     <div class="rail" role="radiogroup" aria-label="Pay with">
-      <button type="button" role="radio" aria-checked="true" data-rail="ecash">Ecash / Lightning</button>
-      <button type="button" role="radio" aria-checked="false" data-rail="card">Card · Stripe</button>
+      <button type="button" role="radio" aria-checked="true" data-rail="ecash" data-t="rail.ecash">Ecash / Lightning</button>
+      <button type="button" role="radio" aria-checked="false" data-rail="card" data-t="rail.card">Card · Stripe</button>
     </div>
-    <p id="rail-note" hidden>Card payments aren’t switched on tonight. Ecash only: no names, no list.</p>
+    <p id="rail-note" data-t="rail.note" hidden>Card payments aren’t switched on tonight. Ecash only: no names, no list.</p>
     <div class="actions">
-      <button id="ticket" class="btn ticket"><span>Ticket · in the room</span><b class="price" id="ticket-price"></b><small>once · free first pint</small></button>
-      <button id="stream-pass" class="btn ticket"><span>Livestream pass</span><b class="price" id="stream-price"></b><small>stop paying, the amp goes quiet</small></button>
+      <button id="ticket" class="btn ticket"><span data-t="ticket.label">Ticket · in the room</span><b class="price" id="ticket-price"></b><small data-t="ticket.sub">once · free first pint</small></button>
+      <button id="stream-pass" class="btn ticket"><span data-t="pass.label">Livestream pass</span><b class="price" id="stream-price"></b><small data-t="pass.sub">stop paying, the amp goes quiet</small></button>
     </div>
   </section>
 
   <section id="inside" data-screen hidden>
-    <h1>You’re in.</h1>
+    <h1 data-t="in.h1">You’re in.</h1>
     <p class="kicker" id="in-tier"></p>
     <p class="lede" id="curtain">Curtains up soon.</p>
     <div class="actions">
-      <button id="pint" class="btn">Free pint<small>first one’s on the house</small></button>
+      <button id="pint" class="btn"><span data-t="pint.btn">Free pint</span><small data-t="pint.sub">first one’s on the house</small></button>
     </div>
     <canvas id="pint-qr" hidden></canvas>
     <div id="finale" hidden>
       <div class="actions">
-        <button id="band" class="btn">A round for the band<small>21 sats · comes home if we miss</small></button>
+        <button id="band" class="btn"><span data-t="band.btn">A round for the band</span><small data-t="band.sub">21 sats · comes home if we miss</small></button>
       </div>
       <p id="goal" class="lede"></p>
       <div class="meter"><div id="goal-bar"></div></div>
       <p id="last-orders" class="note"></p>
     </div>
     <div class="actions">
-      <button id="tune" class="btn" hidden>Tune into the livestream<small>1 sat every 10 seconds · a fresh 402 each time</small></button>
+      <button id="tune" class="btn" hidden><span data-t="tune.btn">Tune into the livestream</span><small data-t="tune.sub">1 sat every 10 seconds · a fresh 402 each time</small></button>
     </div>
     <div id="stream" hidden>
       <div class="actions"><button id="stop" class="btn">Stop paying</button></div>
@@ -60,30 +59,30 @@
 <div id="lights-up" hidden aria-hidden="true">
   <p class="presents">NEW MUSIC NUDGE UNIT</p>
   <div class="rig"><i></i><i></i><i></i></div>
-  <div class="who"><b>LONGY</b><span>live at the NutPub</span></div>
+  <div class="who"><b>LONGY</b><span data-t="lights.who">live at the NutPub</span></div>
 </div>
 <div id="last-call" class="moment" hidden>
   <div class="photo"></div>
   <div class="card">
-    <p class="kicker">Last orders</p>
-    <h1>Your free pint’s still behind the bar.</h1>
-    <p>When the bell rings it goes back to the house. That’s the lock on it, not us.</p>
-    <div class="actions"><button id="last-call-x" class="btn">Show me my pint</button></div>
+    <p class="kicker" data-t="last.kicker">Last orders</p>
+    <h1 data-t="last.h1">Your free pint’s still behind the bar.</h1>
+    <p data-t="last.p">When the bell rings it goes back to the house. That’s the lock on it, not us.</p>
+    <div class="actions"><button id="last-call-x" class="btn" data-t="last.btn">Show me my pint</button></div>
   </div>
 </div>
 <div id="closing" class="moment" hidden>
   <div class="photo"></div>
   <div class="card">
-    <p class="kicker">Closing time</p>
-    <h1>Cheers. That was Longy.</h1>
-    <p class="lede">Drinkers identified: 0</p>
+    <p class="kicker" data-t="closing.kicker">Closing time</p>
+    <h1 data-t="closing.h1">Cheers. That was Longy.</h1>
+    <p class="lede" data-t="closing.zero">Drinkers identified: 0</p>
     <div class="actions">
-      <a class="btn" href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener">Tip Longy on Fountain<small>“Drip Fed Internet Blues”</small></a>
-      <button id="closing-x" class="btn quiet">Back to the pub</button>
+      <a class="btn" href="https://fountain.fm/track/fs7RVh9O8HlIGvGu8kXJ" target="_blank" rel="noopener"><span data-t="closing.tip">Tip Longy on Fountain</span><small>“Drip Fed Internet Blues”</small></a>
+      <button id="closing-x" class="btn quiet" data-t="closing.back">Back to the pub</button>
     </div>
   </div>
 </div>
-<div id="paid-screen" hidden><div class="bolt">⚡</div><p>Longy’s paid!</p><p class="small" lang="de">Longy ist bezahlt!</p></div>
+<div id="paid-screen" hidden><div class="bolt">⚡</div><p data-t="paid.big">Longy’s paid!</p><p class="small" data-t="paid.small">The room hit the goal</p></div>
 <div id="rain" aria-hidden="true"></div>
 <div id="pint-signal" hidden>
   <svg class="pint" viewBox="0 0 200 320" role="img" aria-label="A pint being poured">
@@ -115,7 +114,7 @@
     <text x="100" y="208" text-anchor="middle" class="ipa-small">I PAY ANONYMOUSLY</text>
     <path d="M27 42 L46 282 Q100 292 154 282 L173 42" fill="none" stroke="#ffffff66" stroke-width="3"/>
   </svg>
-  <p>Poured. Cheers!</p>
+  <p data-t="poured">Poured. Cheers!</p>
 </div>
 <script type="module" src="/js/fan.js"></script>
 </body>

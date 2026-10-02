@@ -62,3 +62,4 @@
 - **Grain without a file:** an SVG `feTurbulence` tile as a CSS data URI, blended with `mix-blend-mode: overlay`. Grey noise has to vary around mid-grey (scale the channel, e.g. `2·R − 0.5`): flat mid-grey under overlay changes nothing.
 - **Put grain and vignette under the content, not over it.** Over the top they'd dim QR codes and blur small type.
 - **`background-attachment: fixed` doesn't work on iOS Safari.** Use a `position: fixed` layer at `z-index: -1` for a full-bleed photo.
+- **Translate from one table, by key.** Keep each status line as a key plus its numbers (`say('home', { n: 21 })`), not as finished text, so the 🇩🇪 flag can say the last thing again in German. Unknown keys pass through, so raw server errors still show.

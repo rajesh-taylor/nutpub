@@ -20,24 +20,24 @@
 </head>
 <body>
 <div class="backdrop" aria-hidden="true"></div>
-<p class="kicker pagename">Stage · <span id="float">house: … sats</span></p>
+<p class="kicker pagename"><span data-t="stage.name">Stage</span> · <span id="float">house: … sats</span></p>
 <main>
-  <h1 id="headline">Bring 2 more friends — let’s roll!</h1>
-  <p class="big"><span id="phones">0</span> phones in</p>
+  <h1 id="headline"></h1>
+  <p class="big" id="phones"></p>
   <div class="row">
-    <button class="btn quiet" id="curtains">Curtains up</button>
-    <button class="btn quiet" id="newshow">New show</button>
+    <button class="btn quiet" id="curtains" data-t="stage.curtains">Curtains up</button>
+    <button class="btn quiet" id="newshow" data-t="stage.newshow">New show</button>
   </div>
   <section id="finale" hidden>
     <p class="big" id="goal"></p>
     <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <p id="last-orders"></p>
   </section>
-  <p class="big" id="gift-label">Scan for your gift</p>
+  <p class="big" id="gift-label" data-t="stage.scan">Scan for your gift</p>
   <canvas id="qr" hidden></canvas>
   <div class="row">
-    <button class="btn quiet" id="gift-judge">Next gift · guest 105</button>
-    <button class="btn quiet" id="gift-friend">Next gift · friend 21</button>
+    <button class="btn quiet" id="gift-judge" data-t="stage.next.guest">Next gift · guest 105</button>
+    <button class="btn quiet" id="gift-friend" data-t="stage.next.friend">Next gift · friend 21</button>
   </div>
   <p id="status" role="status"></p>
 </main>
