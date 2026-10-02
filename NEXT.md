@@ -69,6 +69,8 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] **The pre-show fills the room:** each phone that comes in lights one lamp (up to 7), on every phone and the stage. At lights up the house goes dark, then a premiere sequence, synced on every phone by T0: lamps fire in turn (a drum roll), Longy's photo fades up between the flashes, and it ends **static on the photo** with one card placed well: show start time, merch, next shows, or the green room.
 - [ ] **Pint Signal returns to Longy:** after the pour (about 5 s), fade back to the hero image by itself, not stay on the IPA glass until tapped. The pint glass is smaller on the iPhone than the Pixel: size it to the screen.
 - [x] Lights up redesigned Thu night (seen on the Pixel, looks right): THE NUTPUB PRESENTS top centre, three big beacons, Longy's photo much brighter, LONGY · LIVE AT THE NUTPUB along the bottom so his face is clear. Preview: `/?preview=lights` (tap to replay).
+- [ ] **Pick the hero photo:** `/photos.html` cycles 12 portrait candidates, 8 s each (tap to skip); the tag top right names the file. Rajesh to choose at breakfast.
+- [x] Title over the beacons is now **NEW MUSIC NUDGE UNIT** (was "The NutPub presents").
 - [ ] **One beacon per guest:** the three beacons light as each judge comes through the door (pre-show, on every phone and the stage), then the premiere at lights up. Three judges at the expo = three beacons.
 - [ ] Bar page on a fan's phone says "Scan a pint QR from a fan's phone": it's the bar's screen, so keep it off the guest arrows (presenter only).
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.

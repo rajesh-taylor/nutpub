@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Photo Picker</title>
+<link rel="stylesheet" href="/pub.css">
+<style>
+  body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+  .slide { position: fixed; inset: 0; background: center 15% / cover no-repeat; opacity: 0; transition: opacity 1.4s ease; }
+  .slide.on { opacity: 1; }
+  .shade { position: fixed; inset: 0; background: linear-gradient(#0009, #0000 30%, #0000 55%, #000c 92%); }
+  .frame { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6vh 16px 7vh; }
+  .presents { margin: 0; color: var(--amber); letter-spacing: .32em; font-size: 15px; }
+  .rig { display: flex; gap: 34px; margin-top: -30vh; }
+  .rig i { width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff6d0, var(--amber) 55%, #c9771a); box-shadow: 0 0 40px 14px #f3b54a99; }
+  .who { text-align: center; }
+  .who b { display: block; font-size: 72px; line-height: .9; letter-spacing: .14em; color: var(--text); text-shadow: 0 2px 18px #000; }
+  .who span { color: var(--amber); letter-spacing: .24em; text-transform: uppercase; font-size: 16px; }
+  #tag { position: fixed; right: 12px; top: 12px; z-index: 2; padding: 6px 10px; border-radius: 8px; background: #000a; color: var(--text); font: 14px ui-monospace, Menlo, monospace; }
+</style>
+</head>
+<body>
+<div id="slides"></div>
+<div class="shade"></div>
+<div class="frame">
+  <p class="presents">NEW MUSIC NUDGE UNIT</p>
+  <div class="rig"><i></i><i></i><i></i></div>
+  <div class="who"><b>LONGY</b><span>live at the NutPub</span></div>
+</div>
+<div id="tag"></div>
+<script>
+  // Photo picker: each candidate for 8 s, in the lights-up layout. Tap to skip. The tag names the file.
+  const files = ["fp-21.jpg", "fp-23.jpg", "fp-25.jpg", "fp-27.jpg", "fp-29.jpg", "fp-31.jpg", "fp-32.jpg", "fp-33.jpg", "fp-35.jpg", "fp-37.jpg", "obl-2.jpg", "peggy-bw.jpg"];
+  const box = document.getElementById('slides');
+  const slides = files.map((f) => {
+    const d = document.createElement('div');
+    d.className = 'slide';
+    d.style.backgroundImage = 'url(/img/candidates/' + f + ')';
+    box.append(d);
+    return d;
+  });
+  let i = -1, timer;
+  function next() {
+    clearTimeout(timer);
+    if (i >= 0) slides[i].classList.remove('on');
+    i = (i + 1) % slides.length;
+    slides[i].classList.add('on');
+    document.getElementById('tag').textContent = (i + 1) + '/' + slides.length + ' · ' + files[i].replace('.jpg', '');
+    timer = setTimeout(next, 8000);
+  }
+  document.body.onclick = next;
+  next();
+</script>
+</body>
+</html>
