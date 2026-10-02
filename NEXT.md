@@ -55,6 +55,10 @@ Verdict: the flow works, the look doesn't. It reads cartoony and dated, not some
 - [ ] The small-print line about names and receipts: the rail buttons say it now; if any of it stays, it's normal size.
 - [ ] "0 sats" top right means nothing to a judge. Make it a labelled pocket: "IN YOUR POCKET · 60 SATS", or hide until a gift lands.
 - [ ] EN/DE pill doesn't work (only the punchlines have German, so tapping it seems to do nothing). Flags 🇬🇧 🇩🇪 instead, and either translate every line or drop German for the expo (decision below).
+- [ ] After a gift lands, say what to do next in big type ("105 sats in your pocket. Pick a ticket or a pass.").
+- [ ] **The phone should show the room, not just the stage screen:** "2 phones in · lights up at 3", a small row of lamps that fills as people arrive. Judges hold the phone, not the Mac.
+- [ ] **Stop paying must feel immediate:** fade the music out at once on Stop; say "Stopped. You'd paid up to 0:40; nothing more is charged." (Today it plays out the paid segment plus the one bought 3 s ahead, up to ~13 s.)
+- [ ] **Lights up:** lamps scattered like a real rig (different sizes, heights, angles, a few tilted spots with beams), not a neat row. **Hold Longy's photo bright for 5–6 s**, then settle into Now playing with the same photo behind (less darkened). It's our best first image.
 - [ ] Not yet seen on the phones: tune-in button, lights up live, last-orders nudge, finale hit/miss, closing time. Run these first thing.
 
 ### Decided Thu night
