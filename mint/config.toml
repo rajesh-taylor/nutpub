@@ -1,0 +1,24 @@
+# The NutPub Test Mint: cdk-mintd with the fake Lightning wallet. TEST ONLY: its sats have no value.
+# scripts/start.js fills in the {{…}} values and stores the result in the mint's own database (data/mint).
+[info]
+url = "{{MINT_URL}}/"
+listen_host = "127.0.0.1"
+listen_port = {{MINT_PORT}}
+seed = "file:{{MINT_DIR}}/seed.hex"
+
+[mint_info]
+name = "NutPub Test Mint"
+description = "TEST ONLY: no real value"
+description_long = "A test mint for the NutPub demo. Its Lightning is fake: invoices pay themselves, and nothing can be paid out. Never send real sats here."
+
+[database]
+engine = "sqlite"
+
+[payment_backend]
+backend = "fakewallet"
+
+[fake_wallet]
+fee_percent = 0.0
+reserve_fee_min = 0
+min_delay_time = 1
+max_delay_time = 2
