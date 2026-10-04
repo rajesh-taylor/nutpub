@@ -43,7 +43,8 @@ Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two e
 6. Free mode: hide the per-10-s price and "This set"; check on the phones.
 7. **Background photo**: upload one on the setup page (size and type checked, kept in `data/`, never in git); the viewer page shows it dimmed with grain, behind the player. Default until one is uploaded: the Berlin picks (before Play `peggy-5-1372`; while playing `fp-32`, `fp-37`, `peggy-17-8266`; files in the hackathon's `public/img/candidates/`, copied to `public/img/`, git-ignored).
 8. **Pocket: paste ecash** (receive a token from any Cashu wallet), as the hackathon Pocket had.
-9. Then start evening 4: the **stretch goal with refunds** (the pledge gate on the server, from the hackathon).
+9. **A page per artist**: the viewer page at `/longy` too (`nutpub.rajeshtaylor.com/longy`), so "one link per artist" is true on the call. (~10 min)
+10. Then start evening 4: the **stretch goal with refunds** (the pledge gate on the server, from the hackathon).
 
 ## Plan to the freeze (Wed 21 Oct)
 - **Thu 8 Oct:** goal with refunds finished on the phones; safe retry demo (lost reply, same payment, charged once) + PROPOSAL.md as "Retry-safe 402".

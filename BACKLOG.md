@@ -23,3 +23,11 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - **A pre-show screen** with several photos (a slideshow before Play), on top of v1.0's single background photo.
 - **Languages back in**: EN/DE (the hackathon's table), then ES/FR/PT, machine-translated and marked "needs a native check".
 - **One site, a page per artist: `<site>/<artist>`.** Artists share the link or a QR code (socials, posters). Every fan's Pocket then lives on one site and works for every artist. Give the wallet its own hostname (e.g. `pass.<brand>/<artist>`), never a path on a site that hosts other apps: a browser shares storage across a whole site, so other pages there could read the Pocket's keys. Choose the permanent address before real money (moving later strands Pockets). Refueler or not: a business and FCA question, decide after the call. Short links: prefer our own short paths over tinyurl (a third party that sees every click).
+
+## Ideas built on Coco + the 402 (talked through Sun 4 Oct; after v1.0)
+- **Pay only if it's played:** a song request or shout-out is a pledge locked to the artist with a locktime; not played by then, it comes home by itself (the goal's lock, one fan at a time).
+- **Splits:** takings divided automatically between band members, venue and sound crew as each payment lands (each share swapped to its owner's key).
+- **Tickets as ecash:** a ticket is a locked token, checked at the door offline (DLEQ), passed to a friend by sending it on. No ticket platform, no name.
+- **Agents and scripts pay too:** the same 402 works for a program as for a phone (clips, stems, a set's audio for an AI tool), no API key or account.
+- **Fewer mint calls when paying every 10 s:** offline payment channels (Spilman, the open NUTs PR #296), settled once at the end.
+- **Pay per anything:** a track download, a stem, a chapter, the encore. Every one is just a resource behind its own 402.
