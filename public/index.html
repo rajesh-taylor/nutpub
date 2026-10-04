@@ -7,27 +7,34 @@
   <title>The NutPub</title>
   <link rel="stylesheet" href="/app.css">
 </head>
-<body>
+<body class="viewer">
   <main>
-    <h1 class="wordmark">THE NUTPUB</h1>
-    <p class="tag">v1.0 · being built</p>
-    <ul class="checks" id="checks"><li>Checking…</li></ul>
+    <h1 class="wordmark small-mark">THE NUTPUB</h1>
+    <p class="tag" id="billing"></p>
+
+    <div class="player" id="player">
+      <video id="vid-a" muted playsinline preload="auto"></video>
+      <video id="vid-b" muted playsinline preload="auto"></video>
+      <button class="big-play" id="big-play" aria-label="Play">▶</button>
+      <div class="overlay" id="overlay">
+        <button class="btn" id="ov-stop">Stop</button>
+        <button class="btn" id="ov-tip"></button>
+      </div>
+    </div>
+
+    <p class="meter"><span id="price"></span><span id="spent"></span></p>
+
+    <p class="buttons">
+      <button class="btn primary" id="play" disabled>Play</button>
+      <button class="btn" id="tip" disabled></button>
+    </p>
+
+    <p class="pocketline"><span id="pocket">Opening your pocket…</span>
+      <button class="btn quiet" id="topup" hidden>Top up 100 test sats</button>
+      <a class="btn quiet" href="/pocket.html" id="pocket-link" hidden>Pocket</a></p>
+
+    <p class="status" id="status" role="status"></p>
   </main>
-  <script type="module">
-    // The skeleton's own check: the server, its state on disk and the test mint.
-    const li = (ok, html) => `<li class="${ok ? 'ok' : 'bad'}">${html}</li>`;
-    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-    try {
-      const h = await fetch('/api/health').then((r) => r.json());
-      document.getElementById('checks').innerHTML = [
-        li(true, `Server up · start #${h.boots} since ${esc(new Date(h.firstBoot).toLocaleString())}`),
-        h.mint.ok
-          ? li(true, `${esc(h.mint.name)} · <em>${esc(h.mint.description)}</em><br><span class="small"><code>${esc(h.mint.url)}</code> · ${esc(h.mint.version)}</span>`)
-          : li(false, `Mint not answering<br><span class="small">${esc(h.mint.error)}</span>`),
-      ].join('');
-    } catch (e) {
-      document.getElementById('checks').innerHTML = li(false, `Server not answering: ${esc(e.message)}`);
-    }
-  </script>
+  <script type="module" src="/js/viewer.js"></script>
 </body>
 </html>

@@ -118,6 +118,10 @@ function stop() {
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
 
+// The browser bundles (public/js, not in git), built fresh on every start.
+execFileSync('npm', ['run', 'build', '--silent'], { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] });
+say('pages built (public/js)');
+
 mintConfig();
 run('mint', 'cdk-mintd', ['-w', MINT_DIR], { echo: false });
 await waitFor(`http://127.0.0.1:${MINT_PORT}/v1/info`, 'the test mint');

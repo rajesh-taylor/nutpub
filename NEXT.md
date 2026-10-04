@@ -26,13 +26,21 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 |---|---|---|
 | 1 · Sun 4 Oct | Rename + new repo; skeleton; state on disk; test mint behind the tunnel; one command | **done** |
 | 2 · Sun 4 Oct (the extra hour) | Setup page and show template (saved to disk) | **done** (`npm run setup`; `-- --qr` for a phone) |
-| 3 · Mon 5 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | **server side done Sun 4** (the set cut, gate, passes, tip; `npm run check` passes). Left: the page itself and the browser wallet |
+| 3 · Mon 5 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | **server side done Sun 4** (the set cut, gate, passes, tip; `npm run check` passes). Browser wallet and a first Pocket page (`/pocket.html`: top up 100 test sats, Take it home) done Sun 4, seen on both phones and the Mac. Viewer page at `/` (TEST banner on every page; status check moved to `/status.html`): plays, pays 1 sat per 10 s, tips, goes full screen sideways; seen on the Mac. Left: Monday's list below |
 | 4 · Thu 8 Oct | Stretch goal with refunds; Pocket / Take it home; safe retry (+ PROPOSAL.md renamed "Retry-safe 402") | |
 | 5 | Languages (EN/DE; ES/FR/PT if time); TEST banner; Stripe test mode if time | |
 | 6 | Polish on the real phones; 3-minute script and slides; first full run | |
 
 Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two evenings done on Sun 4, so about 6 left to the freeze for 4 planned: **2 spare**.
 **Cut order if behind:** Stripe test mode, then ES/FR/PT, then the room ticket.
+
+## Monday 5 Oct (agreed Sun night)
+1. Tag line: don't repeat the artist when the show name already has it ("Longy - Bitfest · Longy").
+2. Player controls on the picture, like YouTube: play/stop bottom left, "This set: n sats", full screen bottom right. Below the player: the money buttons only.
+3. **Send sats, your amount**: a third button right of the tip button; asks for an amount, pays it as its own 402.
+4. Setup "orientation" becomes **video shape**: landscape 16:9 or portrait 9:16 (phone-shot). Turning the phone sideways still goes full screen.
+5. Free mode: hide the per-10-s price and "This set"; check on the phones.
+Items 1 to 4 came in on Sun night; they fit in the time we gained (no cut), if Rajesh agrees.
 
 ## Commands
 - `npm start`: mint, server, tunnel. `npm run setup` (or `-- --qr`): the setup page.
@@ -41,4 +49,5 @@ Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two e
 
 ## Notes
 - The hackathon repo is now `rajesh-taylor/nutpub-btcppberlin26` (local: `~/Documents/NutPub`). Its old mints (:3338, :3339) and its old quick tunnel are still running; nothing here uses them.
-- Copied across so far: the NUT-24 gate (replay list now on disk), segment cutting. Still to come: the Coco wallet wrapper (Mon), the pledge lock and refund (Thu), the EN/DE table.
+- Copied across so far: the NUT-24 gate (replay list now on disk), segment cutting, the Coco wallet wrapper (with the pledge and refund calls, not used yet). Still to come: the pledge gate on the server (Thu), the EN/DE table.
+- `npm start` builds the browser bundles (`public/js`, not in git) before anything else.

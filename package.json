@@ -12,10 +12,14 @@
     "server": "node server/index.js",
     "setup": "node scripts/setup.js",
     "check": "node scripts/check.js",
-    "cut-set": "sh scripts/cut-set.sh"
+    "cut-set": "sh scripts/cut-set.sh",
+    "build": "esbuild client/pocket.js client/viewer.js --bundle --format=esm --target=es2022 --minify --sourcemap --splitting --outdir=public/js"
   },
   "dependencies": {
     "@cashu/cashu-ts": "5.0.0-rc.4",
+    "@cashu/coco-core": "2.0.0",
+    "@cashu/coco-indexeddb": "2.0.0",
+    "esbuild": "0.28.2",
     "express": "5.2.1",
     "qrcode": "1.5.4"
   }

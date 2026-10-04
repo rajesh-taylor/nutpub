@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>Status · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag">Status</p>
+    <ul class="checks" id="checks"><li>Checking…</li></ul>
+  </main>
+  <script type="module">
+    // The skeleton's own check: the server, its state on disk and the test mint.
+    const li = (ok, html) => `<li class="${ok ? 'ok' : 'bad'}">${html}</li>`;
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+    try {
+      const h = await fetch('/api/health').then((r) => r.json());
+      document.getElementById('checks').innerHTML = [
+        li(true, `Server up · start #${h.boots} since ${esc(new Date(h.firstBoot).toLocaleString())}`),
+        h.mint.ok
+          ? li(true, `${esc(h.mint.name)} · <em>${esc(h.mint.description)}</em><br><span class="small"><code>${esc(h.mint.url)}</code> · ${esc(h.mint.version)}</span>`)
+          : li(false, `Mint not answering<br><span class="small">${esc(h.mint.error)}</span>`),
+      ].join('');
+    } catch (e) {
+      document.getElementById('checks').innerHTML = li(false, `Server not answering: ${esc(e.message)}`);
+    }
+  </script>
+</body>
+</html>
