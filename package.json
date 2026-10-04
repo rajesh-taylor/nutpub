@@ -10,7 +10,9 @@
   "scripts": {
     "start": "node scripts/start.js",
     "server": "node server/index.js",
-    "setup": "node scripts/setup.js"
+    "setup": "node scripts/setup.js",
+    "check": "node scripts/check.js",
+    "cut-set": "sh scripts/cut-set.sh"
   },
   "dependencies": {
     "@cashu/cashu-ts": "5.0.0-rc.4",

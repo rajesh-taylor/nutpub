@@ -9,3 +9,5 @@ The hackathon's lessons (NUT-24 gate, DLEQ, Coco in the browser, locked pledges,
 - **One tunnel, two hostnames** needs a config file with `ingress` rules (the `--url` flag only takes one). Point the services at `127.0.0.1`, not `localhost` (which may resolve to `::1`).
 - **Never run two connectors for one tunnel**: Cloudflare shares the traffic between them, so half the requests go to the wrong server. `npm start` refuses to start if one is already running.
 - **macOS folders ignore case**: `~/Documents/nutpub` is the same folder as `~/Documents/NutPub`.
+- **Cut the set from the original, not from hand-made clips.** Exported clips came out 9.7 to 9.98 s; a 10-second timeline needs exactly 10 s per piece or the joins click. `cut-set.sh` pads the last piece (silence, last frame held).
+- **Keep media out of the repo's top folder.** Anything there goes in with `git add -A`; `media/` is git-ignored.

@@ -26,7 +26,7 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 |---|---|---|
 | 1 · Sun 4 Oct | Rename + new repo; skeleton; state on disk; test mint behind the tunnel; one command | **done** |
 | 2 · Sun 4 Oct (the extra hour) | Setup page and show template (saved to disk) | **done** (`npm run setup`; `-- --qr` for a phone) |
-| 3 · Mon 5 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | |
+| 3 · Mon 5 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | **server side done Sun 4** (the set cut, gate, passes, tip; `npm run check` passes). Left: the page itself and the browser wallet |
 | 4 · Thu 8 Oct | Stretch goal with refunds; Pocket / Take it home; safe retry (+ PROPOSAL.md renamed "Retry-safe 402") | |
 | 5 | Languages (EN/DE; ES/FR/PT if time); TEST banner; Stripe test mode if time | |
 | 6 | Polish on the real phones; 3-minute script and slides; first full run | |
@@ -34,7 +34,11 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two evenings done on Sun 4, so about 6 left to the freeze for 4 planned: **2 spare**.
 **Cut order if behind:** Stripe test mode, then ES/FR/PT, then the room ticket.
 
+## Commands
+- `npm start`: mint, server, tunnel. `npm run setup` (or `-- --qr`): the setup page.
+- `npm run check`: a phone's night from the command line (top up, pay the set, safe retry, reuse refused, tip). Run it after any server change.
+- `npm run cut-set -- <video>`: cut a recorded set into 10-s pieces in `media/set/` (not in git). Tonight's set: `~/Documents/Longy at Peggy Sue's Music Bar 2025.mp4` (29.7 s → 3 pieces, the last padded to 10 s). Your own 3 clips are kept in `media/source/`.
+
 ## Notes
 - The hackathon repo is now `rajesh-taylor/nutpub-btcppberlin26` (local: `~/Documents/NutPub`). Its old mints (:3338, :3339) and its old quick tunnel are still running; nothing here uses them.
-- Proven pieces still to copy across (when their evening comes): the NUT-24 gate, the pledge lock and refund, the Coco wallet wrapper, segment cutting (audio and video), the EN/DE table.
-- The set: `~/Desktop/Longy at Peggy Sue's Music Bar 2025.mp4` (30 s) → 3 × 10 s, into `media/` (not in git).
+- Copied across so far: the NUT-24 gate (replay list now on disk), segment cutting. Still to come: the Coco wallet wrapper (Mon), the pledge lock and refund (Thu), the EN/DE table.

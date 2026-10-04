@@ -3,6 +3,8 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL } from './config.js';
 import { kv } from './db.js';
+import { initPurse } from './purse.js';
+import { mountSet } from './set.js';
 import { currentShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 // Private links carry the admin key. Kept on disk, so they keep working across restarts.
@@ -61,6 +63,9 @@ app.post('/api/admin/templates', admin, json, attempt((req) => saveTemplate(req.
 app.post('/api/admin/templates/load', admin, json, attempt((req) => loadTemplate(req.body?.name)));
 app.post('/api/admin/templates/delete', admin, json, attempt((req) => deleteTemplate(req.body?.name)));
 
+mountSet(app, admin);
+
+await initPurse();
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`NutPub on http://localhost:${PORT}  mint: ${MINT_URL}  start #${boots}`);
   // The key itself is never printed (this terminal may be on a shared screen): npm run setup opens the link.
