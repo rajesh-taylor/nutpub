@@ -31,3 +31,8 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - **Agents and scripts pay too:** the same 402 works for a program as for a phone (clips, stems, a set's audio for an AI tool), no API key or account.
 - **Fewer mint calls when paying every 10 s:** offline payment channels (Spilman, the open NUTs PR #296), settled once at the end.
 - **Pay per anything:** a track download, a stem, a chapter, the encore. Every one is just a resource behind its own 402.
+- **Pay the artist during the set:** when takings pass a threshold the artist sets (e.g. every 210 sats), send them on: as ecash locked to the artist's own key (no fees; works on any mint), or over Lightning to their address (NUT-05; a routing fee each time, hence the threshold; real mint only). Shortens how long we hold money. Show payments landing on the artist's page live.
+- **Pay per play:** each song, or each play of a recorded track, is its own 402.
+- **A professional setup page:** splits (band, venue, crew), the payout threshold and address, a live preview of the viewer page.
+- **Other content:** lessons, chapters, video podcasts: each piece behind its own 402, for people and agents alike.
+- **For businesses (Coco):** a wallet inside the business's own page (no app, no account), automatic payments of 402s, locked payments (deposits, "pay if delivered"). The open question is always the mint: who runs it, custody, the FCA.
