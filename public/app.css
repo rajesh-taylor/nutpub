@@ -1,0 +1,38 @@
+/* The NutPub: midnight, whisky amber, cream. Poster type (Bebas Neue, SIL OFL). */
+@font-face {
+  font-family: "Bebas Neue";
+  src: url(/fonts/BebasNeue-Regular.ttf) format("truetype");
+  font-display: swap;
+}
+:root {
+  --midnight: #0b1426;
+  --deep: #050914;
+  --amber: #d9953a;
+  --cream: #efe3c8;
+  --smoke: #8e97ad;
+  --poster: "Bebas Neue", "Arial Narrow", sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--deep);
+  color: var(--cream);
+  font: 17px/1.45 var(--body);
+  -webkit-font-smoothing: antialiased;
+  text-align: center;
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+main { max-width: 520px; margin: 0 auto; padding: 24px 0; }
+.wordmark { font: 400 clamp(44px, 14vw, 72px)/1 var(--poster); letter-spacing: .08em; margin: 8px 0 4px; }
+.tag { font: 400 18px/1 var(--poster); letter-spacing: .2em; color: var(--amber); margin: 0 0 32px; }
+.checks { list-style: none; padding: 0; margin: 0 auto; text-align: left; display: inline-block; }
+.checks li { padding: 6px 0; }
+.checks li::before { content: "·"; color: var(--smoke); margin-right: 10px; }
+.checks li.ok::before { content: "✓"; color: var(--amber); }
+.checks li.bad::before { content: "✕"; color: var(--cream); }
+.small { color: var(--smoke); font-size: 14px; }
+code { font-family: var(--mono); font-size: .9em; }

@@ -17,7 +17,7 @@ That starts the test mint (`data/mint`, :3340), the server (:8787) and the named
 Ctrl-C stops all three. If one dies, it is restarted. Logs: `data/logs/{mint,server,tunnel}.log`. The admin key is kept in `data/nutpub.db` (printed at start).
 `npm start` refuses to run if :8787 or :3340 is taken, or if another cloudflared is already running the `nutpub` tunnel.
 
-**Check it:** the home page lists the server (start number and first start) and the mint (name, *TEST ONLY*, version).
+**Check it** (seen on the iPhone and the Pixel, Sun 4 Oct): the home page lists the server (start number and first start) and the mint (name, *TEST ONLY*, version).
 A restart bumps the start number and keeps the first-start date: that's the state on disk.
 
 ## Where we are
@@ -25,13 +25,13 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 | Evening | Plan | State |
 |---|---|---|
 | 1 · Sun 4 Oct | Rename + new repo; skeleton; state on disk; test mint behind the tunnel; one command | **done** |
-| 2 | Setup page and show template (saved to disk) | |
-| 3 | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | |
+| 2 · Mon 5 Oct | Setup page and show template (saved to disk) | |
+| 3 · Thu 8 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | |
 | 4 | Stretch goal with refunds; Pocket / Take it home; safe retry (+ PROPOSAL.md renamed "Retry-safe 402") | |
 | 5 | Languages (EN/DE; ES/FR/PT if time); TEST banner; Stripe test mode if time | |
 | 6 | Polish on the real phones; 3-minute script and slides; first full run | |
 
-Evenings available: this week 3 (Sun 4 + 2 more). Ask each week. About 7 to the freeze, 6 planned: **1 spare**.
+Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). About 7 to the freeze, 6 planned: **1 spare**.
 **Cut order if behind:** Stripe test mode, then ES/FR/PT, then the room ticket.
 
 ## Notes
