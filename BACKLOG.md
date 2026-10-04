@@ -18,3 +18,7 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - **Several mints, chosen by the account holder** (like Numo's mint list: a main mint, others accepted). NUT-18 lets a payment request list several mints (`m`). Accepting ecash from a mint you don't trust means moving it over Lightning (melt there, NUT-05; mint here, NUT-04), so it needs real Lightning: not on the test mint.
 - **A free one-minute test broadcast** for new streamers, with the brand in the player (like the TEST strip).
 - **Fiat tippers:** Stripe (test mode is a v1.0 "should"); real fiat is its own session.
+- **Pay one-offs straight from the viewer's own wallet** (tip, your amount, ticket): a QR with a NUT-18 payment request, or a Lightning invoice. Pay-per-10-s still needs the Pocket (a payment every 10 s can't wait for a wallet app).
+- **An embed code** (iframe) so streamers put the player on their own site, instead of a domain of ours per streamer. Note: browsers partition storage by the top-level site, so the Pocket inside an embed on `aaron.example` is a different wallet from the one on our own page.
+- **A pre-show screen** with several photos (a slideshow before Play), on top of v1.0's single background photo.
+- **Languages back in**: EN/DE (the hackathon's table), then ES/FR/PT, machine-translated and marked "needs a native check".

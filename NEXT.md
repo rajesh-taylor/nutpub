@@ -32,7 +32,7 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 | 6 | Polish on the real phones; 3-minute script and slides; first full run | |
 
 Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two evenings done on Sun 4, so about 6 left to the freeze for 4 planned: **2 spare**.
-**Cut order if behind:** Stripe test mode, then ES/FR/PT, then the room ticket.
+**Cut order if behind:** Stripe test mode, then the room ticket.
 
 ## Monday 5 Oct (2 to 3 hours; agreed Sun night)
 1. **Tip sats, your amount**: a third button right of the tip; asks for an amount, pays it as its own 402. (~20 min)
@@ -41,11 +41,14 @@ Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two e
 4. Setup "orientation" becomes **video shape**: landscape 16:9 or portrait 9:16. Turning the phone sideways still goes full screen.
 5. Phone sideways: the TEST strip shrinks to a small corner tag, so it stops covering the picture.
 6. Free mode: hide the per-10-s price and "This set"; check on the phones.
-7. Then start evening 4: the **stretch goal with refunds** (the pledge gate on the server, from the hackathon).
+7. **Background photo**: upload one on the setup page (size and type checked, kept in `data/`, never in git); the viewer page shows it dimmed with grain, behind the player. Default until one is uploaded: the Berlin picks (before Play `peggy-5-1372`; while playing `fp-32`, `fp-37`, `peggy-17-8266`; files in the hackathon's `public/img/candidates/`, copied to `public/img/`, git-ignored).
+8. **Pocket: paste ecash** (receive a token from any Cashu wallet), as the hackathon Pocket had.
+9. Then start evening 4: the **stretch goal with refunds** (the pledge gate on the server, from the hackathon).
 
 ## Plan to the freeze (Wed 21 Oct)
 - **Thu 8 Oct:** goal with refunds finished on the phones; safe retry demo (lost reply, same payment, charged once) + PROPOSAL.md as "Retry-safe 402".
-- **Week of 12 Oct (ask on Sun 11):** EN/DE (+ ES/FR/PT, machine-translated); Stripe test mode (should: the card rail for fiat tippers); polish on the phones; the 3-minute script and slides; **first full run by Wed 14 Oct**.
+- **Week of 12 Oct (ask on Sun 11):** Stripe test mode (should: the card rail for fiat tippers); polish on the phones; the 3-minute script and slides; **first full run by Wed 14 Oct**.
+- **Languages are out of v1.0's musts** (decided Sun 4 Oct: the dev call is in English). If the musts, the runs and their fixes are all done, EN/DE first, then ES/FR/PT. The background photo took their place.
 - **To 21 Oct:** fixes from the runs only. Being ahead buys rehearsal, not features: the hackathon's first lesson.
 
 ## Commands
