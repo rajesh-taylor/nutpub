@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <meta name="robots" content="noindex">
+  <title>Set up the show · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="setup">
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag">Set up the show</p>
+
+    <p class="locked" id="locked" hidden>This page needs the private setup link. On the Mac: <code>npm run setup</code>.</p>
+
+    <form id="form" hidden autocomplete="off">
+      <section class="panel templates">
+        <h2>Templates</h2>
+        <div class="row">
+          <select id="tpl-list" aria-label="Template"></select>
+          <button type="button" class="btn" id="tpl-load">Load</button>
+          <button type="button" class="btn quiet" id="tpl-delete">Delete</button>
+        </div>
+        <div class="row">
+          <input id="tpl-name" placeholder="Name, e.g. Friday at the pub" aria-label="Template name">
+          <button type="button" class="btn" id="tpl-save">Save as template</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>The show</h2>
+        <label>Show name <input data-path="title" placeholder="e.g. Live at the NutPub" maxlength="80"></label>
+        <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
+      </section>
+
+      <section class="panel">
+        <h2>The stream</h2>
+        <p class="hint">The set: a recorded clip, played in 10-second pieces.</p>
+        <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="pay">
+          <span><b>Pay per 10 seconds.</b> Each 10 seconds is its own payment. Stop paying and it stops.</span></label>
+        <label class="indent" data-when="stream.mode=pay">Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="stream.price"> sats per 10 s</span></label>
+        <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="free">
+          <span><b>Free, with tips.</b> Anyone can watch; the tip button pays the artist.</span></label>
+      </section>
+
+      <section class="panel">
+        <h2>Tip button</h2>
+        <p class="hint">Always on. Your words and your price: what a pint or a coffee costs depends on where you are.</p>
+        <label>Label <input data-path="tip.label" placeholder="e.g. Buy me a pint" maxlength="40"></label>
+        <label>Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="tip.price"> sats</span></label>
+        <p class="preview"><span class="btn" id="tip-preview"></span></p>
+      </section>
+
+      <section class="panel">
+        <h2>Extras</h2>
+        <label class="choice"><input type="checkbox" data-path="goal.on">
+          <span><b>Stretch goal.</b> All or nothing: pledges reach the artist only if the goal is hit. Missed, and every pledge goes back to the phone it came from, by itself.</span></label>
+        <div class="indent" data-when="goal.on">
+          <label>Goal <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goal.amount"> sats</span></label>
+          <label>Closes <span class="sats"><input type="number" min="1" max="600" step="1" inputmode="numeric" data-path="goal.minutes"> minutes after the set starts</span></label>
+        </div>
+
+        <label class="choice"><input type="checkbox" data-path="ticket.on">
+          <span><b>Room ticket.</b> An in-person ticket alongside the stream: pay once, you're in.</span></label>
+        <label class="indent" data-when="ticket.on">Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"> sats</span></label>
+
+        <label class="choice"><input type="checkbox" data-path="pocket.on">
+          <span><b>Pocket and Take it home.</b> The viewer's wallet in the browser, and one tap to move their change to any Cashu wallet.</span></label>
+
+        <label class="choice"><input type="checkbox" data-path="retry.on">
+          <span><b>Safe retry.</b> Paid once, retried safely: a payment whose reply got lost can be sent again without paying twice.</span></label>
+      </section>
+
+      <section class="panel">
+        <h2>Viewer page</h2>
+        <p class="label">Opens in</p>
+        <div class="row">
+          <label class="choice inline"><input type="radio" name="orientation" data-path="orientation" value="portrait"> Portrait</label>
+          <label class="choice inline"><input type="radio" name="orientation" data-path="orientation" value="landscape"> Landscape</label>
+        </div>
+        <p class="label">Languages</p>
+        <div class="row langs" id="langs"></div>
+        <p class="hint">* Machine-translated: needs a native check.</p>
+        <label>Starts in <select data-path="language" id="language"></select></label>
+      </section>
+
+      <div class="savebar">
+        <p id="status" role="status"></p>
+        <button type="submit" class="btn primary" id="save">Save</button>
+      </div>
+    </form>
+  </main>
+  <script type="module" src="/setup.js"></script>
+</body>
+</html>

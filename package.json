@@ -9,10 +9,12 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "server": "node server/index.js"
+    "server": "node server/index.js",
+    "setup": "node scripts/setup.js"
   },
   "dependencies": {
     "@cashu/cashu-ts": "5.0.0-rc.4",
-    "express": "5.2.1"
+    "express": "5.2.1",
+    "qrcode": "1.5.4"
   }
 }

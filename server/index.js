@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL } from './config.js';
 import { kv } from './db.js';
+import { currentShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 // Private links carry the admin key. Kept on disk, so they keep working across restarts.
 const ADMIN_KEY = process.env.ADMIN_KEY || kv.get('adminKey') || kv.set('adminKey', randomBytes(12).toString('hex'));
@@ -17,7 +18,8 @@ const PUBLIC = `${ROOT}public`;
 // with ?v=<newest file time>: a new build is a new URL, and phones fetch it at once.
 const assets = () => {
   const js = (() => { try { return readdirSync(`${PUBLIC}/js`).map((f) => `js/${f}`); } catch { return []; } })();
-  return ['app.css', ...js];
+  const root = readdirSync(PUBLIC).filter((f) => f.endsWith('.js'));
+  return ['app.css', ...root, ...js];
 };
 const version = () => Math.max(...assets().map((f) => { try { return Math.floor(statSync(`${PUBLIC}/${f}`).mtimeMs); } catch { return 0; } }))
   .toString(36);
@@ -27,7 +29,7 @@ app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => {
   try { html = readFileSync(`${PUBLIC}/${file}`, 'utf8'); } catch { return next(); }
   const v = version();
   res.set('Cache-Control', 'no-cache').type('html')
-    .send(html.replace(/(["'])(\/(?:app\.css|js\/[a-z-]+\.js))\1/g, `$1$2?v=${v}$1`));
+    .send(html.replace(/(["'])(\/(?:app\.css|(?:js\/)?[a-z-]+\.js))\1/g, `$1$2?v=${v}$1`));
 });
 app.use(express.static(PUBLIC, { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
 
@@ -43,7 +45,24 @@ app.get('/api/health', async (_req, res) => {
   res.json({ ok: mint.ok, boots, firstBoot, mint, site: SITE_URL });
 });
 
+// ---- The setup page (/setup.html#k=<admin key>): the account holder's settings for the show.
+const admin = (req, res, next) =>
+  req.get('X-Admin') === ADMIN_KEY ? next() : res.status(403).json({ error: 'forbidden' });
+const json = express.json({ limit: '16kb' });
+const attempt = (fn) => (req, res) => {
+  try { res.json(fn(req)); } catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+};
+
+// What every viewer page reads: the show's settings (nothing secret in them).
+app.get('/api/show', (_req, res) => res.json(currentShow()));
+app.put('/api/admin/show', admin, json, attempt((req) => saveShow(req.body)));
+app.get('/api/admin/templates', admin, attempt(() => listTemplates()));
+app.post('/api/admin/templates', admin, json, attempt((req) => saveTemplate(req.body?.name, req.body?.show)));
+app.post('/api/admin/templates/load', admin, json, attempt((req) => loadTemplate(req.body?.name)));
+app.post('/api/admin/templates/delete', admin, json, attempt((req) => deleteTemplate(req.body?.name)));
+
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`NutPub on http://localhost:${PORT}  mint: ${MINT_URL}  boot #${boots}`);
-  console.log(`ADMIN_KEY=${ADMIN_KEY}`);
+  console.log(`NutPub on http://localhost:${PORT}  mint: ${MINT_URL}  start #${boots}`);
+  // The key itself is never printed (this terminal may be on a shared screen): npm run setup opens the link.
+  console.log(`Setup page: npm run setup (admin key ${ADMIN_KEY.slice(0, 4)}…)`);
 });
