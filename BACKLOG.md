@@ -22,7 +22,12 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - **Fiat tippers:** Stripe (test mode is a v1.0 "should"); real fiat is its own session.
 - **Pay one-offs straight from the viewer's own wallet** (tip, your amount, ticket): a QR with a NUT-18 payment request, or a Lightning invoice. Pay-per-10-s still needs the Pocket (a payment every 10 s can't wait for a wallet app).
 - **An embed code** (iframe) so streamers put the player on their own site, instead of a domain of ours per streamer. Note: browsers partition storage by the top-level site, so the Pocket inside an embed on `aaron.example` is a different wallet from the one on our own page.
-- **A pre-show screen** with several photos (a slideshow before Play), on top of v1.0's single background photo.
+- **A pre-show screen** with several photos (a slideshow before Play), or a short loop video, on top of v1.0's single background photo. A countdown to the start time.
+- **Stripe (cards)**, test mode first: out of v1.0 on Tue 6 Oct (not needed for the call or for Aaron yet). v2.0.
+- **Business meetings**: a plain mode for companies (their logo instead of photos, no stage lights, maybe no pay per 10 s). A product of its own: after the call.
+- **Page addresses once several hosts share the site** (squatters): we give addresses out (by invite) rather than first come, first served; a reserved list (well-known artists and venues, our own words); unused ones released after a while; impersonation taken down. Register the product domain before announcing it.
+- **A focus point for the background photo** (top, middle, bottom), so the artist's face never sits behind the player.
+- **Several shows on one night** (Tue 6 Oct): v1.0 runs one show per server. Each show needs its own setup link, settings, takings and page (`/<artist>`), and its own holding state before the set starts. Builds on "One site, a page per artist" below.
 - **Languages back in**: EN/DE (the hackathon's table), then ES/FR/PT, machine-translated and marked "needs a native check".
 - **One site, a page per artist: `<site>/<artist>`.** Artists share the link or a QR code (socials, posters). Every fan's Pocket then lives on one site and works for every artist. Give the wallet its own hostname (e.g. `pass.<brand>/<artist>`), never a path on a site that hosts other apps: a browser shares storage across a whole site, so other pages there could read the Pocket's keys. Choose the permanent address before real money (moving later strands Pockets). Refueler or not: a business and FCA question, decide after the call. Short links: prefer our own short paths over tinyurl (a third party that sees every click).
 

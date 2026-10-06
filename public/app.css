@@ -63,9 +63,12 @@ body.setup .wordmark, body.setup .tag { text-align: center; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .row input, .row select { flex: 1 1 12em; margin-top: 0 !important; }
 .preview { margin: 4px 0 14px; }
+.site-host { white-space: nowrap; }
+.sats input[data-path="page"] { width: auto !important; flex: 1; }
 .share-link { font-size: 20px; margin: 0 0 14px; word-break: break-all; }
 .share-link a { color: var(--cream); }
 .qr { display: block; border-radius: 4px; margin: 4px 0 14px; }
+.photo-preview { display: block; width: 100%; max-height: 220px; object-fit: cover; border-radius: 4px; margin: 0 0 14px; filter: brightness(.6); }
 .btn {
   display: inline-block; font: 400 20px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase;
   color: var(--cream); background: transparent; border: 1px solid var(--cream); border-radius: 3px;
@@ -111,6 +114,21 @@ body.wallet textarea {
 }
 
 /* ---- The viewer page */
+/* The background photo: dimmed, with a little grain, behind everything. */
+.backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--deep); }
+.backdrop i { position: absolute; inset: 0; background: center / cover no-repeat; opacity: 0; transition: opacity 1.5s; filter: brightness(.85) saturate(.9); }
+.backdrop i.on { opacity: 1; }
+.backdrop::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(rgb(5 9 20 / .05), rgb(5 9 20 / .3)); }
+.backdrop::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; opacity: .16; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body.viewer { background: transparent; }
+/* Brighter photo (Tue 6: ~70% less dim): everything over it gets a dark backing or a shadow, to stay readable. */
+body.viewer .wordmark, body.viewer .tag, body.viewer .about, body.viewer .status { text-shadow: 0 1px 3px rgb(5 9 20 / .9), 0 0 18px rgb(5 9 20 / .7); }
+body.viewer .purse { background: rgb(5 9 20 / .72); border-color: rgb(239 227 200 / .14); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+body.viewer .money .btn, body.viewer .own .btn:not(.primary) { background: rgb(5 9 20 / .6); }
+html:has(body.viewer) { background: var(--deep); }
 .about { max-width: 34em; margin: -8px auto 16px; font-size: 16px; color: var(--cream); }
 .optional { color: var(--smoke); font-size: 14px; }
 .small-mark { font-size: clamp(36px, 11vw, 56px); margin-top: 16px; }
@@ -124,6 +142,9 @@ body[data-shape="16:9"] .player { aspect-ratio: 16 / 9; }
 body[data-shape="9:16"] .player { aspect-ratio: 9 / 16; width: min(100%, calc(78svh * 9 / 16)); margin: 0 auto; border-radius: 4px; }
 .player video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .25s; }
 .player video.on { opacity: 1; }
+/* Before the set plays, the player is see-through: the photo (and the artist's face) shows, only the controls sit on it. */
+body.viewer:not(.playing) .player { background: rgb(5 9 20 / .15); box-shadow: inset 0 0 0 1px rgb(239 227 200 / .14); }
+body.viewer:not(.playing) .bar { background: none; }
 .big-play {
   position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 50%; padding: 0;
   display: grid; place-items: center; cursor: pointer;

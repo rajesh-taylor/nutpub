@@ -92,6 +92,7 @@ function status(text, kind = '') {
 let site = location.origin;
 function shareLink(path) {
   const link = `${site}${path}`;
+  $('site-host').textContent = `${site.replace(/^https?:\/\//, '')}/`;
   $('show-link').textContent = link.replace(/^https?:\/\//, '');
   $('show-link').href = $('open-show').href = link;
   $('qr').src = `/api/show/qr.svg?t=${Date.now()}`;
@@ -114,6 +115,7 @@ function saved(res) {
 }
 
 form.addEventListener('input', (e) => {
+  if (e.target.id === 'photo-file') return; // saved on its own, not with the form
   read();
   if (e.target.dataset.lang) languageChoices();
   refresh();
@@ -159,11 +161,39 @@ $('tpl-delete').addEventListener('click', async () => {
   catch (err) { status(err.message, 'bad'); }
 });
 
+// ---- Background photo: uploaded the moment it's picked (the server checks its type and size too).
+const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
+function photo(url) {
+  $('photo-preview').src = url || DEFAULT_PHOTO;
+  $('photo-reset').hidden = !url;
+}
+$('photo-file').addEventListener('change', async () => {
+  const file = $('photo-file').files[0];
+  $('photo-file').value = '';
+  if (!file) return;
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return status('Use a JPEG, PNG or WebP photo.', 'bad');
+  if (file.size > 5 * 1024 * 1024) return status('That photo is over 5 MB.', 'bad');
+  status('Uploading the photo…');
+  try {
+    const r = await fetch('/api/admin/photo', { method: 'PUT', headers: { 'X-Admin': key || '', 'Content-Type': file.type }, body: file });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || data.error || r.statusText);
+    photo(data.photo);
+    status('Background photo saved. The show page has it on its next load.', 'ok');
+  } catch (err) { status(`Photo not saved: ${err.message}`, 'bad'); }
+});
+$('photo-reset').addEventListener('click', async () => {
+  try { photo((await api('DELETE', '/api/admin/photo')).photo); status('Back to the Berlin photos.', 'ok'); }
+  catch (err) { status(err.message, 'bad'); }
+});
+
 // ---- Start: the key must work, or the page stays locked.
 try {
   site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
   await templates();
-  saved(await api('GET', '/api/show'));
+  const first = await api('GET', '/api/show');
+  saved(first);
+  photo(first.photo);
   form.hidden = false;
 } catch (err) {
   $('locked').hidden = false;

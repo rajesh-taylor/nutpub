@@ -1,7 +1,8 @@
 // A phone's night, from the command line: top up over the test mint's fake Lightning, get a pass, pay the set
 // 10 seconds at a time, retry safely, get refused for reuse, and tip. Needs `npm start` running.
 //   npm run check
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { Wallet, getEncodedToken, decodePaymentRequest, sumProofs } from '@cashu/cashu-ts';
 
@@ -74,6 +75,22 @@ const ask = await get('/api/tip/7');
 check(ask.status === 402 && Number(decodePaymentRequest(ask.headers.get('X-Cashu')).amount) === 7, 'tip, your amount: 402 for 7 sats');
 const own = await get('/api/tip/7', await pay(ask));
 check(own.status === 200 && (await own.json()).tipped === 7, 'tip, your amount: 7 sats paid');
+
+// The background photo: refused without the setup key; only a real photo is taken. Skipped if one is already up
+// (the check never replaces the account holder's own).
+const key = process.env.ADMIN_KEY || JSON.parse(new DatabaseSync(`${ROOT}data/nutpub.db`, { readOnly: true })
+  .prepare("SELECT value FROM kv WHERE key = 'adminKey'").get().value);
+const put = (body, k) => fetch(`${SITE}/api/admin/photo`, { method: 'PUT', headers: { 'X-Admin': k, 'Content-Type': 'image/jpeg' }, body });
+check((await put('x', 'wrong')).status === 403, 'photo: refused without the setup key');
+if ((await fetch(`${SITE}/api/show`).then((r) => r.json())).photo || !existsSync(`${ROOT}public/img/fp-32.jpg`)) {
+  console.log('· photo: one is already up (or no test photo in public/img), upload not tried');
+} else {
+  check((await put('not a photo', key)).status === 400, 'photo: a file that isn\'t a photo is refused');
+  const up = await put(readFileSync(`${ROOT}public/img/fp-32.jpg`), key).then((r) => r.json()).catch(() => ({}));
+  check(up.photo && (await fetch(`${SITE}${up.photo}`)).status === 200, 'photo: a JPEG is taken and served');
+  await fetch(`${SITE}/api/admin/photo`, { method: 'DELETE', headers: { 'X-Admin': key } });
+  check(!(await fetch(`${SITE}/api/show`).then((r) => r.json())).photo, 'photo: removed again (back to the Berlin photos)');
+}
 
 console.log(failed ? `\n${failed} check(s) failed.` : '\nAll checks passed.');
 process.exit(failed ? 1 : 0);

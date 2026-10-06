@@ -20,3 +20,5 @@ The hackathon's lessons (NUT-24 gate, DLEQ, Coco in the browser, locked pledges,
 - **A pass gets the pieces it paid for again, free (charged once), so a reload must carry on at the next unpaid piece.** Starting again at piece 0 replayed a phone's earlier pieces with an empty wallet, which looks exactly like a broken gate.
 - **Messages at the bottom of the page are invisible on iPhone** (under Safari's toolbar). Say what happened right under the picture.
 - **iPhone Safari has no full screen for a page element**; Android and the Mac do. The full screen button asks where it can and otherwise makes the page fill the screen.
+- **Don't make a public address out of a field people edit.** `/longy` came from the artist's name, so clearing or renaming the artist took the page down. The address is its own setting now, set once.
+- **A bright photo behind the page needs dark backings** (text shadow, a dark fill on the wallet box and buttons); a dim one hides the artist. And keep the face out of the middle: the player sits there (see-through until the set plays).

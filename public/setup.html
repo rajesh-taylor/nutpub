@@ -27,7 +27,7 @@
         </div>
         <img class="qr" id="qr" alt="QR code for the show page" width="168" height="168">
         <p class="hint">Safe to share anywhere: it opens the show, never this page. The QR code is for posters and the screen in the room.
-          The address comes from the artist's name; saving a new name changes it.</p>
+          Change the address under “The show” below.</p>
       </section>
 
       <section class="panel templates">
@@ -50,6 +50,9 @@
           <textarea data-path="description" rows="3" maxlength="280" placeholder="e.g. Three sets from the back room. Doors 8 pm."></textarea></label>
         <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
         <p class="hint">The artist's name goes on the buttons (e.g. “Send Longy a message”), not under the show name.</p>
+        <label>Page address <span class="sats"><span class="site-host" id="site-host">nutpub.rajeshtaylor.com/</span><input data-path="page" placeholder="longy" maxlength="40" autocapitalize="off" spellcheck="false"></span></label>
+        <p class="hint">Set it once and put it on posters weeks ahead: renaming the artist doesn't change it. Left empty, it's made from the artist's name.
+          Changing it breaks links already shared.</p>
       </section>
 
       <section class="panel">
@@ -88,6 +91,19 @@
 
         <label class="choice"><input type="checkbox" data-path="retry.on">
           <span><b>Safe retry.</b> Paid once, retried safely: a payment whose reply got lost can be sent again without paying twice.</span></label>
+      </section>
+
+      <section class="panel">
+        <h2>Background photo</h2>
+        <p class="hint">Shown behind the player (see-through until the set plays). Pick one with the face to the side or near the top:
+          the player covers the middle. A JPEG, PNG or WebP, up to 5 MB; it's saved as soon as you pick it.
+          None picked: the Berlin photos.</p>
+        <img class="photo-preview" id="photo-preview" alt="The background photo now">
+        <div class="row">
+          <label class="btn" for="photo-file">Choose a photo</label>
+          <input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp" hidden>
+          <button type="button" class="btn quiet" id="photo-reset" hidden>Use the Berlin photos</button>
+        </div>
       </section>
 
       <section class="panel">

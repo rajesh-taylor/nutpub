@@ -6,6 +6,7 @@ import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL, MINT_TEST } from './config.js
 import { kv } from './db.js';
 import { initPurse } from './purse.js';
 import { mountSet } from './set.js';
+import { mountPhoto, photoUrl } from './photo.js';
 import { currentShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 // Private links carry the admin key. Kept on disk, so they keep working across restarts.
@@ -62,7 +63,7 @@ const attempt = (fn) => (req, res) => {
 };
 
 // What every viewer page reads: the show's settings (nothing secret in them).
-app.get('/api/show', (_req, res) => res.json(currentShow()));
+app.get('/api/show', (_req, res) => res.json({ ...currentShow(), photo: photoUrl() }));
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 app.get('/api/show/qr.svg', async (req, res) => {
   const link = `${SITE_URL || `${req.protocol}://${req.get('host')}`}${currentShow().path}`;
@@ -76,6 +77,7 @@ app.post('/api/admin/templates/load', admin, json, attempt((req) => loadTemplate
 app.post('/api/admin/templates/delete', admin, json, attempt((req) => deleteTemplate(req.body?.name)));
 
 mountSet(app, admin);
+mountPhoto(app, admin);
 
 await initPurse();
 app.listen(PORT, '127.0.0.1', () => {

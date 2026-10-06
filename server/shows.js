@@ -17,11 +17,20 @@ db.exec(`
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
+// A page address: "Longy" -> longy, "Bitfest '26" -> bitfest-26. Names the site's own folders use are left out.
+const TAKEN = ['api', 'img', 'js', 'fonts'];
+export const pageName = (name) => {
+  const s = String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  return TAKEN.includes(s) ? '' : s;
+};
+
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
 export const blank = () => ({
   title: '',
   description: '',                      // optional: a line or two under the title
   artist: '',                           // not on the tag line; the buttons use it ("Send Longy a message")
+  page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   stream: { mode: 'pay', price: null }, // 'pay': sats per 10 s; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
@@ -48,6 +57,8 @@ export function clean(input = {}) {
     title: text(input.title, 80),
     description: text(input.description, 280),
     artist: text(input.artist, 60),
+    // Empty: taken from the artist's name, once. After that it stays put, so links and posters keep working.
+    page: pageName(input.page) || pageName(input.artist),
     stream: {
       mode: input.stream?.mode === 'free' ? 'free' : 'pay',
       price: sats(input.stream?.price),
@@ -81,15 +92,10 @@ export function clean(input = {}) {
 
 const now = () => new Date().toISOString();
 
-// The show page's own address, from the artist's name: "Longy" -> /longy. No artist yet: the home page.
-export const slug = (name) => String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
-
 export function currentShow() {
   const row = db.prepare("SELECT settings, updated FROM shows WHERE id = 'current'").get();
   const { show, problems } = clean(row ? JSON.parse(row.settings) : blank());
-  const s = slug(show.artist);
-  return { show, problems, updated: row?.updated ?? null, path: s ? `/${s}` : '/' };
+  return { show, problems, updated: row?.updated ?? null, path: show.page ? `/${show.page}` : '/' };
 }
 
 export function saveShow(input) {

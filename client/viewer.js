@@ -31,7 +31,7 @@ const T = {
 const say = (text) => { $('status').textContent = text || ''; };
 const sats = (n) => `${n} sat${n === 1 ? '' : 's'}`;
 
-const [health, { show }] = await Promise.all([
+const [health, { show, photo: showPhoto }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -135,8 +135,34 @@ function unlockAudio() {
   return ctx;
 }
 
+// ---- The background photo: the account holder's own; or the Berlin picks, one before Play and three taking
+// turns while the set plays.
+const BERLIN = { before: ['/img/peggy-5-1372.jpg'], playing: ['/img/fp-32.jpg', '/img/fp-37.jpg', '/img/peggy-17-8266.jpg'] };
+const layers = [$('bd-a'), $('bd-b')];
+let shown = 0;
+let turn = null;
+const backdropTo = (url) => {
+  const img = new Image();
+  img.onload = () => {
+    shown = 1 - shown;
+    layers[shown].style.backgroundImage = `url("${url}")`;
+    layers[shown].classList.add('on');
+    layers[1 - shown].classList.remove('on');
+  };
+  img.src = url; // a missing file (a fresh clone has no Berlin picks) just leaves midnight
+};
+function backdrop(on) {
+  clearInterval(turn);
+  const list = showPhoto ? [showPhoto] : on ? BERLIN.playing : BERLIN.before;
+  let i = 0;
+  backdropTo(list[0]);
+  if (list.length > 1) turn = setInterval(() => backdropTo(list[(i += 1) % list.length]), 20_000);
+}
+backdrop(false);
+
 function controls(on) {
   playing = on;
+  backdrop(on);
   $('play').setAttribute('aria-label', on ? T.stop : T.play);
   document.body.classList.toggle('playing', on);
 }
