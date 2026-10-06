@@ -34,15 +34,21 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 Evenings this week: Sun 4, Mon 5, Thu 8. Ask each week (next: Sun 11 Oct). Two evenings done on Sun 4, so about 6 left to the freeze for 4 planned: **2 spare**.
 **Cut order if behind:** Stripe test mode, then the room ticket.
 
-## Monday 5 Oct (2 to 3 hours; agreed Sun night)
-1. **Tip sats, your amount**: a third button right of the tip; asks for an amount, pays it as its own 402. (~20 min)
+## Monday's list (done Tue 6 Oct instead; Monday was missed)
+Done Tue 6 (seen in the Mac browser at phone sizes; phones to check): 1, 3, 5, 6, plus:
+- **Pocket is now Wallet** (clearer, says money): `/wallet.html` (`/pocket.html` redirects); the setting is `wallet.on` (old shows load).
+- Wallet page: Back to set + Take it home side by side; no top-up there (it's on the viewer page); notes in cream, as three bullets.
+- Tip is one tap (the price is on the button). A reload carries on at the pass's next unpaid piece (it used to replay paid pieces free, so an empty wallet looked like it played).
+- Quiet buttons and notes in cream, not grey: venues are dark rooms.
+
+1. **Tip sats, your amount**: a third button right of the tip; asks for an amount, pays it as its own 402. **done**
 2. Setup: **title + description (optional)** instead of title + artist; the tag line shows the title only.
-3. **Player controls on the picture**, like YouTube: play/stop bottom left, "This set: n sats", full screen bottom right. Below the player: the money buttons only, compact (the tip label can be short, e.g. "🍺": it's the account holder's own text).
+3. **Player controls on the picture**, like YouTube: play/stop bottom left, "This set: n sats", full screen bottom right. Below the player: the money buttons only, compact (the tip label can be short, e.g. "🍺": it's the account holder's own text). **done**: edge to edge on phones; full screen button (real full screen on Android and the Mac; on iPhone the page fills the screen); messages just under the picture (over it in full screen).
 4. Setup "orientation" becomes **video shape**: landscape 16:9 or portrait 9:16. Turning the phone sideways still goes full screen.
-5. Phone sideways: the TEST strip shrinks to a small corner tag, so it stops covering the picture.
-6. Free mode: hide the per-10-s price and "This set"; check on the phones.
+5. Phone sideways: the TEST strip shrinks to a small corner tag, so it stops covering the picture. **done** (full screen too)
+6. Free mode: hide the per-10-s price and "This set"; check on the phones. **done** (phones to check)
 7. **Background photo**: upload one on the setup page (size and type checked, kept in `data/`, never in git); the viewer page shows it dimmed with grain, behind the player. Default until one is uploaded: the Berlin picks (before Play `peggy-5-1372`; while playing `fp-32`, `fp-37`, `peggy-17-8266`; files in the hackathon's `public/img/candidates/`, copied to `public/img/`, git-ignored).
-8. **Pocket: paste ecash** (receive a token from any Cashu wallet), as the hackathon Pocket had.
+8. **Wallet: paste ecash** (receive a token from any Cashu wallet), as the hackathon Pocket had.
 9. **A page per artist**: the viewer page at `/longy` too (`nutpub.rajeshtaylor.com/longy`), so "one link per artist" is true on the call. (~10 min)
 10. Then start evening 4: the **stretch goal with refunds** (the pledge gate on the server, from the hackathon).
 

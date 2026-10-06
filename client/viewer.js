@@ -11,13 +11,12 @@ const PIECE = 10;
 const T = {
   play: 'Play', stop: 'Stop',
   perPiece: (n) => `${n} sat${n === 1 ? '' : 's'} / 10 s`,
-  free: 'Free to watch',
+  full: 'Full screen', exitFull: 'Leave full screen',
   spent: (n) => ` · This set: ${n} sat${n === 1 ? '' : 's'}`,
-  pocket: (n) => `In your pocket · ${n} sats`,
   stopped: 'Stopped. Nothing more is charged.',
-  empty: 'Your pocket’s empty. Top it up to keep playing.',
-  tipAsk: (n) => `Tap again to pay ${n} sats`,
+  empty: 'Your wallet’s empty. Top it up to keep playing.',
   tipDone: (label) => `${label}: paid. Thank you!`,
+  ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (n) => `${n} sat${n === 1 ? '' : 's'} tipped. Thank you!`,
   retrying: 'Lost the reply. Asking again with the same payment…',
   retried: 'Same payment, same 10 seconds. Charged once.',
   notReady: 'The show isn’t ready yet: no price set.',
@@ -40,7 +39,8 @@ document.title = show.title ? `${show.title} · The NutPub` : 'The NutPub';
 $('billing').textContent = [show.title, show.artist].filter(Boolean).join(' · ');
 document.body.dataset.orientation = show.orientation;
 const free = show.stream.mode === 'free';
-$('price').textContent = free ? T.free : T.perPiece(show.stream.price);
+// Free shows: no price and no "This set" (there's nothing to count).
+$('price').textContent = free ? '' : T.perPiece(show.stream.price);
 const tipText = `${show.tip.label || 'Tip'} · ${sats(show.tip.price || 0)}`;
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
@@ -56,28 +56,30 @@ async function getPass(fresh = false) {
 }
 let pass = await getPass();
 let spentHere = 0;
+let resumeAt = 0; // this pass's first unpaid piece
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
 if (me.status === 403) pass = await getPass(true);
-else spentHere = (await me.json()).spent;
+else ({ spent: spentHere, next: resumeAt } = await me.json());
 const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere); };
 meter();
 
 // ---- The wallet (Coco, in this browser).
 const wallet = await openWallet(health.mint.url);
-const pocket = async () => { $('pocket').textContent = T.pocket(await wallet.balance()); };
-await pocket();
-wallet.on('proofs:saved', pocket);
-$('pocket-link').hidden = !show.pocket.on;
+const balance = async () => { $('balance').textContent = await wallet.balance(); };
+await balance();
+wallet.on('proofs:saved', balance);
+if (!show.wallet.on) $('wallet-link').removeAttribute('href'); // the balance still shows; no wallet page
 $('topup').hidden = !health.mint.test;
-$('play').disabled = false;
-$('tip').disabled = !show.tip.price;
+$('play').disabled = $('big-play').disabled = false;
+$('tip').disabled = $('ov-tip').disabled = !show.tip.price;
+$('own').disabled = false;
 
 $('topup').onclick = async () => {
   $('topup').disabled = true;
   try {
     const { id } = await wallet.topup(100);
     for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
-    await pocket();
+    await balance();
     say('+100 test sats.');
   } catch (e) { say(e.message); }
   $('topup').disabled = false;
@@ -118,7 +120,7 @@ let master = null;
 let sources = [];
 let playing = false;
 let run = 0;
-let next = 0; // the next piece to buy (the set loops on the server: piece n is file n % pieces)
+let next = resumeAt; // the next piece to buy (the set loops on the server: piece n is file n % pieces)
 const vids = [$('vid-a'), $('vid-b')];
 
 function unlockAudio() {
@@ -131,8 +133,7 @@ function unlockAudio() {
 
 function controls(on) {
   playing = on;
-  $('play').textContent = on ? T.stop : T.play;
-  $('play').classList.toggle('primary', !on);
+  $('play').setAttribute('aria-label', on ? T.stop : T.play);
   document.body.classList.toggle('playing', on);
 }
 
@@ -159,7 +160,7 @@ async function play() {
       break;
     }
     if (!res.ok) { stop(await refusal(res)); break; }
-    if (res.paidWith) { spentHere += show.stream.price; meter(); }
+    if (res.paidWith) { spentHere += show.stream.price; meter(); balance(); }
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
     if (!playing || mine !== run) break; // stopped while it was on its way: don't start it
     if (startAt < ac.currentTime) startAt = ac.currentTime + 0.05; // fell behind (slow network): start now
@@ -215,31 +216,79 @@ function stop(why) {
 const toggle = () => (playing ? stop() : play());
 $('play').onclick = toggle;
 $('big-play').onclick = toggle;
-$('ov-stop').onclick = () => stop();
+
+// ---- Full screen: the picture fills the screen, with the controls and the tip on it. Phone turned sideways does
+// it by itself. The button also asks the browser for real full screen where it can (not on iPhone: there the
+// page alone fills the screen, with Safari's bars still round it).
+const sideways = matchMedia('(orientation: landscape) and (max-height: 540px)');
+let wantFull = false;
+const layout = () => {
+  const full = wantFull || sideways.matches;
+  document.body.classList.toggle('full', full);
+  document.body.classList.toggle('sideways', sideways.matches);
+  $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
+};
+sideways.addEventListener('change', layout);
+layout();
+$('full').onclick = () => {
+  wantFull = !document.body.classList.contains('full');
+  const doc = document.documentElement;
+  if (wantFull) (doc.requestFullscreen || doc.webkitRequestFullscreen)?.call(doc)?.catch?.(() => {});
+  else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  layout();
+};
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && wantFull) { wantFull = false; layout(); } // left with Esc or the back gesture
+});
+
 // iPhone (Low Power Mode) may refuse to start a video without a tap: any tap on the picture starts it.
 $('player').addEventListener('click', (e) => {
   if (e.target.tagName === 'VIDEO') vids.find((v) => v.classList.contains('on') || v.src)?.play().catch(() => {});
 });
 
-// ---- The tip: tap once to see the price, again to pay.
-let tipArmed = null;
+// ---- The tip: one tap pays (the price is on the button). Off while paying, so a double tap pays once.
 async function tip(button) {
   unlockAudio();
-  if (tipArmed !== button) {
-    tipArmed = button;
-    button.textContent = T.tipAsk(show.tip.price);
-    setTimeout(() => { if (tipArmed === button) { tipArmed = null; button.textContent = tipText; } }, 4000);
-    return;
-  }
-  tipArmed = null;
-  button.textContent = tipText;
+  if (button.disabled) return;
+  button.disabled = true;
   try {
     const res = await paidFetch('/api/tip');
     say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
   }
-  pocket();
+  button.disabled = false;
+  balance();
 }
 $('tip').onclick = () => tip($('tip'));
 $('ov-tip').onclick = () => tip($('ov-tip'));
+
+// ---- Tip sats, your amount: type it, then "Tip n sats" pays exactly that (its own 402).
+const ownSats = () => { const n = Number($('own-sats').value); return Number.isInteger(n) && n >= 1 && n <= 1_000_000 ? n : 0; };
+const ownForm = (open) => {
+  $('own-form').hidden = !open;
+  $('own').hidden = open;
+  if (open) { $('own-sats').value = ''; $('own-sats').oninput(); $('own-sats').focus(); }
+};
+$('own').onclick = () => { unlockAudio(); ownForm(true); };
+$('own-cancel').onclick = () => ownForm(false);
+$('own-sats').oninput = () => {
+  const n = ownSats();
+  $('own-pay').disabled = !n;
+  $('own-pay').textContent = n ? T.ownPay(n) : T.ownTip;
+};
+$('own-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const n = ownSats();
+  if (!n) return;
+  $('own-pay').disabled = true;
+  try {
+    const res = await paidFetch(`/api/tip/${n}`);
+    say(res.ok ? T.ownDone(n) : await refusal(res));
+    if (res.ok) ownForm(false);
+  } catch (err) {
+    say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
+  }
+  $('own-pay').disabled = !ownSats();
+  balance();
+};

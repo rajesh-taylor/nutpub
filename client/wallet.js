@@ -51,7 +51,7 @@ export async function openWallet(mintUrl) {
       return (await coco.ops.mint.get(id))?.state === 'finalized';
     },
     on: (event, fn) => coco.on(event, fn),
-    // Take it home: everything in this browser's pocket as one cashuB, for any Cashu wallet.
+    // Take it home: everything in this browser's wallet as one cashuB, for any Cashu wallet.
     async takeHome() {
       const amount = await this.balance();
       if (!amount) return null;

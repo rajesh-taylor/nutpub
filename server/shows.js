@@ -25,7 +25,7 @@ export const blank = () => ({
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null },   // an in-person ticket alongside the stream
-  pocket: { on: true },                 // the wallet in the browser, with Take it home
+  wallet: { on: true },                 // the wallet in the browser, with Take it home
   retry: { on: true },                  // safe retry: paid once, retried safely
   orientation: 'portrait',
   languages: ['en'],
@@ -57,7 +57,7 @@ export function clean(input = {}) {
       minutes: Math.min(Math.max(Math.floor(Number(input.goal?.minutes)) || b.goal.minutes, 1), 600),
     },
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
-    pocket: { on: input.pocket?.on !== false },
+    wallet: { on: (input.wallet ?? input.pocket)?.on !== false }, // `pocket`: its name in shows saved before 6 Oct
     retry: { on: input.retry?.on !== false },
     orientation: input.orientation === 'landscape' ? 'landscape' : 'portrait',
     languages: LANGUAGES.filter((l) => (input.languages || []).includes(l)),

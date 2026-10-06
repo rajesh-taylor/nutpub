@@ -25,6 +25,7 @@ const assets = () => {
 };
 const version = () => Math.max(...assets().map((f) => { try { return Math.floor(statSync(`${PUBLIC}/${f}`).mtimeMs); } catch { return 0; } }))
   .toString(36);
+app.get('/pocket.html', (_req, res) => res.redirect(301, '/wallet.html')); // its name before 6 Oct
 app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => {
   const file = req.path === '/' ? 'index.html' : req.path.slice(1);
   let html;

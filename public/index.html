@@ -15,25 +15,41 @@
     <div class="player" id="player">
       <video id="vid-a" muted playsinline preload="auto"></video>
       <video id="vid-b" muted playsinline preload="auto"></video>
-      <button class="big-play" id="big-play" aria-label="Play">▶</button>
-      <div class="overlay" id="overlay">
-        <button class="btn" id="ov-stop">Stop</button>
-        <button class="btn" id="ov-tip"></button>
+      <button class="big-play" id="big-play" aria-label="Play" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <!-- Controls on the picture: play/stop and what this set has cost bottom left, full screen bottom right.
+           Full screen (or sideways) adds the tip in between. -->
+      <div class="bar">
+        <button class="icon" id="play" aria-label="Play" disabled>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        </button>
+        <span class="meter"><span id="price"></span><span id="spent"></span></span>
+        <button class="btn" id="ov-tip" disabled></button>
+        <button class="icon" id="full" aria-label="Full screen">
+          <svg class="i-full" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+          <svg class="i-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+        </button>
       </div>
     </div>
 
-    <p class="meter"><span id="price"></span><span id="spent"></span></p>
-
-    <p class="buttons">
-      <button class="btn primary" id="play" disabled>Play</button>
-      <button class="btn" id="tip" disabled></button>
-    </p>
-
-    <p class="pocketline"><span id="pocket">Opening your pocket…</span>
-      <button class="btn quiet" id="topup" hidden>Top up 100 test sats</button>
-      <a class="btn quiet" href="/pocket.html" id="pocket-link" hidden>Pocket</a></p>
-
     <p class="status" id="status" role="status"></p>
+
+    <p class="buttons money">
+      <button class="btn" id="tip" disabled></button>
+      <button class="btn" id="own" disabled>Your amount</button>
+    </p>
+    <form class="own" id="own-form" hidden>
+      <input type="number" id="own-sats" min="1" max="1000000" step="1" inputmode="numeric" placeholder="sats" aria-label="Tip amount in sats">
+      <button class="btn primary" id="own-pay" disabled>Tip</button>
+      <button type="button" class="btn quiet" id="own-cancel" aria-label="Cancel">✕</button>
+    </form>
+
+    <p class="buttons walletline">
+      <a class="btn quiet" href="/wallet.html" id="wallet-link">Wallet · <span id="balance">…</span> sats</a>
+      <button class="btn quiet" id="topup" hidden>Top up 100 test sats</button>
+    </p>
   </main>
   <script type="module" src="/js/viewer.js"></script>
 </body>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>Wallet · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="wallet">
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag">Wallet</p>
+    <p class="big"><span id="balance">…</span> <small>sats</small></p>
+    <p class="buttons"><a class="btn" href="/" id="back">← Back to set</a><button class="btn" id="home" hidden>Take it home</button></p>
+    <div id="takeout" hidden>
+      <textarea id="token" rows="4" readonly aria-label="Your ecash note"></textarea>
+      <p><button class="btn" id="copy">Copy</button></p>
+    </div>
+    <p class="status" id="status" role="status"></p>
+    <ul class="notes" id="where-note" hidden>
+      <li>Your sats live in this browser, at <b id="where"></b>.</li>
+      <li>Closing the tab is fine. Clearing your browsing data, a private window, another browser or phone,
+        or (on iPhone) 7 days without a visit lose them.</li>
+      <li><b>Take them home first.</b></li>
+    </ul>
+  </main>
+  <script type="module" src="/js/wallet-page.js"></script>
+</body>
+</html>

@@ -28,6 +28,7 @@ const getPass = db.prepare('SELECT id FROM passes WHERE id = ?');
 const hasPaid = db.prepare('SELECT 1 FROM paid WHERE pass = ? AND piece = ?');
 const addPaid = db.prepare('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)');
 const spent = db.prepare('SELECT COALESCE(SUM(sats), 0) AS sats FROM paid WHERE pass = ?');
+const nextPiece = db.prepare('SELECT COALESCE(MAX(piece) + 1, 0) AS n FROM paid WHERE pass = ?');
 const tipped = db.prepare('SELECT COALESCE(SUM(sats), 0) AS sats FROM tips WHERE pass = ?');
 
 const now = () => new Date().toISOString();
@@ -60,8 +61,10 @@ export function mountSet(app, admin) {
     res.sendFile(file(req, kind), { root: SET });
   };
 
+  // `next`: where this pass carries on. A reload must not start again at piece 0, or pieces already paid for
+  // would replay free (charged once) and an empty pocket would look like it plays.
   app.get('/api/pass/me', pass, (req, res) =>
-    res.json({ spent: spent.get(req.pass).sats, tipped: tipped.get(req.pass).sats, pieces: pieces() }));
+    res.json({ spent: spent.get(req.pass).sats, tipped: tipped.get(req.pass).sats, pieces: pieces(), next: nextPiece.get(req.pass).n }));
 
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).
   app.get('/api/set/audio/:n', pass, piece,
@@ -88,6 +91,20 @@ export function mountSet(app, admin) {
   app.get('/api/tip', pass,
     (_req, res, next) => (show().tip.price ? next() : res.status(409).json({ error: 'not_ready', detail: 'No tip price set yet.' })),
     cashuGate(() => show().tip.price, () => show().tip.label || 'A tip'),
+    (req, res) => {
+      db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
+      res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });
+    });
+
+  // Tip sats, your amount: the viewer picks the amount; a 402 of its own for exactly that.
+  app.get('/api/tip/:sats', pass,
+    (req, res, next) => {
+      const n = Number(req.params.sats);
+      if (!Number.isInteger(n) || n < 1 || n > 1_000_000) return res.status(400).json({ error: 'bad_amount' });
+      req.amount = n;
+      next();
+    },
+    cashuGate((req) => req.amount, (req) => `A tip of ${req.amount} sat${req.amount === 1 ? '' : 's'}`),
     (req, res) => {
       db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
       res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });

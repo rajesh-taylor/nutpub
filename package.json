@@ -13,7 +13,7 @@
     "setup": "node scripts/setup.js",
     "check": "node scripts/check.js",
     "cut-set": "sh scripts/cut-set.sh",
-    "build": "esbuild client/pocket.js client/viewer.js --bundle --format=esm --target=es2022 --minify --sourcemap --splitting --outdir=public/js"
+    "build": "esbuild client/wallet-page.js client/viewer.js --bundle --format=esm --target=es2022 --minify --sourcemap --splitting --outdir=public/js"
   },
   "dependencies": {
     "@cashu/cashu-ts": "5.0.0-rc.4",

@@ -52,6 +52,7 @@ if (show.stream.mode === 'pay') {
   check(reuse.status === 400 && (await reuse.json()).error === 'reused', 'same token, next piece: refused as reused');
   const me = await get('/api/pass/me').then((r) => r.json());
   check(me.spent === show.stream.price, `charged once: ${me.spent} sat(s) for piece 0`);
+  check(me.next === 1, 'a reload carries on at piece 1, not 0 (no free replay)');
 } else {
   check((await get('/api/set/audio/0')).status === 200, 'free show: piece 0 sound served without a 402');
   check((await get('/api/set/video/0')).status === 200, 'free show: piece 0 picture served');
@@ -63,6 +64,12 @@ if (show.tip.price) {
   const tip = await get('/api/tip', await pay(ask));
   check(tip.status === 200, `tip paid: “${show.tip.label}”`);
 }
+
+check((await get('/api/tip/0')).status === 400, 'tip, your amount: 0 sats refused');
+const ask = await get('/api/tip/7');
+check(ask.status === 402 && Number(decodePaymentRequest(ask.headers.get('X-Cashu')).amount) === 7, 'tip, your amount: 402 for 7 sats');
+const own = await get('/api/tip/7', await pay(ask));
+check(own.status === 200 && (await own.json()).tipped === 7, 'tip, your amount: 7 sats paid');
 
 console.log(failed ? `\n${failed} check(s) failed.` : '\nAll checks passed.');
 process.exit(failed ? 1 : 0);
