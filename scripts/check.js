@@ -13,10 +13,14 @@ const MINT_API = `http://127.0.0.1:${process.env.MINT_PORT || 3340}`;
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? '✓' : '✕'} ${what}`); if (!ok) failed += 1; };
 
-const { show } = await fetch(`${SITE}/api/show`).then((r) => r.json());
+const { show, path } = await fetch(`${SITE}/api/show`).then((r) => r.json());
 const health = await fetch(`${SITE}/api/health`).then((r) => r.json());
 const MINT_URL = health.mint.url;
 console.log(`Show: ${show.title || '(untitled)'} · ${show.stream.mode === 'free' ? 'free, with tips' : `${show.stream.price} sat / 10 s`} · tip ${show.tip.price} sats`);
+
+const page = await fetch(`${SITE}${path}`);
+check(page.status === 200 && (await page.text()).includes('viewer.js'), `the show page at ${path}`);
+check((await fetch(`${SITE}/no-such-artist`)).status === 404, 'another artist\'s address: not found');
 
 // The phone's wallet: 100 test sats over the fake Lightning (the invoice pays itself).
 const wallet = new Wallet(MINT_API, { unit: 'sat' });

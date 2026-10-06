@@ -5,7 +5,9 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - **RTMP stream keys and multistreaming**; a real live ingest (v1.0 plays a recorded set). Aaron and other streamers will multistream (several services at once), so the setup page needs the RTMP URL and key per destination, not just one.
 - **Cloudflare Stream** (or similar) for the video.
 - **A/V-team roles**: a venue's sound, lights, ticketing and bar as separate logins (v1.0: one account type).
-- **Messages with tips** (like ShoSho). On desktop: comments and sat donations in a panel to the right of the player, not over the picture (like YouTube live chat). Mobile with a 16:9 video: comments in a box under the player, so the streamer reads them fast and only viewers see the money buttons (closer to what new users know). Plan it in a design session after the call.
+- **Messages with tips** (like ShoSho). On desktop: comments and sat donations in a panel to the right of the player, not over the picture (like YouTube live chat). Mobile with a 16:9 video: comments in a box under the player, so the streamer reads them fast and only viewers see the money buttons (closer to what new users know). **Moved into v1.0 on Tue 6 Oct** (our own feed, and the panel on the right for wide screens and TVs; see NEXT.md). What stays here: the streamer-only view, and comments without a tip.
+- **Several quick-tip buttons**, each with its own emoji and price, set in the template (e.g. 🍺 21, 🍕 100, 🎸 500). The row under the wallet box already has room (Tue 6 Oct).
+- **Comments from Fountain and zap.stream** (Nostr, NIP-53: live chat and zaps are public events on relays). Read them into the messages feed, marked with where they came from; sending ours back needs a Nostr key and real Lightning zaps. First topic for the design session after the call (decided Tue 6 Oct).
 - **An MCP / agent API**, and agent payments (own session).
 - **The Pass umbrella and real fiat** (own session; Stripe test mode is a v1.0 "should").
 - **The cloud-server move**: Docker Compose on a small server, so the demo runs without the laptop.

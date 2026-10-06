@@ -12,7 +12,12 @@
     <h1 class="wordmark">THE NUTPUB</h1>
     <p class="tag">Wallet</p>
     <p class="big"><span id="balance">…</span> <small>sats</small></p>
-    <p class="buttons"><a class="btn" href="/" id="back">← Back to set</a><button class="btn" id="home" hidden>Take it home</button></p>
+    <p class="buttons"><a class="btn" href="/" id="back">← Back to set</a><button class="btn" id="home" hidden>Take sats home</button><button class="btn" id="receive" hidden>Receive ecash</button></p>
+    <!-- Receive ecash: a note from any Cashu wallet (Minibits, cashu.me), into this one. Same mint only. -->
+    <div class="paste" id="paste" hidden>
+      <textarea id="paste-token" rows="3" placeholder="Paste a note here (cashuB…)" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ecash note to receive"></textarea>
+      <button type="button" class="btn primary" id="paste-go">Add to wallet</button>
+    </div>
     <div id="takeout" hidden>
       <textarea id="token" rows="4" readonly aria-label="Your ecash note"></textarea>
       <p><button class="btn" id="copy">Copy</button></p>

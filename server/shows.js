@@ -20,14 +20,15 @@ export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
 export const blank = () => ({
   title: '',
-  artist: '',
+  description: '',                      // optional: a line or two under the title
+  artist: '',                           // not on the tag line; the buttons use it ("Send Longy a message")
   stream: { mode: 'pay', price: null }, // 'pay': sats per 10 s; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null },   // an in-person ticket alongside the stream
-  wallet: { on: true },                 // the wallet in the browser, with Take it home
+  wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
-  orientation: 'portrait',
+  shape: '16:9',                        // the video: landscape 16:9 or portrait 9:16 (a phone filming upright)
   languages: ['en'],
   language: 'en',                       // the one the viewer page opens in
 });
@@ -45,6 +46,7 @@ export function clean(input = {}) {
 
   const show = {
     title: text(input.title, 80),
+    description: text(input.description, 280),
     artist: text(input.artist, 60),
     stream: {
       mode: input.stream?.mode === 'free' ? 'free' : 'pay',
@@ -59,7 +61,7 @@ export function clean(input = {}) {
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
     wallet: { on: (input.wallet ?? input.pocket)?.on !== false }, // `pocket`: its name in shows saved before 6 Oct
     retry: { on: input.retry?.on !== false },
-    orientation: input.orientation === 'landscape' ? 'landscape' : 'portrait',
+    shape: input.shape === '9:16' ? '9:16' : '16:9', // replaces `orientation` (Tue 6 Oct), which never changed the page
     languages: LANGUAGES.filter((l) => (input.languages || []).includes(l)),
     language: LANGUAGES.includes(input.language) ? input.language : 'en',
   };
@@ -79,10 +81,15 @@ export function clean(input = {}) {
 
 const now = () => new Date().toISOString();
 
+// The show page's own address, from the artist's name: "Longy" -> /longy. No artist yet: the home page.
+export const slug = (name) => String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+
 export function currentShow() {
   const row = db.prepare("SELECT settings, updated FROM shows WHERE id = 'current'").get();
   const { show, problems } = clean(row ? JSON.parse(row.settings) : blank());
-  return { show, problems, updated: row?.updated ?? null };
+  const s = slug(show.artist);
+  return { show, problems, updated: row?.updated ?? null, path: s ? `/${s}` : '/' };
 }
 
 export function saveShow(input) {

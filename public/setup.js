@@ -88,8 +88,23 @@ function status(text, kind = '') {
   $('status').className = kind;
 }
 
+// ---- Share the show: its public address (the tunnel's, not this page's, when there is one).
+let site = location.origin;
+function shareLink(path) {
+  const link = `${site}${path}`;
+  $('show-link').textContent = link.replace(/^https?:\/\//, '');
+  $('show-link').href = $('open-show').href = link;
+  $('qr').src = `/api/show/qr.svg?t=${Date.now()}`;
+  $('share-link').hidden = !navigator.share;
+  $('copy-link').onclick = async () => {
+    try { await navigator.clipboard.writeText(link); status('Link copied.', 'ok'); } catch { status(link); }
+  };
+  $('share-link').onclick = () => navigator.share({ title: show.title || 'The NutPub', url: link }).catch(() => {});
+}
+
 function saved(res) {
   fill(res.show);
+  shareLink(res.path);
   dirty = false;
   const at = res.updated ? new Date(res.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
@@ -146,6 +161,7 @@ $('tpl-delete').addEventListener('click', async () => {
 
 // ---- Start: the key must work, or the page stays locked.
 try {
+  site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
   await templates();
   saved(await api('GET', '/api/show'));
   form.hidden = false;

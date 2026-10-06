@@ -1,4 +1,5 @@
 import express from 'express';
+import QRCode from 'qrcode';
 import { randomBytes } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL, MINT_TEST } from './config.js';
@@ -26,8 +27,7 @@ const assets = () => {
 const version = () => Math.max(...assets().map((f) => { try { return Math.floor(statSync(`${PUBLIC}/${f}`).mtimeMs); } catch { return 0; } }))
   .toString(36);
 app.get('/pocket.html', (_req, res) => res.redirect(301, '/wallet.html')); // its name before 6 Oct
-app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => {
-  const file = req.path === '/' ? 'index.html' : req.path.slice(1);
+const page = (file) => (req, res, next) => {
   let html;
   try { html = readFileSync(`${PUBLIC}/${file}`, 'utf8'); } catch { return next(); }
   const v = version();
@@ -35,7 +35,10 @@ app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => {
   // On the test mint, every page says so, first thing.
   if (MINT_TEST) html = html.replace(/<body[^>]*>/, '$&\n  <div class="test-banner" role="note" data-t="test.banner">Test mint · no real value</div>');
   res.set('Cache-Control', 'no-cache').type('html').send(html);
-});
+};
+app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => page(req.path === '/' ? 'index.html' : req.path.slice(1))(req, res, next));
+// A page per artist: the show page at /<artist> too (e.g. /longy), the link the artist shares.
+app.get(/^\/[a-z0-9-]+$/, (req, res, next) => (req.path === currentShow().path ? page('index.html')(req, res, next) : next()));
 app.use(express.static(PUBLIC, { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
 
 // Is everything up? The server, its state on disk, and the mint.
@@ -60,6 +63,12 @@ const attempt = (fn) => (req, res) => {
 
 // What every viewer page reads: the show's settings (nothing secret in them).
 app.get('/api/show', (_req, res) => res.json(currentShow()));
+// The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
+app.get('/api/show/qr.svg', async (req, res) => {
+  const link = `${SITE_URL || `${req.protocol}://${req.get('host')}`}${currentShow().path}`;
+  const svg = await QRCode.toString(link, { type: 'svg', margin: 2, color: { dark: '#050914', light: '#efe3c8' } });
+  res.set('Cache-Control', 'no-cache').type('image/svg+xml').send(svg);
+});
 app.put('/api/admin/show', admin, json, attempt((req) => saveShow(req.body)));
 app.get('/api/admin/templates', admin, attempt(() => listTemplates()));
 app.post('/api/admin/templates', admin, json, attempt((req) => saveTemplate(req.body?.name, req.body?.show)));

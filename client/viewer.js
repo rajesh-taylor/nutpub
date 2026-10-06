@@ -10,9 +10,9 @@ const PIECE = 10;
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
   play: 'Play', stop: 'Stop',
-  perPiece: (n) => `${n} sat${n === 1 ? '' : 's'} / 10 s`,
+  perPiece: (n) => `${n} sat${n === 1 ? '' : 's'} per 10 seconds`,
   full: 'Full screen', exitFull: 'Leave full screen',
-  spent: (n) => ` · This set: ${n} sat${n === 1 ? '' : 's'}`,
+  spent: (n) => `This set: ${n} sat${n === 1 ? '' : 's'}`,
   stopped: 'Stopped. Nothing more is charged.',
   empty: 'Your wallet’s empty. Top it up to keep playing.',
   tipDone: (label) => `${label}: paid. Thank you!`,
@@ -36,11 +36,14 @@ const [health, { show }] = await Promise.all([
   fetch('/api/show').then((r) => r.json()),
 ]);
 document.title = show.title ? `${show.title} · The NutPub` : 'The NutPub';
-$('billing').textContent = [show.title, show.artist].filter(Boolean).join(' · ');
-document.body.dataset.orientation = show.orientation;
+$('billing').textContent = show.title;
+$('about').textContent = show.description;
+$('about').hidden = !show.description;
+document.body.dataset.shape = show.shape;
 const free = show.stream.mode === 'free';
 // Free shows: no price and no "This set" (there's nothing to count).
 $('price').textContent = free ? '' : T.perPiece(show.stream.price);
+$('meter').hidden = free;
 const tipText = `${show.tip.label || 'Tip'} · ${sats(show.tip.price || 0)}`;
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
@@ -68,8 +71,9 @@ const wallet = await openWallet(health.mint.url);
 const balance = async () => { $('balance').textContent = await wallet.balance(); };
 await balance();
 wallet.on('proofs:saved', balance);
-if (!show.wallet.on) $('wallet-link').removeAttribute('href'); // the balance still shows; no wallet page
+if (!show.wallet.on) { $('wallet-link').removeAttribute('href'); $('wallet-page').hidden = true; } // balance only
 $('topup').hidden = !health.mint.test;
+$('wallet-page').parentElement.classList.toggle('solo', !health.mint.test);
 $('play').disabled = $('big-play').disabled = false;
 $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
 $('own').disabled = false;

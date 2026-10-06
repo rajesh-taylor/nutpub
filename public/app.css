@@ -47,12 +47,12 @@ body.setup .wordmark, body.setup .tag { text-align: center; }
 .panel label, .panel .label { display: block; margin: 0 0 14px; }
 .panel .label { margin-bottom: 6px; color: var(--smoke); font-size: 15px; }
 .hint { color: var(--smoke); font-size: 15px; margin: -4px 0 14px; }
-.panel input:not([type=checkbox]):not([type=radio]), .panel select {
+.panel input:not([type=checkbox]):not([type=radio]), .panel select, .panel textarea {
   display: block; width: 100%; margin-top: 6px; padding: 10px 12px;
   font: inherit; color: var(--cream); background: var(--deep);
   border: 1px solid rgb(239 227 200 / .25); border-radius: 4px;
 }
-.panel input:focus, .panel select:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
+.panel input:focus, .panel select:focus, .panel textarea:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
 .sats { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--smoke); }
 .sats input { width: 7.5em !important; margin-top: 0 !important; display: inline-block !important; }
 .choice { display: flex !important; gap: 12px; align-items: flex-start; cursor: pointer; }
@@ -63,6 +63,9 @@ body.setup .wordmark, body.setup .tag { text-align: center; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .row input, .row select { flex: 1 1 12em; margin-top: 0 !important; }
 .preview { margin: 4px 0 14px; }
+.share-link { font-size: 20px; margin: 0 0 14px; word-break: break-all; }
+.share-link a { color: var(--cream); }
+.qr { display: block; border-radius: 4px; margin: 4px 0 14px; }
 .btn {
   display: inline-block; font: 400 20px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase;
   color: var(--cream); background: transparent; border: 1px solid var(--cream); border-radius: 3px;
@@ -91,6 +94,8 @@ body.wallet .buttons .btn { padding-left: 12px; padding-right: 12px; }
 /* Cream, not grey: venues are dark rooms. */
 .notes { text-align: left; color: var(--cream); font-size: 16px; padding-left: 1.2em; margin: 28px 0 0; }
 .notes li + li { margin-top: 14px; }
+.paste { margin: 0 0 18px; }
+.paste textarea { margin: 0 0 10px; }
 body.wallet textarea {
   width: 100%; font: 12px/1.4 var(--mono); color: var(--cream); background: var(--deep);
   border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; padding: 10px; word-break: break-all;
@@ -106,18 +111,23 @@ body.wallet textarea {
 }
 
 /* ---- The viewer page */
+.about { max-width: 34em; margin: -8px auto 16px; font-size: 16px; color: var(--cream); }
+.optional { color: var(--smoke); font-size: 14px; }
 .small-mark { font-size: clamp(36px, 11vw, 56px); margin-top: 16px; }
 body.viewer .tag { margin-bottom: 18px; }
 /* The player: give it a width of its own (its children are all positioned, so it has none otherwise). */
 .player { position: relative; width: 100%; aspect-ratio: 1280 / 676; background: #000; border-radius: 4px; overflow: hidden; }
 /* Phones: the picture runs edge to edge. */
 @media (max-width: 600px) { body.viewer .player { width: auto; margin: 0 -16px; border-radius: 0; } }
+/* Video shape (setup page): 16:9, or 9:16 for a phone filming upright, kept within the screen's height. */
+body[data-shape="16:9"] .player { aspect-ratio: 16 / 9; }
+body[data-shape="9:16"] .player { aspect-ratio: 9 / 16; width: min(100%, calc(78svh * 9 / 16)); margin: 0 auto; border-radius: 4px; }
 .player video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .25s; }
 .player video.on { opacity: 1; }
 .big-play {
   position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 50%; padding: 0;
   display: grid; place-items: center; cursor: pointer;
-  border: 2px solid var(--cream); background: rgb(5 9 20 / .55); color: var(--cream);
+  border: 2px solid var(--amber); background: rgb(5 9 20 / .55); color: var(--amber);
 }
 .big-play svg { width: 34px; height: 34px; fill: currentColor; margin-left: 4px; }
 body.playing .big-play { display: none; }
@@ -127,17 +137,15 @@ body.playing .big-play { display: none; }
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; align-items: center; gap: 8px;
   padding: 20px 6px 4px; background: linear-gradient(transparent, rgb(5 9 20 / .85));
 }
-.icon { width: 44px; height: 44px; flex: none; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--cream); cursor: pointer; }
+/* Amber, not cream: the controls must be found in a dark room. */
+.icon { width: 44px; height: 44px; flex: none; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--amber); cursor: pointer; }
 .icon:disabled { opacity: .4; cursor: default; }
 .icon svg { width: 26px; height: 26px; fill: currentColor; }
 #full svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .i-stop, body.playing .i-play, .i-exit, body.full .i-full { display: none; }
 body.playing .i-stop, body.full .i-exit { display: block; }
 body.sideways #full { visibility: hidden; } /* turning the phone back is the way out */
-.meter {
-  flex: 1; min-width: 0; text-align: left; font-size: 15px; color: var(--cream); text-shadow: 0 1px 2px #000;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.spacer { flex: 1; }
 #ov-tip { display: none; flex: none; font-size: 17px; padding: 8px 12px 6px; background: rgb(5 9 20 / .6); }
 body.full #ov-tip { display: inline-block; }
 
@@ -145,7 +153,24 @@ body.full #ov-tip { display: inline-block; }
 body.viewer .status { margin: 12px 0 0; }
 .money { gap: 10px; margin: 12px 0; }
 .money .btn { font-size: 17px; letter-spacing: .08em; padding: 9px 10px 7px; }
-.walletline { gap: 10px; margin: 8px 0; }
+/* The wallet, big and amber, above the money buttons. */
+/* Quiet: a hairline and a faint fill, so the eye stays on the picture. */
+.purse {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin: 14px 0 4px;
+  padding: 12px 14px 10px; border: 1px solid rgb(239 227 200 / .1); border-radius: 8px; background: rgb(239 227 200 / .03);
+}
+.purse-sum { flex: none; display: flex; flex-direction: column; align-items: flex-start; color: var(--cream); text-decoration: none; text-align: left; }
+.purse-sum b { font: 400 40px/1 var(--poster); color: var(--amber); letter-spacing: .04em; }
+.purse-meter {
+  flex: 1 0 100%; display: flex; justify-content: space-between; gap: 12px; margin: 0; padding-top: 8px;
+  border-top: 1px solid rgb(239 227 200 / .08); font-size: 14px; color: var(--cream); opacity: .85;
+}
+.purse-sum span { font-size: 14px; white-space: nowrap; }
+.purse-actions .btn { white-space: nowrap; }
+/* No test top-up (a real mint): Wallet takes the right side, a bigger target. */
+.purse-actions.solo { align-self: stretch; }
+.purse-actions.solo #wallet-page { flex: 1; display: grid; place-items: center; font-size: 22px; max-width: 220px; }
+.purse-actions { flex: 1 1 0; min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .btn.quiet { font-size: 16px; padding: 7px 12px 5px; }
 .own { display: flex; gap: 10px; justify-content: center; align-items: stretch; margin: 0 0 12px; }
 .own .btn { white-space: nowrap; }
@@ -175,5 +200,3 @@ body.viewer.full .test-banner {
   position: fixed; z-index: 3; top: calc(8px + env(safe-area-inset-top)); left: calc(8px + env(safe-area-inset-left));
   margin: 0; padding: 4px 8px 3px; font-size: 12px; letter-spacing: .16em; border-radius: 3px; opacity: .9;
 }
-/* Upright phone in full screen: no room for the meter beside the tip, so it gives way (it's below, back out). */
-@media (max-width: 500px) { body.viewer.full .meter { visibility: hidden; } }

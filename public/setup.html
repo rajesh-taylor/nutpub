@@ -16,6 +16,20 @@
     <p class="locked" id="locked" hidden>This page needs the private setup link. On the Mac: <code>npm run setup</code>.</p>
 
     <form id="form" hidden autocomplete="off">
+      <!-- The host's way out to the show: the link to share, and the page as viewers see it. -->
+      <section class="panel share">
+        <h2>Share the show</h2>
+        <p class="share-link"><a id="show-link" target="_blank" rel="noopener"></a></p>
+        <div class="row">
+          <a class="btn primary" id="open-show" target="_blank" rel="noopener">Open the show page</a>
+          <button type="button" class="btn" id="copy-link">Copy link</button>
+          <button type="button" class="btn" id="share-link" hidden>Share</button>
+        </div>
+        <img class="qr" id="qr" alt="QR code for the show page" width="168" height="168">
+        <p class="hint">Safe to share anywhere: it opens the show, never this page. The QR code is for posters and the screen in the room.
+          The address comes from the artist's name; saving a new name changes it.</p>
+      </section>
+
       <section class="panel templates">
         <h2>Templates</h2>
         <div class="row">
@@ -31,8 +45,11 @@
 
       <section class="panel">
         <h2>The show</h2>
-        <label>Show name <input data-path="title" placeholder="e.g. Live at the NutPub" maxlength="80"></label>
+        <label>Show name <input data-path="title" placeholder="e.g. Longy at Bitfest" maxlength="80"></label>
+        <label>Description <span class="optional">(optional)</span>
+          <textarea data-path="description" rows="3" maxlength="280" placeholder="e.g. Three sets from the back room. Doors 8 pm."></textarea></label>
         <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
+        <p class="hint">The artist's name goes on the buttons (e.g. “Send Longy a message”), not under the show name.</p>
       </section>
 
       <section class="panel">
@@ -67,7 +84,7 @@
         <label class="indent" data-when="ticket.on">Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"> sats</span></label>
 
         <label class="choice"><input type="checkbox" data-path="wallet.on">
-          <span><b>Wallet and Take it home.</b> The viewer's wallet in the browser, and one tap to move their change to any Cashu wallet.</span></label>
+          <span><b>Wallet, with Take sats home.</b> The viewer's wallet in the browser, and one tap to move their change to any Cashu wallet.</span></label>
 
         <label class="choice"><input type="checkbox" data-path="retry.on">
           <span><b>Safe retry.</b> Paid once, retried safely: a payment whose reply got lost can be sent again without paying twice.</span></label>
@@ -75,11 +92,12 @@
 
       <section class="panel">
         <h2>Viewer page</h2>
-        <p class="label">Opens in</p>
+        <p class="label">Video shape</p>
         <div class="row">
-          <label class="choice inline"><input type="radio" name="orientation" data-path="orientation" value="portrait"> Portrait</label>
-          <label class="choice inline"><input type="radio" name="orientation" data-path="orientation" value="landscape"> Landscape</label>
+          <label class="choice inline"><input type="radio" name="shape" data-path="shape" value="16:9"> Landscape 16:9</label>
+          <label class="choice inline"><input type="radio" name="shape" data-path="shape" value="9:16"> Portrait 9:16</label>
         </div>
+        <p class="hint">The shape your camera records in. Turning a phone sideways still fills the screen.</p>
         <p class="label">Languages</p>
         <div class="row langs" id="langs"></div>
         <p class="hint">* Machine-translated: needs a native check.</p>
