@@ -27,16 +27,29 @@ A restart bumps the start number and keeps the first-start date: that's the stat
 | 1 · Sun 4 Oct | Rename + new repo; skeleton; state on disk; test mint behind the tunnel; one command | **done** |
 | 2 · Sun 4 Oct (the extra hour) | Setup page and show template (saved to disk) | **done** (`npm run setup`; `-- --qr` for a phone) |
 | 3 · Mon 5 Oct | Viewer page: the set behind the 402, pay per 10 s or free + tips, tip button, orientation | **server side done Sun 4** (the set cut, gate, passes, tip; `npm run check` passes). Browser wallet and a first Pocket page (`/pocket.html`: top up 100 test sats, Take it home) done Sun 4, seen on both phones and the Mac. Viewer page at `/` (TEST banner on every page; status check moved to `/status.html`): plays, pays 1 sat per 10 s, tips, goes full screen sideways; seen on the Mac. Left: Monday's list below |
-| 4 · Thu 8 Oct | Stretch goal with refunds; safe retry demo (+ PROPOSAL.md renamed "Retry-safe 402") | |
-| 4b · extra evening this week (2 h) | Design pass on the phone screen first (a mock-up: what gets the top two-thirds, how the feed grows); then **messages with tips**, open from doors | |
-| 5 · Sat 10 Oct (3 h) | **Doors and Start the show**: holding page with a 2–4 photo slideshow (setup page), see-through player; host's **Start the show** → lights up on every phone, then the set; **Back to doors** if pressed by mistake | |
-| 6 · Sun 11 Oct (3 h) | **Room ticket + welcome**; the room filling (one stage light per phone at doors); TV layout if time | |
-| 7 · week of 12 Oct | Polish on the real phones; 3-minute script and slides; **first full run by Wed 14** | |
+| 4 · Sat 10 – Tue 13 Oct | **Locked to Longy** (below), first | |
+| 5 · Sat 10 – Tue 13 Oct | Stretch goal with refunds; safe retry demo (+ PROPOSAL.md renamed "Retry-safe 402") (was Thu 8) | |
+| 6 · Sat 10 – Tue 13 Oct | Design pass on the phone screen first; then a **comments panel like YouTube / PeerTube live chat** (beside the player on wide screens, under it on phones), open from doors: free comments plus **messages with tips** shown highlighted (tip minimum 21 sats, custom box too); a short cooldown per browser for free comments; word filter, host **messages off**, host **delete a message**, "a removed message isn't refunded"; no IP addresses logged | |
+| 7 · Sat 10 – Tue 13 Oct | **Doors and Start the show**: holding page with a 2–4 photo slideshow (setup page), see-through player; host's **Start the show** → lights up on every phone, then the set; **Back to doors** if pressed by mistake | |
+| **Wed 14 Oct, evening** | **First full run** | |
+| 8 · Wed 14 – Tue 20 Oct | **Poster ticket** and **Numo at the door** (below); then tightening only. Also the 3-minute script and slides | |
 
 Changed Tue 6 Oct: an extra 2-hour evening this week and 3 hours each on Sat 10 and Sun 11. **Stripe test mode is out** (BACKLOG, v2.0;
 no greyed-out card button on the show page: one line on the closing slide instead). The freeze stays **Wed 21 Oct**: it's when
 demo practice starts; building carries on after the call.
 **Cut order if behind:** the TV layout, then the room filling (lights up stays), then the room ticket. Messages and Start the show stay.
+
+## Changed Sat 10 Oct (agreed)
+A test project, a concept, with Longy as the only use case. **Test sats on the call** (our test mint; no Minibits). First full run **Wed 14 (evening)**; freeze **Wed 21**; practice Thu 22 – Wed 28.
+- **Locked to Longy.** Every payment (10-s pieces, tips, tickets) is locked to Longy's key (NUT-11, no locktime; the goal's pledges keep locktime + refund to the fan). The gate checks and never swaps: DLEQ (NUT-12), the lock names Longy, unspent at the mint (NUT-07), a replay list per proof. Longy's key lives on his takings page, where his payments collect: our server can't spend a sat. **Send to my Lightning wallet** (NUT-05 to his Lightning address) is built but off on the test mint, and the page says so.
+- **English only, 🇬🇧 GBP only.** Languages are dropped (were in BACKLOG).
+- **Stripe is back, as a link only:** the setup page asks for a Stripe Payment Link (the artist's own account, test mode). No Stripe keys stored. The card button shows **greyed out ("Card payments not set up")** until a link is pasted (reverses Tue 6).
+- **A responsibility note on the setup page:** running it for your own shows on your own server makes you the provider under the Online Safety Act (risk assessment, report button, takedown, NCA registration); adult performers only; your own songs only, every writer a PRS member.
+- **Poster ticket** (the room ticket, sold before the show): the poster's QR and link open **the show page** (`/longy`), one address for everything; before doors it shows *Tickets for the room*. Setup page: *Tickets for the room* (price in sats, optional Stripe link), and **Print poster** next to *Share the show*: `/longy/poster`, a print-ready A4 page (photo, title, date and time, a large QR, the link in big type; Print → Save as PDF). Tickets: **Bitcoin** (a 402 locked to Longy; the phone shows a ticket QR) or **Card** (opens the Stripe link).
+- **Tips live on the call:** devs on the call open the show link, tap "+100 test sats", and tip with a message; it shows highlighted in the comments panel on the shared screen within seconds. Test sats on the test mint. Expect them to try to break it: message text is always shown as plain text (never HTML), the word filter and cooldown are on, and the host has **messages off** and **delete** to hand.
+- **Live from OBS** is a section on the setup page, empty by default (OBS server, stream key, playback link): empty = the recorded set plays, as on the call. Wired up with Aaron after the call. The door phone scans a bitcoin ticket: "You're in", then "Already in, mate". A ticket plays the set without paying per 10 s. Copy: "Card: Stripe knows who you are. Bitcoin: nobody does."
+- **Numo at the door** (for the call): Numo on the Pixel sells *Door entry* in real sats (Rajesh pays himself; the money stays in Numo). Its `payment.received` webhook tells our server, and the **door screen** plays three stage lights, quickly, then Longy's photo; the room count goes up. No Numo fork. Numo stays on the Minibits mint; pay its Lightning QR from a wallet other than the Minibits app, and check it at every practice run.
+- **Not in v1.0:** recordings, live video from OBS, any server but the Mac. **Cut order now:** the TV layout, the room filling, the poster ticket's card button, the Numo door.
 
 ## Monday's list (done Tue 6 Oct instead; Monday was missed)
 Done Tue 6: 1, 3, 5, 6 (looked over and approved; committed `cc3fa37`), then 2 (phones to check), plus:
