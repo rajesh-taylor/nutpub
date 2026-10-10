@@ -42,6 +42,7 @@ code { font-family: var(--mono); font-size: .9em; }
 body.setup main { max-width: 640px; text-align: left; padding-bottom: 120px; }
 body.setup .wordmark, body.setup .tag { text-align: center; }
 .locked { text-align: center; }
+.takings .amount { font-size: 20px; margin: 0 0 10px; }
 .panel { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 18px 18px 8px; margin: 0 0 16px; background: rgb(11 20 38 / .6); }
 .panel h2 { font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--amber); margin: 0 0 12px; }
 .panel label, .panel .label { display: block; margin: 0 0 14px; }

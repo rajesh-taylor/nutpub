@@ -6,6 +6,7 @@ import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL, MINT_TEST } from './config.js
 import { kv } from './db.js';
 import { initPurse } from './purse.js';
 import { mountSet } from './set.js';
+import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl } from './photo.js';
 import { currentShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
@@ -62,8 +63,13 @@ const attempt = (fn) => (req, res) => {
   try { res.json(fn(req)); } catch (e) { res.status(400).json({ error: String(e.message || e) }); }
 };
 
-// What every viewer page reads: the show's settings (nothing secret in them).
-app.get('/api/show', (_req, res) => res.json({ ...currentShow(), photo: photoUrl() }));
+// What every viewer page reads: the show's settings, the photo and the artist's public key (every payment is locked
+// to it). The artist's Lightning address goes to the setup and takings pages only.
+app.get('/api/show', (req, res) => {
+  const current = currentShow();
+  if (req.get('X-Admin') !== ADMIN_KEY) delete current.show.lightning;
+  res.json({ ...current, photo: photoUrl(), artistKey: artistKey() });
+});
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 app.get('/api/show/qr.svg', async (req, res) => {
   const link = `${SITE_URL || `${req.protocol}://${req.get('host')}`}${currentShow().path}`;
@@ -76,7 +82,8 @@ app.post('/api/admin/templates', admin, json, attempt((req) => saveTemplate(req.
 app.post('/api/admin/templates/load', admin, json, attempt((req) => loadTemplate(req.body?.name)));
 app.post('/api/admin/templates/delete', admin, json, attempt((req) => deleteTemplate(req.body?.name)));
 
-mountSet(app, admin);
+mountSet(app);
+mountTakings(app, admin, json);
 mountPhoto(app, admin);
 
 await initPurse();

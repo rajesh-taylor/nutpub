@@ -1,5 +1,6 @@
-// The takings: the account holder's ecash at the test mint. Every payment the gate accepts is swapped (NUT-03)
-// into fresh proofs that land here. Kept in SQLite, so a restart loses nothing.
+// The server's own wallet at the test mint. Until Sat 10 Oct every payment the gate accepted was swapped (NUT-03)
+// into fresh proofs here; now payments are locked to the artist and never land here (server/takings.js). Kept for
+// what's already in it (shown as "Before Sat 10") and for later (the pint, a house float). Kept in SQLite.
 import { Wallet, sumProofs } from '@cashu/cashu-ts';
 import { MINT_API } from './config.js';
 import { kv } from './db.js';

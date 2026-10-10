@@ -36,6 +36,8 @@ Nothing here gets built before the Cashu dev call. Something comes out before an
 - ~~**Languages back in**~~: dropped Sat 10 Oct. English only, GBP only (no EU audience: EU VAT on live events follows the viewer's country).
 - **One site, a page per artist: `<site>/<artist>`.** Artists share the link or a QR code (socials, posters). Every fan's Pocket then lives on one site and works for every artist. Give the wallet its own hostname (e.g. `pass.<brand>/<artist>`), never a path on a site that hosts other apps: a browser shares storage across a whole site, so other pages there could read the Pocket's keys. Choose the permanent address before real money (moving later strands Pockets). Refueler or not: a business and FCA question, decide after the call. Short links: prefer our own short paths over tinyurl (a third party that sees every click).
 
+- **Send to my Lightning wallet, for real** (Sat 10 Oct): the takings page's button is built but off on the test mint (its Lightning is pretend). On a real mint: LNURL-pay to the artist's Lightning address (setup page) for an invoice, then a NUT-05 melt from the takings page's own wallet, keeping the mint's fee reserve.
+
 ## Ideas built on Coco + the 402 (talked through Sun 4 Oct; after v1.0)
 - **Pay only if it's played:** a song request or shout-out is a pledge locked to the artist with a locktime; not played by then, it comes home by itself (the goal's lock, one fan at a time).
 - **Splits:** takings divided automatically between band members, venue and sound crew as each payment lands (each share swapped to its owner's key).

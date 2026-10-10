@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <meta name="robots" content="noindex">
+  <title>Takings · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="setup takings">
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag" id="who">Takings</p>
+
+    <p class="locked" id="locked" hidden>This page needs the private takings link, from the setup page.</p>
+
+    <div id="page" hidden>
+      <!-- Every payment is locked to the artist's key, which lives only here, in this browser. -->
+      <section class="panel">
+        <p class="amount">Waiting: <b id="waiting">…</b></p>
+        <p class="amount">Collected: <b id="collected">…</b> in this browser</p>
+        <div class="row"><button type="button" class="btn primary" id="collect" disabled>Collect</button></div>
+        <p class="hint" id="elsewhere" hidden></p>
+        <p class="hint" id="kinds"></p>
+        <p class="hint" id="before" hidden></p>
+      </section>
+
+      <section class="panel">
+        <div class="row"><button type="button" class="btn" id="send" disabled>Send to my Lightning wallet</button></div>
+        <p class="hint" id="send-note"></p>
+      </section>
+
+      <section class="panel">
+        <p id="key-note"></p>
+        <div class="row"><button type="button" class="btn" id="new-key" hidden>Make a new key here</button></div>
+      </section>
+
+      <p class="status" id="status" role="status"></p>
+      <p><a class="btn quiet" href="/setup.html">← Back to setup</a></p>
+    </div>
+  </main>
+  <script type="module" src="/js/takings.js"></script>
+</body>
+</html>

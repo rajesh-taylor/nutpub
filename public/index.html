@@ -55,9 +55,9 @@
       <button class="btn" id="own" disabled>Your amount</button>
     </p>
     <form class="own" id="own-form" hidden>
-      <input type="number" id="own-sats" min="1" max="1000000" step="1" inputmode="numeric" placeholder="sats" aria-label="Tip amount in sats">
+      <input type="number" id="own-sats" min="21" max="1000000" step="1" inputmode="numeric" placeholder="21 sats or more" aria-label="Tip amount in sats, 21 or more">
       <button class="btn primary" id="own-pay" disabled>Tip</button>
-      <button type="button" class="btn quiet" id="own-cancel" aria-label="Cancel">✕</button>
+      <button type="button" class="btn quiet" id="own-cancel" aria-label="Back">✕</button>
     </form>
   </main>
   <script type="module" src="/js/viewer.js"></script>

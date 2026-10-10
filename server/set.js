@@ -1,16 +1,18 @@
 // The set: a recorded clip cut into 10-second pieces (scripts/cut-set.sh). Each piece's sound is its own 402,
 // priced on the setup page; its picture goes only to a pass that has paid for that piece (no second charge).
 // "Free, with tips" shows serve every piece without a 402. The tip button is a 402 of its own.
+// Every 402 is locked to the artist's key (server/gate.js); the takings are in server/takings.js.
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { ROOT } from './config.js';
 import { db } from './db.js';
 import { cashuGate } from './gate.js';
 import { currentShow } from './shows.js';
-import { balance } from './purse.js';
+import { artistKey } from './takings.js';
 
 const SET = `${ROOT}media/set`;
 const pieces = () => { try { return JSON.parse(readFileSync(`${SET}/set.json`, 'utf8')).segments; } catch { return 0; } };
+const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
 
 db.exec(`
@@ -35,7 +37,7 @@ const now = () => new Date().toISOString();
 const show = () => currentShow().show;
 const free = () => show().stream.mode === 'free';
 
-export function mountSet(app, admin) {
+export function mountSet(app) {
   // A pass: this phone's place in the show. Free to get; it's what paid pieces are recorded against.
   app.post('/api/pass', (_req, res) => {
     const id = randomBytes(12).toString('hex');
@@ -73,7 +75,7 @@ export function mountSet(app, admin) {
       if (!show().stream.price) return res.status(409).json({ error: 'not_ready', detail: 'No price per 10 s set yet.' });
       next();
     },
-    cashuGate(() => show().stream.price, () => `${show().title || 'The set'}: 10 seconds`),
+    cashuGate(() => show().stream.price, () => `${show().title || 'The set'}: 10 seconds`, { lockTo: artistKey, kind: 'piece' }),
     (req, res) => {
       addPaid.run(req.pass, req.piece, req.paid, now());
       send(req, res, 'audio');
@@ -90,7 +92,7 @@ export function mountSet(app, admin) {
   // The tip button: its own 402, at the label and price set on the setup page.
   app.get('/api/tip', pass,
     (_req, res, next) => (show().tip.price ? next() : res.status(409).json({ error: 'not_ready', detail: 'No tip price set yet.' })),
-    cashuGate(() => show().tip.price, () => show().tip.label || 'A tip'),
+    cashuGate(() => show().tip.price, () => show().tip.label || 'A tip', { lockTo: artistKey, kind: 'tip' }),
     (req, res) => {
       db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
       res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });
@@ -100,19 +102,14 @@ export function mountSet(app, admin) {
   app.get('/api/tip/:sats', pass,
     (req, res, next) => {
       const n = Number(req.params.sats);
-      if (!Number.isInteger(n) || n < 1 || n > 1_000_000) return res.status(400).json({ error: 'bad_amount' });
+      if (!Number.isInteger(n) || n > 1_000_000) return res.status(400).json({ error: 'bad_amount' });
+      if (n < MIN_TIP) return res.status(400).json({ error: 'too_small', detail: `${MIN_TIP} sats or more` });
       req.amount = n;
       next();
     },
-    cashuGate((req) => req.amount, (req) => `A tip of ${req.amount} sat${req.amount === 1 ? '' : 's'}`),
+    cashuGate((req) => req.amount, (req) => `A tip of ${req.amount} sats`, { lockTo: artistKey, kind: 'tip' }),
     (req, res) => {
       db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
       res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });
     });
-
-  app.get('/api/admin/takings', admin, (_req, res) => {
-    const stream = db.prepare('SELECT COALESCE(SUM(sats), 0) AS s, COUNT(*) AS n FROM paid').get();
-    const tips = db.prepare('SELECT COALESCE(SUM(sats), 0) AS s, COUNT(*) AS n FROM tips').get();
-    res.json({ balance: balance(), stream: { sats: stream.s, pieces: stream.n }, tips: { sats: tips.s, count: tips.n } });
-  });
 }

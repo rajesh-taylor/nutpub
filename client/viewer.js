@@ -19,12 +19,14 @@ const T = {
   ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (n) => `${n} sat${n === 1 ? '' : 's'} tipped. Thank you!`,
   retrying: 'Lost the reply. Asking again with the same payment…',
   retried: 'Same payment, same 10 seconds. Charged once.',
-  notReady: 'The show isn’t ready yet: no price set.',
+  notReady: 'The show isn’t ready yet.',
   tapVideo: 'Tap the picture to start it.',
   refused: {
     reused: 'That payment was already used.', wrong_mint: 'Wrong mint.', too_little: 'Not enough.',
     no_dleq: 'The payment carried no signature proof.', bad_dleq: 'The payment’s signature didn’t check out.',
     mint_unreachable: 'The mint isn’t answering.', mint_refused: 'The mint refused the payment.',
+    not_locked: 'The payment wasn’t locked to the artist.', wrong_lock: 'The payment was locked to the wrong key.',
+    has_refund: 'The payment could come back to you, so it isn’t a payment.', too_small: 'Tips are 21 sats or more.',
   },
 };
 
@@ -113,7 +115,7 @@ async function paidFetch(url) {
 }
 const refusal = async (res) => {
   const body = await res.json().catch(() => ({}));
-  if (body.error === 'not_ready') return T.notReady;
+  if (body.error === 'not_ready') return `${T.notReady} ${body.detail || ''}`.trim();
   return T.refused[body.error] || body.detail || body.error || `Refused (${res.status})`;
 };
 
@@ -294,7 +296,8 @@ $('tip').onclick = () => tip($('tip'));
 $('ov-tip').onclick = () => tip($('ov-tip'));
 
 // ---- Tip sats, your amount: type it, then "Tip n sats" pays exactly that (its own 402).
-const ownSats = () => { const n = Number($('own-sats').value); return Number.isInteger(n) && n >= 1 && n <= 1_000_000 ? n : 0; };
+const MIN_TIP = 21; // the server's minimum too (server/set.js)
+const ownSats = () => { const n = Number($('own-sats').value); return Number.isInteger(n) && n >= MIN_TIP && n <= 1_000_000 ? n : 0; };
 const ownForm = (open) => {
   $('own-form').hidden = !open;
   $('own').hidden = open;

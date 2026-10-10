@@ -9,12 +9,12 @@ const hex = (b) => [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 const unhex = (s) => Uint8Array.from(s.match(/../g), (h) => parseInt(h, 16));
 
 // The wallet's seed, kept in this browser only.
-function seed() {
+function seed(name) {
   let s = null;
-  try { s = localStorage.getItem('nutpub-seed'); } catch {}
+  try { s = localStorage.getItem(`${name}-seed`); } catch {}
   if (!s) {
     s = hex(crypto.getRandomValues(new Uint8Array(64)));
-    try { localStorage.setItem('nutpub-seed', s); } catch {}
+    try { localStorage.setItem(`${name}-seed`, s); } catch {}
   }
   return unhex(s);
 }
@@ -25,10 +25,12 @@ const savePledges = (list) => { try { localStorage.setItem('nutpub-pledges', JSO
 export const num = (a) => (a == null ? 0 : typeof a === 'object' ? Number(a.toString()) : Number(a));
 const same = (a, b) => a.replace(/\/+$/, '') === b.replace(/\/+$/, '');
 
-export async function openWallet(mintUrl) {
-  const repo = new IndexedDbRepositories({ name: 'nutpub' });
+// `name`: the viewer's wallet is 'nutpub'; the takings page keeps its own ('nutpub-takings'), so a Mac that opens
+// both never mixes the artist's takings with a viewer's change.
+export async function openWallet(mintUrl, name = 'nutpub') {
+  const repo = new IndexedDbRepositories({ name });
   await repo.init();
-  const coco = await initializeCoco({ repo, seedGetter: async () => seed() });
+  const coco = await initializeCoco({ repo, seedGetter: async () => seed(name) });
   await coco.mint.addMint(mintUrl, { trusted: true });
 
   return {
@@ -61,7 +63,18 @@ export async function openWallet(mintUrl) {
     },
     // Pay a NUT-18 request in-band (NUT-24): returns the cashuB string for the X-Cashu header.
     // Coco's tokens keep their DLEQ proofs, so they pass a gate that requires them.
+    // A request with a P2PK lock (every NutPub payment) is locked to exactly that key: no locktime, no refund keys,
+    // so once sent it's the artist's alone.
     async pay(creq) {
+      const { nut10: lock, amount } = decodePaymentRequest(creq);
+      if (lock?.kind === 'P2PK') {
+        const prepared = await coco.ops.send.prepare({
+          mintUrl, amount: Number(amount),
+          target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data } },
+        });
+        const { token } = await coco.ops.send.execute(prepared);
+        return coco.wallet.encodeToken(token);
+      }
       const req = await coco.paymentRequests.parse(creq);
       const prepared = await coco.paymentRequests.prepare(req, { mintUrl });
       const result = await coco.paymentRequests.execute(prepared);
@@ -83,6 +96,18 @@ export async function openWallet(mintUrl) {
       const encoded = coco.wallet.encodeToken(token);
       savePledges([...loadPledges(), { token: encoded, sk: hex(refund.secretKey), locktime, amount: Number(req.amount) }]);
       return encoded;
+    },
+    // The takings page: collect a payment locked to a key in this browser's keyring. Coco signs it with that key
+    // itself; if it won't, cashu-ts signs with the same key (as reclaim() does) and the fresh proofs go to Coco.
+    async collect(token, pubkey) {
+      try { return await coco.wallet.receive(token); } catch (e) {
+        const pair = await coco.keyring.getKeyPair(pubkey);
+        if (!pair || /spent/i.test(e.message)) throw e;
+        const w = new Wallet(mintUrl, { unit: 'sat' });
+        await w.loadMint();
+        const proofs = await w.receive(token, { privkey: hex(pair.secretKey) });
+        await coco.wallet.receive(getEncodedToken({ mint: mintUrl, unit: 'sat', proofs }));
+      }
     },
     pledges: () => loadPledges(),
     // After the goal closes unmet: sign each pledge's refund path with cashu-ts (Coco only tries the main lock key),

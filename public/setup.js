@@ -79,6 +79,7 @@ function refresh() {
     const v = get(show, path);
     el.hidden = want ? v !== want : !v;
   }
+  $('takings-link').textContent = `${show.artist || 'The artist'}’s takings`;
   const label = show.tip.label || 'Tip';
   $('tip-preview').textContent = show.tip.price ? `${label} · ${show.tip.price} sats` : label;
 }
@@ -194,6 +195,7 @@ try {
   const first = await api('GET', '/api/show');
   saved(first);
   photo(first.photo);
+  $('takings-link').href = `/takings.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
 } catch (err) {
   $('locked').hidden = false;

@@ -25,12 +25,15 @@ export const pageName = (name) => {
   return TAKEN.includes(s) ? '' : s;
 };
 
+const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.example
+
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
 export const blank = () => ({
   title: '',
   description: '',                      // optional: a line or two under the title
   artist: '',                           // not on the tag line; the buttons use it ("Send Longy a message")
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
+  lightning: '',                        // the artist's Lightning address: where the takings page pays out
   stream: { mode: 'pay', price: null }, // 'pay': sats per 10 s; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
@@ -59,6 +62,7 @@ export function clean(input = {}) {
     artist: text(input.artist, 60),
     // Empty: taken from the artist's name, once. After that it stays put, so links and posters keep working.
     page: pageName(input.page) || pageName(input.artist),
+    lightning: LN_ADDRESS.test(text(input.lightning, 120)) ? text(input.lightning, 120).toLowerCase() : '',
     stream: {
       mode: input.stream?.mode === 'free' ? 'free' : 'pay',
       price: sats(input.stream?.price),
