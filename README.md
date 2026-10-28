@@ -2,7 +2,7 @@
 
 **A show paid for in Cashu ecash, 10 seconds at a time.** The artist or venue sets up a show; viewers pay per 10 seconds of the set (or watch free and tip), chip in to an all-or-nothing goal that refunds itself, and take their change home. Every payment is Cashu's HTTP 402 (NUT-24).
 
-v1.0 is being built for the Cashu dev call on Thu 29 Oct 2026. The hackathon version (btc++ Berlin, 1 to 2 Oct 2026) is at [rajesh-taylor/nutpub-btcppberlin26](https://github.com/rajesh-taylor/nutpub-btcppberlin26).
+The hackathon version (btc++ Berlin, 1 to 2 Oct 2026) is at [rajesh-taylor/nutpub-btcppberlin26](https://github.com/rajesh-taylor/nutpub-btcppberlin26).
 
 > **Test only.** The demo runs on the NutPub Test Mint: cdk-mintd with a fake Lightning wallet. Its sats have no value, and it can't pay a real invoice.
 
