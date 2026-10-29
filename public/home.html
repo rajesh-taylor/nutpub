@@ -11,12 +11,6 @@
     .home .wordmark, .home .tag { text-align: center; }
     .lede { font: 15px/1.7 var(--mono); max-width: 46em; margin: 0 auto 24px; text-align: center; color: var(--cream); }
     .one-way { text-align: center; margin: 0 0 32px; }
-    .built { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 8px; }
-    .built div { border: 1px solid rgb(239 227 200 / .18); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
-    .built b { display: block; font: 400 22px/1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 6px; }
-    .built-note { grid-column: 1 / -1; margin: 2px 0 0; font-size: 13px; color: var(--smoke); }
-    .built-note a { color: var(--cream); }
-    @media (max-width: 760px) { .built { grid-template-columns: minmax(0, 1fr); } }
     .one-way .btn { font-size: 24px; padding: 14px 28px 12px; }
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 36px; }
     .way { border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; padding: 16px; background: rgb(11 20 38 / .6); display: flex; flex-direction: column; gap: 10px; }
@@ -27,15 +21,28 @@
     .shows a:hover { border-color: var(--amber); }
     .shows .on { color: var(--amber); white-space: nowrap; }
     .home h3 { font: 400 30px/1 var(--poster); letter-spacing: .08em; margin: 32px 0 12px; }
-    .nutlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .nutlist div { border: 1px solid rgb(239 227 200 / .18); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
-    .nutlist b { display: block; font: 400 20px/1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
-    .nutlist .next { border-style: dashed; }
     .home p.plain { font-size: 16px; max-width: 46em; }
+    /* The line-up, like a gig poster: the headline acts big, the supporting acts in one row of squares. */
+    .lineup { margin: 8px 0 0; padding: 28px 0 8px; border-top: 1px solid rgb(239 227 200 / .18); text-align: center; }
+    .billing { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 18px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
+    .billing::before, .billing::after { content: ""; flex: 1; border-top: 1px solid rgb(232 163 61 / .45); }
+    .headliners { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 34px; }
+    .headliners a { display: block; padding: 26px 16px 22px; border: 2px solid var(--cream); border-radius: 4px; color: var(--cream); text-decoration: none; }
+    .headliners a:hover { border-color: var(--amber); }
+    .headliners b { display: block; font: 400 clamp(52px, 9vw, 92px)/.9 var(--poster); letter-spacing: .04em; }
+    .headliners span { display: block; margin-top: 10px; font: 13px/1.4 var(--mono); color: var(--smoke); }
+    .support { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+    .support div { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 6px;
+      border: 1px solid rgb(239 227 200 / .35); border-radius: 4px; }
+    .support b { font: 400 clamp(16px, 2.4vw, 24px)/1 var(--poster); letter-spacing: .02em; color: var(--cream); white-space: nowrap; }
+    .support span { font: 11px/1.2 var(--mono); color: var(--smoke); }
+    .support .next { border-style: dashed; }
+    .support .next b { color: var(--amber); }
+    @media (max-width: 760px) { .headliners { grid-template-columns: minmax(0, 1fr); } .support { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
     .home .foot { margin: 40px 0 8px; padding-top: 18px; border-top: 1px solid rgb(239 227 200 / .18); }
     .home .foot a { font-size: 13px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
     .home .foot a:hover { color: var(--amber); opacity: 1; }
-    @media (max-width: 760px) { .ways, .nutlist { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .ways { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body class="home">
@@ -46,22 +53,23 @@
 
     <p class="one-way"><a class="btn primary" href="/setup">Sign in as artist</a></p>
 
-    <div class="built">
-      <div><b>Coco</b>The wallet in the fan's browser: no app, no account. It pays each request on the spot and keeps the change on the phone.</div>
-      <div><b>cashu-ts</b>Makes and checks the ecash: payment requests, and locks to the artist's and the bar's keys.</div>
-      <p class="built-note">Both open source, from the Cashu developers: <a href="https://github.com/cashubtc/coco">Coco</a> · <a href="https://github.com/cashubtc/cashu-ts">cashu-ts</a></p>
-    </div>
-
-    <h3>The NUTs it uses</h3>
-    <div class="nutlist">
-      <div><b>NUT-00 – 03</b>Ecash notes, signed blind, swapped at the mint: the base of every payment.</div>
-      <div><b>NUT-04</b>Sats in over Lightning (on the public test mint, pretend Lightning).</div>
-      <div><b>NUT-07</b>"Is it spent yet?" The bar's "already poured" and the artist's Collect both ask the mint.</div>
-      <div><b>NUT-10 · NUT-11</b>Spending conditions: every payment locked to its owner's key; a drink with a locktime at last orders and a refund to the artist.</div>
-      <div><b>NUT-18</b>Payment requests: the amount, the mint and the lock, in one string.</div>
-      <div><b>NUT-24</b>HTTP 402 with Cashu: the ticket, every 10 seconds of the set at home, every tip. Paid inside the same web request.</div>
-      <div class="next"><b>NIP-61 · next</b>Nutzaps on Nostr: the same locked tip, published as a Nostr event, so a tip can come with who you are, if you want.</div>
-    </div>
+    <section class="lineup" aria-label="Built with">
+      <p class="billing">Headline acts</p>
+      <div class="headliners">
+        <a href="https://github.com/cashubtc/coco"><b>Coco</b><span>The wallet in the fan's browser</span></a>
+        <a href="https://github.com/cashubtc/cashu-ts"><b>cashu-ts</b><span>Makes and checks the ecash</span></a>
+      </div>
+      <p class="billing">Supporting acts</p>
+      <div class="support">
+        <div><b>NUT-00–03</b><span>Ecash</span></div>
+        <div><b>NUT-04</b><span>Sats in</span></div>
+        <div><b>NUT-07</b><span>Spent yet?</span></div>
+        <div><b>NUT-10·11</b><span>Locks</span></div>
+        <div><b>NUT-18</b><span>Requests</span></div>
+        <div><b>NUT-24</b><span>HTTP 402</span></div>
+        <div class="next"><b>NIP-61</b><span>Nutzaps · next</span></div>
+      </div>
+    </section>
 
     <footer class="foot"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></footer>
   </main>

@@ -58,11 +58,9 @@
     .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; }
     .where { margin-top: 16px; }
     .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
-    .boxes div, .nut { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
-    .boxes b, .nut b { display: block; font: 400 20px/1.1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
-    .nuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; font-size: 14px; }
-    .nut.next { border-style: dashed; }
-    @media (max-width: 1100px) { .pair, .boxes { grid-template-columns: minmax(0, 1fr); } .nuts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .boxes div { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
+    .boxes b { display: block; font: 400 20px/1.1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
+    @media (max-width: 1100px) { .pair, .boxes { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body class="board">
@@ -137,15 +135,6 @@
         </div>
       </section>
 
-      <div class="nuts">
-        <div class="nut"><b>NUT-00 – 03</b>Ecash notes the mint signs blind: it can't tell whose they are.</div>
-        <div class="nut"><b>NUT-04</b>Test sats in, over the test mint's pretend Lightning.</div>
-        <div class="nut"><b>NUT-07</b>Spent yet? How the bar knows a drink was poured.</div>
-        <div class="nut"><b>NUT-10 · 11</b>Every payment locked to its owner's key; the drink with a locktime and a refund.</div>
-        <div class="nut"><b>NUT-18</b>Payment requests: the amount, the mint and the lock.</div>
-        <div class="nut"><b>NUT-24</b>HTTP 402: the ticket, every 10 seconds at home, every tip.</div>
-        <div class="nut next"><b>NIP-61 · next</b>Nutzaps: the same locked tip, published on Nostr.</div>
-      </div>
     </main>
     <aside aria-label="The attendee's phone">
       <p class="cap" style="text-align: center">The attendee's phone</p>
