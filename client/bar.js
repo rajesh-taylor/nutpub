@@ -86,7 +86,7 @@ async function pour(id) {
     let spent = d.poured;
     if (!spent) {
       try { await wallet.collect(d.token, d.pubkey); } catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
-      await api('POST', '/api/admin/locked/collected', { ids: [d.locked] });
+      await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
     }
     if (spent) { trombone(); pint('Already poured, mate.', 'Copy it all you like. It only pours once.', false); }
     else { clink(); pint('Poured. Cheers!', `${sats(d.sats)} to the bar.`, true); }
@@ -117,3 +117,6 @@ if (drinkId) {
 await refresh();
 $('page').hidden = false;
 setInterval(() => refresh().catch(() => {}), 5000);
+
+// Inside page 3 (Takings): compact, without its own title and links.
+if (top !== self) document.body.classList.add('framed');

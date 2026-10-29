@@ -82,6 +82,11 @@ function refresh() {
     el.hidden = want ? v !== want : !v;
   }
   $('takings-link').textContent = `${show.artist || 'The artist'}’s takings`;
+  // The small poster follows the form, like the A4 one.
+  $('mini-artist').textContent = show.artist || '';
+  $('mini-title').textContent = (show.title || '').replace(show.artist || '\u0000', '').replace(/^\s*[·-]?\s*/, '');
+  const d = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+  $('mini-when').textContent = [d, show.starts].filter(Boolean).join(' · ');
   const n = (v) => Number(v || 0).toLocaleString('en-GB');
   $('tip-preview').textContent = `Tip ${show.artist || 'the artist'} · ${n(show.tip.price)} sats`;
   // Who gets what from each ticket: the same split as the server's (server/shows.js ticketSplit).
@@ -210,12 +215,11 @@ async function goalPreview() {
   document.getElementById('goal-note').textContent = g ? `${g.label}: ${n(tipped)} of ${n(g.at)} sats` : `Tips so far: ${n(tipped)} sats`;
 }
 
-// ---- Doors open: chat opens at home, tickets on sale; the demo moves to its second tab (The show).
-$('doors-open').onclick = async () => {
-  try { await api('POST', '/api/admin/stage', { stage: 'doors' }); } catch (e) { return status(e.message, 'bad'); }
-  if (top !== self) return parent.postMessage({ nutpub: 'tab', tab: '2' }, location.origin);
-  try { localStorage.setItem('nutpub-demo-tab', '2'); } catch {}
-  location.href = '/demo';
+// ---- The show: page 2 (a plain link). Inside the old demo page it switches the tab instead.
+$('doors-open').onclick = (e) => {
+  if (top === self) return;
+  e.preventDefault();
+  parent.postMessage({ nutpub: 'tab', tab: '2' }, location.origin);
 };
 
 // ---- Start: the key must work, or the page stays locked.
@@ -225,13 +229,14 @@ try {
   const first = await api('GET', '/api/show');
   saved(first);
   photo(first.photo);
+  $('mini-photo').style.backgroundImage = `url("${first.photo || '/img/fp-32.jpg'}")`;
   $('takings-link').href = `/takings.html#k=${encodeURIComponent(key)}`;
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
   // The phone beside the form: the real show page. Not inside the demo page, which has its own phone.
   // The phone beside the form: the real show page. Inside the demo page, the demo's own phone is beside it instead.
   if (top === self) { $('preview-frame').src = first.path; $('preview').hidden = false; }
-  else document.getElementById('back')?.remove();
+  else document.querySelector('.board-head')?.remove(); // inside the old demo page, which has its own tabs
   goalPreview();
   setInterval(goalPreview, 5000);
 } catch (err) {

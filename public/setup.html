@@ -38,8 +38,8 @@
     .board .choice input.inline-sats { width: 5em; height: auto; margin: 0 4px; padding: 3px 6px; font: inherit; color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 3px; }
     .board .split { border: 1px dashed rgb(217 149 58 / .6); border-radius: 4px; padding: 12px 14px; margin: 6px 0 14px; font-size: 15px; }
     .board .split:empty { display: none; }
-    .board .bar { height: 10px; border-radius: 5px; background: rgb(239 227 200 / .12); overflow: hidden; margin: 2px 0 6px; }
-    .board .bar i { display: block; height: 100%; background: var(--amber); width: 0; }
+    .board .goal-track { height: 10px; border-radius: 5px; background: rgb(239 227 200 / .12); overflow: hidden; margin: 2px 0 6px; }
+    .board .goal-track i { display: block; height: 100%; background: var(--amber); width: 0; }
     .board .paid { list-style: none; padding: 0; margin: 0 0 14px; font-size: 15px; display: flex; flex-direction: column; gap: 10px; }
     .board .paid a { color: var(--cream); font-weight: 600; }
     .board .poster { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; padding-bottom: 18px; }
@@ -53,18 +53,44 @@
     .board aside .cap { margin: 0 0 10px; text-align: center; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
     .board .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
     .board .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
-    .board .back { display: inline-block; margin: 0 0 14px; font-size: 16px; padding: 7px 12px 5px; }
+    .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
+    .board-head .mark { font: 400 34px/1 var(--poster); letter-spacing: .08em; margin: 0; padding: 14px 0 10px; }
+    .board-head .head-back { font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .tabs { display: flex; flex-wrap: wrap; gap: 32px; }
+    .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
+    .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
+    .board-head .tabs a:hover { color: var(--cream); }
+    .board .mini { margin-top: 18px; padding-bottom: 18px; text-align: center; }
+    .board .mini p { margin: 12px 0 14px; font-size: 14px; color: var(--smoke); }
+    .board .mini p a { color: var(--cream); }
+    .board .sheet { width: 210px; height: 297px; margin: 0 auto; background: #1c1611; border-radius: 3px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgb(0 0 0 / .5); text-align: left; }
+    .board .sheet-photo { height: 50%; background: #000 center 30% / cover no-repeat; flex: none; position: relative; }
+    .board .sheet-photo::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(rgb(28 22 17 / 0), #1c1611); }
+    .board .sheet-words { padding: 4px 14px 12px; display: flex; flex-direction: column; gap: 4px; color: #f3e6cf; }
+    .board .sheet-words b { font: 400 40px/.9 var(--poster); letter-spacing: .02em; }
+    .board .sheet-words span:nth-child(2) { font: 400 13px/1.1 var(--poster); letter-spacing: .1em; color: #e0a65a; }
+    .board .sheet-words span:nth-child(3) { font: 400 12px/1.2 var(--poster); letter-spacing: .08em; }
+    .board .mini-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .board .mini-buttons .btn { font-size: 18px; padding: 10px 14px 8px; }
     @media (max-width: 900px) { .board .grid, .board .two { grid-template-columns: minmax(0, 1fr); } .board .page { padding: 20px 16px; } }
   </style>
 </head>
 <body class="board">
+  <!-- The board's header: the night's three pages, and the way home. -->
+  <header class="board-head">
+    <a class="btn quiet head-back" href="/">← Back</a>
+    <p class="mark">THE NUTPUB</p>
+    <nav class="tabs" aria-label="The night">
+      <a class="on" href="/setup" aria-current="page">1 · Show setup</a>
+      <a href="/show">2 · The show</a>
+      <a href="/takings">3 · Takings</a>
+    </nav>
+  </header>
   <div class="page">
     <main>
-      <a class="btn quiet back" href="/" id="back">← Back</a>
       <div class="top">
         <div style="flex: 1 1 320px;">
           <h1>Set up the gig</h1>
-          <p>For the artist, the venue, or both. This server holds no sats. Saved as you type.</p>
         </div>
         <div class="who-wrap">
           <p class="coming">Venue host and Both: coming soon</p>
@@ -135,7 +161,7 @@
               <label class="field">Goal<input data-path="goals.1.label" maxlength="60"></label>
               <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
             </div>
-            <div class="bar"><i id="goal-bar"></i></div>
+            <div class="goal-track"><i id="goal-bar"></i></div>
             <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
           </section>
 
@@ -157,23 +183,11 @@
           </section>
         </div>
 
-        <section class="panel poster" id="poster-panel">
-          <img class="qr" id="qr" alt="QR code for the ticket page" width="140" height="140">
-          <div style="flex: 1 1 280px;">
-            <h2>The poster</h2>
-            <p>A4, made from the details above. Its QR opens the ticket page: <a id="show-link" target="_blank" rel="noopener" style="color: var(--cream);"></a>. Print it, save it as a PDF, or put the QR on a slide.</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              <a class="btn primary" id="poster-link" target="_blank" rel="noopener">Make the poster</a>
-              <a class="btn quiet" id="open-show" target="_blank" rel="noopener">Ticket page</a>
-              <button type="button" class="btn quiet" id="copy-link">Copy link</button>
-              <button type="button" class="btn quiet" id="share-link" hidden>Share</button>
-            </div>
-          </div>
-        </section>
+
 
         <div class="foot">
           <p id="status" role="status"></p>
-          <button type="button" class="btn primary" id="doors-open">Doors open →</button>
+          <a class="btn primary" id="doors-open" href="/show">The show →</a>
           <button type="submit" hidden>Save</button>
         </div>
 
@@ -194,6 +208,20 @@
     <aside id="preview" hidden aria-label="The attendee's phone">
       <p class="cap">The attendee's phone · from the poster's QR</p>
       <div class="phone-frame"><iframe id="preview-frame" title="The show page, as an attendee sees it"></iframe></div>
+      <section class="panel mini" id="poster-panel">
+        <h2>Gig poster</h2>
+        <!-- A small copy of the A4 poster: the photo fading into the poster's brown, the artist, the date. -->
+        <div class="sheet" aria-hidden="true">
+          <div class="sheet-photo" id="mini-photo"></div>
+          <div class="sheet-words"><b id="mini-artist"></b><span id="mini-title"></span><span id="mini-when"></span></div>
+        </div>
+        <p>A4, made from the details on the left. Its QR opens <a id="show-link" target="_blank" rel="noopener"></a>.</p>
+        <div class="mini-buttons">
+          <a class="btn primary" id="poster-link" target="_blank" rel="noopener">Make the poster</a>
+          <a class="btn quiet" id="open-show" target="_blank" rel="noopener">Ticket page</a>
+        </div>
+        <div hidden><img id="qr" alt=""><button type="button" id="copy-link"></button><button type="button" id="share-link"></button></div>
+      </section>
     </aside>
   </div>
   <script type="module" src="/setup.js"></script>

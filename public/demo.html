@@ -143,8 +143,8 @@
     for (const b of document.querySelectorAll('[role="tab"]')) b.onclick = () => open(b.dataset.tab);
     // The setup page's Doors open moves the demo on to The show.
     addEventListener('message', (e) => { if (e.origin === location.origin && e.data?.nutpub === 'tab') open(String(e.data.tab)); });
-    let first = '1';
-    try { first = localStorage.getItem('nutpub-demo-tab') || '1'; } catch {}
+    let first = { '/show': '2', '/last-orders': '3' }[location.pathname] || '1';
+    if (first === '1') try { first = localStorage.getItem('nutpub-demo-tab') || '1'; } catch {}
     open(first);
 
     // ---- The host: doors, Start the show, last orders. Every phone follows within 2 seconds.

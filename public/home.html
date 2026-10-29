@@ -9,7 +9,9 @@
   <style>
     body.home main { max-width: 980px; text-align: left; }
     .home .wordmark, .home .tag { text-align: center; }
-    .lede { font-size: 20px; max-width: 36em; margin: 0 auto 28px; text-align: center; }
+    .lede { font: 15px/1.7 var(--mono); max-width: 46em; margin: 0 auto 24px; text-align: center; color: var(--cream); }
+    .one-way { text-align: center; margin: 0 0 40px; }
+    .one-way .btn { font-size: 24px; padding: 14px 28px 12px; }
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 36px; }
     .way { border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; padding: 16px; background: rgb(11 20 38 / .6); display: flex; flex-direction: column; gap: 10px; }
     .way h2 { font: 400 26px/1 var(--poster); letter-spacing: .08em; margin: 0; color: var(--amber); }
@@ -31,12 +33,9 @@
   <main>
     <h1 class="wordmark">THE NUTPUB</h1>
     <p class="tag">A gig paid for in Cashu ecash</p>
-    <p class="lede">A ticket site data mines who you are, harvests what you saw, where you sat and who you went with. Cashu ecash is bearer money. Your phone pays at the door, at the bar and in a tip jar. The mint can't link any of it to you. The browser wallet is <a href="https://github.com/cashubtc/coco">Coco</a> (with cashu-ts underneath): no app, no account, no email.</p>
+    <p class="lede">A ticket site data mines who you are, how much you spent, what you saw, where you sat and who you went with. Your local NutPub lets your phone pay at the door, the bar and tip your favourite artists or band. No app, no account, no email.</p>
 
-    <div class="ways">
-      <div class="way"><h2>Artists</h2><p>Set up your gig: tickets with a free first drink, tips and a poster.</p><a class="btn primary" href="/setup.html">Sign in as artist</a></div>
-      <div class="way"><h2>Watch a show</h2><ul class="shows" id="shows"><li>Nothing on right now.</li></ul></div>
-    </div>
+    <p class="one-way"><a class="btn primary" href="/setup">Sign in as artist</a></p>
 
     <h3>The NUTs it uses</h3>
     <div class="nutlist">
@@ -50,26 +49,6 @@
       <div class="next"><b>NIP-61 · next</b>Nutzaps on Nostr: the same locked tip, published as a Nostr event, so a tip can come with who you are, if you want.</div>
     </div>
 
-    <h3>Honest bits</h3>
-    <p class="plain">This runs on a test mint: test sats, no real value. Card payments (Stripe), Nostr sign-in and the venue's own setup are shown but not wired up yet. The code is open: <a href="https://github.com/rajesh-taylor/nutpub">github.com/rajesh-taylor/nutpub</a>.</p>
   </main>
-  <script type="module">
-    // The shows on now: one per server for now (several shows is on the list for after the call).
-    const [{ show, path }, { stage }] = await Promise.all([fetch('/api/show').then((r) => r.json()), fetch('/api/stage').then((r) => r.json())]);
-    const when = { doors: 'Doors open', on: 'On now', closed: 'Finished' }[stage];
-    if (show.title && stage !== 'closed') {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = `${path}?as=home`;
-      const t = document.createElement('span');
-      t.textContent = show.title;
-      const w = document.createElement('span');
-      w.className = 'on';
-      w.textContent = when;
-      a.append(t, w);
-      li.append(a);
-      document.getElementById('shows').replaceChildren(li);
-    }
-  </script>
 </body>
 </html>

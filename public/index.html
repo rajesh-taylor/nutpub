@@ -15,17 +15,16 @@
     <header class="masthead">
       <h1 class="wordmark small-mark">THE NUTPUB</h1>
       <p class="tag" id="billing"></p>
-      <p class="when" id="when"></p>
     </header>
+    <p class="when" id="when"></p>
 
     <!-- At the door: the privacy ticket (the room), or the whole ticket (at home). -->
     <section class="door card" id="door" hidden>
-      <h2 class="card-title"><span id="door-title">Privacy ticket</span> · <span id="ticket-price"></span></h2>
+      <h2 class="card-title" id="door-title">Ticket</h2>
       <p class="hint" id="ticket-note">Includes your first drink</p>
       <p class="door-wallet">Your wallet: <b id="door-balance">…</b> test sats <button type="button" class="linkish" id="door-topup" hidden>Add 50,000 test sats</button></p>
       <button class="btn primary wide" id="buy">Pay</button>
       <button class="btn quiet wide" id="card" disabled>Card · not wired up</button>
-      <p class="small">Card: Stripe knows who you are. Bitcoin: nobody does.</p>
     </section>
 
     <!-- In the room, before the set: welcome, the free drink. -->
@@ -47,6 +46,7 @@
       <video id="vid-a" muted playsinline preload="auto"></video>
       <video id="vid-b" muted playsinline preload="auto"></video>
       <p class="doors-sign" id="doors-sign">Doors · chat open</p>
+      <span class="live-badge" id="live-badge" hidden>Live</span>
       <button class="big-play" id="big-play" aria-label="Play" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
       </button>
@@ -66,11 +66,12 @@
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
+      <p class="chat-head">Live chat <span class="works">Works</span></p>
       <div class="goal" id="goal" hidden><span id="goal-label"></span><span id="goal-sum"></span><i><b id="goal-bar"></b></i></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
         <input id="say-text" maxlength="140" autocomplete="off" placeholder="Say something (140)" aria-label="A message for the artist">
-        <button class="btn quiet" id="say-free">Send</button>
+        <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
       <p class="nostr small"><button type="button" class="btn quiet" disabled>Nostr sign-in</button> Post as you, tips as nutzaps · <span class="soon">Design only</span></p>
     </section>
@@ -81,6 +82,7 @@
       <p class="buttons money" id="money" hidden>
         <button class="btn primary" id="tip" disabled></button>
         <button class="btn" id="own" disabled>Your amount</button>
+        <button class="btn quiet" id="whole" hidden></button>
         <button class="btn quiet" id="card-tip" disabled>Card · not wired up</button>
       </p>
       <form class="own" id="own-form" hidden>
@@ -105,7 +107,6 @@
     <img id="closing-photo" alt="">
     <div>
       <p class="cheers">Cheers.</p>
-      <p class="zero">Drinkers identified: 0</p>
       <p class="small" id="change"></p>
       <a class="btn quiet" href="/wallet.html">Take it home</a>
     </div>

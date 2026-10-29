@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Takings · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* Page 2, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
+       show, the chat beside it) and the room's phone. Every frame is the real page, so payments and chat are real. */
+    body.board { padding: 0; text-align: left; background: #050914; font: 16px/1.45 var(--body); }
+    .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
+    .board-head .mark { font: 400 34px/1 var(--poster); letter-spacing: .08em; margin: 0; padding: 14px 0 10px; }
+    .board-head .head-back { font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .tabs { display: flex; flex-wrap: wrap; gap: 32px; }
+    .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
+    .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
+    .board-head .tabs a:hover { color: var(--cream); }
+    .page { max-width: 1440px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+    .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
+    .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .host .label { font: 400 18px/1 var(--poster); letter-spacing: .14em; color: var(--smoke); margin: 0 6px 0 0; }
+    .host .btn.on { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .host .count { margin-left: auto; font-size: 14px; color: var(--smoke); }
+    .cap { margin: 0 0 10px; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
+    .frame { width: 100%; height: 760px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--deep); display: block; }
+    aside { flex: 0 0 390px; margin: 0 auto; }
+    .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+    .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
+    .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
+    h1 { font: 400 56px/1 var(--poster); letter-spacing: .06em; margin: 0; }
+    .sub { margin: 6px 0 22px; color: var(--smoke); }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .card { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 18px; background: rgb(11 20 38 / .6); }
+    .card h2 { font: 400 28px/1 var(--poster); letter-spacing: .1em; color: var(--amber); margin: 0 0 4px; }
+    .card { text-align: left; }
+    .card .note, .card .key, .card .status { text-align: left; }
+    .card .byline { margin: 0 0 10px; font-size: 14px; color: var(--smoke); }
+    .line { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgb(239 227 200 / .1); font-size: 15px; }
+    .line span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .line.total { border-bottom: 0; align-items: baseline; }
+    .line.total span:first-child { font: 400 24px/1 var(--poster); letter-spacing: .08em; }
+    .line.total span:last-child { font: 400 30px/1 var(--poster); color: var(--amber); }
+    .line .muted, .muted { color: var(--smoke); }
+    .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); }
+    .soon { font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 3px 6px 2px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; color: var(--cream); }
+    .key { margin: 12px 0 0; font-size: 13px; color: var(--smoke); }
+    .key button { margin-left: 6px; }
+    textarea.token { width: 100%; margin-top: 10px; font: 12px/1.4 var(--mono); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; padding: 8px; word-break: break-all; }
+    .pour-btn { font-size: 15px; padding: 5px 10px 3px; }
+    .poured-box { display: flex; gap: 14px; align-items: center; margin-top: 14px; padding: 12px; border: 1px dashed rgb(217 149 58 / .6); border-radius: 6px; }
+    .poured-box .big { font: 400 28px/1 var(--poster); letter-spacing: .06em; color: var(--amber); margin: 0; }
+    .poured-box p { margin: 2px 0 0; font-size: 13px; color: var(--smoke); }
+    .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; }
+    .where { margin-top: 16px; }
+    .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
+    .boxes div, .nut { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
+    .boxes b, .nut b { display: block; font: 400 20px/1.1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
+    .nuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; font-size: 14px; }
+    .nut.next { border-style: dashed; }
+    @media (max-width: 1100px) { .pair, .boxes { grid-template-columns: minmax(0, 1fr); } .nuts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body class="board">
+  <header class="board-head">
+    <a class="btn quiet head-back" href="/">← Back</a>
+    <p class="mark">THE NUTPUB</p>
+    <nav class="tabs" aria-label="The night">
+      <a href="/setup">1 · Show setup</a>
+      <a href="/show">2 · The show</a>
+      <a class="on" href="/takings" aria-current="page">3 · Takings</a>
+    </nav>
+  </header>
+
+  <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
+
+  <div class="page" id="page" hidden>
+    <main>
+      <h1>Takings</h1>
+      <p class="sub">Two pages, two browsers, two keys. Each collects only what's locked to its own key.</p>
+
+      <div class="pair">
+        <section class="card" aria-labelledby="artist-h">
+          <h2 id="artist-h"><span id="artist-name">Longy</span>'s takings</h2>
+          <p class="byline">The artist's page · the key lives in the artist's browser</p>
+          <div class="line"><span id="l-tickets">Tickets</span><span id="v-tickets">0</span></div>
+          <div class="line"><span id="l-tips">Tips and messages</span><span id="v-tips">0</span></div>
+          <div class="line"><span id="l-home">Watching at home</span><span id="v-home">0</span></div>
+          <div class="line"><span id="l-drinks">Drinks not poured by last orders</span><span id="v-drinks">0</span></div>
+          <div class="line total"><span>Total</span><span id="v-artist-total">0 sats</span></div>
+          <div class="acts">
+            <button type="button" class="btn primary" id="artist-collect">Collect</button>
+            <button type="button" class="btn quiet" id="artist-home">Send to another wallet</button>
+          </div>
+          <p class="note" id="artist-held"></p>
+          <p class="note">Send to my Lightning wallet <span class="soon">Off on the test mint</span></p>
+          <p class="key" id="artist-key"></p>
+          <textarea class="token" id="artist-token" readonly rows="4" hidden aria-label="The artist's takings as one Cashu token"></textarea>
+          <p class="status" id="artist-status" role="status"></p>
+        </section>
+
+        <section class="card" aria-labelledby="bar-h">
+          <h2 id="bar-h">The bar's takings</h2>
+          <p class="byline">The bar's page · the key lives in the bar's browser</p>
+          <div id="drinks"></div>
+          <div class="line total"><span>Total</span><span id="v-bar-total">0 sats</span></div>
+          <div class="acts">
+            <button type="button" class="btn quiet" id="bar-home">Send to another wallet</button>
+          </div>
+          <p class="note" id="bar-held"></p>
+          <div class="poured-box">
+            <svg width="54" height="86" viewBox="0 0 200 320" role="img" aria-label="A pint, already poured" style="flex: none;">
+              <defs><clipPath id="g-in"><path d="M27 42 L46 282 Q100 292 154 282 L173 42 Z"/></clipPath><linearGradient id="g-ale" x1="0" x2="1"><stop offset="0" stop-color="#c9771a"/><stop offset=".45" stop-color="#f3b54a"/><stop offset="1" stop-color="#b8650f"/></linearGradient></defs>
+              <g clip-path="url(#g-in)"><rect x="0" y="66" width="200" height="260" fill="url(#g-ale)"/><rect x="0" y="40" width="200" height="30" fill="#fff6e1"/></g>
+              <path d="M22 46 C22 30 40 24 52 30 C60 18 84 18 92 28 C102 16 124 18 130 28 C142 20 168 24 168 36 C180 36 182 46 178 48 L22 48 Z" fill="#fff6e1"/>
+              <path d="M27 42 L46 282 Q100 292 154 282 L173 42" fill="none" stroke="#ffffff66" stroke-width="3"/>
+            </svg>
+            <div><p class="big" id="poured-line">Already poured, mate</p><p id="poured-note">Pour a drink twice: the mint says it's spent (NUT-07). One drink per ticket, whoever copies the QR.</p></div>
+          </div>
+          <p class="key" id="bar-key"></p>
+          <textarea class="token" id="bar-token" readonly rows="4" hidden aria-label="The bar's takings as one Cashu token"></textarea>
+          <p class="status" id="bar-status" role="status"></p>
+        </section>
+      </div>
+
+      <section class="card where">
+        <h2>Where every sat went</h2>
+        <div class="boxes">
+          <div><b id="w-ticket">A ticket</b><span id="w-ticket-text"></span></div>
+          <div><b>A drink not poured</b>At last orders the lock's refund path opens for the artist's key (NUT-11). The mint enforces it, not us.</div>
+          <div><b>This server · 0 sats</b>It checks each payment and never swaps it. It could not spend a sat if it tried.</div>
+        </div>
+      </section>
+
+      <div class="nuts">
+        <div class="nut"><b>NUT-00 – 03</b>Ecash notes the mint signs blind: it can't tell whose they are.</div>
+        <div class="nut"><b>NUT-04</b>Test sats in, over the test mint's pretend Lightning.</div>
+        <div class="nut"><b>NUT-07</b>Spent yet? How the bar knows a drink was poured.</div>
+        <div class="nut"><b>NUT-10 · 11</b>Every payment locked to its owner's key; the drink with a locktime and a refund.</div>
+        <div class="nut"><b>NUT-12</b>The mint's signature checked offline (DLEQ).</div>
+        <div class="nut"><b>NUT-18</b>Payment requests: the amount, the mint and the lock.</div>
+        <div class="nut"><b>NUT-24</b>HTTP 402: the ticket, every 10 seconds at home, every tip.</div>
+        <div class="nut next"><b>NIP-61 · next</b>Nutzaps: the same locked tip, published on Nostr.</div>
+      </div>
+    </main>
+    <aside aria-label="The attendee's phone">
+      <p class="cap" style="text-align: center">The attendee's phone</p>
+      <div class="phone-frame"><iframe id="phone" title="The attendee's phone"></iframe></div>
+    </aside>
+  </div>
+  <script type="module" src="/js/night.js"></script>
+</body>
+</html>

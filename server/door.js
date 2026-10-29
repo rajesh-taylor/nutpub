@@ -49,6 +49,7 @@ export function mountDoor(app, admin, json, pass) {
   // stay as they are: they belong to the artist and the bar, to collect.
   app.post('/api/admin/new-night', admin, (_req, res) => {
     db.exec('DELETE FROM tickets; DELETE FROM drinks; UPDATE messages SET deleted = 1;');
+    kv.set('nightStart', now()); // page 3 counts tonight's takings from here
     kv.set('stage', 'doors');
     res.json({ stage: 'doors' });
   });
@@ -103,13 +104,13 @@ export function mountDoor(app, admin, json, pass) {
 
   // ---- The bar: one drink by its number (the QR on the phone carries only that), with its locked token.
   app.get('/api/admin/drinks/:id', admin, (req, res) => {
-    const d = db.prepare('SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at FROM drinks d JOIN locked l ON l.id = d.locked WHERE d.id = ?')
+    const d = db.prepare('SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked WHERE d.id = ?')
       .get(Number(req.params.id));
     if (!d) return res.status(404).json({ error: 'no_drink' });
     res.json({ ...d, poured: !!d.collected_at });
   });
   app.get('/api/admin/drinks', admin, (_req, res) => {
-    res.json(db.prepare(`SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at FROM drinks d
+    res.json(db.prepare(`SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d
                          JOIN locked l ON l.id = d.locked ORDER BY d.id`).all().map((d) => ({ ...d, poured: !!d.collected_at })));
   });
 

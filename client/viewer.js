@@ -352,7 +352,13 @@ $('own-form').onsubmit = async (e) => {
 // ---- The night: the door, the welcome and the free drink, the stage (doors, on, closed), the live chat.
 const body = document.body;
 body.dataset.as = AS;
-if (top !== self) $('back-link').remove(); // inside the demo's phone frame: the demo has its own way out
+if (top !== self) { // inside a host page: it has its own way out, and its own test strip
+  $('back-link').remove();
+  body.classList.add('framed');
+  document.querySelector('.test-banner')?.remove();
+}
+// At home the stretch goal sits under the money buttons, in a box of its own (board 2); the chat keeps the messages.
+if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = $('closing-photo').src = showPhoto || DEFAULT_PHOTO;
 // Before the set plays, the player shows the artist's photo, like a video's cover picture.
@@ -365,6 +371,7 @@ function words() {
   $('about').textContent = show.description;
   $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`;
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
+  $('say-tip').textContent = `Send with ${sats(show.tip.price || 0)}`;
 }
 words();
 let shownAt = null;
@@ -390,6 +397,9 @@ function render() {
   $('closing').hidden = !closed;
   $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink));
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
+  // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
+  body.classList.toggle('at-door', room && !$('door').hidden);
+  body.classList.toggle('inside-doors', !$('inside').hidden);
   $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
   $('money').hidden = closed || (room && !ticket);
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
@@ -397,18 +407,20 @@ function render() {
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
   const live = AS === 'home' ? !closed : stage === 'on';
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
+  $('live-badge').hidden = stage !== 'on';
+  // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
+  $('whole').hidden = AS !== 'home' || !show.ticket.on || ticket || closed;
+  $('whole').textContent = `The whole ticket · ${sats(s.artist)}`;
   $('play').disabled = $('big-play').disabled = !live;
   if (!live && playing) stop();
 
   // At the door: the room's ticket includes the drink; at home, the whole set for the artist's part alone.
   if (!ticket) {
-    $('door-title').textContent = room ? 'Privacy ticket' : 'The whole ticket';
-    $('ticket-price').textContent = sats(room ? s.total : s.artist);
+    $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
     $('ticket-note').textContent = room ? (s.drink ? 'Includes your first drink' : '') : free ? 'Or watch free, with tips' : 'Or press play and pay as it plays';
     $('buy').textContent = `Pay ${sats(room ? s.total : s.artist)}`;
   } else {
     $('door-title').textContent = 'Your first drink';
-    $('ticket-price').textContent = sats(s.drink);
     $('ticket-note').textContent = 'The ticket went through; the drink didn’t.';
     $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;
   }
@@ -423,13 +435,20 @@ function render() {
   }
 }
 
+$('whole').onclick = () => $('buy').onclick();
+$('say-tip').onclick = () => tip($('tip'));
 $('buy').onclick = async () => {
   unlockAudio();
   // Enough in the wallet for what's left to pay? Say so before paying half of it.
   const s = split();
   const due = (door.ticket ? 0 : AS === 'room' ? s.total : s.artist) - (door.ticket ? -s.drink : 0);
   const have = await wallet.balance();
-  if (have < due) { $('door-topup').hidden = false; return say(`You need ${sats(due)} and have ${sats(have)}.`); }
+  if (have < due && AS === 'home' && health.mint.test) {
+    // At home there's no wallet box on page 2: on the test mint, top up by itself and carry on.
+    say('Adding test sats…');
+    const { id } = await wallet.topup(TOP_UP);
+    for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
+  } else if (have < due) { $('door-topup').hidden = false; return say(`You need ${sats(due)} and have ${sats(have)}.`); }
   $('buy').disabled = true;
   say('Paying at the door…');
   try {
@@ -482,17 +501,18 @@ async function chat() {
   for (const m of r.messages) {
     const li = document.createElement('li');
     li.dataset.id = m.id;
-    if (m.sats) {
+    const who = document.createElement('span');
+    who.className = 'from';
+    who.textContent = m.who;
+    li.append(who, ' ');
+    if (m.sats) { // the name first, then what they tipped, in gold
       li.className = 'tipped';
       const amt = document.createElement('b');
       amt.className = 'amt';
       amt.textContent = m.sats.toLocaleString('en-GB');
       li.append(amt, ' ');
     }
-    const who = document.createElement('span');
-    who.className = 'from';
-    who.textContent = m.who;
-    li.append(who, ...(m.text ? [' ', m.text] : []));
+    if (m.text) li.append(m.text);
     feed.append(li);
     lastMsg = Math.max(lastMsg, m.id);
   }

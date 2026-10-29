@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>The show · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* Page 2, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
+       show, the chat beside it) and the room's phone. Every frame is the real page, so payments and chat are real. */
+    body.board { padding: 0; text-align: left; background: #050914; font: 16px/1.45 var(--body); }
+    .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
+    .board-head .mark { font: 400 34px/1 var(--poster); letter-spacing: .08em; margin: 0; padding: 14px 0 10px; }
+    .board-head .head-back { font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .tabs { display: flex; flex-wrap: wrap; gap: 32px; }
+    .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
+    .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
+    .board-head .tabs a:hover { color: var(--cream); }
+    .page { max-width: 1440px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+    .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
+    .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .host .label { font: 400 18px/1 var(--poster); letter-spacing: .14em; color: var(--smoke); margin: 0 6px 0 0; }
+    .host .btn.on { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .host .count { margin-left: auto; font-size: 14px; color: var(--smoke); }
+    .cap { margin: 0 0 10px; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
+    .frame { width: 100%; height: 760px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--deep); display: block; }
+    aside { flex: 0 0 390px; margin: 0 auto; }
+    .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+    .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
+    .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
+  </style>
+</head>
+<body class="board">
+  <header class="board-head">
+    <a class="btn quiet head-back" href="/">← Back</a>
+    <p class="mark">THE NUTPUB</p>
+    <nav class="tabs" aria-label="The night">
+      <a href="/setup">1 · Show setup</a>
+      <a class="on" href="/show" aria-current="page">2 · The show</a>
+      <a href="/takings">3 · Takings</a>
+    </nav>
+  </header>
+
+  <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
+
+  <div class="page" id="page" hidden>
+    <main>
+      <div class="host">
+        <span class="label">Host</span>
+        <button class="btn quiet" data-stage="doors">Doors · chat open</button>
+        <button class="btn quiet" data-stage="on">Start the show</button>
+        <button class="btn quiet" data-stage="closed">End the night</button>
+        <button class="btn quiet" id="new-night">New night</button>
+        <span class="count" id="count"></span>
+      </div>
+      <p class="cap">Watching at home · the desktop view</p>
+      <iframe class="frame" id="home" title="Watching at home"></iframe>
+    </main>
+    <aside aria-label="The attendee's phone">
+      <p class="cap" style="text-align: center">In the room · the attendee's phone</p>
+      <div class="phone-frame"><iframe id="phone" title="The attendee's phone"></iframe></div>
+      <p class="note">On Start the show: three stage lights, then the video, on every phone.</p>
+    </aside>
+  </div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    // The host's key, kept in this browser by the setup page's sign-in.
+    let key = null;
+    try { key = localStorage.getItem('nutpub-admin'); } catch {}
+    const api = (method, url, body) => fetch(url, { method, headers: { 'X-Admin': key || '', 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) })
+      .then(async (r) => { if (!r.ok) throw Object.assign(new Error(r.statusText), { status: r.status }); return r.json(); });
+
+    try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = false; throw new Error('signed out'); }
+    $('page').hidden = false;
+    const { path } = await fetch('/api/show').then((r) => r.json());
+    $('home').src = `${path}?as=home`;
+    $('phone').src = path;
+
+    // ---- Doors, Start the show, Last orders. Every phone follows within 2 seconds.
+    async function stage(next) {
+      const { stage: now } = next ? await api('POST', '/api/admin/stage', { stage: next }) : await fetch('/api/stage').then((r) => r.json());
+      for (const b of document.querySelectorAll('[data-stage]')) b.classList.toggle('on', b.dataset.stage === now);
+    }
+    for (const b of document.querySelectorAll('[data-stage]')) b.onclick = () => stage(b.dataset.stage);
+    $('new-night').onclick = async () => {
+      if (!confirm('A new night: every phone back to the door and the chat emptied. Payments already made stay to collect.')) return;
+      await api('POST', '/api/admin/new-night');
+      stage();
+    };
+
+    // ---- In the room and at home: tickets sold, from the drinks and the door (counts only, never names).
+    async function count() {
+      const drinks = await api('GET', '/api/admin/drinks').catch(() => []);
+      $('count').textContent = drinks.length ? `Drinks waiting at the bar: ${drinks.filter((d) => !d.poured).length}` : '';
+    }
+    stage(); count();
+    setInterval(() => { stage().catch(() => {}); count(); }, 3000);
+  </script>
+</body>
+</html>

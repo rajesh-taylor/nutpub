@@ -45,6 +45,11 @@ const page = (file) => (req, res, next) => {
 // demo page (/demo: three tabs, the desktop on the left and the phone on the right).
 app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => page(req.path === '/' ? 'home.html' : req.path.slice(1))(req, res, next));
 app.get('/demo', page('demo.html'));
+// The night's three pages: 1 Show setup, 2 The show, 3 Takings.
+app.get('/setup', page('setup.html'));
+app.get('/show', page('show.html'));
+app.get('/takings', page('night-takings.html'));
+app.get('/last-orders', (_req, res) => res.redirect(301, '/takings')); // its name before 29 Oct
 app.get(/^\/[a-z0-9-]+\/poster$/, (req, res, next) => (req.path === `${currentShow().path}/poster` ? page('poster.html')(req, res, next) : next()));
 // A page per artist: the show page at /<artist> too (e.g. /longy), the link the artist shares.
 app.get(/^\/[a-z0-9-]+$/, (req, res, next) => (req.path === currentShow().path ? page('index.html')(req, res, next) : next()));

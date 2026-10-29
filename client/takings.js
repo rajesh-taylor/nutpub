@@ -105,7 +105,7 @@ $('collect').onclick = async () => {
     for (const p of drinks) {
       try { await wallet.collect(p.token, p.pubkey, pubkey); mine.push(p); } catch {}
     }
-    const { collected, notYet } = await api('POST', '/api/admin/locked/collected', { ids: mine.map((p) => p.id) });
+    const { collected, notYet } = await api('POST', '/api/admin/locked/collected', { ids: mine.map((p) => p.id), by: 'artist' });
     const got = mine.filter((p) => collected.includes(p.id)).reduce((s, p) => s + p.sats, 0);
     say(notYet.length ? `Collected ${sats(got)}. ${payments(notYet.length)} didn't go through: try again.` : `Collected ${sats(got)}.`);
   } catch (e) { say(e.message); }
@@ -135,3 +135,6 @@ $('home').onclick = async () => {
   } catch (e) { say(e.message); }
   refresh().catch(() => {});
 };
+
+// Inside page 3 (Takings): compact, without its own title and links.
+if (top !== self) document.body.classList.add('framed');

@@ -7,13 +7,17 @@ import { mint, keysetIds, balance } from './purse.js';
 import { lastOrdersAt } from './shows.js';
 import './gate.js'; // creates the `locked` table this module reads
 
+// Who collected a payment: 'artist' or 'bar'. A drink the bar collected was poured; one the artist collected went
+// to the artist at last orders. Added Thu 29 Oct; older rows have none.
+try { db.exec('ALTER TABLE locked ADD COLUMN collected_by TEXT'); } catch {}
+
 export const artistKey = () => kv.get('artistKey');
 const COMPRESSED = /^0[23][0-9a-f]{64}$/; // a 33-byte compressed secp256k1 public key, in hex
 
 const waiting = db.prepare('SELECT id, token, sats, kind, pubkey, at FROM locked WHERE collected_at IS NULL ORDER BY id');
 const byKind = db.prepare(`SELECT kind, collected_at IS NOT NULL AS collected, COALESCE(SUM(sats), 0) AS sats, COUNT(*) AS n
-                           FROM locked GROUP BY kind, collected`);
-const markCollected = db.prepare('UPDATE locked SET collected_at = ? WHERE id = ? AND collected_at IS NULL');
+                           FROM locked WHERE at >= ? GROUP BY kind, collected`);
+const markCollected = db.prepare('UPDATE locked SET collected_at = ?, collected_by = ? WHERE id = ? AND collected_at IS NULL');
 const getLocked = db.prepare('SELECT token FROM locked WHERE id = ? AND collected_at IS NULL');
 
 const totals = (list) => ({ sats: list.reduce((s, p) => s + p.sats, 0), count: list.length });
@@ -38,6 +42,7 @@ export function mountTakings(app, admin, json) {
   // The page says it collected these. Never taken on its word: each must be spent at the mint (NUT-07),
   // which, locked to the artist, only the artist's key can have done.
   app.post('/api/admin/locked/collected', admin, json, async (req, res) => {
+    const by = ['artist', 'bar'].includes(req.body?.by) ? req.body.by : null;
     const ids = [...new Set((Array.isArray(req.body?.ids) ? req.body.ids : []).map(Number).filter(Number.isInteger))].slice(0, 500);
     const collected = [];
     const notYet = [];
@@ -51,7 +56,7 @@ export function mountTakings(app, admin, json) {
         return res.status(502).json({ error: 'mint_unreachable', detail: String(e.message || e), collected });
       }
       if (states.every((s) => s.state === CheckStateEnum.SPENT)) {
-        markCollected.run(new Date().toISOString(), id);
+        markCollected.run(new Date().toISOString(), by, id);
         collected.push(id);
       } else notYet.push(id);
     }
@@ -62,7 +67,7 @@ export function mountTakings(app, admin, json) {
   // into the server's own wallet. Shown, so nothing silently vanishes.
   app.get('/api/admin/takings', admin, (_req, res) => {
     const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
-    for (const r of byKind.all()) {
+    for (const r of byKind.all(kv.get('nightStart', ''))) { // tonight: since the last New night
       const k = (kinds[r.kind] ??= { waiting: 0, collected: 0, count: 0 });
       k[r.collected ? 'collected' : 'waiting'] += r.sats;
       k.count += r.n;
