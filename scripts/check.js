@@ -31,7 +31,7 @@ check((await fetch(`${SITE}/no-such-artist`)).status === 404, 'another artist\'s
 
 // The phone's wallet: 200 test sats over the fake Lightning (the invoice pays itself). The refused locks below
 // cost a few: sats locked to a stranger's key, or with a refund an hour away, are gone for this wallet.
-const TOP_UP = 200;
+const TOP_UP = 5000; // the tip is 2,100 today
 const wallet = new Wallet(MINT_API, { unit: 'sat' });
 await wallet.loadMint();
 const quote = await wallet.createMintQuoteBolt11(TOP_UP);
@@ -49,8 +49,12 @@ async function pay(res, lock) {
   const send = wallet.ops.send(Number(req.amount), proofs);
   const { keep, send: out } = await (p2pk ? send.asP2PK(p2pk) : send).run();
   proofs = keep;
-  return getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: out });
+  sent.set(getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: out }), out);
+  return [...sent.keys()].pop();
 }
+// Tokens carry the mint's public address; this wallet talks to it locally, so taking one back uses its proofs.
+const sent = new Map();
+const back = (token) => wallet.receive(getEncodedToken({ mint: MINT_API, unit: 'sat', proofs: sent.get(token) }));
 const randomKey = () => Buffer.from(getPubKeyFromPrivKey(crypto.getRandomValues(new Uint8Array(32)))).toString('hex');
 const refusal = async (res) => (res.status === 400 ? (await res.json()).error : res.status);
 
@@ -65,7 +69,7 @@ const get = (path, token) => fetch(`${SITE}${path}`, { headers: { 'X-Pass': pass
     'the 402 asks for P2PK to the artist’s key, no locktime, no refund');
   const plain = await pay(ask, null);
   check(await refusal(await get('/api/tip/21', plain)) === 'not_locked', 'an unlocked token: refused (not_locked)');
-  proofs = [...proofs, ...(await wallet.receive(plain))]; // never accepted, so it's still ours
+  proofs = [...proofs, ...(await back(plain))]; // never accepted, so it's still ours
   const stranger = await pay(ask, { kind: 'P2PK', data: randomKey() });
   check(await refusal(await get('/api/tip/21', stranger)) === 'wrong_lock', 'locked to another key: refused (wrong_lock)');
   const refundable = await pay(ask, { kind: 'P2PK', data: artistKey, locktime: Math.floor(Date.now() / 1000) + 3600, refundKeys: [randomKey()] });
@@ -85,7 +89,7 @@ if (show.stream.mode === 'pay') {
   check(reuse.status === 400 && (await reuse.json()).error === 'reused', 'same token, next piece: refused as reused');
   // The mint itself must refuse it for want of the artist's signature (any other error proves nothing).
   let why = 'spent it';
-  try { proofs = [...proofs, ...(await wallet.receive(token))]; } catch (e) { why = String(e.message); }
+  try { proofs = [...proofs, ...(await back(token))]; } catch (e) { why = String(e.message); }
   check(/witness|signature/i.test(why), `the server can’t spend it: without the artist’s key the mint says “${why.slice(0, 60)}”`);
   const me = await get('/api/pass/me').then((r) => r.json());
   check(me.spent === show.stream.price, `charged once: ${me.spent} sat(s) for piece 0`);

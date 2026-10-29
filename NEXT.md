@@ -3,6 +3,24 @@
 **Goal:** a 3-minute demo on the Cashu dev call, **Thu 29 Oct 2026** (date and time to be confirmed: usually the last Thursday of the month; screen share, slides before and after).
 **Feature freeze: Wed 21 Oct.** Practice runs Thu 22 to Wed 28 Oct. Times are UK time.
 
+## Demo day: Thu 29 Oct (agreed 01:00; replaces the rows below for today)
+One page at `/demo`, three tabs (Set up · The show · Last orders), desktop on the left and the real attendee page in a phone frame on the right. Test mint and test sats only. Address for the day: `nutpub.refueler.io` + `nutpub-mint.refueler.io`, down from 19:00. Design: https://claude.ai/artifact/4ShxK7vxuJfjok9SPSCUz6.
+
+| # | Build | Time |
+|---|---|---|
+| 1 | Address: Rajesh adds the two CNAMEs; `.env` `SITE_HOST` / `MINT_HOST`; restart | 10 min |
+| 2 | **The 10 Oct fault:** one log line per 402 and refusal (`server/gate.js`); pay from a browser with the console open; fix | 20 min |
+| 3 | `/demo`: header, three tabs, phone frame (same-site iframe of the attendee page) | 15 min |
+| 4 | Tab 1: setup fields (event, last orders, ticket + drink + pricing choice, tips 2,100 / own, stretch goals, at home); poster `/longy/poster` with QR; the ticket page | 30 min |
+| 5 | The door: two locked payments (artist; bar with locktime = last orders, refund = artist); You're in, Longy's welcome, free-drink QR | 25 min |
+| 6 | Tab 2: Start the show → lights → video; YouTube-like desktop view; live chat (tips with messages, free messages, Delete, 2-s poll) | 30 min |
+| 7 | Tab 3: the bar's page (key in its browser), Pour, "Already poured, mate" + pint; artist and bar takings; unpoured drinks to the artist | 30 min |
+| 8 | QR PNG for Keynote; one full run; iPhone check of the QR page; commit | 15 min |
+
+**Built Thu 29 Oct, by 12:05** (`npm run check` passes): `/demo` (three tabs, phone frame, host Doors / Start the show / Last orders / New night, Delete a message); `/` home page; setup page desktop-first, saved as you type (event, show starts, last orders, ticket + drink + pricing choice, tip 2,100, two stretch goals, Venue host and Both marked Design); the door's two locked payments; You're in, the artist's welcome, the free-drink QR; stage lights, the set in portrait with the chat over it; live chat (tips with a message, free messages, 2-s poll); the bar's page (`/bar.html`: key in its own browser, Pour, "Already poured, mate" with the pint); the artist collects unpoured drinks after last orders (refund path); Send to another wallet; the poster (`/longy/poster`, QR PNG in `data/longy-qr.png`). The gate logs every 402, refusal and payment. The 10 Oct fault did not come back: a browser paid the ticket and the drink first time. `scripts/check.js` had a mint-address mismatch (public vs local) that stopped it on any public mint: fixed.
+
+**Cut order if behind:** free messages → Send to another wallet → unpoured-drink collection (show the number, say it) → Pour (a slide) → stretch goals → stage lights (the video plays after the door). Never cut: 1, 2, the door, the free-drink QR, the video, tips with messages, the artist's takings.
+
 ## Start everything (Mac)
 
 ```bash

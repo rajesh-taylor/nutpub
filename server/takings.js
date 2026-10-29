@@ -4,6 +4,7 @@
 import { getDecodedToken, CheckStateEnum } from '@cashu/cashu-ts';
 import { db, kv } from './db.js';
 import { mint, keysetIds, balance } from './purse.js';
+import { lastOrdersAt } from './shows.js';
 import './gate.js'; // creates the `locked` table this module reads
 
 export const artistKey = () => kv.get('artistKey');
@@ -30,7 +31,8 @@ export function mountTakings(app, admin, json) {
   app.get('/api/admin/locked', admin, (_req, res) => {
     const list = waiting.all().map((r) => ({ ...r }));
     const key = artistKey();
-    res.json({ pubkey: key, waiting: list, totals: { all: totals(list), here: totals(list.filter((p) => p.pubkey === key)) } });
+    // Drinks are locked to the bar's key; after last orders the artist's key may take those still waiting (refund path).
+    res.json({ pubkey: key, lastOrdersAt: lastOrdersAt(), waiting: list, totals: { all: totals(list), here: totals(list.filter((p) => p.pubkey === key)) } });
   });
 
   // The page says it collected these. Never taken on its word: each must be spent at the mint (NUT-07),
@@ -59,7 +61,7 @@ export function mountTakings(app, admin, json) {
   // The night's takings by kind. `before`: the purse from before Sat 10 Oct, when the gate still swapped payments
   // into the server's own wallet. Shown, so nothing silently vanishes.
   app.get('/api/admin/takings', admin, (_req, res) => {
-    const kinds = { piece: { waiting: 0, collected: 0, count: 0 }, tip: { waiting: 0, collected: 0, count: 0 } };
+    const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
     for (const r of byKind.all()) {
       const k = (kinds[r.kind] ??= { waiting: 0, collected: 0, count: 0 });
       k[r.collected ? 'collected' : 'waiting'] += r.sats;

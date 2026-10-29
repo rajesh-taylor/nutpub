@@ -68,9 +68,12 @@ export async function openWallet(mintUrl, name = 'nutpub') {
     async pay(creq) {
       const { nut10: lock, amount } = decodePaymentRequest(creq);
       if (lock?.kind === 'P2PK') {
+        // A drink also carries a locktime and a refund key (the artist's): copied exactly, or the gate refuses it.
+        const tag = (k) => (lock.tags || []).find(([name]) => name === k)?.slice(1);
+        const locktime = tag('locktime') ? Number(tag('locktime')[0]) : undefined;
         const prepared = await coco.ops.send.prepare({
           mintUrl, amount: Number(amount),
-          target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data } },
+          target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data, ...(locktime ? { locktime, refundKeys: tag('refund') } : {}) } },
         });
         const { token } = await coco.ops.send.execute(prepared);
         return coco.wallet.encodeToken(token);
@@ -99,9 +102,13 @@ export async function openWallet(mintUrl, name = 'nutpub') {
     },
     // The takings page: collect a payment locked to a key in this browser's keyring. Coco signs it with that key
     // itself; if it won't, cashu-ts signs with the same key (as reclaim() does) and the fresh proofs go to Coco.
-    async collect(token, pubkey) {
-      try { return await coco.wallet.receive(token); } catch (e) {
-        const pair = await coco.keyring.getKeyPair(pubkey);
+    // `signer`: the key that signs when it isn't the lock's own (the artist taking an unpoured drink by its refund path).
+    async collect(token, pubkey, signer = pubkey) {
+      try {
+        if (signer !== pubkey) throw new Error('refund path');
+        return await coco.wallet.receive(token);
+      } catch (e) {
+        const pair = await coco.keyring.getKeyPair(signer);
         if (!pair || /spent/i.test(e.message)) throw e;
         const w = new Wallet(mintUrl, { unit: 'sat' });
         await w.loadMint();

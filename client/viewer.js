@@ -4,8 +4,13 @@
 import { openWallet } from './wallet.js';
 
 const $ = (id) => document.getElementById(id);
+// ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
+// phone in the room, even when both are open in one browser (the demo page).
+const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 'room';
+const KEEP = AS === 'home' ? '-home' : '';
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
+const TOP_UP = 50_000; // a ticket, a drink and a few tips
 
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
@@ -31,7 +36,7 @@ const T = {
 };
 
 const say = (text) => { $('status').textContent = text || ''; };
-const sats = (n) => `${n} sat${n === 1 ? '' : 's'}`;
+const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 
 const [health, { show, photo: showPhoto }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
@@ -46,16 +51,16 @@ const free = show.stream.mode === 'free';
 // Free shows: no price and no "This set" (there's nothing to count).
 $('price').textContent = free ? '' : T.perPiece(show.stream.price);
 $('meter').hidden = free;
-const tipText = `${show.tip.label || 'Tip'} · ${sats(show.tip.price || 0)}`;
+const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
 // ---- This phone's pass: what paid pieces are recorded against. Kept in this browser.
 async function getPass(fresh = false) {
   let id = null;
-  try { id = fresh ? null : localStorage.getItem('nutpub-pass'); } catch {}
+  try { id = fresh ? null : localStorage.getItem(`nutpub-pass${KEEP}`); } catch {}
   if (!id) {
     id = (await fetch('/api/pass', { method: 'POST' }).then((r) => r.json())).pass;
-    try { localStorage.setItem('nutpub-pass', id); } catch {}
+    try { localStorage.setItem(`nutpub-pass${KEEP}`, id); } catch {}
   }
   return id;
 }
@@ -69,10 +74,22 @@ const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere); }
 meter();
 
 // ---- The wallet (Coco, in this browser).
-const wallet = await openWallet(health.mint.url);
+const wallet = await openWallet(health.mint.url, `nutpub${KEEP}`);
 const balance = async () => { $('balance').textContent = await wallet.balance(); };
 await balance();
 wallet.on('proofs:saved', balance);
+// On the test mint a new wallet gets its test sats by itself, once: nobody fiddles with a wallet before the show.
+const FIRST = `nutpub-topped${KEEP}`;
+let topped = true;
+try { topped = !!localStorage.getItem(FIRST); } catch {}
+if (health.mint.test && !topped && !(await wallet.balance())) {
+  try { localStorage.setItem(FIRST, '1'); } catch {}
+  wallet.topup(TOP_UP).then(async ({ id }) => {
+    for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
+    await balance();
+    say(`${TOP_UP.toLocaleString('en-GB')} test sats added to your wallet.`);
+  }).catch(() => {});
+}
 if (!show.wallet.on) { $('wallet-link').removeAttribute('href'); $('wallet-page').hidden = true; } // balance only
 $('topup').hidden = !health.mint.test;
 $('wallet-page').parentElement.classList.toggle('solo', !health.mint.test);
@@ -83,10 +100,10 @@ $('own').disabled = false;
 $('topup').onclick = async () => {
   $('topup').disabled = true;
   try {
-    const { id } = await wallet.topup(100);
+    const { id } = await wallet.topup(TOP_UP);
     for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
     await balance();
-    say('+100 test sats.');
+    say(`+${TOP_UP.toLocaleString('en-GB')} test sats.`);
   } catch (e) { say(e.message); }
   $('topup').disabled = false;
 };
@@ -94,8 +111,8 @@ $('topup').onclick = async () => {
 // ---- NUT-24: ask; on a 402, pay the creqA from this wallet and ask again with the cashuB.
 // Safe retry (if on): a lost reply is asked for again with the same token, which the server answers without
 // charging twice.
-async function paidFetch(url) {
-  const headers = { 'X-Pass': pass };
+async function paidFetch(url, extra = {}) {
+  const headers = { 'X-Pass': pass, ...extra };
   const res = await fetch(url, { headers });
   if (res.status !== 402) return res;
   const token = await wallet.pay(res.headers.get('X-Cashu'));
@@ -284,7 +301,7 @@ async function tip(button) {
   if (button.disabled) return;
   button.disabled = true;
   try {
-    const res = await paidFetch('/api/tip');
+    const res = await paidFetch('/api/tip', said());
     say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
@@ -316,7 +333,7 @@ $('own-form').onsubmit = async (e) => {
   if (!n) return;
   $('own-pay').disabled = true;
   try {
-    const res = await paidFetch(`/api/tip/${n}`);
+    const res = await paidFetch(`/api/tip/${n}`, said());
     say(res.ok ? T.ownDone(n) : await refusal(res));
     if (res.ok) ownForm(false);
   } catch (err) {
@@ -325,3 +342,184 @@ $('own-form').onsubmit = async (e) => {
   $('own-pay').disabled = !ownSats();
   balance();
 };
+
+// ---- The night: the door, the welcome and the free drink, the stage (doors, on, closed), the live chat.
+const body = document.body;
+body.dataset.as = AS;
+if (top !== self) $('back-link').remove(); // inside the demo's phone frame: the demo has its own way out
+const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
+$('welcome-photo').src = $('closing-photo').src = showPhoto || DEFAULT_PHOTO;
+// The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
+function words() {
+  const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+  $('when').textContent = [day, show.starts && `starts ${show.starts}`, show.venue].filter(Boolean).join(' · ');
+  $('billing').textContent = show.title;
+  $('about').textContent = show.description;
+  $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`;
+  $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
+}
+words();
+let shownAt = null;
+
+// The same split as the server's (server/shows.js ticketSplit): with the venue, the drink comes out of the price.
+const split = () => {
+  const drink = show.drink.mode === 'artist' ? show.drink.price || 0 : 0;
+  const artist = show.ticket.price || 0;
+  return { artist, drink, total: artist + drink };
+};
+const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
+let door = await myDoor();
+let stage = (await fetch('/api/stage').then((r) => r.json()).catch(() => ({}))).stage || 'doors';
+
+function render() {
+  const room = AS === 'room';
+  const ticket = !!door.ticket;
+  const closed = stage === 'closed';
+  const s = split();
+  body.dataset.stage = stage;
+  // Full picture with the chat over it: the room once the set plays, and always at home.
+  body.classList.toggle('immersive', !closed && (AS === 'home' || (ticket && stage === 'on')));
+  $('closing').hidden = !closed;
+  $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink));
+  $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
+  $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
+  $('chat').hidden = $('money').hidden = closed || (room && !ticket);
+  // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
+  const live = AS === 'home' ? !closed : stage === 'on';
+  $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
+  $('play').disabled = $('big-play').disabled = !live;
+  if (!live && playing) stop();
+
+  // At the door: the room's ticket includes the drink; at home, the whole set for the artist's part alone.
+  if (!ticket) {
+    $('door-title').textContent = room ? 'Privacy ticket' : 'The whole ticket';
+    $('ticket-price').textContent = sats(room ? s.total : s.artist);
+    $('ticket-note').textContent = room ? (s.drink ? 'Includes your first drink' : '') : 'Or pay as it plays, below';
+    $('buy').textContent = `Pay ${sats(room ? s.total : s.artist)}`;
+  } else {
+    $('door-title').textContent = 'Your first drink';
+    $('ticket-price').textContent = sats(s.drink);
+    $('ticket-note').textContent = 'The ticket went through; the drink didn’t.';
+    $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;
+  }
+
+  // The free drink: a QR with its number only. The bar's page finds the locked token and pours it.
+  $('drink').hidden = !door.drink;
+  if (door.drink) {
+    $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
+    $('drink-title').textContent = door.drink.poured ? 'Poured. Cheers!' : 'Get your free drink';
+    $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
+      : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
+  }
+}
+
+$('buy').onclick = async () => {
+  unlockAudio();
+  // Enough in the wallet for what's left to pay? Say so before paying half of it.
+  const s = split();
+  const due = (door.ticket ? 0 : AS === 'room' ? s.total : s.artist) - (door.ticket ? -s.drink : 0);
+  const have = await wallet.balance();
+  if (have < due) return say(`You need ${sats(due)} and have ${sats(have)}. Top up first.`);
+  $('buy').disabled = true;
+  say('Paying at the door…');
+  try {
+    let res = door.ticket ? null : await paidFetch('/api/door/ticket');
+    if (res && !res.ok) throw new Error(await refusal(res));
+    if (AS === 'room' && split().drink) {
+      res = await paidFetch('/api/door/drink');
+      if (!res.ok) throw new Error(`You’re in, but the drink didn’t go through: ${await refusal(res)}`);
+    }
+    say('');
+  } catch (e) {
+    say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
+  }
+  door = await myDoor();
+  render();
+  $('buy').disabled = false;
+  balance();
+};
+
+// ---- The Pint Signal: the bar never talks to this phone; the phone sees its drink spent at the mint and lights up.
+function pint() {
+  $('pint-screen').hidden = false;
+  setTimeout(() => { $('pint-screen').hidden = true; }, 7000);
+}
+
+// ---- Stage lights: three, one by one, then the set (a tap on Play starts the sound: browsers want a tap).
+function lights() {
+  $('lights').hidden = false;
+  $('lights').classList.remove('go');
+  void $('lights').offsetWidth;
+  $('lights').classList.add('go');
+  setTimeout(() => { $('lights').hidden = true; }, 3400);
+}
+
+// ---- The live chat. Every message is set as text, never as HTML.
+const feed = $('feed');
+let lastMsg = 0;
+function goal(tipped, goals) {
+  const g = goals.find((x) => tipped < x.at) || goals[goals.length - 1];
+  $('goal').hidden = !g;
+  if (!g) return;
+  $('goal-label').textContent = g.label;
+  $('goal-sum').textContent = `${tipped.toLocaleString('en-GB')} / ${g.at.toLocaleString('en-GB')}`;
+  $('goal-bar').style.width = `${Math.min(100, (tipped / g.at) * 100)}%`;
+}
+async function chat() {
+  const r = await fetch(`/api/messages?after=${lastMsg}`).then((x) => x.json());
+  for (const m of r.messages) {
+    const li = document.createElement('li');
+    li.dataset.id = m.id;
+    if (m.sats) {
+      li.className = 'tipped';
+      const amt = document.createElement('b');
+      amt.className = 'amt';
+      amt.textContent = m.sats.toLocaleString('en-GB');
+      li.append(amt, ' ');
+    }
+    const who = document.createElement('span');
+    who.className = 'from';
+    who.textContent = m.who;
+    li.append(who, ...(m.text ? [' ', m.text] : []));
+    feed.append(li);
+    lastMsg = Math.max(lastMsg, m.id);
+  }
+  for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
+  while (feed.children.length > 60) feed.firstElementChild.remove();
+  feed.scrollTop = feed.scrollHeight;
+  goal(r.tipped, r.goals);
+}
+// What the message box says goes with the next tip (highlighted), or on its own with Send.
+function said() {
+  const text = $('say-text').value.trim();
+  $('say-text').value = '';
+  setTimeout(() => chat().catch(() => {}), 300);
+  return text ? { 'X-Message': encodeURIComponent(text) } : {};
+}
+$('say').onsubmit = async (e) => {
+  e.preventDefault();
+  const text = $('say-text').value.trim();
+  if (!text) return;
+  const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+  if (r.ok) { $('say-text').value = ''; chat().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
+};
+
+// ---- Every 2 s: the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)
+async function tick() {
+  const fresh = await fetch('/api/show').then((r) => r.json());
+  if (shownAt && fresh.updated !== shownAt) { Object.assign(show, fresh.show); words(); }
+  shownAt = fresh.updated;
+  const latest = (await fetch('/api/stage').then((r) => r.json())).stage;
+  if (latest === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
+  stage = latest;
+  if (door.drink && !door.drink.poured) {
+    door = await myDoor();
+    if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
+  }
+  if (stage === 'closed') $('change').textContent = `Your change: ${sats(await wallet.balance())}, in this browser.`;
+  render();
+  await chat();
+}
+render();
+tick().catch(() => {});
+setInterval(() => tick().catch(() => {}), 2000);

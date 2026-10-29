@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>The bar · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="setup takings bar">
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag">The bar's takings</p>
+
+    <p class="locked" id="locked" hidden>This page needs the private bar link, from the setup page.</p>
+
+    <div id="page" hidden>
+      <!-- One drink, from its QR: Pour collects it with the bar's key. A second pour finds it spent. -->
+      <section class="panel pour-panel" id="one" hidden>
+        <p class="amount" id="one-what"></p>
+        <div class="row"><button type="button" class="btn primary" id="pour">Pour it</button></div>
+      </section>
+
+      <section class="panel">
+        <p class="amount">Poured: <b id="poured">…</b></p>
+        <p class="amount">In this browser: <b id="held">…</b></p>
+        <ol class="drinks" id="drinks"></ol>
+        <p class="hint">Each drink is locked to the bar's key until last orders (NUT-11). Not poured by then, it goes to the artist: the mint enforces it.</p>
+        <div class="row"><button type="button" class="btn quiet" id="home">Send to another wallet</button></div>
+        <textarea id="home-token" readonly rows="4" hidden aria-label="The bar's sats as one Cashu token"></textarea>
+      </section>
+
+      <section class="panel"><p id="key-note"></p></section>
+      <p class="status" id="status" role="status"></p>
+    </div>
+  </main>
+
+  <div class="pint-screen" id="pint-screen" hidden>
+    <svg class="pint" viewBox="0 0 200 320" role="img" aria-label="A pint being poured">
+      <defs>
+        <clipPath id="glass-in"><path d="M27 42 L46 282 Q100 292 154 282 L173 42 Z"/></clipPath>
+        <linearGradient id="ale" x1="0" x2="1">
+          <stop offset="0" stop-color="#c9771a"/><stop offset=".45" stop-color="#f3b54a"/><stop offset="1" stop-color="#b8650f"/>
+        </linearGradient>
+      </defs>
+      <g clip-path="url(#glass-in)">
+        <g class="fill">
+          <rect x="0" y="66" width="200" height="260" fill="url(#ale)"/>
+          <rect x="0" y="40" width="200" height="30" fill="#fff6e1"/>
+          <g class="bubbles" fill="#ffe7a8">
+            <circle cx="70" cy="270" r="2"/><circle cx="102" cy="250" r="1.6"/><circle cx="131" cy="275" r="2.2"/>
+            <circle cx="88" cy="230" r="1.4"/><circle cx="118" cy="210" r="1.8"/><circle cx="60" cy="200" r="1.5"/>
+          </g>
+        </g>
+      </g>
+      <g class="head" fill="#fff6e1">
+        <path d="M22 46 C22 30 40 24 52 30 C60 18 84 18 92 28 C102 16 124 18 130 28 C142 20 168 24 168 36 C180 36 182 46 178 48 L22 48 Z"/>
+      </g>
+      <text x="100" y="186" text-anchor="middle" class="ipa">IPA</text>
+      <text x="100" y="208" text-anchor="middle" class="ipa-small">I PAY ANONYMOUSLY</text>
+      <path d="M27 42 L46 282 Q100 292 154 282 L173 42" fill="none" stroke="#ffffff66" stroke-width="3"/>
+    </svg>
+    <p id="pint-line">Poured. Cheers!</p>
+    <p class="small" id="pint-sub"></p>
+    <button type="button" class="btn quiet" id="pint-back">Back</button>
+  </div>
+  <script type="module" src="/js/bar.js"></script>
+</body>
+</html>

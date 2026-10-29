@@ -7,22 +7,49 @@
   <title>The NutPub</title>
   <link rel="stylesheet" href="/app.css">
 </head>
-<body class="viewer">
+<body class="viewer" data-as="room" data-stage="doors">
   <!-- The background photo, dimmed, with grain: two layers that take turns, so a change fades. -->
   <div class="backdrop" aria-hidden="true"><i id="bd-a"></i><i id="bd-b"></i></div>
   <main>
-    <h1 class="wordmark small-mark">THE NUTPUB</h1>
-    <p class="tag" id="billing"></p>
-    <p class="about" id="about" hidden></p>
+    <a class="back-link" id="back-link" href="/">← Back</a>
+    <header class="masthead">
+      <h1 class="wordmark small-mark">THE NUTPUB</h1>
+      <p class="tag" id="billing"></p>
+      <p class="when" id="when"></p>
+    </header>
+
+    <!-- At the door: the privacy ticket (the room), or the whole ticket (at home). -->
+    <section class="door card" id="door" hidden>
+      <h2 class="card-title"><span id="door-title">Privacy ticket</span> · <span id="ticket-price"></span></h2>
+      <p class="hint" id="ticket-note">Includes your first drink</p>
+      <button class="btn primary wide" id="buy">Pay</button>
+      <button class="btn quiet wide" id="card" disabled>Card · not wired up</button>
+      <p class="small">Card: Stripe knows who you are. Bitcoin: nobody does.</p>
+    </section>
+
+    <!-- In the room, before the set: welcome, the free drink. -->
+    <section class="inside" id="inside" hidden>
+      <p class="youre-in">You're in</p>
+      <figure class="welcome" id="welcome">
+        <img id="welcome-photo" alt="">
+        <figcaption id="about"></figcaption>
+      </figure>
+      <div class="drink card" id="drink" hidden>
+        <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">
+        <div>
+          <h2 class="card-title" id="drink-title">Get your free drink</h2>
+          <p class="hint" id="drink-note"></p>
+        </div>
+      </div>
+    </section>
 
     <div class="player" id="player">
       <video id="vid-a" muted playsinline preload="auto"></video>
       <video id="vid-b" muted playsinline preload="auto"></video>
+      <p class="doors-sign" id="doors-sign">Doors · chat open</p>
       <button class="big-play" id="big-play" aria-label="Play" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
       </button>
-      <!-- Controls on the picture: play/stop and what this set has cost bottom left, full screen bottom right.
-           Full screen (or sideways) adds the tip in between. -->
       <div class="bar">
         <button class="icon" id="play" aria-label="Play" disabled>
           <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
@@ -37,29 +64,81 @@
       </div>
     </div>
 
+    <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
+    <section class="chat" id="chat" aria-label="Live chat" hidden>
+      <div class="goal" id="goal" hidden><span id="goal-label"></span><span id="goal-sum"></span><i><b id="goal-bar"></b></i></div>
+      <ol class="feed" id="feed" aria-live="polite"></ol>
+      <form class="say" id="say">
+        <input id="say-text" maxlength="140" autocomplete="off" placeholder="Say something (140)" aria-label="A message for the artist">
+        <button class="btn quiet" id="say-free">Send</button>
+      </form>
+      <p class="nostr small"><button type="button" class="btn quiet" disabled>Nostr sign-in</button> Post as you, tips as nutzaps · <span class="soon">Design only</span></p>
+    </section>
+
     <p class="status" id="status" role="status"></p>
 
-    <!-- What's in the wallet, big, before any tip button: you see what you have before you give. -->
-    <div class="purse">
-      <a class="purse-sum" href="/wallet.html" id="wallet-link"><b id="balance">…</b> <span>sats in your wallet</span></a>
-      <div class="purse-actions">
-        <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
-        <button class="btn quiet" id="topup" hidden aria-label="Top up 100 test sats">+100 test sats</button>
+    <div class="bottom">
+      <p class="buttons money" id="money" hidden>
+        <button class="btn primary" id="tip" disabled></button>
+        <button class="btn" id="own" disabled>Your amount</button>
+        <button class="btn quiet" id="card-tip" disabled>Card · not wired up</button>
+      </p>
+      <form class="own" id="own-form" hidden>
+        <input type="number" id="own-sats" min="21" max="1000000" step="1" inputmode="numeric" placeholder="21 sats or more" aria-label="Tip amount in sats, 21 or more">
+        <button class="btn primary" id="own-pay" disabled>Tip</button>
+        <button type="button" class="btn quiet" id="own-cancel" aria-label="Back">✕</button>
+      </form>
+      <!-- What's in the wallet. -->
+      <div class="purse">
+        <a class="purse-sum" href="/wallet.html" id="wallet-link"><b id="balance">…</b> <span>sats in your wallet</span></a>
+        <div class="purse-actions">
+          <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
+          <button class="btn quiet" id="topup" hidden>+50,000 test sats</button>
+        </div>
+        <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span></p>
       </div>
-      <!-- What watching costs and what this set has cost so far: here, not on the picture. Free shows: hidden. -->
-      <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span></p>
     </div>
-
-    <p class="buttons money">
-      <button class="btn" id="tip" disabled></button>
-      <button class="btn" id="own" disabled>Your amount</button>
-    </p>
-    <form class="own" id="own-form" hidden>
-      <input type="number" id="own-sats" min="21" max="1000000" step="1" inputmode="numeric" placeholder="21 sats or more" aria-label="Tip amount in sats, 21 or more">
-      <button class="btn primary" id="own-pay" disabled>Tip</button>
-      <button type="button" class="btn quiet" id="own-cancel" aria-label="Back">✕</button>
-    </form>
   </main>
+
+  <!-- Closing time. -->
+  <section class="closing" id="closing" hidden>
+    <img id="closing-photo" alt="">
+    <div>
+      <p class="cheers">Cheers.</p>
+      <p class="zero">Drinkers identified: 0</p>
+      <p class="small" id="change"></p>
+      <a class="btn quiet" href="/wallet.html">Take it home</a>
+    </div>
+  </section>
+  <div class="pint-screen" id="pint-screen" hidden>
+    <svg class="pint" viewBox="0 0 200 320" role="img" aria-label="A pint being poured">
+      <defs>
+        <clipPath id="glass-in-p"><path d="M27 42 L46 282 Q100 292 154 282 L173 42 Z"/></clipPath>
+        <linearGradient id="ale-p" x1="0" x2="1">
+          <stop offset="0" stop-color="#c9771a"/><stop offset=".45" stop-color="#f3b54a"/><stop offset="1" stop-color="#b8650f"/>
+        </linearGradient>
+      </defs>
+      <g clip-path="url(#glass-in-p)">
+        <g class="fill">
+          <rect x="0" y="66" width="200" height="260" fill="url(#ale-p)"/>
+          <rect x="0" y="40" width="200" height="30" fill="#fff6e1"/>
+          <g class="bubbles" fill="#ffe7a8">
+            <circle cx="70" cy="270" r="2"/><circle cx="102" cy="250" r="1.6"/><circle cx="131" cy="275" r="2.2"/>
+            <circle cx="88" cy="230" r="1.4"/><circle cx="118" cy="210" r="1.8"/><circle cx="60" cy="200" r="1.5"/>
+          </g>
+        </g>
+      </g>
+      <g class="head" fill="#fff6e1">
+        <path d="M22 46 C22 30 40 24 52 30 C60 18 84 18 92 28 C102 16 124 18 130 28 C142 20 168 24 168 36 C180 36 182 46 178 48 L22 48 Z"/>
+      </g>
+      <text x="100" y="186" text-anchor="middle" class="ipa">IPA</text>
+      <text x="100" y="208" text-anchor="middle" class="ipa-small">I PAY ANONYMOUSLY</text>
+      <path d="M27 42 L46 282 Q100 292 154 282 L173 42" fill="none" stroke="#ffffff66" stroke-width="3"/>
+    </svg>
+    <p id="pint-line">Poured. Cheers!</p>
+    <p class="small">One drink per ticket.</p>
+  </div>
+  <div class="lights" id="lights" hidden aria-hidden="true"><i></i><i></i><i></i></div>
   <script type="module" src="/js/viewer.js"></script>
 </body>
 </html>

@@ -5,135 +5,164 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050914">
   <meta name="robots" content="noindex">
-  <title>Set up the show · The NutPub</title>
+  <title>Set up the gig · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
 </head>
-<body class="setup">
+<body class="setup wide">
   <main>
-    <h1 class="wordmark">THE NUTPUB</h1>
-    <p class="tag">Set up the show</p>
+    <p class="back-row"><a class="btn quiet" href="/">← Back</a></p>
+    <div class="setup-head">
+      <div>
+        <h1 class="setup-title">Set up the gig</h1>
+        <p class="hint">This server holds no sats. Saved as you type.</p>
+      </div>
+      <div class="who" role="group" aria-label="Who is setting it up">
+        <button type="button" class="on" aria-pressed="true">Artist</button>
+        <button type="button" disabled>Venue host <span class="soon">Design</span></button>
+        <button type="button" disabled>Both <span class="soon">Design</span></button>
+      </div>
+    </div>
 
-    <p class="locked" id="locked" hidden>This page needs the private setup link. On the Mac: <code>npm run setup</code>.</p>
+    <form class="locked signin" id="locked" hidden>
+      <p>Sign in with your private setup link (it came with your gig). This browser remembers it.</p>
+      <input id="signin-link" placeholder="https://nutpub.refueler.io/setup.html#k=…" aria-label="Your private setup link" autocomplete="off">
+      <p><button class="btn primary">Sign in</button></p>
+      <p class="hint" id="signin-note"></p>
+    </form>
 
+    <div class="setup-split">
     <form id="form" hidden autocomplete="off">
-      <!-- The host's way out to the show: the link to share, and the page as viewers see it. -->
-      <section class="panel share">
-        <h2>Share the show</h2>
-        <p class="share-link"><a id="show-link" target="_blank" rel="noopener"></a></p>
-        <div class="row">
-          <a class="btn primary" id="open-show" target="_blank" rel="noopener">Open the show page</a>
-          <button type="button" class="btn" id="copy-link">Copy link</button>
-          <button type="button" class="btn" id="share-link" hidden>Share</button>
-        </div>
-        <img class="qr" id="qr" alt="QR code for the show page" width="168" height="168">
-        <p class="hint">Safe to share anywhere: it opens the show, never this page. The QR code is for posters and the screen in the room.
-          Change the address under “The show” below.</p>
-      </section>
+      <div class="panels">
+        <section class="panel">
+          <h2>The event</h2>
+          <label>Show name <input data-path="title" placeholder="e.g. Longy · Live at the NutPub" maxlength="80"></label>
+          <div class="two">
+            <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
+            <label>Venue <input data-path="venue" placeholder="e.g. The NutPub" maxlength="60"></label>
+          </div>
+          <div class="three">
+            <label>Date <input type="date" data-path="date"></label>
+            <label>Show starts <input type="time" data-path="starts"></label>
+            <label>Last orders <input type="time" data-path="lastOrders"></label>
+          </div>
+          <p class="hint">At last orders, a drink nobody poured goes to the artist.</p>
+          <label>The artist's welcome <span class="optional">(on the phone once you're in)</span>
+            <textarea data-path="description" rows="2" maxlength="280" placeholder="e.g. Thanks for coming in. First one's on me."></textarea></label>
+          <label>Page address <span class="sats"><span class="site-host" id="site-host"></span><input data-path="page" placeholder="longy" maxlength="40" autocapitalize="off" spellcheck="false"></span></label>
+        </section>
 
-      <!-- Every payment is locked to the artist's key, which lives on the takings page, in one browser. -->
-      <section class="panel">
-        <h2>Takings</h2>
-        <p><a class="btn" id="takings-link" target="_blank" rel="noopener">Takings</a></p>
-        <p class="hint">Payments are locked to the artist’s key, kept on that page in that browser. Open it once before the show.</p>
-        <label>Lightning address <input data-path="lightning" type="email" placeholder="e.g. longy@walletofsatoshi.com" maxlength="120" autocapitalize="off" spellcheck="false"></label>
-        <p class="hint">Where the takings page sends the sats.</p>
-      </section>
+        <section class="panel">
+          <h2>Tickets <span class="works">Works</span></h2>
+          <label class="choice"><input type="checkbox" data-path="ticket.on"> <span>Sell privacy tickets</span></label>
+          <label>Ticket price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"> sats</span></label>
+          <p class="label">Free first drink</p>
+          <label class="choice"><input type="radio" name="drink-mode" data-path="drink.mode" value="off"> <span>Off</span></label>
+          <label class="choice"><input type="radio" name="drink-mode" data-path="drink.mode" value="artist"> <span>On: add it to the ticket price</span></label>
+          <label class="indent" id="drink-price">Drink <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"> sats</span></label>
+          <p class="split" id="split"></p>
+          <label>Card tickets: Stripe Payment Link <span class="soon">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
+        </section>
 
-      <section class="panel templates">
-        <h2>Templates</h2>
-        <div class="row">
-          <select id="tpl-list" aria-label="Template"></select>
-          <button type="button" class="btn" id="tpl-load">Load</button>
-          <button type="button" class="btn quiet" id="tpl-delete">Delete</button>
-        </div>
-        <div class="row">
-          <input id="tpl-name" placeholder="Name, e.g. Friday at the pub" aria-label="Template name">
-          <button type="button" class="btn" id="tpl-save">Save as template</button>
-        </div>
-      </section>
+        <section class="panel">
+          <h2>Tips and messages <span class="works">Works</span></h2>
+          <div class="two">
+            <label>Single tap tip <span class="sats"><input type="number" min="21" step="1" inputmode="numeric" data-path="tip.price"> sats</span></label>
+            <label>Their own amount <input disabled value="21 sats or more"></label>
+          </div>
+          <p class="preview"><span class="btn" id="tip-preview"></span></p>
+          <p class="hint">Tips with a message show highlighted in the live chat. The host can delete any message.</p>
+          <label>Nutzaps on Nostr: the artist's npub <span class="soon">Design only</span><input disabled placeholder="npub1…"></label>
+          <label>Card tips: Stripe Payment Link <span class="soon">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
+          <input type="hidden" data-path="tip.label">
+        </section>
 
-      <section class="panel">
-        <h2>The show</h2>
-        <label>Show name <input data-path="title" placeholder="e.g. Longy at Bitfest" maxlength="80"></label>
-        <label>Description <span class="optional">(optional)</span>
-          <textarea data-path="description" rows="3" maxlength="280" placeholder="e.g. Three sets from the back room. Doors 8 pm."></textarea></label>
-        <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
-        <p class="hint">The artist's name goes on the buttons (e.g. “Send Longy a message”), not under the show name.</p>
-        <label>Page address <span class="sats"><span class="site-host" id="site-host">nutpub.rajeshtaylor.com/</span><input data-path="page" placeholder="longy" maxlength="40" autocapitalize="off" spellcheck="false"></span></label>
-        <p class="hint">Set it once and put it on posters weeks ahead: renaming the artist doesn't change it. Left empty, it's made from the artist's name.
-          Changing it breaks links already shared.</p>
-      </section>
+        <section class="panel">
+          <h2>Stretch goals <span class="works">Works</span></h2>
+          <p class="hint">Fed by live tips. Everyone sees the bar fill.</p>
+          <div class="goal-row">
+            <label>Goal <input data-path="goals.0.label" placeholder="e.g. Encore" maxlength="60"></label>
+            <label>At <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"> sats</span></label>
+          </div>
+          <div class="goal-row">
+            <label>Goal <input data-path="goals.1.label" placeholder="e.g. A new song, first time live" maxlength="60"></label>
+            <label>At <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"> sats</span></label>
+          </div>
+        </section>
 
-      <section class="panel">
-        <h2>The stream</h2>
-        <p class="hint">The set: a recorded clip, played in 10-second pieces.</p>
-        <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="pay">
-          <span><b>Pay per 10 seconds.</b> Each 10 seconds is its own payment. Stop paying and it stops.</span></label>
-        <label class="indent" data-when="stream.mode=pay">Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="stream.price"> sats per 10 s</span></label>
-        <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="free">
-          <span><b>Free, with tips.</b> Anyone can watch; the tip button pays the artist.</span></label>
-      </section>
+        <section class="panel">
+          <h2>Watching at home</h2>
+          <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="pay">
+            <span><b>Pay as it plays:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.price" aria-label="Sats per 10 seconds"> sats every 10 seconds. Stop paying, it stops.</span></label>
+          <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="free"> <span><b>Free, with tips</b></span></label>
+          <p class="hint">Either way, people at home can also buy the whole ticket (the artist's part) and watch without paying as it plays.</p>
+          <label class="choice"><input type="checkbox" disabled> <span><b>Card</b> through Stripe <span class="soon">Not wired up</span></span></label>
+        </section>
 
-      <section class="panel">
-        <h2>Tip button</h2>
-        <p class="hint">Always on. Your words and your price: what a pint or a coffee costs depends on where you are.</p>
-        <label>Label <input data-path="tip.label" placeholder="e.g. Buy me a pint" maxlength="40"></label>
-        <label>Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="tip.price"> sats</span></label>
-        <p class="preview"><span class="btn" id="tip-preview"></span></p>
-      </section>
+        <section class="panel">
+          <h2>Who gets paid</h2>
+          <p><a class="btn" id="takings-link" target="_blank" rel="noopener">Artist's takings</a> <a class="btn" id="bar-link" target="_blank" rel="noopener">The bar's takings</a></p>
+          <p class="hint">Each page makes its own key in its own browser; only the public half comes here. Open both once before doors.
+            This server checks every payment (NUT-12, NUT-07) and never swaps it.</p>
+          <label>Artist's Lightning address <input data-path="lightning" type="email" placeholder="e.g. longy@walletofsatoshi.com" maxlength="120" autocapitalize="off" spellcheck="false"></label>
+          <p class="hint">Send to Lightning is off on the test mint.</p>
+        </section>
 
-      <section class="panel">
-        <h2>Extras</h2>
-        <label class="choice"><input type="checkbox" data-path="goal.on">
-          <span><b>Stretch goal.</b> All or nothing: pledges reach the artist only if the goal is hit. Missed, and every pledge goes back to the phone it came from, by itself.</span></label>
-        <div class="indent" data-when="goal.on">
-          <label>Goal <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goal.amount"> sats</span></label>
-          <label>Closes <span class="sats"><input type="number" min="1" max="600" step="1" inputmode="numeric" data-path="goal.minutes"> minutes after the set starts</span></label>
-        </div>
+        <section class="panel share">
+          <h2>The poster</h2>
+          <div class="poster-row">
+            <img class="qr" id="qr" alt="QR code for the ticket page" width="132" height="132">
+            <div>
+              <p class="share-link"><a id="show-link" target="_blank" rel="noopener"></a></p>
+              <div class="row">
+                <a class="btn primary" id="poster-link" target="_blank" rel="noopener">Make the poster</a>
+                <a class="btn" id="open-show" target="_blank" rel="noopener">Ticket page</a>
+                <button type="button" class="btn quiet" id="copy-link">Copy link</button>
+                <button type="button" class="btn quiet" id="share-link" hidden>Share</button>
+              </div>
+              <p class="hint">A4, made from the details above. The QR opens the ticket page. Print it or save it as a PDF.</p>
+            </div>
+          </div>
+        </section>
 
-        <label class="choice"><input type="checkbox" data-path="ticket.on">
-          <span><b>Room ticket.</b> An in-person ticket alongside the stream: pay once, you're in.</span></label>
-        <label class="indent" data-when="ticket.on">Price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"> sats</span></label>
+        <section class="panel">
+          <h2>Background photo</h2>
+          <img class="photo-preview" id="photo-preview" alt="The background photo now">
+          <div class="row">
+            <label class="btn" for="photo-file">Choose a photo</label>
+            <input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp" hidden>
+            <button type="button" class="btn quiet" id="photo-reset" hidden>Use the Berlin photos</button>
+          </div>
+        </section>
 
-        <label class="choice"><input type="checkbox" data-path="wallet.on">
-          <span><b>Wallet, with Take sats home.</b> The viewer's wallet in the browser, and one tap to move their change to any Cashu wallet.</span></label>
+        <section class="panel templates">
+          <h2>Your shows</h2>
+          <div class="row">
+            <select id="tpl-list" aria-label="Saved show"></select>
+            <button type="button" class="btn" id="tpl-load">Load</button>
+            <button type="button" class="btn quiet" id="tpl-delete">Delete</button>
+          </div>
+          <div class="row">
+            <input id="tpl-name" placeholder="e.g. Longy on Tour" aria-label="Name for this show">
+            <button type="button" class="btn" id="tpl-save">Save as a show</button>
+          </div>
+        </section>
+      </div>
 
-        <label class="choice"><input type="checkbox" data-path="retry.on">
-          <span><b>Safe retry.</b> Paid once, retried safely: a payment whose reply got lost can be sent again without paying twice.</span></label>
-      </section>
-
-      <section class="panel">
-        <h2>Background photo</h2>
-        <p class="hint">Shown behind the player (see-through until the set plays). Pick one with the face to the side or near the top:
-          the player covers the middle. A JPEG, PNG or WebP, up to 5 MB; it's saved as soon as you pick it.
-          None picked: the Berlin photos.</p>
-        <img class="photo-preview" id="photo-preview" alt="The background photo now">
-        <div class="row">
-          <label class="btn" for="photo-file">Choose a photo</label>
-          <input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp" hidden>
-          <button type="button" class="btn quiet" id="photo-reset" hidden>Use the Berlin photos</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Viewer page</h2>
-        <p class="label">Video shape</p>
-        <div class="row">
-          <label class="choice inline"><input type="radio" name="shape" data-path="shape" value="16:9"> Landscape 16:9</label>
-          <label class="choice inline"><input type="radio" name="shape" data-path="shape" value="9:16"> Portrait 9:16</label>
-        </div>
-        <p class="hint">The shape your camera records in. Turning a phone sideways still fills the screen.</p>
-        <p class="label">Languages</p>
-        <div class="row langs" id="langs"></div>
-        <p class="hint">* Machine-translated: needs a native check.</p>
-        <label>Starts in <select data-path="language" id="language"></select></label>
-      </section>
+      <!-- Kept for older shows; English only for now. -->
+      <div hidden><div id="langs"></div><select data-path="language" id="language"></select>
+        <input type="radio" name="shape" data-path="shape" value="16:9"><input type="radio" name="shape" data-path="shape" value="9:16">
+        <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on"></div>
 
       <div class="savebar">
         <p id="status" role="status"></p>
         <button type="submit" class="btn primary" id="save">Save</button>
       </div>
     </form>
+    <aside class="preview-phone" id="preview" hidden aria-label="The attendee's phone">
+      <p class="label">The attendee's phone</p>
+      <div class="phone-frame"><iframe id="preview-frame" title="The show page, as an attendee sees it"></iframe></div>
+    </aside>
+    </div>
   </main>
   <script type="module" src="/setup.js"></script>
 </body>

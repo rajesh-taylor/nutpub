@@ -25,19 +25,26 @@ export const pageName = (name) => {
   return TAKEN.includes(s) ? '' : s;
 };
 
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.example
 
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
 export const blank = () => ({
   title: '',
   description: '',                      // optional: a line or two under the title
-  artist: '',                           // not on the tag line; the buttons use it ("Send Longy a message")
+  artist: '',                           // not on the tag line; the buttons use it ("Tip Longy")
+  venue: '',
+  date: '',                             // YYYY-MM-DD, UK time
+  starts: '',                           // HH:MM, when the show starts
+  lastOrders: '',                       // HH:MM: an unpoured drink's lock opens for the artist then (NUT-11 locktime)
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   stream: { mode: 'pay', price: null }, // 'pay': sats per 10 s; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
-  ticket: { on: false, price: null },   // an in-person ticket alongside the stream
+  ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
+  drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
+  goals: [{ label: '', at: null }, { label: '', at: null }], // stretch goals, fed by tips
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
   shape: '16:9',                        // the video: landscape 16:9 or portrait 9:16 (a phone filming upright)
@@ -73,7 +80,13 @@ export function clean(input = {}) {
       amount: sats(input.goal?.amount),
       minutes: Math.min(Math.max(Math.floor(Number(input.goal?.minutes)) || b.goal.minutes, 1), 600),
     },
+    venue: text(input.venue, 60),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(input.date) ? input.date : '',
+    starts: TIME.test(input.starts) ? input.starts : '',
+    lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
+    drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
+    goals: [0, 1].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
     wallet: { on: (input.wallet ?? input.pocket)?.on !== false }, // `pocket`: its name in shows saved before 6 Oct
     retry: { on: input.retry?.on !== false },
     shape: input.shape === '9:16' ? '9:16' : '16:9', // replaces `orientation` (Tue 6 Oct), which never changed the page
@@ -91,6 +104,8 @@ export function clean(input = {}) {
   if (!show.tip.price) problems.push('tip.price');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
+  if (show.drink.mode === 'artist' && !show.drink.price) problems.push('drink.price');
+  if (show.drink.mode === 'artist' && !(show.date && show.lastOrders)) problems.push('lastOrders');
   return { show, problems };
 }
 
@@ -133,4 +148,21 @@ export function loadTemplate(name) {
 export function deleteTemplate(name) {
   db.prepare('DELETE FROM templates WHERE name = ?').run(String(name ?? ''));
   return listTemplates();
+}
+
+// What a ticket costs and who gets what: the artist's price, plus the first drink if the artist added one.
+export function ticketSplit(show = currentShow().show) {
+  const drink = show.drink.mode === 'artist' ? show.drink.price || 0 : 0;
+  const artist = show.ticket.price || 0;
+  return { artist, drink, total: artist + drink };
+}
+
+// Last orders as Unix seconds. The times are UK time: the offset is read for that date, so summer time works too.
+export function lastOrdersAt(show = currentShow().show) {
+  if (!show.date || !show.lastOrders) return null;
+  const guess = new Date(`${show.date}T${show.lastOrders}:00Z`);
+  const tz = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' })
+    .formatToParts(guess).find((x) => x.type === 'timeZoneName').value; // "GMT" or "GMT+1"
+  const hours = Number(tz.replace('GMT', '') || 0);
+  return Math.floor(guess.getTime() / 1000) - hours * 3600;
 }

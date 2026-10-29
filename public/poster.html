@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Poster · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* A4, made from the setup page. The photo fades into a deep warm brown taken from Longy's photo; the text is a
+       warm near-white (cream), not pure white, so it sits with the picture. */
+    @page { size: A4; margin: 0; }
+    html, body { background: #2a2420; }
+    body.poster-page { padding: 24px 0 80px; text-align: left; }
+    .sheet { width: 210mm; height: 297mm; margin: 0 auto; position: relative; overflow: hidden; color: #f3e6cf;
+      background: #1c1611; box-shadow: 0 20px 60px rgb(0 0 0 / .5); display: flex; flex-direction: column; }
+    .sheet .photo { height: 46%; background: center 30% / cover no-repeat; flex: none; }
+    .sheet .fade { position: absolute; left: 0; right: 0; top: 30%; height: 18%;
+      background: linear-gradient(rgb(28 22 17 / 0), #1c1611); }
+    .sheet .body { position: relative; flex: 1; padding: 0 16mm 10mm; display: flex; gap: 10mm; }
+    .sheet .words { flex: 1; display: flex; flex-direction: column; }
+    .sheet .artist { font: 400 120px/.85 var(--poster); letter-spacing: .02em; margin: 0; }
+    .sheet .title { font: 400 30px/1.05 var(--poster); letter-spacing: .08em; color: #e0a65a; margin: 10px 0 0; }
+    .sheet .date { font: 400 28px/1 var(--poster); letter-spacing: .08em; margin: 18px 0 4px; }
+    .sheet .times { font-size: 17px; margin: 0; }
+    .sheet .price { margin: auto 0 0; font-size: 16px; line-height: 1.45; }
+    .sheet .qr-box { flex: none; width: 62mm; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 6mm; }
+    .sheet .qr-box img { width: 62mm; height: 62mm; background: #f3e6cf; padding: 3mm; border-radius: 2mm; }
+    .sheet .scan { font: 400 24px/1 var(--poster); letter-spacing: .1em; }
+    .sheet .link { font-size: 14px; font-weight: 600; text-align: center; word-break: break-all; }
+    .sheet .strip { flex: none; text-align: center; font: 400 15px/1 var(--poster); letter-spacing: .22em; padding: 8px 0 6px; background: #0e0b08; }
+    .tools { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; justify-content: center; padding: 12px; background: rgb(5 9 20 / .94); }
+    @media print { html, body { background: none; } body.poster-page { padding: 0; } .sheet { box-shadow: none; } .tools, .test-banner { display: none; } }
+  </style>
+</head>
+<body class="poster-page">
+  <article class="sheet" id="sheet">
+    <div class="photo" id="photo"></div>
+    <div class="fade"></div>
+    <div class="body">
+      <div class="words">
+        <h1 class="artist" id="artist"></h1>
+        <p class="title" id="title"></p>
+        <p class="date" id="date"></p>
+        <p class="times" id="times"></p>
+        <p class="price" id="price"></p>
+      </div>
+      <div class="qr-box">
+        <img id="qr" alt="QR code for tickets">
+        <p class="scan">Scan for tickets</p>
+        <p class="link" id="link"></p>
+      </div>
+    </div>
+    <p class="strip">Test mint demo · no real value</p>
+  </article>
+  <div class="tools"><button class="btn primary" onclick="print()">Print or save as PDF</button><a class="btn quiet" href="javascript:history.back()">Back</a></div>
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const [{ show, path, photo }, health] = await Promise.all([fetch('/api/show').then((r) => r.json()), fetch('/api/health').then((r) => r.json())]);
+    const site = health.site || location.origin;
+    const n = (v) => Number(v || 0).toLocaleString('en-GB');
+    $('photo').style.backgroundImage = `url("${photo || '/img/fp-32.jpg'}")`;
+    $('artist').textContent = show.artist;
+    $('title').textContent = show.title.replace(new RegExp(`^${show.artist}\\s*·\\s*`), '');
+    $('date').textContent = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    $('times').textContent = [show.starts && `Show starts ${show.starts}`, show.lastOrders && `Last orders ${show.lastOrders}`].filter(Boolean).join(' · ');
+    const drink = show.drink.price || 0;
+    const total = show.drink.mode === 'artist' ? (show.ticket.price || 0) + drink : show.ticket.price || 0;
+    $('price').innerHTML = '';
+    const b = document.createElement('b');
+    b.textContent = `Privacy ticket: ${n(total)} sats.`;
+    $('price').append(b, drink ? ' Your first drink is included.' : '', document.createElement('br'), 'Pay with card or bitcoin (Cashu ecash). With ecash, nobody learns who you are.');
+    $('qr').src = '/api/show/qr.svg';
+    $('link').textContent = `${site}${path}`.replace(/^https?:\/\//, '');
+    document.title = `${show.artist} · Poster`;
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 import { openWallet } from './wallet.js';
 
 const $ = (id) => document.getElementById(id);
-const sats = (n) => `${n} sat${n === 1 ? '' : 's'}`;
+const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 const payments = (n) => `${n} payment${n === 1 ? '' : 's'}`;
 const say = (text) => { $('status').textContent = text || ''; };
 
@@ -63,17 +63,27 @@ $('new-key').onclick = async () => {
   catch (e) { say(e.message); }
 };
 
+// Last orders, Unix seconds (from the server): the mint's clock decides, this is only when to try.
+let lastOrders = null;
+const afterLastOrders = () => lastOrders && Date.now() / 1000 > lastOrders + 5;
+
 // ---- What's waiting (locked to the key here), what this browser has collected, and the night by kind.
 async function refresh() {
-  const [{ totals }, takings] = await Promise.all([api('GET', '/api/admin/locked'), api('GET', '/api/admin/takings')]);
+  const [{ totals, lastOrdersAt: lo }, takings] = await Promise.all([api('GET', '/api/admin/locked'), api('GET', '/api/admin/takings')]);
+  lastOrders = lo;
   $('waiting').textContent = `${sats(totals.here.sats)} (${payments(totals.here.count)})`;
   $('collected').textContent = sats(await wallet.balance());
-  $('collect').disabled = !holds || !totals.here.count;
+  $('collect').disabled = !holds;
   const old = totals.all.count - totals.here.count;
   $('elsewhere').hidden = !old;
   $('elsewhere').textContent = `Also ${sats(totals.all.sats - totals.here.sats)} (${payments(old)}) locked to an old key: they collect only where that key is.`;
-  const { piece, tip } = takings.locked;
-  $('kinds').textContent = `Tonight: 10-second pieces ${sats(piece.waiting + piece.collected)}, tips ${sats(tip.waiting + tip.collected)}.`;
+  const { piece, tip, ticket } = takings.locked;
+  const all = (k) => sats(k.waiting + k.collected);
+  $('kinds').textContent = `Tonight: tickets ${all(ticket)}, tips ${all(tip)}, watching at home ${all(piece)}.`;
+  const unpoured = (await api('GET', '/api/admin/locked')).waiting.filter((p) => p.kind === 'drink');
+  $('drinks-note').textContent = unpoured.length
+    ? `Drinks not poured yet: ${sats(unpoured.reduce((s, p) => s + p.sats, 0))}. ${afterLastOrders() ? 'Last orders has passed: Collect takes them.' : `Yours if still unpoured at ${show.lastOrders || 'last orders'}.`}`
+    : '';
   $('before').hidden = !takings.before;
   $('before').textContent = `Before Sat 10 (swapped): ${sats(takings.before)}, in the server’s own wallet.`;
 }
@@ -83,11 +93,17 @@ $('collect').onclick = async () => {
   $('collect').disabled = true;
   say('Collecting…');
   try {
-    const { waiting } = await api('GET', '/api/admin/locked');
+    const { waiting, pubkey } = await api('GET', '/api/admin/locked');
+    lastOrders = (await api('GET', '/api/admin/locked')).lastOrdersAt;
     const mine = [];
     for (const p of waiting) if (await coco.keyring.getKeyPair(p.pubkey)) mine.push(p);
+    // After last orders, a drink nobody poured opens for the artist's key (its NUT-11 refund path).
+    const drinks = afterLastOrders() ? waiting.filter((p) => p.kind === 'drink' && p.pubkey !== pubkey) : [];
     for (const p of mine) {
       try { await wallet.collect(p.token, p.pubkey); } catch {} // the mint's answer below is what counts
+    }
+    for (const p of drinks) {
+      try { await wallet.collect(p.token, p.pubkey, pubkey); mine.push(p); } catch {}
     }
     const { collected, notYet } = await api('POST', '/api/admin/locked/collected', { ids: mine.map((p) => p.id) });
     const got = mine.filter((p) => collected.includes(p.id)).reduce((s, p) => s + p.sats, 0);
@@ -106,3 +122,16 @@ await refresh();
 $('page').hidden = false;
 wallet.on('proofs:saved', () => refresh().catch(() => {}));
 setInterval(() => refresh().catch(() => {}), 10_000); // Waiting goes up as the show plays
+
+// ---- Send to another wallet: everything collected here, as one Cashu token for any wallet.
+$('home').onclick = async () => {
+  try {
+    const out = await wallet.takeHome();
+    if (!out) return say('Nothing collected here yet.');
+    $('home-token').value = out.token;
+    $('home-token').hidden = false;
+    await navigator.clipboard?.writeText(out.token).catch(() => {});
+    say(`${sats(out.amount)} as one token: copied. Paste it into any Cashu wallet.`);
+  } catch (e) { say(e.message); }
+  refresh().catch(() => {});
+};

@@ -9,6 +9,7 @@ import { db } from './db.js';
 import { cashuGate } from './gate.js';
 import { currentShow } from './shows.js';
 import { artistKey } from './takings.js';
+import { hasTicket, addMessage, tipMessage } from './door.js';
 
 const SET = `${ROOT}media/set`;
 const pieces = () => { try { return JSON.parse(readFileSync(`${SET}/set.json`, 'utf8')).segments; } catch { return 0; } };
@@ -71,7 +72,7 @@ export function mountSet(app) {
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).
   app.get('/api/set/audio/:n', pass, piece,
     (req, res, next) => {
-      if (free() || hasPaid.get(req.pass, req.piece)) return send(req, res, 'audio');
+      if (free() || hasTicket(req.pass) || hasPaid.get(req.pass, req.piece)) return send(req, res, 'audio'); // a ticket plays the set
       if (!show().stream.price) return res.status(409).json({ error: 'not_ready', detail: 'No price per 10 s set yet.' });
       next();
     },
@@ -83,7 +84,7 @@ export function mountSet(app) {
 
   // The picture for piece n: only for a pass that paid for that piece's sound.
   app.get('/api/set/video/:n', pass, piece, (req, res) => {
-    if (!free() && !hasPaid.get(req.pass, req.piece)) {
+    if (!free() && !hasTicket(req.pass) && !hasPaid.get(req.pass, req.piece)) {
       return res.status(403).json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' });
     }
     send(req, res, 'video');
@@ -95,6 +96,7 @@ export function mountSet(app) {
     cashuGate(() => show().tip.price, () => show().tip.label || 'A tip', { lockTo: artistKey, kind: 'tip' }),
     (req, res) => {
       db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
+      addMessage(req.pass, tipMessage(req), req.paid); // in the live chat, highlighted, with or without words
       res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });
     });
 
@@ -110,6 +112,8 @@ export function mountSet(app) {
     cashuGate((req) => req.amount, (req) => `A tip of ${req.amount} sats`, { lockTo: artistKey, kind: 'tip' }),
     (req, res) => {
       db.prepare('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)').run(req.pass, req.paid, now());
+      addMessage(req.pass, tipMessage(req), req.paid); // in the live chat, highlighted, with or without words
       res.json({ tipped: req.paid, total: tipped.get(req.pass).sats });
     });
+  return pass;
 }

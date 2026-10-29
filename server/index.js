@@ -6,6 +6,7 @@ import { PORT, ROOT, MINT_URL, MINT_API, SITE_URL, MINT_TEST } from './config.js
 import { kv } from './db.js';
 import { initPurse } from './purse.js';
 import { mountSet } from './set.js';
+import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl } from './photo.js';
 import { currentShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
@@ -35,10 +36,16 @@ const page = (file) => (req, res, next) => {
   const v = version();
   html = html.replace(/(["'])(\/(?:app\.css|(?:js\/)?[a-z-]+\.js))\1/g, `$1$2?v=${v}$1`);
   // On the test mint, every page says so, first thing.
-  if (MINT_TEST) html = html.replace(/<body[^>]*>/, '$&\n  <div class="test-banner" role="note" data-t="test.banner">Test mint · no real value</div>');
+  if (MINT_TEST) html = html.replace(/<body[^>]*>/, '$&\n  <div class="test-banner" role="note" data-t="test.banner">Test mint · no real value</div>'
+    // Inside the demo page's frames the demo already says so: only the phone keeps its own.
+    + '<script>if (top !== self && !/^\\/[a-z0-9-]+$/.test(location.pathname)) document.currentScript.previousElementSibling.remove();</script>');
   res.set('Cache-Control', 'no-cache').type('html').send(html);
 };
-app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => page(req.path === '/' ? 'index.html' : req.path.slice(1))(req, res, next));
+// The home page explains the night; each show has its own page (/longy), its poster (/longy/poster) and the
+// demo page (/demo: three tabs, the desktop on the left and the phone on the right).
+app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => page(req.path === '/' ? 'home.html' : req.path.slice(1))(req, res, next));
+app.get('/demo', page('demo.html'));
+app.get(/^\/[a-z0-9-]+\/poster$/, (req, res, next) => (req.path === `${currentShow().path}/poster` ? page('poster.html')(req, res, next) : next()));
 // A page per artist: the show page at /<artist> too (e.g. /longy), the link the artist shares.
 app.get(/^\/[a-z0-9-]+$/, (req, res, next) => (req.path === currentShow().path ? page('index.html')(req, res, next) : next()));
 app.use(express.static(PUBLIC, { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
@@ -68,7 +75,7 @@ const attempt = (fn) => (req, res) => {
 app.get('/api/show', (req, res) => {
   const current = currentShow();
   if (req.get('X-Admin') !== ADMIN_KEY) delete current.show.lightning;
-  res.json({ ...current, photo: photoUrl(), artistKey: artistKey() });
+  res.json({ ...current, photo: photoUrl(), artistKey: artistKey(), barKey: barKey() });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 app.get('/api/show/qr.svg', async (req, res) => {
@@ -82,7 +89,7 @@ app.post('/api/admin/templates', admin, json, attempt((req) => saveTemplate(req.
 app.post('/api/admin/templates/load', admin, json, attempt((req) => loadTemplate(req.body?.name)));
 app.post('/api/admin/templates/delete', admin, json, attempt((req) => deleteTemplate(req.body?.name)));
 
-mountSet(app);
+mountDoor(app, admin, json, mountSet(app));
 mountTakings(app, admin, json);
 mountPhoto(app, admin);
 

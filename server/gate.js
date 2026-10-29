@@ -30,60 +30,71 @@ const markSeen = db.prepare('INSERT INTO seen (secret, at) VALUES (?, ?)');
 const addLocked = db.prepare('INSERT INTO locked (token, sats, kind, pubkey, at) VALUES (?, ?, ?, ?, ?)');
 
 const norm = (url) => String(url || '').replace(/\/+$/, '');
-const refuse = (res, status, error, detail) => res.status(status).json({ error, detail });
+// One line per 402, refusal and payment, so a phone that "didn't pay" can be traced. Never the token itself.
+const log = (res, what) => console.log(`${new Date().toISOString().slice(11, 19)} ${res.req.method} ${res.req.path} ${what}`);
+const refuse = (res, status, error, detail) => {
+  log(res, `${status} ${error}${detail ? `: ${String(detail).slice(0, 120)}` : ''}`);
+  return res.status(status).json({ error, detail });
+};
 
 const LOCK = {
-  not_locked: 'not locked to the artist’s key (NUT-11 P2PK)',
+  not_locked: 'not locked to the owner’s key (NUT-11 P2PK)',
   wrong_lock: 'locked to another key, or with extra conditions',
   has_refund: 'has a locktime or refund keys: it could go back to the payer',
 };
-// What's wrong with one proof's lock, or null if it's locked to the artist alone, for good.
-function lockProblem(secret, pubkey) {
+const tagText = (tags) => tags.map((t) => t.map((v) => String(v).toLowerCase()).join(' ')).sort().join('|');
+// What's wrong with one proof's lock, or null if it's locked to `pubkey` with exactly the tags asked for (none: the
+// owner's for good; a drink: locktime at last orders and a refund to the artist). Anything else changes who can spend it.
+function lockProblem(secret, pubkey, want) {
   try {
     const [kind, { data, tags = [] }] = JSON.parse(secret);
     if (kind !== 'P2PK') return 'not_locked';
     if (String(data).toLowerCase() !== pubkey) return 'wrong_lock';
-    if (tags.some(([k]) => k === 'locktime' || k === 'refund')) return 'has_refund';
-    // Anything else (more keys, n_sigs, SIG_ALL) changes who can spend it or how.
-    if (tags.some(([k, v]) => !(k === 'sigflag' && v === 'SIG_INPUTS'))) return 'wrong_lock';
+    const rest = tags.filter(([k, v]) => !(k === 'sigflag' && v === 'SIG_INPUTS'));
+    if (!want.length && rest.some(([k]) => k === 'locktime' || k === 'refund')) return 'has_refund';
+    if (tagText(rest) !== tagText(want)) return 'wrong_lock';
     return null;
   } catch {
     return 'not_locked'; // a plain secret: anyone holding the token could spend it
   }
 }
 
-// One transaction, so two requests carrying the same token can't both pass. False: some proof was seen already.
+// One transaction, so two requests carrying the same token can't both pass. Returns the payment's id, or false:
+// some proof was seen already.
 function record(token, proofs, sats, kind, pubkey) {
   const at = new Date().toISOString();
   db.exec('BEGIN IMMEDIATE');
   try {
     if (proofs.some((p) => isSeen.get(p.secret))) { db.exec('ROLLBACK'); return false; }
-    addLocked.run(token, sats, kind, pubkey, at);
+    const id = Number(addLocked.run(token, sats, kind, pubkey, at).lastInsertRowid);
     for (const p of proofs) markSeen.run(p.secret, at);
     db.exec('COMMIT');
-    return true;
+    return id;
   } catch (e) {
     db.exec('ROLLBACK');
     throw e;
   }
 }
 
-// price(req) -> sats; label(req) -> the request's description; lockTo() -> the artist's pubkey (null until the
-// takings page has been opened once); kind: 'piece' | 'tip'. On success: req.paid = sats locked to the artist.
-export function cashuGate(price, label, { lockTo, kind }) {
+// price(req) -> sats; label(req) -> the request's description; lockTo() -> the owner's pubkey (null until their
+// takings page has been opened once); tags() -> extra NUT-11 tags the lock must carry (default none); kind: 'piece' |
+// 'tip' | 'ticket' | 'drink'. On success: req.paid = sats locked to the owner, req.lockedId = the payment's id.
+export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner = () => currentShow().show.artist || 'the artist' }) {
   return async (req, res, next) => {
     const amount = price(req);
     const pubkey = lockTo();
-    if (!pubkey) {
-      return refuse(res, 409, 'not_ready', `Open ${currentShow().show.artist || 'the artist'}’s takings page once first.`);
+    const want = tags();
+    if (!pubkey || want.some((t) => t.some((v) => v == null))) {
+      return refuse(res, 409, 'not_ready', `Open ${owner()}’s takings page once first.`);
     }
     const token = req.get('X-Cashu')?.trim();
 
     if (!token) {
-      const lock = { kind: 'P2PK', data: pubkey, tags: [] }; // no locktime, no refund: the artist's for good
+      const lock = { kind: 'P2PK', data: pubkey, tags: want }; // no tags: the owner's for good
       const pr = new PaymentRequest(undefined, randomBytes(8).toString('hex'), amount, 'sat', [MINT_URL], label(req), true, lock);
       res.set('X-Cashu', pr.toEncodedCreqA());
       res.set('Access-Control-Expose-Headers', 'X-Cashu');
+      log(res, `402 ${amount} sats`);
       return res.status(402).json({ error: 'payment_required', amount, unit: 'sat', mints: [MINT_URL] });
     }
 
@@ -98,7 +109,7 @@ export function cashuGate(price, label, { lockTo, kind }) {
       return refuse(res, 400, 'unknown_keyset', e.message);
     }
     for (const p of proofs) {
-      const why = lockProblem(p.secret, pubkey);
+      const why = lockProblem(p.secret, pubkey, want);
       if (why) return refuse(res, 400, why, LOCK[why]);
     }
     if (proofs.some((p) => isSeen.get(p.secret))) return refuse(res, 400, 'reused', 'token already used here');
@@ -125,8 +136,11 @@ export function cashuGate(price, label, { lockTo, kind }) {
     }
 
     const sats = Number(sumProofs(proofs));
-    if (!record(token, proofs, sats, kind, pubkey)) return refuse(res, 400, 'reused', 'token already used here');
+    const id = record(token, proofs, sats, kind, pubkey);
+    if (!id) return refuse(res, 400, 'reused', 'token already used here');
+    log(res, `paid ${sats} sats (${kind})`);
     req.paid = sats;
+    req.lockedId = id;
     next();
   };
 }

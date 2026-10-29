@@ -3,6 +3,7 @@ const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*',
 const PROBLEMS = {
   title: 'show name', artist: 'artist', 'stream.price': 'price per 10 s', 'tip.label': 'tip label',
   'tip.price': 'tip price', 'goal.amount': 'goal', 'ticket.price': 'ticket price',
+  'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
 // The admin key comes after the # (so it never reaches a server log), then is kept on this computer only.
@@ -67,6 +68,7 @@ function read() {
       : el.value;
     set(show, el.dataset.path, v);
   }
+  show.tip.label = `Tip ${show.artist || 'the artist'}`; // the button takes the artist's name
   show.languages = [...$('langs').querySelectorAll('[data-lang]:checked')].map((el) => el.dataset.lang);
   if (!show.languages.length) show.languages = ['en'];
   if (!show.languages.includes(show.language)) show.language = show.languages[0];
@@ -80,8 +82,15 @@ function refresh() {
     el.hidden = want ? v !== want : !v;
   }
   $('takings-link').textContent = `${show.artist || 'The artist'}’s takings`;
-  const label = show.tip.label || 'Tip';
-  $('tip-preview').textContent = show.tip.price ? `${label} · ${show.tip.price} sats` : label;
+  const n = (v) => Number(v || 0).toLocaleString('en-GB');
+  $('tip-preview').textContent = `Tip ${show.artist || 'the artist'} · ${n(show.tip.price)} sats`;
+  // Who gets what from each ticket: the same split as the server's (server/shows.js ticketSplit).
+  const drink = show.drink?.mode === 'artist' ? show.drink.price || 0 : 0;
+  const artist = show.ticket?.price || 0;
+  $('drink-price').hidden = show.drink?.mode !== 'artist';
+  $('split').textContent = !artist ? '' : drink
+    ? `Ticket: ${n(artist + drink)} sats. ${n(artist)} locked to ${show.artist || 'the artist'}’s key, ${n(drink)} locked to the bar’s for the first drink. Not poured by ${show.lastOrders || 'last orders'}? It goes to ${show.artist || 'the artist'}.`
+    : `Ticket: ${n(artist)} sats, locked to ${show.artist || 'the artist'}’s key.`;
 }
 
 function status(text, kind = '') {
@@ -96,6 +105,7 @@ function shareLink(path) {
   $('site-host').textContent = `${site.replace(/^https?:\/\//, '')}/`;
   $('show-link').textContent = link.replace(/^https?:\/\//, '');
   $('show-link').href = $('open-show').href = link;
+  $('poster-link').href = `${path}/poster`;
   $('qr').src = `/api/show/qr.svg?t=${Date.now()}`;
   $('share-link').hidden = !navigator.share;
   $('copy-link').onclick = async () => {
@@ -121,8 +131,11 @@ form.addEventListener('input', (e) => {
   if (e.target.dataset.lang) languageChoices();
   refresh();
   dirty = true;
-  status('Not saved yet.', 'todo');
+  status('Saving…', 'todo');
+  clearTimeout(autosave); // saved as you type, so the ticket page on every phone follows within seconds
+  autosave = setTimeout(() => form.requestSubmit(), 700);
 });
+let autosave;
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   read();
@@ -196,8 +209,20 @@ try {
   saved(first);
   photo(first.photo);
   $('takings-link').href = `/takings.html#k=${encodeURIComponent(key)}`;
+  $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
+  // The phone beside the form: the real show page. Not inside the demo page, which has its own phone.
+  if (top === self) { $('preview-frame').src = first.path; $('preview').hidden = false; }
 } catch (err) {
   $('locked').hidden = false;
-  if (err.status !== 403) $('locked').textContent = `Couldn't reach the server: ${err.message}`;
+  if (err.status !== 403) $('signin-note').textContent = `Couldn't reach the server: ${err.message}`;
+  else if (key) $('signin-note').textContent = 'That link didn’t work. Check it and try again.';
 }
+// Sign in: the private link (or just its key), kept in this browser like the link itself would be.
+$('locked').onsubmit = (e) => {
+  e.preventDefault();
+  const v = $('signin-link').value.trim();
+  const k = new URLSearchParams(v.split('#')[1] || '').get('k') || v;
+  try { localStorage.setItem('nutpub-admin', k); } catch {}
+  location.reload();
+};
