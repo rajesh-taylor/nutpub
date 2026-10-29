@@ -23,6 +23,10 @@
     .host .label { font: 400 18px/1 var(--poster); letter-spacing: .14em; color: var(--smoke); margin: 0 6px 0 0; }
     .host .btn.on { background: var(--amber); border-color: var(--amber); color: var(--deep); }
     .host .count { margin-left: auto; font-size: 14px; color: var(--smoke); }
+    .bar-strip { margin-top: -8px; }
+    .bar-drinks { display: flex; flex-wrap: wrap; gap: 8px; }
+    .bar-drinks .btn { font-size: 16px; padding: 7px 12px 5px; }
+    .bar-strip .count { flex: 1 1 240px; text-align: right; }
     .cap { margin: 0 0 10px; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
     .frame { width: 100%; height: 760px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--deep); display: block; }
     aside { flex: 0 0 390px; margin: 0 auto; }
@@ -53,7 +57,11 @@
         <button class="btn quiet" data-stage="on">Start the show</button>
         <button class="btn quiet" data-stage="closed">End the night</button>
         <button class="btn quiet" id="new-night">New night</button>
-        <span class="count" id="count"></span>
+      </div>
+      <div class="host bar-strip" id="bar-strip" hidden>
+        <span class="label">The bar</span>
+        <span id="bar-drinks" class="bar-drinks"></span>
+        <span class="count" id="bar-say">In the room, the bar scans the drink's QR. Here, tap Pour: the phone shows the pint.</span>
       </div>
       <p class="cap">Watching at home · the desktop view</p>
       <iframe class="frame" id="home" title="Watching at home"></iframe>
@@ -91,13 +99,9 @@
       stage();
     };
 
-    // ---- In the room and at home: tickets sold, from the drinks and the door (counts only, never names).
-    async function count() {
-      const drinks = await api('GET', '/api/admin/drinks').catch(() => []);
-      $('count').textContent = drinks.length ? `Drinks waiting at the bar: ${drinks.filter((d) => !d.poured).length}` : '';
-    }
-    stage(); count();
-    setInterval(() => { stage().catch(() => {}); count(); }, 3000);
+    stage();
+    setInterval(() => stage().catch(() => {}), 3000);
   </script>
+  <script type="module" src="/js/barstrip.js"></script>
 </body>
 </html>

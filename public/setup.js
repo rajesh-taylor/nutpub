@@ -215,6 +215,13 @@ async function goalPreview() {
   document.getElementById('goal-note').textContent = g ? `${g.label}: ${n(tipped)} of ${n(g.at)} sats` : `Tips so far: ${n(tipped)} sats`;
 }
 
+// ---- The stream key: hidden like a password; Show reveals it.
+$('show-key').onclick = () => {
+  const shown = $('live-key').type === 'text';
+  $('live-key').type = shown ? 'password' : 'text';
+  $('show-key').textContent = shown ? 'Show' : 'Hide';
+};
+
 // ---- The show: page 2 (a plain link). Inside the old demo page it switches the tab instead.
 $('doors-open').onclick = (e) => {
   if (top === self) return;

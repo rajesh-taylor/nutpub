@@ -198,6 +198,7 @@ async function play() {
   controls(true);
   say('');
   master = ac.createGain();
+  master.gain.value = muted ? 0 : volume;
   master.connect(ac.destination);
   const out = master;
   let startAt = ac.currentTime + 0.4;
@@ -255,6 +256,17 @@ async function picture(n, startAt, mine) {
 }
 
 // Stop paying: the sound fades out now, not at the end of what was already bought.
+// ---- Volume and mute: the sound is Web Audio, so the page sets its level (phones also have their own buttons).
+let volume = 1;
+let muted = false;
+function level() {
+  if (master && ctx) master.gain.setTargetAtTime(muted ? 0 : volume, ctx.currentTime, 0.05);
+  $('mute').setAttribute('aria-label', muted ? 'Sound on' : 'Mute');
+  document.body.classList.toggle('muted', muted);
+}
+$('mute').onclick = () => { muted = !muted; level(); };
+$('vol').oninput = () => { volume = Number($('vol').value); muted = volume === 0; level(); };
+
 function stop(why) {
   run += 1;
   if (master) {

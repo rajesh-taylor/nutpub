@@ -10,7 +10,14 @@
     body.home main { max-width: 980px; text-align: left; }
     .home .wordmark, .home .tag { text-align: center; }
     .lede { font: 15px/1.7 var(--mono); max-width: 46em; margin: 0 auto 24px; text-align: center; color: var(--cream); }
-    .one-way { text-align: center; margin: 0 0 40px; }
+    .one-way { text-align: center; margin: 0 0 10px; }
+    .for-artists { max-width: 34em; margin: 0 auto 32px; text-align: center; font-size: 15px; color: var(--smoke); }
+    .built { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 8px; }
+    .built div { border: 1px solid rgb(239 227 200 / .18); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
+    .built b { display: block; font: 400 22px/1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 6px; }
+    .built-note { grid-column: 1 / -1; margin: 2px 0 0; font-size: 13px; color: var(--smoke); }
+    .built-note a { color: var(--cream); }
+    @media (max-width: 760px) { .built { grid-template-columns: minmax(0, 1fr); } }
     .one-way .btn { font-size: 24px; padding: 14px 28px 12px; }
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 36px; }
     .way { border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; padding: 16px; background: rgb(11 20 38 / .6); display: flex; flex-direction: column; gap: 10px; }
@@ -36,6 +43,13 @@
     <p class="lede">A ticket site data mines who you are, how much you spent, what you saw, where you sat and who you went with. Your local NutPub lets your phone pay at the door, the bar and tip your favourite artists or band. No app, no account, no email.</p>
 
     <p class="one-way"><a class="btn primary" href="/setup">Sign in as artist</a></p>
+    <p class="for-artists">Sell tickets, take tips and get paid to your own key as it happens. No platform holds your money, and nobody learns who your fans are.</p>
+
+    <div class="built">
+      <div><b>Coco</b>The wallet in the fan's browser: no app, no account. It pays each request on the spot and keeps the change on the phone.</div>
+      <div><b>cashu-ts</b>Makes and checks the ecash: payment requests, locks to the artist's and the bar's keys, and the mint's signatures (DLEQ).</div>
+      <p class="built-note">Both open source, from the Cashu developers: <a href="https://github.com/cashubtc/coco">Coco</a> · <a href="https://github.com/cashubtc/cashu-ts">cashu-ts</a></p>
+    </div>
 
     <h3>The NUTs it uses</h3>
     <div class="nutlist">

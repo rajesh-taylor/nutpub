@@ -79,7 +79,8 @@ const attempt = (fn) => (req, res) => {
 // to it). The artist's Lightning address goes to the setup and takings pages only.
 app.get('/api/show', (req, res) => {
   const current = currentShow();
-  if (req.get('X-Admin') !== ADMIN_KEY) delete current.show.lightning;
+  // The artist's Lightning address and the stream's server and key go to the host's pages only.
+  if (req.get('X-Admin') !== ADMIN_KEY) { delete current.show.lightning; delete current.show.live; }
   res.json({ ...current, photo: photoUrl(), artistKey: artistKey(), barKey: barKey() });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.

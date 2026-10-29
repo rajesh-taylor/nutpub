@@ -464,3 +464,15 @@ body.framed.takings { padding-top: 0; }
 body.framed.takings .wordmark, body.framed.takings .tag + .locked ~ * .btn.quiet[href="/setup.html"], body.framed.takings p:has(> a[href="/setup.html"]) { display: none; }
 body.framed.takings .tag { margin: 12px 0 14px; font-size: 22px; }
 body.framed.takings main { padding-top: 0; }
+
+/* Mute and volume on the picture. Phones show mute only: their own buttons set the level. */
+.i-muted, body.muted .i-sound { display: none; }
+body.muted .i-muted { display: block; }
+#vol { width: 90px; accent-color: var(--amber); }
+@media (max-width: 600px) { #vol { display: none; } }
+body.immersive #vol { display: none; }
+/* The phone's status line sat over the play/stop button at the top: lower it, and let taps through. */
+body.immersive .status { top: 84px; pointer-events: none; }
+body.immersive .player .bar { z-index: 3; }
+/* The upright crop: show more of the left of the clip. */
+body.immersive .player video { object-position: 25% 30%; }

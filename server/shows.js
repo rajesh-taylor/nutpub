@@ -45,6 +45,7 @@ export const blank = () => ({
   ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }], // stretch goals, fed by tips
+  live: { server: '', key: '', playback: '' }, // OBS: where to stream, its key (host only), the link it plays at
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
   shape: '16:9',                        // the video: landscape 16:9 or portrait 9:16 (a phone filming upright)
@@ -87,6 +88,11 @@ export function clean(input = {}) {
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
     drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goals: [0, 1].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
+    live: {
+      server: /^rtmps?:\/\/\S+$|^srt:\/\/\S+$/i.test(text(input.live?.server, 300)) ? text(input.live?.server, 300) : '',
+      key: text(input.live?.key, 300),
+      playback: /^https:\/\/\S+$/i.test(text(input.live?.playback, 300)) ? text(input.live?.playback, 300) : '',
+    },
     wallet: { on: (input.wallet ?? input.pocket)?.on !== false }, // `pocket`: its name in shows saved before 6 Oct
     retry: { on: input.retry?.on !== false },
     shape: input.shape === '9:16' ? '9:16' : '16:9', // replaces `orientation` (Tue 6 Oct), which never changed the page

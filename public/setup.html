@@ -60,6 +60,11 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
+    .board .paid-wide { margin-top: 16px; }
+    .board .paid-wide .paid { flex-direction: row; flex-wrap: wrap; gap: 10px 28px; }
+    .board .key-row { display: flex; gap: 8px; margin-top: 6px; }
+    .board .key-row input { margin-top: 0; flex: 1; }
+    .board .key-row .btn { font-size: 16px; padding: 8px 12px 6px; }
     .board .mini { margin-top: 18px; padding-bottom: 18px; text-align: center; }
     .board .mini p { margin: 12px 0 14px; font-size: 14px; color: var(--smoke); }
     .board .mini p a { color: var(--cream); }
@@ -174,16 +179,24 @@
           </section>
 
           <section class="panel">
-            <h2>Who gets paid</h2>
-            <ul class="paid">
-              <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
-              <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
-              <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment (NUT-12, NUT-07) and never swaps.</li>
-            </ul>
+            <h2>Live stream <span class="tag design">Saved · playback next</span></h2>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Add the NutPub as one more destination in OBS, beside your other platforms. Copy these from your streaming service.</p>
+            <label class="field">Stream server (RTMP or SRT)<input data-path="live.server" placeholder="rtmps://live.example.com:443/live/" autocapitalize="off" spellcheck="false" maxlength="300"></label>
+            <label class="field">Stream key
+              <span class="key-row"><input data-path="live.key" type="password" id="live-key" autocomplete="off" maxlength="300"><button type="button" class="btn quiet" id="show-key">Show</button></span></label>
+            <label class="field">Playback link (HLS)<input data-path="live.playback" placeholder="https://…/index.m3u8" autocapitalize="off" spellcheck="false" maxlength="300"></label>
+            <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">The key stays on the host's pages, never on the show page. Until playback is wired up, the show plays the recorded set.</p>
           </section>
         </div>
 
-
+        <section class="panel paid-wide">
+          <h2>Who gets paid</h2>
+          <ul class="paid">
+            <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
+            <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
+            <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment (NUT-12, NUT-07) and never swaps.</li>
+          </ul>
+        </section>
 
         <div class="foot">
           <p id="status" role="status"></p>
