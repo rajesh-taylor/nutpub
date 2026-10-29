@@ -375,7 +375,7 @@ $('player').style.background = `#000 center / cover no-repeat url("${showPhoto |
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
 function words() {
   const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
-  $('when').textContent = [day, show.starts && `starts ${show.starts}`, show.venue].filter(Boolean).join(' · ');
+  $('when').textContent = [day, show.starts && `starts ${show.starts}`, AS === 'home' && show.venue].filter(Boolean).join(' · ');
   $('billing').textContent = show.title;
   $('about').textContent = show.description;
   $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`;

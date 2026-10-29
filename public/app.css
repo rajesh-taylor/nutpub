@@ -487,3 +487,7 @@ body.inside-doors .chat { margin-top: 0; }
 .soon, .works { vertical-align: 2px; }
 .btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .btn:not(:disabled):hover { filter: brightness(1.1); }
+/* The phone shows the card button once, by the tips; the Nostr line stays on one line. */
+body[data-as="room"] #card { display: none; }
+.nostr { flex-wrap: nowrap; white-space: nowrap; font-size: 12px; }
+.nostr .btn { font-size: 13px; padding: 4px 7px 2px; }

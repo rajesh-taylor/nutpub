@@ -44,7 +44,7 @@ const page = (file) => (req, res, next) => {
 // The home page explains the night; each show has its own page (/longy), its poster (/longy/poster) and the
 // demo page (/demo: three tabs, the desktop on the left and the phone on the right).
 app.get(/^\/(?:[a-z-]+\.html)?$/, (req, res, next) => page(req.path === '/' ? 'home.html' : req.path.slice(1))(req, res, next));
-app.get('/demo', page('demo.html'));
+app.get('/demo', (_req, res) => res.redirect(301, '/setup')); // the four-tab demo page, before the three pages
 // The night's three pages: 1 Show setup, 2 The show, 3 Takings.
 app.get('/setup', page('setup.html'));
 app.get('/show', page('show.html'));

@@ -127,7 +127,8 @@ export function mountDoor(app, admin, json, pass) {
   app.get('/api/messages', (req, res) => {
     const after = Number(req.query.after) || 0;
     const rows = db.prepare('SELECT id, pass, sats, text FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50').all(after);
-    const tipped = db.prepare("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip'").get().s;
+    // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
+    const tipped = db.prepare("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?").get(kv.get('nightStart', '')).s;
     const gone = db.prepare('SELECT id FROM messages WHERE deleted = 1 AND id > ?').all(Math.max(after - 200, 0)).map((r) => r.id);
     res.json({
       messages: rows.reverse().map((m) => ({ id: m.id, sats: m.sats, text: m.text, who: `guest ${String(m.pass || '').slice(0, 4)}` })),
