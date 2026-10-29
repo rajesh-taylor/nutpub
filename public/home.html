@@ -32,6 +32,9 @@
     .nutlist b { display: block; font: 400 20px/1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
     .nutlist .next { border-style: dashed; }
     .home p.plain { font-size: 16px; max-width: 46em; }
+    .home .foot { margin: 40px 0 8px; padding-top: 18px; border-top: 1px solid rgb(239 227 200 / .18); }
+    .home .foot a { font-size: 13px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
+    .home .foot a:hover { color: var(--amber); opacity: 1; }
     @media (max-width: 760px) { .ways, .nutlist { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
@@ -61,6 +64,7 @@
       <div class="next"><b>NIP-61 · next</b>Nutzaps on Nostr: the same locked tip, published as a Nostr event, so a tip can come with who you are, if you want.</div>
     </div>
 
+    <footer class="foot"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></footer>
   </main>
 </body>
 </html>
