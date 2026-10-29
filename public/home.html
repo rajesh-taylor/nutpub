@@ -9,6 +9,12 @@
   <style>
     body.home main { max-width: 980px; text-align: left; }
     .home .wordmark, .home .tag { text-align: center; }
+    .wins { margin: 8px 0 32px; }
+    .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+    .three h2 { font: 400 clamp(44px, 6vw, 64px)/.95 var(--poster); letter-spacing: .02em; margin: 0 0 14px; color: var(--cream); }
+    .three .band h2 { color: var(--amber); }
+    .three p { margin: 0; font-size: 19px; line-height: 1.45; }
+    @media (max-width: 760px) { .three { grid-template-columns: minmax(0, 1fr); gap: 22px; } .three h2 { margin-bottom: 8px; } }
     .lede { font: 15px/1.7 var(--mono); max-width: 46em; margin: 0 auto 24px; text-align: center; color: var(--cream); }
     .one-way { text-align: center; margin: 0 0 32px; }
     .one-way .btn { font-size: 24px; padding: 14px 28px 12px; }
@@ -49,7 +55,14 @@
   <main>
     <h1 class="wordmark">THE NUTPUB</h1>
     <p class="tag">A gig paid for in Cashu ecash</p>
-    <p class="lede">A ticket site data mines who you are, how much you spent, what you saw, where you sat and who you went with. Your local NutPub lets your phone pay at the door, the bar and tip your favourite artists or band. No app, no account, no email.</p>
+    <section class="wins" aria-label="Who wins">
+      <p class="billing">Who wins</p>
+      <div class="three">
+        <div><h2>The bar</h2><p>Paid on the spot.<br>No card fees.<br>No chargebacks.</p></div>
+        <div class="band"><h2>The band</h2><p>Paid on the night,<br>locked to their own key.</p></div>
+        <div><h2>The punters</h2><p>No account.<br>No email.<br>Nobody learns who you are.</p></div>
+      </div>
+    </section>
 
     <p class="one-way"><a class="btn primary" href="/setup">Sign in as artist</a></p>
 

@@ -10,6 +10,7 @@
 - **Parked:** a My gigs drop-down for several saved gigs (the server already saves them; one gig is live at a time).
 - **To simplify (Rajesh, 29 Oct):** Takings shows too much machinery for a test-mint concept. Make the artist's and the bar's keys silently on first open (and again after an address change), drop "Make a new key here" and the "key lives in…" lines from view, and keep plain words: what came in, Collect, Send to another wallet.
 - **Safari on iPhone (29 Oct, after the move to Cloudflare):** /longy stays on the placeholder ("Doors · chat open", no title, no ticket box), so the page's script stops early. Brave on the same iPhone works once its script blocker is off; Chrome-size test in the browser pane works. To try: Safari's Web Inspector from the Mac (Develop menu) for the console error; clear thenutpub.com's website data in Safari (old wallet and pass from the Mac-hosted site); any Safari content blocker.
+- **Home page "Who wins" (29 Oct, late):** the opening paragraph was replaced by The bar / The band / The punters (from the finals deck). Rajesh may ask to revert after a few days: the old paragraph is in git history, in the commit before "Home: Who wins".
 - **Also look at:** GitHub flagged 2 dependency vulnerabilities (1 high, 1 moderate); cashu-ts and Coco stay pinned.
 
 ## Demo day: Thu 29 Oct (agreed 01:00; replaces the rows below for today)
