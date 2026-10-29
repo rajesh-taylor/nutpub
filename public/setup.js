@@ -238,7 +238,7 @@ try {
   saved(first);
   photo(first.photo);
   $('mini-photo').style.backgroundImage = `url("${first.photo || '/img/fp-32.jpg'}")`;
-  $('takings-link').href = `/takings.html#k=${encodeURIComponent(key)}`;
+  $('takings-link').href = '/takings'; // 3 · Takings (the old artist-only page forwards there)
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
   // The phone beside the form: the real show page. Not inside the demo page, which has its own phone.

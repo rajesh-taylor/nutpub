@@ -14,7 +14,7 @@ import { current, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTem
 const routes = [];
 // route(method, '/exact/path' or /regex with (?<named>) groups/, ...steps)
 const route = (method, path, ...steps) => routes.push({ method, path, run: chain(...steps) });
-const redirect = (to) => () => Response.redirect(to, 301);
+const redirect = (to) => (c) => Response.redirect(new URL(to, c.url), 301);
 
 // ---- Pages. Every page links its CSS and JS with ?v=<this deploy>, so a new deploy is a new URL and phones fetch
 // it at once; on the test mint every page says so, first thing.
@@ -29,14 +29,15 @@ const page = (file) => async (c) => {
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
 };
 route('GET', '/pocket.html', redirect('/wallet.html')); // its name before 6 Oct
+route('GET', '/takings.html', redirect('/takings')); // the artist-only page, before 3 · Takings
 route('GET', '/', page('home.html'));
 route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
-route('GET', '/demo', (c) => Response.redirect(new URL('/setup', c.url), 301)); // the four-tab demo page, before the three pages
+route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's three pages: 1 Show setup, 2 The show, 3 Takings.
 route('GET', '/setup', page('setup.html'));
 route('GET', '/show', page('show.html'));
 route('GET', '/takings', page('night-takings.html'));
-route('GET', '/last-orders', (c) => Response.redirect(new URL('/takings', c.url), 301)); // its name before 29 Oct
+route('GET', '/last-orders', redirect('/takings')); // its name before 29 Oct
 
 // Is everything up? The server and the mint.
 route('GET', '/api/health', async () => {
