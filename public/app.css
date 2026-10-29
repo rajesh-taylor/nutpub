@@ -483,3 +483,7 @@ body.inside-doors .inside { flex: 1 1 auto; display: flex; flex-direction: colum
 body.inside-doors .welcome { flex: 1 1 240px; min-height: 200px; display: flex; margin-bottom: 12px; }
 body.inside-doors .welcome img { flex: 1; width: 100%; height: auto; min-height: 0; object-fit: cover; object-position: 30% 30%; }
 body.inside-doors .chat { margin-top: 0; }
+/* Small wins (29 Oct): tags sit on their line; the live chat's head aligns; buttons show where focus is. */
+.soon, .works { vertical-align: 2px; }
+.btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.btn:not(:disabled):hover { filter: brightness(1.1); }

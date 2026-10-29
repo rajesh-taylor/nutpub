@@ -62,7 +62,14 @@
     .board-head .tabs a:hover { color: var(--cream); }
     .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
     .board .paid-wide { margin-top: 16px; }
+    .board .wallet-box { margin: 0 0 16px; border-color: rgb(217 149 58 / .35); }
+    .board .panel h2 { display: flex; align-items: center; gap: 10px; }
+    .board .tag { vertical-align: 2px; margin: 0 0 0 6px; } /* not the phone tagline's 32 px below */
+    .board .panel h2 .tag { margin-left: 0; }
+    .board .field input::placeholder { color: rgb(142 151 173 / .6); }
+    .board .field input:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
     .board .paid-wide .paid { flex-direction: row; flex-wrap: wrap; gap: 10px 28px; }
+    .board .ln { max-width: 520px; margin-top: 4px; }
     .board .key-row { display: flex; gap: 8px; margin-top: 6px; }
     .board .key-row input { margin-top: 0; flex: 1; }
     .board .key-row .btn { font-size: 16px; padding: 8px 12px 6px; }
@@ -117,6 +124,18 @@
       </form>
 
       <form id="form" hidden autocomplete="off">
+        <section class="panel paid-wide wallet-box">
+          <h2>My wallet details</h2>
+          <ul class="paid">
+            <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
+            <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
+            <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment (NUT-12, NUT-07) and never swaps.</li>
+          </ul>
+          <label class="field ln">The artist's Lightning address <span class="tag design">Off on the test mint</span>
+            <input data-path="lightning" type="email" placeholder="e.g. longy@walletofsatoshi.com" maxlength="120" autocapitalize="off" spellcheck="false" disabled></label>
+          <p style="margin: -6px 0 14px; font-size: 13px; color: var(--smoke);">Where the artist's page sends the takings (NUT-05). The test mint's Lightning is pretend, so on the demo the takings stay as ecash.</p>
+        </section>
+
         <div class="grid">
           <section class="panel">
             <h2>The event</h2>
@@ -191,14 +210,6 @@
           </section>
         </div>
 
-        <section class="panel paid-wide">
-          <h2>Who gets paid</h2>
-          <ul class="paid">
-            <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
-            <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
-            <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment (NUT-12, NUT-07) and never swaps.</li>
-          </ul>
-        </section>
 
         <div class="foot">
           <p id="status" role="status"></p>
@@ -212,7 +223,6 @@
           <div id="langs"></div><select data-path="language" id="language"></select>
           <input type="radio" name="shape" data-path="shape" value="16:9"><input type="radio" name="shape" data-path="shape" value="9:16">
           <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on">
-          <input data-path="lightning">
           <select id="tpl-list"></select><button type="button" id="tpl-load"></button><button type="button" id="tpl-delete"></button>
           <input id="tpl-name"><button type="button" id="tpl-save"></button>
           <img id="photo-preview" alt=""><input type="file" id="photo-file"><button type="button" id="photo-reset"></button>
