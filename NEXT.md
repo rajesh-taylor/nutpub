@@ -8,6 +8,8 @@
 - **The night is three pages:** 1 · Show setup (`/setup`), 2 · The show (`/show`), 3 · Takings (`/takings`); the attendee's page is `/longy`. New night sits top right on all three.
 - **Next session (Mon or Tue):** Rajesh brings written feedback from the Cashu dev call, mostly design, layout and UX for users who are not technical and don't want to be. Read that first; nothing is planned until then.
 - **Parked:** a My gigs drop-down for several saved gigs (the server already saves them; one gig is live at a time).
+- **To simplify (Rajesh, 29 Oct):** Takings shows too much machinery for a test-mint concept. Make the artist's and the bar's keys silently on first open (and again after an address change), drop "Make a new key here" and the "key lives in…" lines from view, and keep plain words: what came in, Collect, Send to another wallet.
+- **Also look at:** GitHub flagged 2 dependency vulnerabilities (1 high, 1 moderate); cashu-ts and Coco stay pinned.
 
 ## Demo day: Thu 29 Oct (agreed 01:00; replaces the rows below for today)
 One page at `/demo`, three tabs (Set up · The show · Last orders), desktop on the left and the real attendee page in a phone frame on the right. Test mint and test sats only. Address for the day: `nutpub.refueler.io` + `nutpub-mint.refueler.io`, down from 19:00. Design: https://claude.ai/artifact/4ShxK7vxuJfjok9SPSCUz6.
