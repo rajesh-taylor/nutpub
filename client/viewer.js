@@ -75,7 +75,12 @@ meter();
 
 // ---- The wallet (Coco, in this browser).
 const wallet = await openWallet(health.mint.url, `nutpub${KEEP}`);
-const balance = async () => { $('balance').textContent = await wallet.balance(); };
+const balance = async () => {
+  const n = (await wallet.balance()).toLocaleString('en-GB');
+  $('balance').textContent = n;
+  const d = document.getElementById('door-balance'); // on the door's ticket box too: you see what you have before you pay
+  if (d) d.textContent = n;
+};
 await balance();
 wallet.on('proofs:saved', balance);
 // On the test mint a new wallet gets its test sats by itself, once: nobody fiddles with a wallet before the show.
@@ -97,6 +102,7 @@ $('play').disabled = $('big-play').disabled = false;
 $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
 $('own').disabled = false;
 
+$('door-topup').onclick = () => $('topup').onclick();
 $('topup').onclick = async () => {
   $('topup').disabled = true;
   try {
@@ -349,6 +355,8 @@ body.dataset.as = AS;
 if (top !== self) $('back-link').remove(); // inside the demo's phone frame: the demo has its own way out
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = $('closing-photo').src = showPhoto || DEFAULT_PHOTO;
+// Before the set plays, the player shows the artist's photo, like a video's cover picture.
+$('player').style.background = `#000 center / cover no-repeat url("${showPhoto || '/img/fp-32.jpg'}")`;
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
 function words() {
   const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
@@ -378,12 +386,14 @@ function render() {
   const s = split();
   body.dataset.stage = stage;
   // Full picture with the chat over it: the room once the set plays, and always at home.
-  body.classList.toggle('immersive', !closed && (AS === 'home' || (ticket && stage === 'on')));
+  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on');
   $('closing').hidden = !closed;
   $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink));
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
   $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
-  $('chat').hidden = $('money').hidden = closed || (room && !ticket);
+  $('money').hidden = closed || (room && !ticket);
+  // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
+  $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
   const live = AS === 'home' ? !closed : stage === 'on';
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
@@ -394,7 +404,7 @@ function render() {
   if (!ticket) {
     $('door-title').textContent = room ? 'Privacy ticket' : 'The whole ticket';
     $('ticket-price').textContent = sats(room ? s.total : s.artist);
-    $('ticket-note').textContent = room ? (s.drink ? 'Includes your first drink' : '') : 'Or pay as it plays, below';
+    $('ticket-note').textContent = room ? (s.drink ? 'Includes your first drink' : '') : free ? 'Or watch free, with tips' : 'Or press play and pay as it plays';
     $('buy').textContent = `Pay ${sats(room ? s.total : s.artist)}`;
   } else {
     $('door-title').textContent = 'Your first drink';
@@ -419,7 +429,7 @@ $('buy').onclick = async () => {
   const s = split();
   const due = (door.ticket ? 0 : AS === 'room' ? s.total : s.artist) - (door.ticket ? -s.drink : 0);
   const have = await wallet.balance();
-  if (have < due) return say(`You need ${sats(due)} and have ${sats(have)}. Top up first.`);
+  if (have < due) { $('door-topup').hidden = false; return say(`You need ${sats(due)} and have ${sats(have)}.`); }
   $('buy').disabled = true;
   say('Paying at the door…');
   try {
@@ -437,6 +447,8 @@ $('buy').onclick = async () => {
   render();
   $('buy').disabled = false;
   balance();
+  // At home the ticket is the way in: the set starts at once (this tap lets the browser play sound).
+  if (AS === 'home' && door.ticket && !playing) play();
 };
 
 // ---- The Pint Signal: the bar never talks to this phone; the phone sees its drink spent at the mint and lights up.

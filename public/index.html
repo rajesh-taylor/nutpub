@@ -22,6 +22,7 @@
     <section class="door card" id="door" hidden>
       <h2 class="card-title"><span id="door-title">Privacy ticket</span> · <span id="ticket-price"></span></h2>
       <p class="hint" id="ticket-note">Includes your first drink</p>
+      <p class="door-wallet">Your wallet: <b id="door-balance">…</b> test sats <button type="button" class="linkish" id="door-topup" hidden>Add 50,000 test sats</button></p>
       <button class="btn primary wide" id="buy">Pay</button>
       <button class="btn quiet wide" id="card" disabled>Card · not wired up</button>
       <p class="small">Card: Stripe knows who you are. Bitcoin: nobody does.</p>
@@ -29,7 +30,6 @@
 
     <!-- In the room, before the set: welcome, the free drink. -->
     <section class="inside" id="inside" hidden>
-      <p class="youre-in">You're in</p>
       <figure class="welcome" id="welcome">
         <img id="welcome-photo" alt="">
         <figcaption id="about"></figcaption>
@@ -90,10 +90,10 @@
       </form>
       <!-- What's in the wallet. -->
       <div class="purse">
-        <a class="purse-sum" href="/wallet.html" id="wallet-link"><b id="balance">…</b> <span>sats in your wallet</span></a>
+        <a class="purse-sum" href="/wallet.html" id="wallet-link"><span>Your wallet</span> <b id="balance">…</b> <span>test sats</span></a>
         <div class="purse-actions">
           <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
-          <button class="btn quiet" id="topup" hidden>+50,000 test sats</button>
+          <button class="btn quiet" id="topup" hidden>Add 50,000 test sats</button>
         </div>
         <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span></p>
       </div>

@@ -238,7 +238,7 @@ body.viewer.full .test-banner {
 .drink { display: flex; gap: 14px; align-items: center; border-color: rgb(217 149 58 / .6); }
 .drink img { flex: none; border-radius: 3px; background: var(--cream); }
 .doors-sign { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 30px/1 var(--poster); letter-spacing: .14em; color: var(--cream); background: rgb(5 9 20 / .55); z-index: 1; }
-body[data-stage="doors"] .big-play, body[data-stage="doors"] .bar { display: none; }
+body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-stage="doors"] .bar { display: none; }
 .soon { font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 3px 6px 2px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; }
 
 /* The chat: newest at the bottom, like a live stream's. */
@@ -366,4 +366,61 @@ body.setup.wide main { max-width: 1600px; }
 .preview-phone .label { text-align: center; }
 .phone-frame { width: 390px; height: 780px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 48px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
 .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
-@media (max-width: 1200px) { .preview-phone { display: none; } }
+@media (max-width: 1500px) { .setup-split .panels { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .preview-phone { display: none; } }
+.door-wallet { margin: -4px 0 12px; font-size: 16px; }
+.door-wallet b { font: 400 24px/1 var(--poster); color: var(--amber); letter-spacing: .04em; }
+
+/* The date line: in the poster face, like the rest of the brand, small enough to leave the photo alone. */
+.masthead .when { font: 400 17px/1.2 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--cream); margin: 2px 0 14px; }
+/* The wallet: what it is first, then how much. */
+.purse-sum { gap: 2px; }
+.purse-sum span:first-child { font: 400 15px/1 var(--poster); letter-spacing: .16em; text-transform: uppercase; }
+
+/* Watching at home on a wide screen: a video site's page. The picture top left, the title under it, the ticket and
+   the money below; the live chat in its own column on the right, full height. */
+@media (min-width: 900px) {
+  body[data-as="home"] main { max-width: 1320px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px 20px; align-items: start; text-align: left; padding-top: 12px; }
+  body[data-as="home"] .back-link { grid-column: 1 / -1; order: 0; margin: 0; }
+  body[data-as="home"] .player { grid-column: 1; order: 1; border-radius: 8px; }
+  body[data-as="home"] .masthead { grid-column: 1; order: 2; }
+  body[data-as="home"] .masthead .wordmark { font-size: 30px; margin: 0; text-align: left; }
+  body[data-as="home"] .masthead .tag { text-align: left; margin: 4px 0 0; font-size: 20px; }
+  body[data-as="home"] .masthead .when { text-align: left; }
+  body[data-as="home"] .door { grid-column: 1; order: 3; margin: 0; }
+  body[data-as="home"] .status { grid-column: 1; order: 4; margin: 0; }
+  body[data-as="home"] .bottom { grid-column: 1; order: 5; }
+  body[data-as="home"] .bottom .money { justify-content: flex-start; }
+  body[data-as="home"] .chat { grid-column: 2; grid-row: 2 / span 5; margin: 0; padding: 12px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: rgb(5 9 20 / .78); display: flex; flex-direction: column; min-height: 520px; }
+  body[data-as="home"] .feed { flex: 1; max-height: 560px; }
+}
+
+/* The setup page's top right: the role (Artist; the others coming soon) and Doors open, the next step. */
+.head-actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.who-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.coming { margin: 0; font-size: 13px; color: var(--smoke); }
+.who button:disabled { color: rgb(142 151 173 / .55); background: rgb(239 227 200 / .03); }
+.btn.doors { font-size: 22px; padding: 12px 20px 10px; }
+/* The poster, standing under the phone. */
+.preview-phone .panel { margin-top: 16px; }
+.poster-col { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.poster-col .qr { margin: 0; background: var(--cream); }
+.poster-col .row { justify-content: center; }
+.poster-col .share-link { font-size: 15px; margin: 0 0 10px; }
+
+/* The room's phone before the set: the photo and the drink at the top, the goal and the tips at the very bottom,
+   so the drink's QR gets the room. No wallet buttons: test sats arrive by themselves, and the ticket box says so. */
+body.viewer[data-as="room"]:not(.immersive) main { min-height: calc(100dvh - 40px); display: flex; flex-direction: column; padding-bottom: 8px; }
+body.viewer[data-as="room"]:not(.immersive) .chat { margin-top: auto; }
+body.viewer[data-as="room"]:not(.immersive) .door ~ .status:empty { display: none; }
+body[data-as="room"][data-stage="doors"] .feed, body[data-as="room"][data-stage="doors"] .say, body[data-as="room"][data-stage="doors"] .nostr { display: none; }
+body[data-as="room"] .purse-actions, body[data-as="room"] .purse-meter { display: none; }
+body[data-as="room"] .purse { justify-content: center; padding: 6px 10px; margin: 4px 0 0; border: 0; background: none; }
+body[data-as="room"] .purse-sum { flex-direction: row; align-items: baseline; gap: 6px; }
+body[data-as="room"] .purse-sum b { font-size: 22px; }
+body[data-as="room"]:not(.immersive) .bottom:has(#money[hidden]) .purse { display: none; } /* at the door, the ticket box shows the wallet */
+.drink { flex-direction: column; text-align: center; }
+.drink img { width: 200px; height: 200px; }
+.linkish { background: none; border: 0; padding: 0; margin-left: 6px; font: inherit; font-size: 14px; color: var(--amber); text-decoration: underline; cursor: pointer; }
+body[data-as="room"] .welcome img { height: 150px; }
+.drink img { width: 170px; height: 170px; }

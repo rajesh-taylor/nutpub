@@ -11,6 +11,7 @@
        right. Every frame is the real page on this site, so payments, locks and the chat all run for real. */
     body.demo { padding: 0; text-align: left; }
     .demo-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 36px; padding: 0 32px; border-bottom: 1px solid rgb(239 227 200 / .14); }
+    .demo-head .back { font-size: 16px; padding: 7px 12px 5px; }
     .demo-head .mark { font: 400 32px/1 var(--poster); letter-spacing: .08em; padding: 14px 0 10px; margin: 0; }
     .tabs { display: flex; gap: 28px; }
     .tabs button { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); background: none; border: 0; border-bottom: 3px solid transparent; padding: 18px 4px 14px; cursor: pointer; }
@@ -43,18 +44,20 @@
 </head>
 <body class="demo">
   <header class="demo-head">
+    <a class="btn quiet back" href="/">← Back</a>
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" role="tablist" aria-label="The night">
       <button role="tab" id="tab-1" aria-selected="true" data-tab="1">1 · Set up</button>
       <button role="tab" id="tab-2" aria-selected="false" data-tab="2">2 · The show</button>
       <button role="tab" id="tab-3" aria-selected="false" data-tab="3">3 · Last orders</button>
+      <button role="tab" id="tab-4" aria-selected="false" data-tab="4">4 · Watch a show</button>
     </nav>
   </header>
 
   <div class="demo-body">
     <div class="left">
       <section id="pane-1" role="tabpanel" aria-labelledby="tab-1">
-        <iframe class="frame" id="setup" title="Set up the gig" style="height: 820px"></iframe>
+        <iframe class="frame" id="setup" title="Set up the gig" style="height: 1500px"></iframe>
       </section>
 
       <section id="pane-2" role="tabpanel" aria-labelledby="tab-2" hidden>
@@ -67,7 +70,7 @@
           <ul class="msgs" id="msgs" aria-label="Latest messages: delete any"></ul>
         </div>
         <p class="caption">Watching at home · the desktop view</p>
-        <iframe class="frame" id="home" title="Watching at home" style="height: 700px"></iframe>
+        <div id="home-slot"><iframe class="frame" id="home" title="Watching at home" style="height: 700px"></iframe></div>
       </section>
 
       <section id="pane-3" role="tabpanel" aria-labelledby="tab-3" hidden>
@@ -95,9 +98,12 @@
           </ul>
         </div>
       </section>
+      <section id="pane-4" role="tabpanel" aria-labelledby="tab-4" hidden>
+        <div id="watch-slot"></div>
+      </section>
     </div>
 
-    <aside class="phone-col" aria-label="The attendee's phone">
+    <aside class="phone-col" id="phone-col" aria-label="The attendee's phone">
       <p class="caption" style="text-align: center">The attendee's phone</p>
       <div class="phone"><iframe id="phone" title="The attendee's phone"></iframe></div>
     </aside>
@@ -114,16 +120,29 @@
     $('setup').src = '/setup.html';
     $('phone').src = path;
     // The other frames load when their tab is first opened: four browser wallets at once is a lot for one page.
-    const later = { 2: () => { $('home').src = `${path}?as=home`; }, 3: () => { $('artist').src = '/takings.html'; $('bar').src = '/bar.html'; } };
+    const later = {
+      3: () => { $('artist').src = '/takings.html'; $('bar').src = '/bar.html'; },
+    };
 
     function open(n) {
       for (const b of document.querySelectorAll('[role="tab"]')) b.setAttribute('aria-selected', String(b.dataset.tab === n));
-      for (const i of ['1', '2', '3']) $(`pane-${i}`).hidden = i !== n;
+      for (const i of ['1', '2', '3', '4']) $(`pane-${i}`).hidden = i !== n;
+      $('phone-col').hidden = n === '4'; // Watch a show is the desktop page on its own
+      // One home view only (two would be two wallets open on the same sats): it moves between tabs 2 and 4.
+      if (n === '4' || n === '2') {
+        const home = $('home');
+        if (!home.src) home.src = `${path}?as=home`;
+        const slot = n === '4' ? $('watch-slot') : $('home-slot');
+        if (home.parentElement !== slot) slot.append(home);
+        home.style.height = n === '4' ? '860px' : '700px';
+      }
       later[n]?.();
       delete later[n];
       try { localStorage.setItem('nutpub-demo-tab', n); } catch {}
     }
     for (const b of document.querySelectorAll('[role="tab"]')) b.onclick = () => open(b.dataset.tab);
+    // The setup page's Doors open moves the demo on to The show.
+    addEventListener('message', (e) => { if (e.origin === location.origin && e.data?.nutpub === 'tab') open(String(e.data.tab)); });
     let first = '1';
     try { first = localStorage.getItem('nutpub-demo-tab') || '1'; } catch {}
     open(first);

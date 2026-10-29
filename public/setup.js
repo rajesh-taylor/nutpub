@@ -201,6 +201,23 @@ $('photo-reset').addEventListener('click', async () => {
   catch (err) { status(err.message, 'bad'); }
 });
 
+// ---- The stretch goal's bar, filled by the tips so far.
+async function goalPreview() {
+  const { tipped, goals } = await fetch('/api/messages').then((r) => r.json()).catch(() => ({ tipped: 0, goals: [] }));
+  const g = goals.find((x) => tipped < x.at) || goals[goals.length - 1];
+  const n = (v) => Number(v).toLocaleString('en-GB');
+  document.getElementById('goal-bar').style.width = g ? `${Math.min(100, (tipped / g.at) * 100)}%` : '0';
+  document.getElementById('goal-note').textContent = g ? `${g.label}: ${n(tipped)} of ${n(g.at)} sats` : `Tips so far: ${n(tipped)} sats`;
+}
+
+// ---- Doors open: chat opens at home, tickets on sale; the demo moves to its second tab (The show).
+$('doors-open').onclick = async () => {
+  try { await api('POST', '/api/admin/stage', { stage: 'doors' }); } catch (e) { return status(e.message, 'bad'); }
+  if (top !== self) return parent.postMessage({ nutpub: 'tab', tab: '2' }, location.origin);
+  try { localStorage.setItem('nutpub-demo-tab', '2'); } catch {}
+  location.href = '/demo';
+};
+
 // ---- Start: the key must work, or the page stays locked.
 try {
   site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
@@ -212,7 +229,11 @@ try {
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
   // The phone beside the form: the real show page. Not inside the demo page, which has its own phone.
+  // The phone beside the form: the real show page. Inside the demo page, the demo's own phone is beside it instead.
   if (top === self) { $('preview-frame').src = first.path; $('preview').hidden = false; }
+  else document.getElementById('back')?.remove();
+  goalPreview();
+  setInterval(goalPreview, 5000);
 } catch (err) {
   $('locked').hidden = false;
   if (err.status !== 403) $('signin-note').textContent = `Couldn't reach the server: ${err.message}`;

@@ -7,163 +7,195 @@
   <meta name="robots" content="noindex">
   <title>Set up the gig · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
+  <style>
+    /* Board A, made live (Thu 29 Oct): the layout from the design canvas, every field bound to the real show. */
+    body.board { padding: 0; text-align: left; background: #050914; font: 16px/1.45 var(--body); }
+    .board .page { max-width: 1360px; margin: 0 auto; padding: 32px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+    .board main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
+    .board .top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px; margin: 0 0 24px; }
+    .board h1 { font: 400 56px/1 var(--poster); letter-spacing: .06em; margin: 0; }
+    .board .top p { margin: 6px 0 0; color: var(--smoke); }
+    .board .who-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .board .coming { margin: 0; font-size: 13px; color: var(--smoke); }
+    .board .who { display: flex; border: 1px solid rgb(239 227 200 / .35); border-radius: 4px; overflow: hidden; }
+    .board .who button { font: 400 18px/1 var(--poster); letter-spacing: .12em; padding: 10px 16px 8px; background: transparent; color: var(--cream); border: 0; border-left: 1px solid rgb(239 227 200 / .35); }
+    .board .who button:first-child { border-left: 0; }
+    .board .who button.on { background: var(--amber); color: var(--deep); }
+    .board .who button:disabled { color: rgb(142 151 173 / .55); }
+    .board .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .board .panel { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 18px 18px 6px; background: rgb(11 20 38 / .6); margin: 0; }
+    .board .panel h2 { font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--amber); margin: 0 0 14px; }
+    .board .field { display: block; margin: 0 0 14px; font-size: 15px; color: var(--smoke); }
+    .board .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px 12px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
+    .board .field input:disabled { opacity: .6; }
+    .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+    .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
+    .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
+    .board .tag.works { color: var(--deep); background: var(--amber); }
+    .board .tag.design { color: var(--cream); border: 1px solid rgb(239 227 200 / .4); }
+    .board .choice { display: flex !important; gap: 10px; align-items: flex-start; margin: 0 0 12px; font-size: 15px; color: var(--cream); cursor: pointer; }
+    .board .choice input { accent-color: var(--amber); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
+    .board .choice input.inline-sats { width: 5em; height: auto; margin: 0 4px; padding: 3px 6px; font: inherit; color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 3px; }
+    .board .split { border: 1px dashed rgb(217 149 58 / .6); border-radius: 4px; padding: 12px 14px; margin: 6px 0 14px; font-size: 15px; }
+    .board .split:empty { display: none; }
+    .board .bar { height: 10px; border-radius: 5px; background: rgb(239 227 200 / .12); overflow: hidden; margin: 2px 0 6px; }
+    .board .bar i { display: block; height: 100%; background: var(--amber); width: 0; }
+    .board .paid { list-style: none; padding: 0; margin: 0 0 14px; font-size: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .board .paid a { color: var(--cream); font-weight: 600; }
+    .board .poster { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; padding-bottom: 18px; }
+    .board .poster .qr { margin: 0; background: var(--cream); border-radius: 3px; }
+    .board .poster h2 { margin-bottom: 8px; }
+    .board .poster p { margin: 0 0 14px; font-size: 15px; color: var(--smoke); }
+    .board .foot { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgb(239 227 200 / .14); }
+    .board .foot #status { margin: 0; flex: 1 1 300px; font-size: 15px; color: var(--cream); }
+    .board .foot #status.bad { font-weight: 600; }
+    .board aside { flex: 0 0 390px; margin: 0 auto; }
+    .board aside .cap { margin: 0 0 10px; text-align: center; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
+    .board .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+    .board .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .board .back { display: inline-block; margin: 0 0 14px; font-size: 16px; padding: 7px 12px 5px; }
+    @media (max-width: 900px) { .board .grid, .board .two { grid-template-columns: minmax(0, 1fr); } .board .page { padding: 20px 16px; } }
+  </style>
 </head>
-<body class="setup wide">
-  <main>
-    <p class="back-row"><a class="btn quiet" href="/">← Back</a></p>
-    <div class="setup-head">
-      <div>
-        <h1 class="setup-title">Set up the gig</h1>
-        <p class="hint">This server holds no sats. Saved as you type.</p>
+<body class="board">
+  <div class="page">
+    <main>
+      <a class="btn quiet back" href="/" id="back">← Back</a>
+      <div class="top">
+        <div style="flex: 1 1 320px;">
+          <h1>Set up the gig</h1>
+          <p>For the artist, the venue, or both. This server holds no sats. Saved as you type.</p>
+        </div>
+        <div class="who-wrap">
+          <p class="coming">Venue host and Both: coming soon</p>
+          <div class="who" role="group" aria-label="Who is setting it up">
+            <button type="button" class="on" aria-pressed="true">Artist</button>
+            <button type="button" disabled>Venue</button>
+            <button type="button" disabled>Both</button>
+          </div>
+        </div>
       </div>
-      <div class="who" role="group" aria-label="Who is setting it up">
-        <button type="button" class="on" aria-pressed="true">Artist</button>
-        <button type="button" disabled>Venue host <span class="soon">Design</span></button>
-        <button type="button" disabled>Both <span class="soon">Design</span></button>
-      </div>
-    </div>
 
-    <form class="locked signin" id="locked" hidden>
-      <p>Sign in with your private setup link (it came with your gig). This browser remembers it.</p>
-      <input id="signin-link" placeholder="https://nutpub.refueler.io/setup.html#k=…" aria-label="Your private setup link" autocomplete="off">
-      <p><button class="btn primary">Sign in</button></p>
-      <p class="hint" id="signin-note"></p>
-    </form>
+      <form class="locked signin" id="locked" hidden>
+        <p>Sign in with your private setup link (it came with your gig). This browser remembers it.</p>
+        <input id="signin-link" placeholder="https://nutpub.refueler.io/setup.html#k=…" aria-label="Your private setup link" autocomplete="off">
+        <p><button class="btn primary">Sign in</button></p>
+        <p class="hint" id="signin-note"></p>
+      </form>
 
-    <div class="setup-split">
-    <form id="form" hidden autocomplete="off">
-      <div class="panels">
-        <section class="panel">
-          <h2>The event</h2>
-          <label>Show name <input data-path="title" placeholder="e.g. Longy · Live at the NutPub" maxlength="80"></label>
-          <div class="two">
-            <label>Artist <input data-path="artist" placeholder="e.g. Longy" maxlength="60"></label>
-            <label>Venue <input data-path="venue" placeholder="e.g. The NutPub" maxlength="60"></label>
-          </div>
-          <div class="three">
-            <label>Date <input type="date" data-path="date"></label>
-            <label>Show starts <input type="time" data-path="starts"></label>
-            <label>Last orders <input type="time" data-path="lastOrders"></label>
-          </div>
-          <p class="hint">At last orders, a drink nobody poured goes to the artist.</p>
-          <label>The artist's welcome <span class="optional">(on the phone once you're in)</span>
-            <textarea data-path="description" rows="2" maxlength="280" placeholder="e.g. Thanks for coming in. First one's on me."></textarea></label>
-          <label>Page address <span class="sats"><span class="site-host" id="site-host"></span><input data-path="page" placeholder="longy" maxlength="40" autocapitalize="off" spellcheck="false"></span></label>
-        </section>
+      <form id="form" hidden autocomplete="off">
+        <div class="grid">
+          <section class="panel">
+            <h2>The event</h2>
+            <div class="two">
+              <label class="field">Show name<input data-path="title" maxlength="80"></label>
+              <label class="field">The artist's welcome<input data-path="description" maxlength="280"></label>
+              <label class="field">Artist<input data-path="artist" maxlength="60"></label>
+              <label class="field">Venue<input data-path="venue" maxlength="60"></label>
+              <label class="field">Date<input type="date" data-path="date"></label>
+              <label class="field">Show starts<input type="time" data-path="starts"></label>
+            </div>
+            <label class="field">Last orders <span style="color: var(--cream);">(unpoured drinks go to the artist)</span><input type="time" data-path="lastOrders"></label>
+            <label class="field">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+          </section>
 
-        <section class="panel">
-          <h2>Tickets <span class="works">Works</span></h2>
-          <label class="choice"><input type="checkbox" data-path="ticket.on"> <span>Sell privacy tickets</span></label>
-          <label>Ticket price <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"> sats</span></label>
-          <p class="label">Free first drink</p>
-          <label class="choice"><input type="radio" name="drink-mode" data-path="drink.mode" value="off"> <span>Off</span></label>
-          <label class="choice"><input type="radio" name="drink-mode" data-path="drink.mode" value="artist"> <span>On: add it to the ticket price</span></label>
-          <label class="indent" id="drink-price">Drink <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"> sats</span></label>
-          <p class="split" id="split"></p>
-          <label>Card tickets: Stripe Payment Link <span class="soon">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
-        </section>
+          <section class="panel">
+            <h2>Tickets <span class="tag works">Works</span></h2>
+            <input type="checkbox" data-path="ticket.on" hidden>
+            <div class="two">
+              <label class="field">Privacy ticket, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"></label>
+              <label class="field" id="drink-price">First drink, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
+            </div>
+            <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Free first drink</p>
+            <label class="choice"><input type="radio" name="drink" data-path="drink.mode" value="off"> <span><b>Off</b></span></label>
+            <label class="choice"><input type="radio" name="drink" data-path="drink.mode" value="artist"> <span><b>On:</b> added to the ticket price</span></label>
+            <p class="split" id="split"></p>
+            <label class="field">Card tickets: Stripe Payment Link <span class="tag design">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
+          </section>
 
-        <section class="panel">
-          <h2>Tips and messages <span class="works">Works</span></h2>
-          <div class="two">
-            <label>Single tap tip <span class="sats"><input type="number" min="21" step="1" inputmode="numeric" data-path="tip.price"> sats</span></label>
-            <label>Their own amount <input disabled value="21 sats or more"></label>
-          </div>
-          <p class="preview"><span class="btn" id="tip-preview"></span></p>
-          <p class="hint">Tips with a message show highlighted in the live chat. The host can delete any message.</p>
-          <label>Nutzaps on Nostr: the artist's npub <span class="soon">Design only</span><input disabled placeholder="npub1…"></label>
-          <label>Card tips: Stripe Payment Link <span class="soon">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
-          <input type="hidden" data-path="tip.label">
-        </section>
+          <section class="panel">
+            <h2>Tips and messages <span class="tag works">Works</span></h2>
+            <input data-path="tip.label" hidden>
+            <div class="two">
+              <label class="field">One tap, sats<input type="number" min="21" step="1" inputmode="numeric" data-path="tip.price"></label>
+              <label class="field">Their own amount<input disabled value="21 sats or more"></label>
+            </div>
+            <label class="choice"><input type="checkbox" checked disabled> <span>Tips with a message, shown in the live chat</span></label>
+            <label class="choice"><input type="checkbox" checked disabled> <span>Host can delete a message</span></label>
+            <label class="field">Nutzaps on Nostr: Longy's npub <span class="tag design">Design only</span><input disabled placeholder="npub1…"></label>
+            <label class="field">Card tips: Stripe Payment Link <span class="tag design">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
+          </section>
 
-        <section class="panel">
-          <h2>Stretch goals <span class="works">Works</span></h2>
-          <p class="hint">Fed by live tips. Everyone sees the bar fill.</p>
-          <div class="goal-row">
-            <label>Goal <input data-path="goals.0.label" placeholder="e.g. Encore" maxlength="60"></label>
-            <label>At <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"> sats</span></label>
-          </div>
-          <div class="goal-row">
-            <label>Goal <input data-path="goals.1.label" placeholder="e.g. A new song, first time live" maxlength="60"></label>
-            <label>At <span class="sats"><input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"> sats</span></label>
-          </div>
-        </section>
+          <section class="panel">
+            <h2>Stretch goals <span class="tag works">Works</span></h2>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Fed by live tips. Everyone sees the bar fill.</p>
+            <div class="goal-row">
+              <label class="field">Goal<input data-path="goals.0.label" maxlength="60"></label>
+              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"></label>
+              <label class="field">Goal<input data-path="goals.1.label" maxlength="60"></label>
+              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
+            </div>
+            <div class="bar"><i id="goal-bar"></i></div>
+            <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
+          </section>
 
-        <section class="panel">
-          <h2>Watching at home</h2>
-          <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="pay">
-            <span><b>Pay as it plays:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.price" aria-label="Sats per 10 seconds"> sats every 10 seconds. Stop paying, it stops.</span></label>
-          <label class="choice"><input type="radio" name="stream-mode" data-path="stream.mode" value="free"> <span><b>Free, with tips</b></span></label>
-          <p class="hint">Either way, people at home can also buy the whole ticket (the artist's part) and watch without paying as it plays.</p>
-          <label class="choice"><input type="checkbox" disabled> <span><b>Card</b> through Stripe <span class="soon">Not wired up</span></span></label>
-        </section>
+          <section class="panel">
+            <h2>Watching at home</h2>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as it plays:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.price" aria-label="Sats every 10 seconds"> sats every 10 seconds. Stop paying, it stops.</span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Free, with tips</b></span></label>
+            <p style="margin: 0 0 12px; font-size: 15px;">Either way they can buy <b>the whole ticket</b> in sats, once.</p>
+            <label class="choice"><input type="radio" disabled> <span><b>Card</b> through Stripe <span class="tag design">Not wired up</span></span></label>
+          </section>
 
-        <section class="panel">
-          <h2>Who gets paid</h2>
-          <p><a class="btn" id="takings-link" target="_blank" rel="noopener">Artist's takings</a> <a class="btn" id="bar-link" target="_blank" rel="noopener">The bar's takings</a></p>
-          <p class="hint">Each page makes its own key in its own browser; only the public half comes here. Open both once before doors.
-            This server checks every payment (NUT-12, NUT-07) and never swaps it.</p>
-          <label>Artist's Lightning address <input data-path="lightning" type="email" placeholder="e.g. longy@walletofsatoshi.com" maxlength="120" autocapitalize="off" spellcheck="false"></label>
-          <p class="hint">Send to Lightning is off on the test mint.</p>
-        </section>
+          <section class="panel">
+            <h2>Who gets paid</h2>
+            <ul class="paid">
+              <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
+              <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
+              <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment (NUT-12, NUT-07) and never swaps.</li>
+            </ul>
+          </section>
+        </div>
 
-        <section class="panel share">
-          <h2>The poster</h2>
-          <div class="poster-row">
-            <img class="qr" id="qr" alt="QR code for the ticket page" width="132" height="132">
-            <div>
-              <p class="share-link"><a id="show-link" target="_blank" rel="noopener"></a></p>
-              <div class="row">
-                <a class="btn primary" id="poster-link" target="_blank" rel="noopener">Make the poster</a>
-                <a class="btn" id="open-show" target="_blank" rel="noopener">Ticket page</a>
-                <button type="button" class="btn quiet" id="copy-link">Copy link</button>
-                <button type="button" class="btn quiet" id="share-link" hidden>Share</button>
-              </div>
-              <p class="hint">A4, made from the details above. The QR opens the ticket page. Print it or save it as a PDF.</p>
+        <section class="panel poster" id="poster-panel">
+          <img class="qr" id="qr" alt="QR code for the ticket page" width="140" height="140">
+          <div style="flex: 1 1 280px;">
+            <h2>The poster</h2>
+            <p>A4, made from the details above. Its QR opens the ticket page: <a id="show-link" target="_blank" rel="noopener" style="color: var(--cream);"></a>. Print it, save it as a PDF, or put the QR on a slide.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+              <a class="btn primary" id="poster-link" target="_blank" rel="noopener">Make the poster</a>
+              <a class="btn quiet" id="open-show" target="_blank" rel="noopener">Ticket page</a>
+              <button type="button" class="btn quiet" id="copy-link">Copy link</button>
+              <button type="button" class="btn quiet" id="share-link" hidden>Share</button>
             </div>
           </div>
         </section>
 
-        <section class="panel">
-          <h2>Background photo</h2>
-          <img class="photo-preview" id="photo-preview" alt="The background photo now">
-          <div class="row">
-            <label class="btn" for="photo-file">Choose a photo</label>
-            <input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp" hidden>
-            <button type="button" class="btn quiet" id="photo-reset" hidden>Use the Berlin photos</button>
-          </div>
-        </section>
+        <div class="foot">
+          <p id="status" role="status"></p>
+          <button type="button" class="btn primary" id="doors-open">Doors open →</button>
+          <button type="submit" hidden>Save</button>
+        </div>
 
-        <section class="panel templates">
-          <h2>Your shows</h2>
-          <div class="row">
-            <select id="tpl-list" aria-label="Saved show"></select>
-            <button type="button" class="btn" id="tpl-load">Load</button>
-            <button type="button" class="btn quiet" id="tpl-delete">Delete</button>
-          </div>
-          <div class="row">
-            <input id="tpl-name" placeholder="e.g. Longy on Tour" aria-label="Name for this show">
-            <button type="button" class="btn" id="tpl-save">Save as a show</button>
-          </div>
-        </section>
-      </div>
+        <!-- Kept for older shows and the hidden extras the script still fills. -->
+        <div hidden>
+          <span id="tip-preview"></span>
+          <div id="langs"></div><select data-path="language" id="language"></select>
+          <input type="radio" name="shape" data-path="shape" value="16:9"><input type="radio" name="shape" data-path="shape" value="9:16">
+          <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on">
+          <input data-path="lightning">
+          <select id="tpl-list"></select><button type="button" id="tpl-load"></button><button type="button" id="tpl-delete"></button>
+          <input id="tpl-name"><button type="button" id="tpl-save"></button>
+          <img id="photo-preview" alt=""><input type="file" id="photo-file"><button type="button" id="photo-reset"></button>
+        </div>
+      </form>
+    </main>
 
-      <!-- Kept for older shows; English only for now. -->
-      <div hidden><div id="langs"></div><select data-path="language" id="language"></select>
-        <input type="radio" name="shape" data-path="shape" value="16:9"><input type="radio" name="shape" data-path="shape" value="9:16">
-        <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on"></div>
-
-      <div class="savebar">
-        <p id="status" role="status"></p>
-        <button type="submit" class="btn primary" id="save">Save</button>
-      </div>
-    </form>
-    <aside class="preview-phone" id="preview" hidden aria-label="The attendee's phone">
-      <p class="label">The attendee's phone</p>
+    <aside id="preview" hidden aria-label="The attendee's phone">
+      <p class="cap">The attendee's phone · from the poster's QR</p>
       <div class="phone-frame"><iframe id="preview-frame" title="The show page, as an attendee sees it"></iframe></div>
     </aside>
-    </div>
-  </main>
+  </div>
   <script type="module" src="/setup.js"></script>
 </body>
 </html>
