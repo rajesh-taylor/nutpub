@@ -1,8 +1,8 @@
 # The NutPub
 
-**A gig paid for in Cashu ecash.** A value-for-value (V4V) and privacy hackathon project: fans buy a ticket at the door, get a free first drink, tip the band and watch the livestream, all from a wallet in their phone's browser. No app, no account, no email.
+**A gig paid for in Cashu ecash.** A Refueler Labs concept, from a value-for-value (V4V) and privacy hackathon project: fans buy a ticket at the door, get a free first drink, tip the band and watch the livestream, all from a wallet in their phone's browser. No app, no account, no email.
 
-**Live demo:** https://nutpub.refueler.io (test mint, online during demos)
+**Live demo:** https://thenutpub.com (test mint, test sats only)
 
 > **Test only.** The demo runs on the NutPub Test Mint: cdk-mintd with a fake Lightning wallet. Its sats have no value, and it can't pay a real invoice.
 
