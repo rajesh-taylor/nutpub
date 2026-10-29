@@ -4,7 +4,7 @@
 
 **Live demo:** https://thenutpub.com (test mint, test sats only)
 
-> **Test only.** The demo runs on the NutPub Test Mint: cdk-mintd with a fake Lightning wallet. Its sats have no value, and it can't pay a real invoice.
+> **Test only.** The demo runs on the public Cashu test mint (testnut.cashu.space): a fake Lightning wallet. Its sats have no value, and it can't pay a real invoice.
 
 ## The night, in three pages
 
@@ -32,12 +32,11 @@ Every payment is locked to the key of whoever it's for (NUT-11 P2PK). The server
 | 04 | Test sats in, over the test mint's pretend Lightning |
 | 07 | "Spent yet?": how the bar knows a drink was poured, and how the phone shows the pint |
 | 10 · 11 | Every payment locked to its owner's key; the drink with a locktime and a refund |
-| 12 | The mint's signature checked offline (DLEQ) |
 | 18 | Payment requests: the amount, the mint and the lock |
 | 24 | HTTP 402: the ticket, every 10 seconds at home, every tip |
 | NIP-61 (next) | Nutzaps: the same locked tip, published on Nostr |
 
-Built on [Coco](https://github.com/cashubtc/coco) (the wallet in the browser) and [cashu-ts](https://github.com/cashubtc/cashu-ts) (payment requests, locks and DLEQ checks).
+Built on [Coco](https://github.com/cashubtc/coco) (the wallet in the browser) and [cashu-ts](https://github.com/cashubtc/cashu-ts) (payment requests, locks and checks).
 
 ## Not wired up yet
 
@@ -45,19 +44,20 @@ Card payments (Stripe), Nostr sign-in and nutzaps, playback of a live OBS stream
 
 ## Run it
 
-Needs Node 24 or newer (for `node:sqlite`) and [cdk-mintd](https://github.com/cashubtc/cdk) 0.18.1 on the `PATH`. `cloudflared` only if you want a public address.
+The NutPub runs on Cloudflare's free plan: a Worker (`server/`), its state in D1 and the site's files as Worker assets. It never runs a mint: payments use a public test mint.
 
 ```bash
 npm install
-cp .env.example .env   # optional: tunnel hostnames
-npm start              # the test mint, the server and the tunnel; Ctrl-C stops them all
-npm run setup          # opens the host's private setup link
-npm run check          # a phone's night from the command line
+npx wrangler d1 create nutpub                           # once: put its id in wrangler.jsonc
+npx wrangler kv namespace create PHOTOS                 # once: put its id in wrangler.jsonc
+npx wrangler d1 execute nutpub --remote --file schema.sql
+npx wrangler secret put ADMIN_KEY                       # the key the setup link carries; also in .env
+npm run deploy                                          # build and publish
+npm run setup                                           # opens the host's private setup link
+SITE=https://thenutpub.com npm run check                # a phone's night from the command line
 ```
 
-Open http://localhost:8787. All state lives in `data/` (SQLite for the server, `data/mint/` for the mint), so a restart loses nothing. Logs: `data/logs/`.
-
-With a Cloudflare named tunnel, set `TUNNEL`, `SITE_HOST` and `MINT_HOST` in `.env` and route both hostnames to it once (`cloudflared tunnel route dns <tunnel> <host>`). The mint needs its own public hostname: its URL is written into every token, so phones must be able to reach it.
+`npm start` runs it locally (`wrangler dev`, http://localhost:8787) with ADMIN_KEY in `.dev.vars`. The recorded set is cut into 10-second pieces with `npm run cut-set -- <video>` (into `media/set/`, not in git) and ships with the site's files.
 
 The hackathon version (btc++ Berlin, 1 to 2 Oct 2026) is at [rajesh-taylor/nutpub-btcppberlin26](https://github.com/rajesh-taylor/nutpub-btcppberlin26).
 

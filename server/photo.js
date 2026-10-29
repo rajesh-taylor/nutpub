@@ -1,52 +1,48 @@
 // The background photo: one picture the account holder uploads on the setup page, shown dimmed behind the player.
-// Kept in data/ (never in git; the repo is public). None uploaded: the viewer page uses the Berlin picks in
-// public/img/ (also git-ignored), or plain midnight if those aren't there either.
-import express from 'express';
-import { readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { DATA } from './config.js';
+// Kept in Workers KV (never in git; the repo is public). None uploaded: the viewer page uses the Berlin picks in
+// public/img/, or plain midnight if those aren't there either.
 import { kv } from './db.js';
+import { json, now } from './http.js';
 
 const MAX = 5 * 1024 * 1024; // 5 MB: plenty for a phone photo, small enough for a phone to load
+const starts = (b, bytes, at = 0) => bytes.every((x, i) => b[at + i] === x);
+const ascii = (s) => [...s].map((ch) => ch.charCodeAt(0));
 // The file says what it is in its first bytes; the Content-Type header is only the browser's guess.
 const kinds = [
-  { type: 'image/jpeg', ext: 'jpg', is: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
-  { type: 'image/png', ext: 'png', is: (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
-  { type: 'image/webp', ext: 'webp', is: (b) => b.subarray(0, 4).toString() === 'RIFF' && b.subarray(8, 12).toString() === 'WEBP' },
+  { type: 'image/jpeg', is: (b) => starts(b, [0xff, 0xd8, 0xff]) },
+  { type: 'image/png', is: (b) => starts(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) },
+  { type: 'image/webp', is: (b) => starts(b, ascii('RIFF')) && starts(b, ascii('WEBP'), 8) },
 ];
 
-// { type, ext, at } or null
+// { type, at } or null
 const current = () => kv.get('photo', null);
-export const photoUrl = () => { const p = current(); return p ? `/api/show/photo?v=${Date.parse(p.at).toString(36)}` : null; };
+export const photoUrl = async () => { const p = await current(); return p ? `/api/show/photo?v=${Date.parse(p.at).toString(36)}` : null; };
 
-export function mountPhoto(app, admin) {
-  app.get('/api/show/photo', (_req, res) => {
-    const p = current();
-    if (!p) return res.status(404).json({ error: 'no_photo' });
-    res.set('Cache-Control', 'public, max-age=31536000, immutable'); // the URL changes with every upload
-    res.type(p.type).send(readFileSync(`${DATA}/photo.${p.ext}`));
+export function mountPhoto(route, admin, store) {
+  route('GET', '/api/show/photo', async () => {
+    const p = await current();
+    const bytes = p && (await store().get('photo', 'arrayBuffer'));
+    if (!bytes) return json({ error: 'no_photo' }, 404);
+    // The URL changes with every upload.
+    return new Response(bytes, { headers: { 'Content-Type': p.type, 'Cache-Control': 'public, max-age=31536000, immutable' } });
   });
 
-  app.put('/api/admin/photo', admin, express.raw({ type: () => true, limit: MAX }), (req, res) => {
-    const buf = req.body;
-    if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'empty', detail: 'No photo came through.' });
+  route('PUT', '/api/admin/photo', admin, async (c) => {
+    if (Number(c.req.headers.get('Content-Length')) > MAX) return json({ error: 'too_big', detail: 'That photo is over 5 MB.' }, 413);
+    const buf = new Uint8Array(await c.req.arrayBuffer());
+    if (buf.length > MAX) return json({ error: 'too_big', detail: 'That photo is over 5 MB.' }, 413);
+    if (!buf.length) return json({ error: 'empty', detail: 'No photo came through.' }, 400);
     const kind = kinds.find((k) => k.is(buf));
-    if (!kind) return res.status(400).json({ error: 'not_a_photo', detail: 'Use a JPEG, PNG or WebP photo.' });
-    const old = current();
-    writeFileSync(`${DATA}/photo.${kind.ext}`, buf);
-    if (old && old.ext !== kind.ext) rmSync(`${DATA}/photo.${old.ext}`, { force: true });
-    kv.set('photo', { type: kind.type, ext: kind.ext, at: new Date().toISOString() });
-    res.json({ photo: photoUrl() });
+    if (!kind) return json({ error: 'not_a_photo', detail: 'Use a JPEG, PNG or WebP photo.' }, 400);
+    await store().put('photo', buf);
+    await kv.set('photo', { type: kind.type, at: now() });
+    return json({ photo: await photoUrl() });
   });
 
   // Back to the default photos.
-  app.delete('/api/admin/photo', admin, (_req, res) => {
-    const old = current();
-    if (old) rmSync(`${DATA}/photo.${old.ext}`, { force: true });
-    kv.set('photo', null);
-    res.json({ photo: null });
+  route('DELETE', '/api/admin/photo', admin, async () => {
+    await store().delete('photo');
+    await kv.set('photo', null);
+    return json({ photo: null });
   });
-
-  // Too big: express.raw refuses before we see it; say so in words.
-  app.use('/api/admin/photo', (err, _req, res, next) =>
-    err?.type === 'entity.too.large' ? res.status(413).json({ error: 'too_big', detail: 'That photo is over 5 MB.' }) : next(err));
 }

@@ -7,3 +7,6 @@ public/img/
 *.log
 .DS_Store
 KICKOFF*.md
+public/set-media/
+.dev.vars
+.wrangler/

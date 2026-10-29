@@ -5,11 +5,12 @@
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "server": "node server/index.js",
+    "start": "npm run build && npm run media && wrangler dev",
+    "deploy": "npm run build && npm run media && wrangler deploy --var VERSION:$(date +%s)",
+    "media": "rm -rf public/set-media && cp -R media/set public/set-media",
     "setup": "node scripts/setup.js",
     "check": "node scripts/check.js",
     "cut-set": "sh scripts/cut-set.sh",
@@ -20,7 +21,6 @@
     "@cashu/coco-core": "2.0.0",
     "@cashu/coco-indexeddb": "2.0.0",
     "esbuild": "0.28.2",
-    "express": "5.2.1",
     "qrcode": "1.5.4"
   }
 }

@@ -9,6 +9,7 @@
 - **Next session (Mon or Tue):** Rajesh brings written feedback from the Cashu dev call, mostly design, layout and UX for users who are not technical and don't want to be. Read that first; nothing is planned until then.
 - **Parked:** a My gigs drop-down for several saved gigs (the server already saves them; one gig is live at a time).
 - **To simplify (Rajesh, 29 Oct):** Takings shows too much machinery for a test-mint concept. Make the artist's and the bar's keys silently on first open (and again after an address change), drop "Make a new key here" and the "key lives in…" lines from view, and keep plain words: what came in, Collect, Send to another wallet.
+- **Safari on iPhone (29 Oct, after the move to Cloudflare):** /longy stays on the placeholder ("Doors · chat open", no title, no ticket box), so the page's script stops early. Brave on the same iPhone works once its script blocker is off; Chrome-size test in the browser pane works. To try: Safari's Web Inspector from the Mac (Develop menu) for the console error; clear thenutpub.com's website data in Safari (old wallet and pass from the Mac-hosted site); any Safari content blocker.
 - **Also look at:** GitHub flagged 2 dependency vulnerabilities (1 high, 1 moderate); cashu-ts and Coco stay pinned.
 
 ## Demo day: Thu 29 Oct (agreed 01:00; replaces the rows below for today)
@@ -29,22 +30,16 @@ One page at `/demo`, three tabs (Set up · The show · Last orders), desktop on 
 
 **Cut order if behind:** free messages → Send to another wallet → unpoured-drink collection (show the number, say it) → Pour (a slide) → stretch goals → stage lights (the video plays after the door). Never cut: 1, 2, the door, the free-drink QR, the video, tips with messages, the artist's takings.
 
-## Start everything (Mac)
+## Where it runs (since Thu 29 Oct, evening)
 
-```bash
-cd ~/Documents/nutpub-v1
-npm start
-```
-
-That starts the test mint (`data/mint`, :3340), the server (:8787) and the named tunnel `nutpub`:
-- site: https://nutpub.rajeshtaylor.com
-- mint: https://nutpub-mint.rajeshtaylor.com
-
-Ctrl-C stops all three. If one dies, it is restarted. Logs: `data/logs/{mint,server,tunnel}.log`. The admin key is kept in `data/nutpub.db` (printed at start).
-`npm start` refuses to run if :8787 or :3340 is taken, or if another cloudflared is already running the `nutpub` tunnel.
-
-**Check it** (seen on the iPhone and the Pixel, Sun 4 Oct): the home page lists the server (start number and first start) and the mint (name, *TEST ONLY*, version).
-A restart bumps the start number and keeps the first-start date: that's the state on disk.
+On Cloudflare's free plan, like toothache.fyi: nothing runs on the Mac, and Mullvad can stay on.
+- **The site:** the Worker `thenutpub` (code in `server/`, config in `wrangler.jsonc`) on the route `thenutpub.com/*`. State in D1 (`nutpub`, tables in `schema.sql`), the background photo in KV (`PHOTOS`), the pages and the set's pieces as Worker assets. The admin key is the Worker secret `ADMIN_KEY` (also in `.env`, for `npm run setup`).
+- **The mint:** the public test mint https://testnut.cashu.space (cdk-mintd, fake Lightning, run by the Cashu developers). Not ours: it may reset, and it keeps a small fee (about 1 sat per collect).
+- **Publish a change:** `npm run deploy` (builds, then `wrangler deploy`; wrangler is installed and logged in on the Mac).
+- **Try it locally first (optional):** `npm start` (`wrangler dev` on http://localhost:8787, with a local copy of D1; needs `.dev.vars` with ADMIN_KEY).
+- **Check it:** `SITE=https://thenutpub.com npm run check`.
+- **Free-plan limits:** 100,000 Worker requests a day (each open phone polls every 2 s: about 1,800 an hour) and 10 ms of CPU per request, so the gate no longer checks DLEQ (NUT-12, ~10 ms per note); a forged note fails at Collect instead.
+- **Left over from the Mac days:** the tunnel `nutpub` and the DNS record `mint.thenutpub.com` are no longer used (the `thenutpub.com` record must stay: the Worker's route needs it). `data/` keeps the old database and mint; nothing reads them.
 
 ## Where we are
 
@@ -115,11 +110,15 @@ Done Tue 6: 1, 3, 5, 6 (looked over and approved; committed `cc3fa37`), then 2 (
 - **To 21 Oct:** fixes from the runs only. Being ahead buys rehearsal, not features: the hackathon's first lesson.
 
 ## Commands
-- `npm start`: mint, server, tunnel. `npm run setup` (or `-- --qr`): the setup page.
+- `npm run deploy`: publish. `npm start`: the site locally (wrangler dev). `npm run setup` (or `-- --qr`, `-- --local`): the setup page.
 - `npm run check`: a phone's night from the command line (top up, pay the set, safe retry, reuse refused, tip). Run it after any server change.
 - `npm run cut-set -- <video>`: cut a recorded set into 10-s pieces in `media/set/` (not in git). Tonight's set: `~/Documents/Longy at Peggy Sue's Music Bar 2025.mp4` (29.7 s → 3 pieces, the last padded to 10 s). Your own 3 clips are kept in `media/source/`.
 
 ## Notes
 - The hackathon repo is now `rajesh-taylor/nutpub-btcppberlin26` (local: `~/Documents/NutPub`). Its old mints (:3338, :3339) and its old quick tunnel are still running; nothing here uses them.
 - Copied across so far: the NUT-24 gate (replay list now on disk), segment cutting, the Coco wallet wrapper (with the pledge and refund calls, not used yet). Still to come: the pledge gate on the server (Thu), the EN/DE table.
-- `npm start` builds the browser bundles (`public/js`, not in git) before anything else.
+- `npm start` and `npm run deploy` build the browser bundles (`public/js`, not in git) and copy the set into `public/set-media` (not in git) first.
+
+## Hosting: off the Mac (done Thu 29 Oct, evening)
+
+Rajesh chose option 2 (no server, like toothache): the server is now a Cloudflare Worker with D1, on the public test mint. See "Where it runs" above.

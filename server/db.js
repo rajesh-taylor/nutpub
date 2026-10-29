@@ -1,29 +1,22 @@
-// State on disk: one SQLite file (node:sqlite, built into Node), so a restart costs nothing.
-// Every table the server needs is created here; each module reads and writes its own.
-import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
-import { DATA } from './config.js';
+// State in D1 (Cloudflare's SQLite): the tables are in schema.sql. Each module reads and writes its own.
+let D1;
+export const useDb = (d1) => { D1 = d1; };
 
-mkdirSync(DATA, { recursive: true });
-export const db = new DatabaseSync(`${DATA}/nutpub.db`);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 2000;');
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS kv (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-  );
-`);
+export const sql = (text, ...args) => D1.prepare(text).bind(...args);
+export const one = (text, ...args) => sql(text, ...args).first();
+export const all = async (text, ...args) => (await sql(text, ...args).all()).results;
+export const run = (text, ...args) => sql(text, ...args).run();
+// Several statements as one transaction: all of them, or none.
+export const batch = (statements) => D1.batch(statements);
 
 // Small settings and counters, stored as JSON.
 export const kv = {
-  get(key, fallback = null) {
-    const row = db.prepare('SELECT value FROM kv WHERE key = ?').get(key);
+  async get(key, fallback = null) {
+    const row = await one('SELECT value FROM kv WHERE key = ?', key);
     return row ? JSON.parse(row.value) : fallback;
   },
-  set(key, value) {
-    db.prepare('INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
-      .run(key, JSON.stringify(value));
+  async set(key, value) {
+    await run('INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', key, JSON.stringify(value));
     return value;
   },
 };

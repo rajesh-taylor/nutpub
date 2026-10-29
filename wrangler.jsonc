@@ -1,0 +1,26 @@
+// The NutPub on Cloudflare's free plan: one Worker, its state in D1, the background photo in KV, the site's files
+// as assets. Deploy: npm run deploy. Local: npm start (wrangler dev, with a local copy of D1 and KV).
+{
+  "name": "thenutpub",
+  "main": "server/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [{ "pattern": "thenutpub.com/*", "zone_name": "thenutpub.com" }],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    // The pages get the TEST banner from the Worker; the set's files go only to a pass that may play them.
+    "run_worker_first": ["/", "/*.html", "/set-media/*"]
+  },
+  "d1_databases": [{ "binding": "DB", "database_name": "nutpub", "database_id": "68813683-cdd0-45c5-80e4-565c19f5ded5" }],
+  "kv_namespaces": [{ "binding": "PHOTOS", "id": "d3599301789e4a6b916b2a8c365e8880" }],
+  "vars": {
+    // A public test mint run by the Cashu developers: fake Lightning, no real value. Never a real mint.
+    "MINT_URL": "https://testnut.cashu.space",
+    "SITE_URL": "https://thenutpub.com",
+    "MINT_TEST": "1"
+  },
+  "observability": { "enabled": true }
+}

@@ -48,17 +48,16 @@
 
     <div class="built">
       <div><b>Coco</b>The wallet in the fan's browser: no app, no account. It pays each request on the spot and keeps the change on the phone.</div>
-      <div><b>cashu-ts</b>Makes and checks the ecash: payment requests, locks to the artist's and the bar's keys, and the mint's signatures (DLEQ).</div>
+      <div><b>cashu-ts</b>Makes and checks the ecash: payment requests, and locks to the artist's and the bar's keys.</div>
       <p class="built-note">Both open source, from the Cashu developers: <a href="https://github.com/cashubtc/coco">Coco</a> · <a href="https://github.com/cashubtc/cashu-ts">cashu-ts</a></p>
     </div>
 
     <h3>The NUTs it uses</h3>
     <div class="nutlist">
       <div><b>NUT-00 – 03</b>Ecash notes, signed blind, swapped at the mint: the base of every payment.</div>
-      <div><b>NUT-04</b>Sats in over Lightning (on this test mint, pretend Lightning).</div>
+      <div><b>NUT-04</b>Sats in over Lightning (on the public test mint, pretend Lightning).</div>
       <div><b>NUT-07</b>"Is it spent yet?" The bar's "already poured" and the artist's Collect both ask the mint.</div>
       <div><b>NUT-10 · NUT-11</b>Spending conditions: every payment locked to its owner's key; a drink with a locktime at last orders and a refund to the artist.</div>
-      <div><b>NUT-12</b>DLEQ proofs: the door checks the mint really signed each note, offline, without calling the mint.</div>
       <div><b>NUT-18</b>Payment requests: the amount, the mint and the lock, in one string.</div>
       <div><b>NUT-24</b>HTTP 402 with Cashu: the ticket, every 10 seconds of the set at home, every tip. Paid inside the same web request.</div>
       <div class="next"><b>NIP-61 · next</b>Nutzaps on Nostr: the same locked tip, published as a Nostr event, so a tip can come with who you are, if you want.</div>

@@ -1,19 +1,6 @@
 // The show: what the account holder (artist or venue) sets on /setup before going live. One current show,
-// plus named templates to start the next one from. Both live in SQLite.
-import { db } from './db.js';
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS shows (
-    id       TEXT PRIMARY KEY,
-    settings TEXT NOT NULL,
-    updated  TEXT NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS templates (
-    name     TEXT PRIMARY KEY,
-    settings TEXT NOT NULL,
-    updated  TEXT NOT NULL
-  );
-`);
+// plus named templates to start the next one from. Both live in D1.
+import { one, all, run } from './db.js';
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
@@ -117,54 +104,51 @@ export function clean(input = {}) {
 
 const now = () => new Date().toISOString();
 
-export function currentShow() {
-  const row = db.prepare("SELECT settings, updated FROM shows WHERE id = 'current'").get();
+export async function currentShow() {
+  const row = await one("SELECT settings, updated FROM shows WHERE id = 'current'");
   const { show, problems } = clean(row ? JSON.parse(row.settings) : blank());
   return { show, problems, updated: row?.updated ?? null, path: show.page ? `/${show.page}` : '/' };
 }
 
-export function saveShow(input) {
+export async function saveShow(input) {
   const { show } = clean(input);
-  db.prepare(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
-              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`)
-    .run(JSON.stringify(show), now());
+  await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
+             ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), now());
   return currentShow();
 }
 
-export const listTemplates = () =>
-  db.prepare('SELECT name, updated FROM templates ORDER BY updated DESC').all().map((r) => ({ ...r }));
+export const listTemplates = () => all('SELECT name, updated FROM templates ORDER BY updated DESC');
 
-export function saveTemplate(name, input) {
+export async function saveTemplate(name, input) {
   const n = String(name ?? '').trim().slice(0, 60);
   if (!n) throw new Error('A template needs a name.');
   const { show } = clean(input);
-  db.prepare(`INSERT INTO templates (name, settings, updated) VALUES (?, ?, ?)
-              ON CONFLICT(name) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`)
-    .run(n, JSON.stringify(show), now());
+  await run(`INSERT INTO templates (name, settings, updated) VALUES (?, ?, ?)
+             ON CONFLICT(name) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, n, JSON.stringify(show), now());
   return listTemplates();
 }
 
 // Start the current show from a template (the template itself stays as it was).
-export function loadTemplate(name) {
-  const row = db.prepare('SELECT settings FROM templates WHERE name = ?').get(String(name ?? ''));
+export async function loadTemplate(name) {
+  const row = await one('SELECT settings FROM templates WHERE name = ?', String(name ?? ''));
   if (!row) throw new Error('No template by that name.');
   return saveShow(JSON.parse(row.settings));
 }
 
-export function deleteTemplate(name) {
-  db.prepare('DELETE FROM templates WHERE name = ?').run(String(name ?? ''));
+export async function deleteTemplate(name) {
+  await run('DELETE FROM templates WHERE name = ?', String(name ?? ''));
   return listTemplates();
 }
 
 // What a ticket costs and who gets what: the artist's price, plus the first drink if the artist added one.
-export function ticketSplit(show = currentShow().show) {
+export function ticketSplit(show) {
   const drink = show.drink.mode === 'artist' ? show.drink.price || 0 : 0;
   const artist = show.ticket.price || 0;
   return { artist, drink, total: artist + drink };
 }
 
 // Last orders as Unix seconds. The times are UK time: the offset is read for that date, so summer time works too.
-export function lastOrdersAt(show = currentShow().show) {
+export function lastOrdersAt(show) {
   if (!show.date || !show.lastOrders) return null;
   const guess = new Date(`${show.date}T${show.lastOrders}:00Z`);
   const tz = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' })
@@ -172,3 +156,7 @@ export function lastOrdersAt(show = currentShow().show) {
   const hours = Number(tz.replace('GMT', '') || 0);
   return Math.floor(guess.getTime() / 1000) - hours * 3600;
 }
+
+// The show, read once per request.
+export const current = (c) => (c.current ??= currentShow());
+export const showOf = async (c) => (await current(c)).show;

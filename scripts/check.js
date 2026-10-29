@@ -1,17 +1,17 @@
 // A phone's night, from the command line: top up over the test mint's fake Lightning, get a pass, pay the set
 // 10 seconds at a time, retry safely, get refused for reuse, and tip. Every payment is locked to the artist's key;
-// payments not locked to it alone are refused, and the server can't spend what it accepted. Needs `npm start`
-// running and the takings page opened once (it makes the artist's key; this check never touches it).
+// payments not locked to it alone are refused, and the server can't spend what it accepted. Needs the site running
+// (`npm start`, or SITE=https://thenutpub.com) and Takings opened once (it makes the artist's key; this check never
+// touches it). It spends a few sats of the public test mint's, which are free.
 //   npm run check
+//   SITE=https://thenutpub.com npm run check
 import { existsSync, readFileSync } from 'node:fs';
-import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { Wallet, getEncodedToken, decodePaymentRequest, getPubKeyFromPrivKey, sumProofs } from '@cashu/cashu-ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 if (existsSync(`${ROOT}.env`)) process.loadEnvFile(`${ROOT}.env`);
-const SITE = `http://127.0.0.1:${process.env.PORT || 8787}`;
-const MINT_API = `http://127.0.0.1:${process.env.MINT_PORT || 3340}`;
+const SITE = (process.env.SITE || 'http://localhost:8787').replace(/\/+$/, '');
 
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? '✓' : '✕'} ${what}`); if (!ok) failed += 1; };
@@ -32,7 +32,7 @@ check((await fetch(`${SITE}/no-such-artist`)).status === 404, 'another artist\'s
 // The phone's wallet: 200 test sats over the fake Lightning (the invoice pays itself). The refused locks below
 // cost a few: sats locked to a stranger's key, or with a refund an hour away, are gone for this wallet.
 const TOP_UP = 5000; // the tip is 2,100 today
-const wallet = new Wallet(MINT_API, { unit: 'sat' });
+const wallet = new Wallet(MINT_URL, { unit: 'sat' });
 await wallet.loadMint();
 const quote = await wallet.createMintQuoteBolt11(TOP_UP);
 for (let i = 0; i < 20 && (await wallet.checkMintQuote('bolt11', quote.quote)).state !== 'PAID'; i += 1) {
@@ -52,9 +52,9 @@ async function pay(res, lock) {
   sent.set(getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: out }), out);
   return [...sent.keys()].pop();
 }
-// Tokens carry the mint's public address; this wallet talks to it locally, so taking one back uses its proofs.
+// Taking back a token this wallet sent (one the server refused).
 const sent = new Map();
-const back = (token) => wallet.receive(getEncodedToken({ mint: MINT_API, unit: 'sat', proofs: sent.get(token) }));
+const back = (token) => wallet.receive(getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: sent.get(token) }));
 const randomKey = () => Buffer.from(getPubKeyFromPrivKey(crypto.getRandomValues(new Uint8Array(32)))).toString('hex');
 const refusal = async (res) => (res.status === 400 ? (await res.json()).error : res.status);
 
@@ -115,8 +115,7 @@ check(own.status === 200 && (await own.json()).tipped === 21, 'tip, your amount:
 
 // The background photo: refused without the setup key; only a real photo is taken. Skipped if one is already up
 // (the check never replaces the account holder's own).
-const key = process.env.ADMIN_KEY || JSON.parse(new DatabaseSync(`${ROOT}data/nutpub.db`, { readOnly: true })
-  .prepare("SELECT value FROM kv WHERE key = 'adminKey'").get().value);
+const key = process.env.ADMIN_KEY;
 const put = (body, k) => fetch(`${SITE}/api/admin/photo`, { method: 'PUT', headers: { 'X-Admin': k, 'Content-Type': 'image/jpeg' }, body });
 check((await put('x', 'wrong')).status === 403, 'photo: refused without the setup key');
 if ((await fetch(`${SITE}/api/show`).then((r) => r.json())).photo || !existsSync(`${ROOT}public/img/fp-32.jpg`)) {

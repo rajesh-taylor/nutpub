@@ -1,17 +1,18 @@
 // Opens the setup page in the Mac's browser, with the admin key after the # (it never reaches a server log).
-//   npm run setup            opens it here
+// The key is ADMIN_KEY in .env (the same as the Worker's secret).
+//   npm run setup            opens the live site's
+//   npm run setup -- --local opens the one `npm start` runs (http://localhost:8787)
 //   npm run setup -- --qr    draws it as a QR code, for a phone's camera (not on a shared screen: it holds the key)
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 if (existsSync(`${ROOT}.env`)) process.loadEnvFile(`${ROOT}.env`);
-const db = new DatabaseSync(`${ROOT}data/nutpub.db`, { readOnly: true });
-const key = process.env.ADMIN_KEY || JSON.parse(db.prepare("SELECT value FROM kv WHERE key = 'adminKey'").get().value);
-const site = process.env.TUNNEL && process.env.SITE_HOST ? `https://${process.env.SITE_HOST}` : `http://localhost:${process.env.PORT || 8787}`;
+const key = process.env.ADMIN_KEY;
+if (!key) { console.error('No ADMIN_KEY in .env.'); process.exit(1); }
+const site = process.argv.includes('--local') ? 'http://localhost:8787' : `https://${process.env.SITE_HOST || 'thenutpub.com'}`;
 const link = `${site}/setup.html#k=${key}`;
 if (process.argv.includes('--qr')) {
   console.log(await QRCode.toString(link, { type: 'terminal', small: true, errorCorrectionLevel: 'L' }));
