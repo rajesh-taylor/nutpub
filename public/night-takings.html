@@ -17,6 +17,7 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
+    .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
     .page { max-width: 1440px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
     .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
     .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
@@ -73,6 +74,7 @@
       <a href="/show">2 · The show</a>
       <a class="on" href="/takings" aria-current="page">3 · Takings</a>
     </nav>
+    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
 
   <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
@@ -152,5 +154,6 @@
     </aside>
   </div>
   <script type="module" src="/js/night.js"></script>
+  <script src="/newnight.js" defer></script>
 </body>
 </html>

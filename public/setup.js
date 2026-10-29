@@ -92,7 +92,8 @@ function refresh() {
   // Who gets what from each ticket: the same split as the server's (server/shows.js ticketSplit).
   const drink = show.drink?.mode === 'artist' ? show.drink.price || 0 : 0;
   const artist = show.ticket?.price || 0;
-  $('drink-price').hidden = show.drink?.mode !== 'artist';
+  // The drink's price stays in sight; it only counts (and can only be typed) when the free drink is on.
+  $('drink-price').querySelector('input').disabled = show.drink?.mode !== 'artist';
   $('split').textContent = !artist ? '' : drink
     ? `Ticket: ${n(artist + drink)} sats. ${n(artist)} locked to ${show.artist || 'the artist'}’s key, ${n(drink)} locked to the bar’s for the first drink. Not poured by ${show.lastOrders || 'last orders'}? It goes to ${show.artist || 'the artist'}.`
     : `Ticket: ${n(artist)} sats, locked to ${show.artist || 'the artist'}’s key.`;

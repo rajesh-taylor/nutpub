@@ -60,6 +60,7 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
+    .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
     .board .paid-wide { margin-top: 16px; }
     .board .paid-wide .paid { flex-direction: row; flex-wrap: wrap; gap: 10px 28px; }
     .board .key-row { display: flex; gap: 8px; margin-top: 6px; }
@@ -87,9 +88,10 @@
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
       <a class="on" href="/setup" aria-current="page">1 · Show setup</a>
-      <a href="/show">2 · The show</a>
+      <a href="/show?doors=1">2 · The show</a>
       <a href="/takings">3 · Takings</a>
     </nav>
+    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
   <div class="page">
     <main>
@@ -134,8 +136,8 @@
             <h2>Tickets <span class="tag works">Works</span></h2>
             <input type="checkbox" data-path="ticket.on" hidden>
             <div class="two">
-              <label class="field">Privacy ticket, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"></label>
-              <label class="field" id="drink-price">First drink, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
+              <label class="field">Ticket, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"></label>
+              <label class="field" id="drink-price">Free first drink, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
             </div>
             <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Free first drink</p>
             <label class="choice"><input type="radio" name="drink" data-path="drink.mode" value="off"> <span><b>Off</b></span></label>
@@ -200,7 +202,7 @@
 
         <div class="foot">
           <p id="status" role="status"></p>
-          <a class="btn primary" id="doors-open" href="/show">The show →</a>
+          <a class="btn primary" id="doors-open" href="/show?doors=1">The show →</a>
           <button type="submit" hidden>Save</button>
         </div>
 
@@ -238,5 +240,6 @@
     </aside>
   </div>
   <script type="module" src="/setup.js"></script>
+  <script src="/newnight.js" defer></script>
 </body>
 </html>

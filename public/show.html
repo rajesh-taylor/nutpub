@@ -17,6 +17,7 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
+    .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
     .page { max-width: 1440px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
     .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
     .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
@@ -45,6 +46,7 @@
       <a class="on" href="/show" aria-current="page">2 · The show</a>
       <a href="/takings">3 · Takings</a>
     </nav>
+    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
 
   <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
@@ -56,7 +58,6 @@
         <button class="btn quiet" data-stage="doors">Doors · chat open</button>
         <button class="btn quiet" data-stage="on">Start the show</button>
         <button class="btn quiet" data-stage="closed">End the night</button>
-        <button class="btn quiet" id="new-night">New night</button>
       </div>
       <div class="host bar-strip" id="bar-strip" hidden>
         <span class="label">The bar</span>
@@ -93,15 +94,15 @@
       for (const b of document.querySelectorAll('[data-stage]')) b.classList.toggle('on', b.dataset.stage === now);
     }
     for (const b of document.querySelectorAll('[data-stage]')) b.onclick = () => stage(b.dataset.stage);
-    $('new-night').onclick = async () => {
-      if (!confirm('A new night: every phone back to the door and the chat emptied. Payments already made stay to collect.')) return;
-      await api('POST', '/api/admin/new-night');
-      stage();
-    };
 
-    stage();
+    // Coming from page 1, the night starts at the door: doors open, chat open.
+    if (new URLSearchParams(location.search).has('doors')) {
+      history.replaceState(null, '', '/show');
+      await stage('doors');
+    } else stage();
     setInterval(() => stage().catch(() => {}), 3000);
   </script>
   <script type="module" src="/js/barstrip.js"></script>
+  <script src="/newnight.js" defer></script>
 </body>
 </html>

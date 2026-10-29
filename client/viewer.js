@@ -10,7 +10,7 @@ const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 
 const KEEP = AS === 'home' ? '-home' : '';
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
-const TOP_UP = 50_000; // a ticket, a drink and a few tips
+const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plenty of tips
 
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
@@ -83,18 +83,15 @@ const balance = async () => {
 };
 await balance();
 wallet.on('proofs:saved', balance);
-// On the test mint a new wallet gets its test sats by itself, once: nobody fiddles with a wallet before the show.
-const FIRST = `nutpub-topped${KEEP}`;
-let topped = true;
-try { topped = !!localStorage.getItem(FIRST); } catch {}
-if (health.mint.test && !topped && !(await wallet.balance())) {
-  try { localStorage.setItem(FIRST, '1'); } catch {}
-  wallet.topup(TOP_UP).then(async ({ id }) => {
-    for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
-    await balance();
-    say(`${TOP_UP.toLocaleString('en-GB')} test sats added to your wallet.`);
-  }).catch(() => {});
+// On the test mint every wallet fills itself to 150,000 test sats when the page opens: nobody fiddles before the show.
+async function fill() {
+  const have = await wallet.balance();
+  if (!health.mint.test || have >= TOP_UP / 2) return;
+  const { id } = await wallet.topup(TOP_UP - have);
+  for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
+  await balance();
 }
+fill().catch(() => {});
 if (!show.wallet.on) { $('wallet-link').removeAttribute('href'); $('wallet-page').hidden = true; } // balance only
 $('topup').hidden = !health.mint.test;
 $('wallet-page').parentElement.classList.toggle('solo', !health.mint.test);
@@ -394,6 +391,10 @@ const split = () => {
   const artist = show.ticket.price || 0;
   return { artist, drink, total: artist + drink };
 };
+// The drink failed at the door after the ticket went through: remembered in this browser, so the phone offers it again.
+const DUE = `nutpub-drink-due${KEEP}`;
+const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catch { return false; } };
+const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
 const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
 let door = await myDoor();
 let stage = (await fetch('/api/stage').then((r) => r.json()).catch(() => ({}))).stage || 'doors';
@@ -407,7 +408,8 @@ function render() {
   // Full picture with the chat over it: the room once the set plays, and always at home.
   body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on');
   $('closing').hidden = !closed;
-  $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink));
+  // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
+  $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
@@ -441,7 +443,7 @@ function render() {
   $('drink').hidden = !door.drink;
   if (door.drink) {
     $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
-    $('drink-title').textContent = door.drink.poured ? 'Poured. Cheers!' : 'Get your free drink';
+    $('drink-title').textContent = door.drink.poured ? 'Enjoy your pint, cheers!' : 'Get your free drink';
     $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
@@ -455,8 +457,8 @@ $('buy').onclick = async () => {
   const s = split();
   const due = (door.ticket ? 0 : AS === 'room' ? s.total : s.artist) - (door.ticket ? -s.drink : 0);
   const have = await wallet.balance();
-  if (have < due && AS === 'home' && health.mint.test) {
-    // At home there's no wallet box on page 2: on the test mint, top up by itself and carry on.
+  if (have < due && health.mint.test) {
+    // On the test mint, short at the door: fill up by itself and carry on.
     say('Adding test sats…');
     const { id } = await wallet.topup(TOP_UP);
     for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
@@ -468,7 +470,8 @@ $('buy').onclick = async () => {
     if (res && !res.ok) throw new Error(await refusal(res));
     if (AS === 'room' && split().drink) {
       res = await paidFetch('/api/door/drink');
-      if (!res.ok) throw new Error(`You’re in, but the drink didn’t go through: ${await refusal(res)}`);
+      if (!res.ok) { owe(true); throw new Error(`You’re in, but the drink didn’t go through: ${await refusal(res)}`); }
+      owe(false);
     }
     say('');
   } catch (e) {

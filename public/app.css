@@ -476,3 +476,10 @@ body.immersive .status { top: 84px; pointer-events: none; }
 body.immersive .player .bar { z-index: 3; }
 /* The upright crop: show more of the left of the clip. */
 body.immersive .player video { object-position: 25% 30%; }
+
+/* In the room at doors: the artist's photo fills the phone between the date and the tips (it shares the space with
+   the drink's QR when the free drink is on), so there's no empty gap. */
+body.inside-doors .inside { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+body.inside-doors .welcome { flex: 1 1 240px; min-height: 200px; display: flex; margin-bottom: 12px; }
+body.inside-doors .welcome img { flex: 1; width: 100%; height: auto; min-height: 0; object-fit: cover; object-position: 30% 30%; }
+body.inside-doors .chat { margin-top: 0; }
