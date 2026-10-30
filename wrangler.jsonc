@@ -22,5 +22,7 @@
     "SITE_URL": "https://thenutpub.com",
     "MINT_TEST": "1"
   },
-  "observability": { "enabled": true }
+  // Keep only the Worker's own lines (errors, payments). No per-request record: that holds the visitor's IP and
+  // headers (X-Admin, X-Pass) for 7 days.
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } }
 }
