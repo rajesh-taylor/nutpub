@@ -7,12 +7,15 @@
 |---|---|
 | Sun 1 Nov | **0** Stream test (below); session 2: design Set up your gig and the home page on the canvas |
 | 2–7 Nov | **1** Design clean-up and speed · **2** home page, `/gigs` listings, Artist sign-in, invite + passkey |
-| 8–15 Nov | **3** Set up your gig built · **4** live input per artist, outputs, live light, overlay page |
+| 8–15 Nov | **3** Set up your gig built · **4** live input per artist, outputs, live light, overlay page · **experiment C** (one evening): browser records 10-s pieces → Worker → R2, a 402 per piece |
 | Mon 16 Nov | Checkpoint: advanced streaming; real mints (contact by Tue 17) |
 | 16–23 Nov | **5** The show redesigned · **6** the 402 on live video |
 | 24–26 Nov | Freeze, README, costs page, demo video, submit |
 
-### Part 0: Stream test (about 5 min, no app code; 2 min max per test (judges will test too, keep costs down))
+### Part 0: Stream test: **done Sun 1 Nov**
+**Results** (full notes in the private plan): WebRTC from Larix under a second; RTMPS/SRT from Larix by Grove QR works, HLS ~21 s behind, DVR, recording + MP4 and the YouTube copy all work. The $0 plan refuses recorded inputs (`STORAGE_QUOTA_EXHAUSTED`): the 1,000-minute storage block ($5/month) is on. **Free Larix shows its watermark from the first second**, so clean video means Larix Premium ($9.99/month, the artist's). The QR should also turn off Larix's own phone recording (`enc[record][enabled]=off`). The live input `nutpub-larix` stays (its YouTube output is off).
+
+(The original plan, kept for reference: about 5 min, no app code, 2 min max per test.)
 **WebRTC is dropped as the main path** (1 Nov): it has no HLS segments, so the Worker can't charge every 10 s, and no recording, copies out or DVR. RTMPS + HLS is the build; WebRTC "low-delay mode" goes on the roadmap. **Artists stream from their phone with Larix Broadcaster** (free, iOS and Android, RTMPS and SRT). Larix can be set up by one QR code or `larix://set/v1?…` link (Larix Grove: server, key, 720p, keyframe interval), so the artist's steps are: install Larix, scan the QR on Set up your gig, press the button. Free Larix limit: 30 min, then 30 min with Larix's overlay, then it stops; Premium is $9.99/month (the artist's cost, said plainly).
 
 Before: Rajesh chooses the **$0 Images & Stream plan** (pay as you go: $5 per 1,000 min stored, $1 per 1,000 delivered) and installs Larix on his phone. Note any charge for the costs log.
@@ -22,12 +25,22 @@ Before: Rajesh chooses the **$0 Images & Stream plan** (pay as you go: $5 per 1,
 
 **Write down:** WebRTC delay; Larix delay (Stream player / YouTube copy); Grove QR worked yes/no; recording and DVR; cost. Results go in the private plan and decide the Live stream card.
 
-### Session prompts (Opus; every session ends by writing the next one here)
-**Today, session 1 (Sun 1 Nov):**
-> NutPub, NutNovember part 0. Read `~/Documents/nutpub-v1/NEXT.md` ("NutNovember") and the private plan `~/Documents/refueler-share-private/NutPub-plan-2026-10.md` ("NutNovember: decisions"). I'm on Cloudflare's $0 Images & Stream plan with Larix on my phone. Walk me through the two short tests: WebRTC from the phone browser (2 min max), then RTMPS from Larix set up by a Grove QR (2 min max) with recording, DVR and a YouTube copy. Log the results and any charge in the plan, then write session 2's prompt into NEXT.md.
+### Home page: next changes (Rajesh, 1 Nov evening; not urgent, do at the next home page session)
+- **Wordmark A/B:** "THE NUTPUB" lettering curved like the Golden Lion fascia. A: a gentle curve; B: a stronger curve.
+- **Who wins:** smaller headings on desktop (they compete with the wordmark) and on mobile, so The Artists and The punters sit side by side on a phone too. Balance: The punters column ends at the right edge, as The Artists starts at the left.
+- **Button** under The Artists, renamed **"Sign in as Longy"** (demo site, one artist).
+- **Punters line:** "Buy tickets and live stream access".
+- **Tagline:** "We accept bitcoin, cashu... even fiat".
+- **Laurel hover:** nothing above the name to start with. On hover the top line appears ("Best browser wallet" / "Best original ecash and key grip"; check the wording with Rajesh) and the line below the name disappears.
+- **Footer:** "A Refueler Labs project" half a size smaller.
 
-**Today, session 2 (Sun 1 Nov):**
-> NutPub, NutNovember design. Read `~/Documents/nutpub-v1/NEXT.md` and the private plan ("NutNovember: decisions", and session 1's Stream test results). Design on the canvas, no code: (a) Set up your gig with the new card order, including the Live stream card ("Go live from your phone": install Larix, scan the QR, press the button; copies out; the live light); (b) the home page with gold award laurels (screenshot-5 shape, glow only on Coco and cashu-ts), "Supporting acts" line removed, and the NutPub logo as a hanging London pub sign (bracket, arched name, a gold nut). Plain English, for artists who aren't technical. End by writing the next session's prompt into NEXT.md.
+### Session prompts (Opus; every session ends by writing the next one here)
+**Session 1 (Sun 1 Nov): done.** Stream test; results above and in the private plan.
+
+**Session 2 (Sun 1 Nov): done.** Design on the canvas: https://claude.ai/artifact/WCGSt951zkDv5fLwMyXKEd (Set up your gig, Live stream card, home page desktop + phone). Rajesh's feedback on it comes first next session.
+
+**Next, session 3 (changed 1 Nov: live wiring first, site design after):**
+> NutPub, NutNovember: wire the live show first; site design comes after. Read `~/Documents/nutpub-v1/NEXT.md` ("NutNovember", Part 0 results), the private plan `~/Documents/refueler-share-private/NutPub-plan-2026-10.md` ("Live streaming: Cloudflare Stream", "Built-in streaming") and `server/gate.js` + `server/set.js` (the NUT-24 402 already works on the recorded set's 10-s pieces). Goal: Longy streams from Larix and a viewer at home pays as they watch. Steps, smallest first, plan before code: (1) a live input per artist made through the Stream API (Worker secret, nothing in the repo), recording on, auto-delete 30 days; (2) the Larix setup QR and the server + key on the setup page (plain, no styling work); (3) the live player on the gig page (HLS, DVR) and the live light from the input's status; (4) the gate: Stream signed URLs, a short-lived token handed out only after a paid 402, renewed by the next payment, with the viewer's budget and Pause; tickets watch free. Check the free-plan limits (Worker requests and CPU, a NUT-07 call per payment) before choosing how often to charge. Tests: a pre-recorded file from OBS or Larix, a minute at a time; log any Cloudflare charge in the costs log. Small steps, phone check before each commit (I commit), publish with `npm run deploy`. Plain English, be brief. End by writing the next session's prompt into NEXT.md and giving it to me in a markdown code block.
 
 **Goal:** a 3-minute demo on the Cashu dev call, **Thu 29 Oct 2026** (date and time to be confirmed: usually the last Thursday of the month; screen share, slides before and after).
 **Feature freeze: Wed 21 Oct.** Practice runs Thu 22 to Wed 28 Oct. Times are UK time.
