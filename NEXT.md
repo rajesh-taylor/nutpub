@@ -33,6 +33,8 @@ Before: Rajesh chooses the **$0 Images & Stream plan** (pay as you go: $5 per 1,
 - **Tagline:** "We accept bitcoin, cashu... even fiat".
 - **Laurel hover:** nothing above the name to start with. On hover the top line appears ("Best browser wallet" / "Best original ecash and key grip"; check the wording with Rajesh) and the line below the name disappears.
 - **Footer:** "A Refueler Labs project" half a size smaller.
+- **Agreed (Claude's ideas):** a punters' button to match, e.g. "See Longy's gig" (judges get a way in); the wordmark as a Golden Lion board, gold serif on black with a thin gold edge, in the same serif as the laurels (goes with the A/B); that serif (Cinzel or similar, OFL) hosted on our own site, not Google Fonts; "Try it with test sats" on the punters' button.
+- Rajesh has clean-up ideas for The Show's 3 tabs and Takings: ask for them at part 5.
 
 ### Session prompts (Opus; every session ends by writing the next one here)
 **Session 1 (Sun 1 Nov): done.** Stream test; results above and in the private plan.
