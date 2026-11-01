@@ -1,5 +1,33 @@
 # Next
 
+## NutNovember (1–27 Nov 2026): build order
+**Deadline Fri 27 Nov, 23:59 UTC.** Freeze Wed 25 Nov; submit Thu 26. Goal: **the 402 on live video** (pay every 10 s while watching live, with a budget and pause). Decisions and reasons: the private plan (`NutPub-plan-2026-10.md`, "NutNovember: decisions").
+
+| When | Part |
+|---|---|
+| Sun 1 Nov | **0** Stream test (below), then design Set up your gig and the home page on the canvas |
+| 2–7 Nov | **1** Design clean-up and speed · **2** home page, `/gigs` listings, Artist sign-in, invite + passkey |
+| 8–15 Nov | **3** Set up your gig built · **4** live input per artist, outputs, live light, overlay page |
+| Mon 16 Nov | Checkpoint: advanced streaming; real mints (contact by Tue 17) |
+| 16–23 Nov | **5** The show redesigned · **6** the 402 on live video |
+| 24–26 Nov | Freeze, README, costs page, demo video, submit |
+
+### Part 0: Stream test (20 min, no app code)
+Before the session: Rajesh subscribes to **Stream** in the Cloudflare dashboard (Stream → Plans; $5/month) and notes the charge for the costs log.
+1. Stream → Live inputs → **Create**. Name `nutpub-test`; recording **automatic**; delete recordings after 30 days.
+2. Copy the **RTMPS URL** and **stream key**.
+3. **OBS:** Settings → Stream → Service *Custom*, paste both. Output: H.264, AAC, CBR ~4 Mbps, keyframe interval 4 s. Add the set (`~/Documents/Longy at Peggy Sue's Music Bar 2025.mp4`) as a Media Source on loop. **Start streaming.**
+4. Within about a minute the input shows **Connected**. Open its playback link on the Mac and on a phone (Safari and the Pixel). Note the **delay** (clap or a clock on screen).
+5. Live input → **Outputs** → add YouTube (`rtmp://a.rtmp.youtube.com/live2` + Rajesh's key). Check YouTube Studio shows it; turn the output off and on.
+6. Stop after about a minute. Check: **is there a recording**, how long, and can it be downloaded as MP4?
+7. **Atomos Shogun Ultra** (if to hand): does it take an **RTMPS** URL or **SRT**? Cloudflare takes only those two; plain `rtmp://` may be refused. Try it with the same key.
+8. Next day: Billing → note the minutes delivered and cost.
+
+**Write down:** delay (Stream player / YouTube copy); recording yes/no, length, MP4; Atomos result; cost. This shapes the Live stream card and the judge test (one shared judge account; one judge streams, the others watch).
+
+### Next session prompt (Opus)
+> NutPub, NutNovember part 0 then design. Read `~/Documents/nutpub-v1/NEXT.md` ("NutNovember") and the private plan `~/Documents/refueler-share-private/NutPub-plan-2026-10.md` ("NutNovember: decisions"). I've subscribed to Cloudflare Stream. Walk me through the 20-minute Stream test step by step and log the results and the charge in the plan. Then design on the canvas, no code: (a) Set up your gig with the new card order, (b) the home page with gold award laurels for Coco and cashu-ts and smaller ones for the NUTs and NIP, "Supporting acts" line removed, and the NutPub logo as a hanging London pub sign. Plain English, for artists who aren't technical.
+
 **Goal:** a 3-minute demo on the Cashu dev call, **Thu 29 Oct 2026** (date and time to be confirmed: usually the last Thursday of the month; screen share, slides before and after).
 **Feature freeze: Wed 21 Oct.** Practice runs Thu 22 to Wed 28 Oct. Times are UK time.
 
