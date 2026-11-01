@@ -9,6 +9,7 @@ import { mountSet } from './set.js';
 import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl } from './photo.js';
+import { mountLive, useStream } from './live.js';
 import { current, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -82,6 +83,7 @@ let PHOTOS;
 mountDoor(route, admin, mountSet(route));
 mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
+mountLive(route, admin);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {
@@ -99,6 +101,7 @@ export default {
     configure(env);
     useDb(env.DB);
     PHOTOS = env.PHOTOS;
+    useStream(env);
     const url = new URL(req.url);
     const c = { req, url, params: {} };
     try {

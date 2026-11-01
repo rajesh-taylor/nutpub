@@ -25,6 +25,14 @@ Before: Rajesh chooses the **$0 Images & Stream plan** (pay as you go: $5 per 1,
 
 **Write down:** WebRTC delay; Larix delay (Stream player / YouTube copy); Grove QR worked yes/no; recording and DVR; cost. Results go in the private plan and decide the Live stream card.
 
+### Live wiring (session 3, Sun 1 Nov): plan
+Longy streams from Larix; a viewer at home pays as they watch. Account ID and API token are Worker secrets (`STREAM_ACCOUNT`, `STREAM_TOKEN`, Stream: Edit), never in the repo.
+1. **Live input per artist** (`server/live.js`, built): `POST /api/admin/live` makes `nutpub-<page>` once (recording automatic, `deleteRecordingAfterDays: 30`, signed URLs off until step 4), keeps its id in kv `live:<page>`, and fills the setup page's server, key and playback link.
+2. **Setup page, plain:** a "Make my stream" button; the Larix QR (`larix://set/v1?conn[][url]=<server+key>&enc[vid][res]=1280x720&enc[vid][keyframe]=4&enc[record][enabled]=off`), fetched with the admin key (it holds the stream key); server + key with Copy for OBS.
+3. **Gig page:** hls.js (from npm, bundled, so iPhone Safari 17.1+ works through ManagedMediaSource) plays the input's HLS; DVR to test. **Live light** from the input's `status` (`connected`/`reconnected` = on), read by the Worker at most every 10 s and passed in the 2-s poll.
+4. **The gate:** a Stream signing key made once (secrets `STREAM_KEY_ID`, `STREAM_KEY_JWK`), self-signed RS256 tokens (no API call, no rate limit), signed URLs on. `GET /api/live/token`: a ticket gets a token; otherwise the usual `cashuGate` per 10 s, and the paid reply carries a token with `exp` = now + 30 s (slack for a slow payment). hls.js swaps the newest token into every request, so the picture runs on while payments keep coming. The viewer sets a budget ("up to 500 sats tonight") and Pause; no payment, the token runs out and the picture stops. To test: whether `sub` is the input's id or the live video's id, and whether segments fail once `exp` passes.
+- **Free plan, per viewer paying every 10 s:** 720 Worker requests an hour (402 + paid retry) beside 1,800 for the 2-s poll; 100,000 a day ≈ 40 viewer-hours. CPU: one RS256 signature (~1 ms) and the token checks; the NUT-07 call is waiting, not CPU. Segments come from Stream, not the Worker. **So: charge every 10 s.** If judges push the daily limit, 30 s is a one-number change.
+
 ### Home page: next changes (Rajesh, 1 Nov evening; not urgent, do at the next home page session)
 - **Wordmark A/B:** "THE NUTPUB" lettering curved like the Golden Lion fascia. A: a gentle curve; B: a stronger curve.
 - **Who wins:** smaller headings on desktop (they compete with the wordmark) and on mobile, so The Artists and The punters sit side by side on a phone too. Balance: The punters column ends at the right edge, as The Artists starts at the left.
