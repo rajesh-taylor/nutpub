@@ -1,6 +1,7 @@
 // Live video through Cloudflare Stream: one live input per artist, made through the Stream API. The account and its
 // API token (Stream: Edit) are Worker secrets, STREAM_ACCOUNT and STREAM_TOKEN: nothing about them is in the repo.
 // The artist streams to it from Larix or OBS; Stream records each broadcast and deletes it after 30 days.
+import QRCode from 'qrcode';
 import { kv } from './db.js';
 import { current, saveShow } from './shows.js';
 import { json } from './http.js';
@@ -36,6 +37,13 @@ export async function liveInput(page) {
   return input;
 }
 
+// Larix Grove: one link (or its QR) sets Larix up: where to stream, 720p, a keyframe every 4 s (Stream wants ≤ 8),
+// and Larix's own copy on the phone off, so a gig doesn't fill it. Scanned again: it replaces the one of that name.
+// Larix keeps any other connection ticked, and streams to every ticked one.
+export const larixLink = ({ server, key }, name) => 'larix://set/v1?'
+  + `conn[][url]=${encodeURIComponent(server + key)}&conn[][name]=${encodeURIComponent(name)}&conn[][overwrite]=on`
+  + '&enc[vid][res]=1280x720&enc[vid][keyframe]=4&enc[record][enabled]=off';
+
 export function mountLive(route, admin) {
   // Make (or read back) the artist's stream: its server and key go into the show, on the host's pages only.
   route('POST', '/api/admin/live', admin, async (c) => {
@@ -47,5 +55,14 @@ export function mountLive(route, admin) {
     } catch (e) {
       return json({ error: String(e.message || e) }, 502);
     }
+  });
+
+  // The Larix link and its QR. Host only: both carry the stream key.
+  route('GET', '/api/admin/live/larix', admin, async (c) => {
+    const { show } = await current(c);
+    if (!show.live.server || !show.live.key) return json({ error: 'No stream yet: press Make my stream.' }, 409);
+    const link = larixLink(show.live, `NutPub · ${show.artist || show.page}`);
+    const svg = await QRCode.toString(link, { type: 'svg', margin: 2, color: { dark: '#050914', light: '#efe3c8' } });
+    return json({ link, svg });
   });
 }

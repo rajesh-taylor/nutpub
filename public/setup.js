@@ -123,6 +123,7 @@ function shareLink(path) {
 function saved(res) {
   fill(res.show);
   shareLink(res.path);
+  larix();
   dirty = false;
   const at = res.updated ? new Date(res.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
@@ -222,6 +223,34 @@ $('show-key').onclick = () => {
   $('live-key').type = shown ? 'password' : 'text';
   $('show-key').textContent = shown ? 'Show' : 'Hide';
 };
+
+// ---- The live stream: made through Cloudflare Stream; Larix is set up by scanning its QR.
+let larixFor = null;
+async function larix() {
+  const k = show?.live?.key || '';
+  if (k === larixFor) return;
+  larixFor = k;
+  $('make-stream').textContent = k ? 'Stream made ✓' : 'Make my stream';
+  $('larix').hidden = !k;
+  if (!k) return;
+  try {
+    const { link, svg } = await api('GET', '/api/admin/live/larix');
+    $('larix-qr').innerHTML = svg; // our own server's QR, made from the show's own fields
+    $('larix-link').href = link;
+  } catch (err) { $('larix').hidden = true; status(err.message, 'bad'); }
+}
+$('make-stream').onclick = async () => {
+  $('make-stream').disabled = true;
+  status('Making your stream…', 'todo');
+  try { saved(await api('POST', '/api/admin/live')); status('Your stream is ready: scan the code with Larix.', 'ok'); }
+  catch (err) { status(`Stream not made: ${err.message}`, 'bad'); }
+  $('make-stream').disabled = false;
+};
+const copy = (id, what) => async () => {
+  try { await navigator.clipboard.writeText($(id).value); status(`${what} copied.`, 'ok'); } catch { status(`Couldn't copy the ${what.toLowerCase()}.`, 'bad'); }
+};
+$('copy-server').onclick = copy('live-server', 'Server');
+$('copy-key').onclick = copy('live-key', 'Key');
 
 // ---- The show: page 2 (a plain link). Inside the old demo page it switches the tab instead.
 $('doors-open').onclick = (e) => {
