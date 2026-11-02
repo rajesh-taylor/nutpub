@@ -83,6 +83,8 @@ The aim: **a calmer page.** Too many features are fighting for the screen; a men
 
 **More ways in (Rajesh, 2 Nov):** OBS has a mobile app that feeds its main app, so a phone can be a camera for OBS. Bear it in mind when we add OBS and other providers such as Ecamm.
 
+**Other streaming apps to consider offering artists (Rajesh, 2 Nov; a web answer's list, not yet checked or tried):** Haivision Play Pro (SRT), PRISM Live Studio; through OBS or vMix: NDI HX Camera, MAVIS; LiveU Solo; in the browser: StreamYard, Riverside.fm. Anything that can send RTMPS or SRT to a custom server and key should work with the fields we already show; test each before naming it on the page.
+
 **For the docs and judges:** paid live video needs iOS 17.1 or later (out just over 3 years); Rajesh is fine with that.
 
 ### Session prompts (Opus; every session ends by writing the next one here)
