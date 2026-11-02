@@ -30,7 +30,12 @@ Longy streams from Larix; a viewer at home pays as they watch. Account ID and AP
 1. **Live input per artist** (`server/live.js`, built): `POST /api/admin/live` makes `nutpub-<page>` once (recording automatic, `deleteRecordingAfterDays: 30`, signed URLs off until step 4), keeps its id in kv `live:<page>`, and fills the setup page's server, key and playback link.
 2. **Setup page, plain** (built, tested Sun 1 Nov: QR → Larix → picture in the dashboard after ~20 s; the dashboard's "Disconnected" badge doesn't update by itself, so trust the picture): a "Make my stream" button; the Larix QR (`larix://set/v1?conn[][url]=<server+key>&enc[vid][res]=1280x720&enc[vid][keyframe]=4&enc[record][enabled]=off`), fetched with the admin key (it holds the stream key); server + key with Copy for OBS.
 3. **Gig page** (built, tested Sun 1 Nov on the Mac: live light, then the phone's picture with sound after ~20 s; free to watch until step 4; DVR not tried, no seek bar yet): hls.js (from npm, bundled, so iPhone Safari 17.1+ works through ManagedMediaSource) plays the input's HLS; DVR to test. **Live light** from the input's `status` (`connected`/`reconnected` = on), read by the Worker at most every 10 s and passed in the 2-s poll.
-4. **The gate:** a Stream signing key made once (secrets `STREAM_KEY_ID`, `STREAM_KEY_JWK`), self-signed RS256 tokens (no API call, no rate limit), signed URLs on. `GET /api/live/token`: a ticket gets a token; otherwise the usual `cashuGate` per 10 s, and the paid reply carries a token with `exp` = now + 30 s (slack for a slow payment). hls.js swaps the newest token into every request, so the picture runs on while payments keep coming. The viewer sets a budget ("up to 500 sats tonight") and Pause; no payment, the token runs out and the picture stops. To test: whether `sub` is the input's id or the live video's id, and whether segments fail once `exp` passes.
+4. **The gate (built and tested Mon 2 Nov, iPhone with Larix → Safari on the Mac):** a Stream signing key made once (secrets `STREAM_KEY_ID`, `STREAM_KEY_JWK`), self-signed RS256 tokens (no API call, no rate limit), signed URLs on. `GET /api/live/token`: a ticket gets a token; otherwise the usual `cashuGate` per 10 s, and the paid reply carries a token with `exp` = now + 30 s (slack for a slow payment). hls.js swaps the newest token into every request, so the picture runs on while payments keep coming. The viewer sets a budget ("up to 500 sats tonight") and Pause; no payment, the token runs out and the picture stops. 
+   **Test results:** the plain link gets 401. `sub` can be the input id or the live video's id: we use the input id, which never changes. Once `exp` passes, the manifest, the playlists and even a segment already listed all get 401, so the picture stops. Only playlist links need the fresh token; segment links carry their own signature. Don't change a live input's settings during a stream: playback dropped out for a moment (204, no live video listed).
+   **Also built:** one row per viewer (`live_paid`) for tonight's spend, so a lost reply asked for again within 8 s gets no second charge. Viewer checks passed: pay to watch, budget, Pause, rejoin, ticket watches free, wallet empty, stream end.
+   **Larix:** wide needs Orientation = Landscape in Larix's settings (the setup page says so). Not yet tried on the Pixel: Larix isn't installed there. Paid live video needs iOS 17.1+.
+   **Not closed:** a tampered page could pay every 30 s instead of every 10, and a token could be shared for its 30 s (accepted for a test concept). Collect now works in tens with a progress count; test it past 150 payments.
+   **Mint fee (decision for Rajesh):** the test mint charges 0.1 sat per coin, at least 1 sat per swap. A viewer pays about 11 sats for 10, and Collect swaps each payment alone, so the artist gets about 9 of the 10. Fix: collect all payments in one swap, say "plus a small mint fee", and count the fee in the budget (500 today can cost about 550).
 - **Free plan, per viewer paying every 10 s:** 720 Worker requests an hour (402 + paid retry) beside **5,400** for the 2-s poll (it asks for the show, the stage and the chat: 3 requests every 2 s); 100,000 a day ≈ **16 viewer-hours**. Folding the three into one `/api/tick` brings it to ~2,500 an hour, ≈ 40 viewer-hours: do it before the judges come. Over the limit the site stops answering until midnight UTC; it never costs money. CPU: one RS256 signature (~1 ms) and the token checks; the NUT-07 call is waiting, not CPU. Segments come from Stream, not the Worker. **So: charge every 10 s.** If judges push the daily limit, 30 s is a one-number change.
 
 ### Home page: next changes (Rajesh, 1 Nov evening; not urgent, do at the next home page session)
@@ -43,7 +48,42 @@ Longy streams from Larix; a viewer at home pays as they watch. Account ID and AP
 - **Footer:** "A Refueler Labs project" half a size smaller.
 - **Agreed (Claude's ideas):** a punters' button to match, e.g. "See Longy's gig" (judges get a way in); the wordmark as a Golden Lion board, gold serif on black with a thin gold edge, in the same serif as the laurels (goes with the A/B); that serif (Cinzel or similar, OFL) hosted on our own site, not Google Fonts; "Try it with test sats" on the punters' button.
 - Rajesh has clean-up ideas for The Show's 3 tabs and Takings: ask for them at part 5.
-- **Live picture shape:** a portrait phone stream is cropped in the 16:9 player (full screen shows it whole). Take the shape from the video itself (`videoWidth`/`videoHeight`) instead of the setup page's 16:9 / 9:16. Artists will each frame differently: no advice needed on the page.
+- **Live picture shape:** a portrait phone stream is cropped in the 16:9 player (full screen shows it whole). Take the shape from the video itself (`videoWidth`/`videoHeight`) instead of the setup page's 16:9 / 9:16. **Done Mon 2 Nov.** Rajesh then changed his mind on advice: the setup page now says how to film wide (below).
+
+### The show: Rajesh's design notes (Mon 2 Nov, from the iPhone 13 mini and Pixel; for the design sessions, part 5; nothing built yet)
+The aim: **a calmer page.** Too many features are fighting for the screen; a menu holds what's needed only sometimes.
+
+**First visit (the door)**
+- The upright photo looks good. **Back:** where would it go? If this is the first page, remove it. Also remove it once paid (no reason to go back).
+- **Date and time:** add GMT; people may watch from other countries.
+- **Wallet preloaded with test sats, said clearly:** keep.
+- **Ticket: two buttons side by side.** The price in £ (Stripe, a one-time payment for the whole show) and the price in sats. If the artist sets a fiat price, the sats price follows it through CoinGecko's API, updated every 15 minutes. For our test the Stripe button is greyed out; the docs and presentation explain what the dual payment rail gives.
+
+**The show, phone upright**
+- **The stretch goal bar gets in the way of the picture** (worst when the video plays). Put it along the bottom, only if set.
+- **Play, sound and full screen go along the bottom too.** Only the red LIVE chip stays on top. (Rajesh keeps Safari's address bar at the bottom; most people have it on top, so check both.)
+- **At doors the LIVE chip shows on a still photo:** it isn't live, the doors are open. It may be the moment for a Load wallet button.
+- **Tip buttons take far too much room.** Three boxes along the bottom, left to right: **Your wallet xxx sats · Tip in £** (Stripe, greyed out) **· Tip in sats** (black, gold outline and text, the style of today's Your amount). Comment box and Send underneath them.
+- **Chat lettering is jarring.** Try 5 or 6 fonts, A/B, with none from Google Fonts (they track).
+- **While typing,** names, tip amounts and comments are cropped at the right edge (needs fixing for the keyboard view).
+
+**The show, phone sideways**
+- Comments under the video, not over it (a design of their own for this view).
+- The second Tip Longy button at the top: use that room for something else. Stretch goals could live there, in this view only.
+
+**A menu (hamburger, top right)**
+- A guest name set once for the show, wallet balance, "take your sats back home" and other info. Guests can take their sats back at any time: good customer service, designed in.
+
+**Home page**
+- **Block lettering has no artistic merit:** it doesn't feel like getting ready for a gig. Keep the colour, and the test mint strip on top. (See the wordmark A/B above.)
+- **"A Refueler Labs project":** lower down, to give the rest more room.
+- **"Best Supporting Acts"** (new heading). Row 1: Coco and cashu-ts. Row 2, three small laurels: NUT-00-03, NUT-04, NUT-07. Row 3: the remaining four. Rows 2 and 3 equally spaced and centred.
+
+**Filming shape (Rajesh, 2 Nov):** a paid upright stream can feel like selling a FaceTime call, above all at high ticket prices; most paying viewers watch on a 16:9 laptop. The setup page should tell the artist or camera person how to film sideways. Seen 2 Nov: a stream started upright and turned sideways mid-way stays an upright frame, with black bars above and below the picture.
+
+**More ways in (Rajesh, 2 Nov):** OBS has a mobile app that feeds its main app, so a phone can be a camera for OBS. Bear it in mind when we add OBS and other providers such as Ecamm.
+
+**For the docs and judges:** paid live video needs iOS 17.1 or later (out just over 3 years); Rajesh is fine with that.
 
 ### Session prompts (Opus; every session ends by writing the next one here)
 **Session 1 (Sun 1 Nov): done.** Stream test; results above and in the private plan.
@@ -52,8 +92,10 @@ Longy streams from Larix; a viewer at home pays as they watch. Account ID and AP
 
 **Session 3 (Sun 1 Nov, late): done.** Live wiring steps 1–3: live input through the API (`server/live.js`), Make my stream + Larix QR on the setup page, the live player (hls.js) and live light on the gig page. Tested with Larix on the iPhone and Safari on the Mac.
 
-**Next, session 4:**
-> NutPub, NutNovember, session 4: the gate on live video (step 4 of "Live wiring" in `~/Documents/nutpub-v1/NEXT.md`; steps 1–3 are done and tested). Read that section, `server/live.js`, `server/gate.js`, `server/set.js` and the live part of `client/viewer.js`. First, two small jobs: (a) fold the gig page's 2-s poll (show, stage, chat) into one `/api/tick` so the free plan holds ~40 viewer-hours a day; (b) the live picture's shape from the video itself, not the setup page. Then step 4, plan before code: a Stream signing key made once through the API (Worker secrets, nothing in the repo); signed URLs on for Longy's input; self-signed RS256 tokens handed out only after a paid 402 (every 10 s, `exp` ≈ 30 s) and renewed by the next payment; hls.js swaps the newest token into each request; the viewer's budget and Pause; ticket holders watch free. Test first, with a 1-minute Larix stream: whether `sub` is the input id or the live video id, and whether the picture stops once a token runs out. Pixel: Larix if GrapheneOS allows it. Log any Cloudflare charge in the costs log. Small steps, phone check before each commit (I commit), publish with `npm run deploy`. Plain English, be brief. End by writing the next session's prompt into NEXT.md and giving it to me in a markdown code block.
+**Session 4 (Mon 2 Nov): done.** One `/api/tick`, the picture's shape from the video, the gate on live video (step 4 above), Rajesh's design notes logged.
+
+**Next, session 5:**
+> NutPub, NutNovember, session 5: the mint fee, then the calmer show page. Read `~/Documents/nutpub-v1/NEXT.md`: "Mint fee" under Live wiring step 4, and "The show: Rajesh's design notes". First, one small job: Collect takes all waiting payments in one swap, so the artist isn't charged a fee per payment; the page says "plus a small mint fee", and the viewer's budget counts it. Check Collect past 150 payments. Then plan before code, and show me on the design canvas (https://claude.ai/artifact/WCGSt951zkDv5fLwMyXKEd) before building: on the show page, controls and stretch goal along the bottom; only the LIVE chip on top, shown only when a stream is really on; three boxes (Your wallet, Tip in £ greyed out, Tip in sats) with the comment box under them; a hamburger menu for guest name, wallet and Take sats home; Back removed; GMT on the time; comments under the video when the phone is sideways. Hold the home page and the £/CoinGecko ticket for the session after, unless there's time. Small steps, phone check before each commit (I commit), publish with `npm run deploy`. Plain English, be brief. End by writing the next session's prompt into NEXT.md and giving it to me in a markdown code block.
 
 **Goal:** a 3-minute demo on the Cashu dev call, **Thu 29 Oct 2026** (date and time to be confirmed: usually the last Thursday of the month; screen share, slides before and after).
 **Feature freeze: Wed 21 Oct.** Practice runs Thu 22 to Wed 28 Oct. Times are UK time.

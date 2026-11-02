@@ -56,11 +56,12 @@ export function mountSet(route) {
   // `next`: where this pass carries on. A reload must not start again at piece 0, or pieces already paid for
   // would replay free (charged once) and an empty pocket would look like it plays.
   route('GET', '/api/pass/me', pass, async (c) => {
-    const [spent, next] = await Promise.all([
+    const [spent, next, live] = await Promise.all([
       one('SELECT COALESCE(SUM(sats), 0) AS sats FROM paid WHERE pass = ?', c.pass),
       one('SELECT COALESCE(MAX(piece) + 1, 0) AS n FROM paid WHERE pass = ?', c.pass),
+      one('SELECT COALESCE(SUM(sats), 0) AS sats FROM live_paid WHERE pass = ?', c.pass),
     ]);
-    return json({ spent: spent.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n });
+    return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n });
   });
 
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).

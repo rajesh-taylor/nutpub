@@ -16,10 +16,10 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.example
 
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
-// The show as every viewer may see it: the artist's Lightning address and the stream's server and key stay with the host.
+// The show as every viewer may see it: the artist's Lightning address and the stream's details stay with the host.
 export const publicShow = (show) => {
   const open = structuredClone(show);
-  delete open.lightning; delete open.live.server; delete open.live.key;
+  delete open.lightning; delete open.live; // the picture's link comes with a token, from /api/live/token
   return open;
 };
 

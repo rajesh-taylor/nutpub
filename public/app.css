@@ -166,6 +166,9 @@ body.playing .big-play { display: none; }
 #full svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .i-stop, body.playing .i-play, .i-exit, body.full .i-full { display: none; }
 body.playing .i-stop, body.full .i-exit { display: block; }
+/* Live, Stop is a pause: nothing more is charged, and play rejoins the show. */
+.i-pause, body.live-video.playing .i-stop { display: none; }
+body.live-video.playing .i-pause { display: block; }
 body.sideways #full { visibility: hidden; } /* turning the phone back is the way out */
 .spacer { flex: 1; }
 #ov-tip { display: none; flex: none; font-size: 17px; padding: 8px 12px 6px; background: rgb(5 9 20 / .6); }
@@ -183,6 +186,7 @@ body.viewer .status { margin: 12px 0 0; }
 }
 .purse-sum { flex: none; display: flex; flex-direction: column; align-items: flex-start; color: var(--cream); text-decoration: none; text-align: left; }
 .purse-sum b { font: 400 40px/1 var(--poster); color: var(--amber); letter-spacing: .04em; }
+.budget input { width: 7ch; padding: 2px 4px; font: inherit; color: var(--cream); background: transparent; border: 1px solid rgb(239 227 200 / .3); border-radius: 3px; }
 .purse-meter {
   flex: 1 0 100%; display: flex; justify-content: space-between; gap: 12px; margin: 0; padding-top: 8px;
   border-top: 1px solid rgb(239 227 200 / .08); font-size: 14px; color: var(--cream); opacity: .85;

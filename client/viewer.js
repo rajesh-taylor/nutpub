@@ -19,6 +19,9 @@ const T = {
   full: 'Full screen', exitFull: 'Leave full screen',
   spent: (n) => `This set: ${n} sat${n === 1 ? '' : 's'}`,
   stopped: 'Stopped. Nothing more is charged.',
+  paused: 'Paused. Nothing more is charged. Press play to rejoin the show, live.',
+  budget: (n) => `You’ve reached your limit: ${n} sats tonight. Raise it to keep watching.`,
+  liveEnded: 'The stream has stopped.', liveLost: 'The picture stopped. Press play to rejoin.',
   empty: 'Your wallet’s empty. Top it up to keep playing.',
   tipDone: (label) => `${label}: paid. Thank you!`,
   ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (n) => `${n} sat${n === 1 ? '' : 's'} tipped. Thank you!`,
@@ -26,7 +29,7 @@ const T = {
   retried: 'Same payment, same 10 seconds. Charged once.',
   notReady: 'The show isn’t ready yet.',
   tapVideo: 'Tap the picture to start it.',
-  noLive: 'This browser can’t play the live stream.',
+  noLive: 'Live video needs a newer browser (on iPhone, iOS 17.1 or later).',
   refused: {
     reused: 'That payment was already used.', wrong_mint: 'Wrong mint.', too_little: 'Not enough.',
     no_dleq: 'The payment carried no signature proof.', bad_dleq: 'The payment’s signature didn’t check out.',
@@ -67,9 +70,11 @@ async function getPass(fresh = false) {
 let pass = await getPass();
 let spentHere = 0;
 let resumeAt = 0; // this pass's first unpaid piece
+let liveSpentSoFar = 0;
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
 if (me.status === 403) pass = await getPass(true);
-else ({ spent: spentHere, next: resumeAt } = await me.json());
+else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar } = await me.json());
+spentHere += liveSpentSoFar;
 const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere); };
 meter();
 
@@ -192,37 +197,80 @@ backdrop(false);
 function controls(on) {
   playing = on;
   backdrop(on);
-  $('play').setAttribute('aria-label', on ? T.stop : T.play);
+  $('play').setAttribute('aria-label', on ? (document.body.classList.contains('live-video') ? 'Pause' : T.stop) : T.play);
   document.body.classList.toggle('playing', on);
 }
 
 // ---- Live: when the artist's stream is coming in (the live light), Play plays it instead of the recorded set.
-// HLS through hls.js (iPhone Safari 17.1+ too), loaded only once a stream is on. Free to watch until the gate.
+// HLS through hls.js (iPhone Safari 17.1+ too), loaded only once a stream is on. Stream plays nothing without a token,
+// and each 402 paid buys a token that outlasts the next payment: stop paying and the picture stops. hls.js puts the
+// newest token in every playlist request; the segments' links come with their own signature.
 let liveOn = false;
 let Hls = null;
 let hls = null;
-const liveUrl = () => show.live?.playback || '';
-const readyLive = () => { if (liveOn && liveUrl() && !Hls) import('hls.js').then((m) => { Hls = m.default; }).catch(() => {}); };
+let liveToken = '';
+let liveSpent = liveSpentSoFar;
+const readyLive = () => { if (liveOn && !Hls) import('hls.js').then((m) => { Hls = m.default; }).catch(() => {}); };
+const withToken = (url) => url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/, `$1${liveToken}$2`);
 
-function playLive() {
+// The viewer's limit for the night, kept in this browser. Tickets and free shows pay nothing, so have none.
+const pays = () => !free && !door.ticket;
+const budget = () => Number($('budget').value) || 0;
+try { $('budget').value = localStorage.getItem(`nutpub-budget${KEEP}`) || ''; } catch {}
+$('budget').value ||= Math.max(500, (show.stream.price || 0) * 6);
+$('budget').oninput = () => { try { localStorage.setItem(`nutpub-budget${KEEP}`, $('budget').value); } catch {} };
+
+// One token: free for a ticket or a free show, otherwise a 402. Returns its reply, or null with the picture stopped.
+async function renew(mine) {
+  if (pays() && liveSpent + show.stream.price > budget()) { stop(T.budget(liveSpent)); return null; }
+  const res = await paidFetch('/api/live/token');
+  if (mine !== run) return null; // paused while it was on its way
+  if (res.status === 409 && (await res.clone().json()).error === 'not_live') return { off: true };
+  if (!res.ok) { stop(await refusal(res)); return null; }
+  const reply = await res.json();
+  if (reply.spent != null) { spentHere += reply.spent - liveSpent; liveSpent = reply.spent; meter(); balance(); }
+  liveToken = new URL(reply.url).pathname.split('/')[1];
+  return reply;
+}
+
+async function playLive() {
   const v = vids[0];
   v.muted = muted;
   v.volume = volume;
-  if (Hls?.isSupported()) {
-    hls = new Hls({ lowLatencyMode: false });
-    hls.loadSource(liveUrl());
-    hls.attachMedia(v);
-  } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
-    v.src = liveUrl(); // older iPhones play HLS themselves
-  } else return say(T.noLive);
+  if (!Hls?.isSupported()) return say(T.noLive);
+  const mine = ++run;
+  v.play().catch(() => {}); // in the tap itself, or the sound stays off; the picture comes once it's paid for
   document.body.classList.add('live-video');
   controls(true);
   say('');
-  v.play().then(() => v.classList.add('on')).catch(() => say(T.tapVideo)); // in the tap itself, or the sound stays off
+  let started = false;
+  let off = 0;
+  while (playing && mine === run) {
+    const at = Date.now();
+    let reply = null;
+    try {
+      reply = await renew(mine);
+      if (!reply) break;
+      off = reply.off ? off + 1 : 0;
+      if (off >= 3) { stop(T.liveEnded); break; } // the token has run out by now: the artist has stopped
+      if (reply.url && !started) {
+        started = true;
+        hls = new Hls({ lowLatencyMode: false, xhrSetup: (xhr, url) => xhr.open('GET', withToken(url)) });
+        hls.on(Hls.Events.ERROR, (_, e) => { if (e.fatal && mine === run) stop(T.liveLost); });
+        hls.loadSource(reply.url);
+        hls.attachMedia(v);
+        v.play().then(() => v.classList.add('on')).catch(() => say(T.tapVideo));
+      }
+    } catch (e) {
+      if (/insufficient|not enough|balance/i.test(e.message)) { stop(T.empty); break; }
+      if (mine === run) say(T.retrying); // the network: the token has 20 s of slack, so try again
+    }
+    await new Promise((r) => setTimeout(r, Math.max(0, (reply?.every || 10) * 1000 - (Date.now() - at))));
+  }
 }
 
 async function play() {
-  if (liveOn && liveUrl()) return playLive();
+  if (liveOn) return playLive();
   const ac = unlockAudio();
   const mine = ++run;
   controls(true);
@@ -290,7 +338,7 @@ async function picture(n, startAt, mine) {
 let volume = 1;
 let muted = false;
 function level() {
-  if (hls || vids[0].src.startsWith('http')) { vids[0].muted = muted; vids[0].volume = volume; }
+  if (hls) { vids[0].muted = muted; vids[0].volume = volume; }
   if (master && ctx) master.gain.setTargetAtTime(muted ? 0 : volume, ctx.currentTime, 0.05);
   $('mute').setAttribute('aria-label', muted ? 'Sound on' : 'Mute');
   document.body.classList.toggle('muted', muted);
@@ -300,6 +348,7 @@ $('vol').oninput = () => { volume = Number($('vol').value); muted = volume === 0
 
 function stop(why) {
   run += 1;
+  const wasLive = document.body.classList.contains('live-video');
   if (master) {
     master.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
     for (const s of sources) { try { s.stop(ctx.currentTime + 0.7); } catch {} }
@@ -308,11 +357,10 @@ function stop(why) {
   }
   for (const v of vids) { v.pause(); v.classList.remove('on'); }
   if (hls) { hls.destroy(); hls = null; }
-  document.body.classList.remove('live-video');
-  if (vids[0].src.startsWith('http')) { vids[0].removeAttribute('src'); vids[0].load(); }
   vids[0].muted = true;
   controls(false);
-  say(why || (free ? '' : T.stopped));
+  document.body.classList.remove('live-video');
+  say(why || (free ? '' : wasLive && pays() ? T.paused : T.stopped));
 }
 
 const toggle = () => (playing ? stop() : play());
@@ -463,6 +511,7 @@ function render() {
   const live = AS === 'home' ? !closed : stage === 'on';
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
   $('live-badge').hidden = stage !== 'on' && !liveOn;
+  $('budget-box').hidden = !liveOn || !pays();
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
   $('whole').hidden = AS !== 'home' || !show.ticket.on || ticket || closed;

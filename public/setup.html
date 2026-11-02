@@ -201,12 +201,13 @@
 
           <section class="panel">
             <h2>Live stream</h2>
-            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Stream from your phone with <b>Larix Broadcaster</b> (free, iPhone and Android): install it, scan this code with the phone's camera, then press the red button in Larix. Free Larix puts its name over your video; <b>Larix Premium</b> ($9.99 a month, paid to Larix) takes it off.</p>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Stream from your phone with <b>Larix Broadcaster</b> (iPhone or Android): install, scan this QR with your phone, then press the red button in Larix. Free Larix puts its name over your video; <b>Larix Premium</b> $9.99/mo removes it.</p>
             <p><button type="button" class="btn primary" id="make-stream">Make my stream</button></p>
             <div id="larix" hidden>
               <div id="larix-qr" style="width: 220px; max-width: 100%;"></div>
               <p style="font-size: 15px;">On the phone itself? <a id="larix-link" href="#">Open in Larix</a></p>
               <p style="font-size: 15px;">In Larix, under Settings → Connections, only <b>NutPub</b> should be ticked: Larix streams to every ticked connection.</p>
+              <p style="font-size: 15px;"><b>For the full wide picture,</b> set Orientation to Landscape in Larix's settings before you start. Most people who pay will watch on a laptop. Turning the phone during the stream only leaves black bars.</p>
             </div>
             <p style="margin: 14px 0 8px; font-size: 15px; color: var(--smoke);">Streaming from a laptop: put these in OBS (Settings → Stream → Custom).</p>
             <label class="field">Stream server (RTMP or SRT)
@@ -214,7 +215,7 @@
             <label class="field">Stream key
               <span class="key-row"><input data-path="live.key" type="password" id="live-key" autocomplete="off" maxlength="300"><button type="button" class="btn quiet" id="show-key">Show</button><button type="button" class="btn quiet" id="copy-key">Copy</button></span></label>
             <label class="field">Playback link (HLS)<input data-path="live.playback" placeholder="https://…/index.m3u8" autocapitalize="off" spellcheck="false" maxlength="300"></label>
-            <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">The key and the code stay on the host's pages, never on the show page: anyone with them can stream as you. Until playback is wired up, the show plays the recorded set.</p>
+            <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">Keep the key and the code private: anyone with them can stream as you.</p>
           </section>
         </div>
 

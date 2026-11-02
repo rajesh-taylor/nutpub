@@ -54,6 +54,7 @@
         <button class="icon" id="play" aria-label="Play" disabled>
           <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
         </button>
         <button class="icon" id="mute" aria-label="Mute">
           <svg class="i-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -102,7 +103,7 @@
           <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
           <button class="btn quiet" id="topup" hidden>Add 150,000 test sats</button>
         </div>
-        <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span></p>
+        <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span><label id="budget-box" class="budget" hidden>Up to <input id="budget" type="number" min="0" inputmode="numeric" aria-label="Your limit in sats"> sats tonight</label></p>
       </div>
     </div>
   </main>

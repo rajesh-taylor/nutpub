@@ -126,13 +126,24 @@ $('artist-collect').onclick = async () => {
   try {
     const mine = [];
     for (const p of state.waiting) if (await artist.coco.keyring.getKeyPair(p.pubkey)) mine.push(p);
-    for (const p of mine) { try { await artist.collect(p.token, p.pubkey); } catch {} } // the mint's word below counts
+    let done = 0;
+    for (const p of mine) { // the mint's word below counts
+      try { await artist.collect(p.token, p.pubkey); } catch {}
+      $('artist-status').textContent = `Collecting… ${done += 1} of ${mine.length}`; // a viewer paying every 10 s is 360 an hour
+    }
     if (afterLastOrders()) {
       for (const p of state.waiting.filter((x) => x.kind === 'drink' && x.pubkey !== state.pubkey)) {
         try { await artist.collect(p.token, p.pubkey, state.pubkey); mine.push(p); } catch {}
       }
     }
-    const { collected, notYet } = await api('POST', '/api/admin/locked/collected', { ids: mine.map((p) => p.id), by: 'artist' });
+    // Ten at a time: each one is a D1 read and a call to the mint, and one Worker request on the free plan allows 50.
+    const collected = [];
+    const notYet = [];
+    for (let i = 0; i < mine.length; i += 10) {
+      const part = await api('POST', '/api/admin/locked/collected', { ids: mine.slice(i, i + 10).map((p) => p.id), by: 'artist' });
+      collected.push(...part.collected);
+      notYet.push(...part.notYet);
+    }
     const got = mine.filter((p) => collected.includes(p.id)).reduce((s, p) => s + p.sats, 0);
     $('artist-status').textContent = notYet.length ? `Collected ${sats(got)}. ${notYet.length} didn't go through: try again.` : `Collected ${sats(got)}.`;
   } catch (e) { $('artist-status').textContent = e.message; }

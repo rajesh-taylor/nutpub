@@ -47,7 +47,7 @@ export function mountDoor(route, admin, pass) {
   // A new night, for a rehearsal: every phone back to the door, the chat empty, doors open. Payments already locked
   // stay as they are: they belong to the artist and the bar, to collect.
   route('POST', '/api/admin/new-night', admin, async () => {
-    await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('UPDATE messages SET deleted = 1')]);
+    await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('UPDATE messages SET deleted = 1')]);
     await kv.set('nightStart', now()); // Takings counts tonight from here
     await kv.set('stage', 'doors');
     return json({ stage: 'doors' });

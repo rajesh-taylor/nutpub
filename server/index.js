@@ -79,10 +79,11 @@ route('POST', '/api/admin/templates/load', admin, attempt(async (c) => loadTempl
 route('POST', '/api/admin/templates/delete', admin, attempt(async (c) => deleteTemplate((await body(c))?.name)));
 
 let PHOTOS;
-mountDoor(route, admin, mountSet(route));
+const pass = mountSet(route);
+mountDoor(route, admin, pass);
 mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
-mountLive(route, admin);
+mountLive(route, admin, pass);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {
