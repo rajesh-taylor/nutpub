@@ -432,6 +432,10 @@ body.viewer.at-door .door { margin-bottom: 0; }
 
 /* ---- Watching at home inside page 2 (board 2): black, the video and its title left, the live chat right. */
 .live-badge { position: absolute; top: 12px; left: 12px; z-index: 2; font: 400 15px/1 var(--poster); letter-spacing: .14em; color: #fff; background: #c0392b; padding: 5px 8px 4px; border-radius: 3px; }
+/* The live light: glows while the artist's stream comes in. */
+.live-badge.on-air { box-shadow: 0 0 10px 2px rgb(231 76 60 / .75); animation: on-air 2s ease-in-out infinite; }
+@keyframes on-air { 50% { box-shadow: 0 0 3px 0 rgb(231 76 60 / .4); } }
+@media (prefers-reduced-motion: reduce) { .live-badge.on-air { animation: none; } }
 .chat-head, .say-buttons #say-tip, #whole { display: none; }
 body[data-as="home"] .chat-head { display: flex; justify-content: space-between; align-items: center; margin: -12px -12px 8px; padding: 12px 14px; border-bottom: 1px solid rgb(239 227 200 / .14); font: 400 22px/1 var(--poster); letter-spacing: .12em; }
 body[data-as="home"] #whole:not([hidden]) { display: inline-block; }

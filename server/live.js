@@ -37,6 +37,27 @@ export async function liveInput(page) {
   return input;
 }
 
+// Is the artist streaming right now? Stream's word on the input, asked at most every 10 s per Worker: every phone
+// polls the stage every 2 s, and that mustn't become a Stream API call each time.
+const ON_AIR = ['connected', 'reconnected'];
+let onAir = { page: '', live: false, at: 0 };
+export async function liveNow(page) {
+  if (!page || !ACCOUNT || !TOKEN) return false;
+  if (onAir.page === page && Date.now() - onAir.at < 10_000) return onAir.live;
+  let live = false;
+  try {
+    const uid = await kv.get(`live:${page}`);
+    if (uid) {
+      const input = await stream('GET', `/live_inputs/${uid}`);
+      live = ON_AIR.includes(input.status?.current?.state ?? input.status);
+    }
+  } catch (e) {
+    console.log(`live status: ${String(e.message || e).slice(0, 120)}`);
+  }
+  onAir = { page, live, at: Date.now() };
+  return live;
+}
+
 // Larix Grove: one link (or its QR) sets Larix up: where to stream, 720p, a keyframe every 4 s (Stream wants ≤ 8),
 // and Larix's own copy on the phone off, so a gig doesn't fill it. Scanned again: it replaces the one of that name.
 // Larix keeps any other connection ticked, and streams to every ticked one.

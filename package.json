@@ -21,6 +21,7 @@
     "@cashu/coco-core": "2.0.0",
     "@cashu/coco-indexeddb": "2.0.0",
     "esbuild": "0.28.2",
+    "hls.js": "1.6.19",
     "qrcode": "1.5.4"
   }
 }

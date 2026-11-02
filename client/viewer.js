@@ -26,6 +26,7 @@ const T = {
   retried: 'Same payment, same 10 seconds. Charged once.',
   notReady: 'The show isn’t ready yet.',
   tapVideo: 'Tap the picture to start it.',
+  noLive: 'This browser can’t play the live stream.',
   refused: {
     reused: 'That payment was already used.', wrong_mint: 'Wrong mint.', too_little: 'Not enough.',
     no_dleq: 'The payment carried no signature proof.', bad_dleq: 'The payment’s signature didn’t check out.',
@@ -189,7 +190,32 @@ function controls(on) {
   document.body.classList.toggle('playing', on);
 }
 
+// ---- Live: when the artist's stream is coming in (the live light), Play plays it instead of the recorded set.
+// HLS through hls.js (iPhone Safari 17.1+ too), loaded only once a stream is on. Free to watch until the gate.
+let liveOn = false;
+let Hls = null;
+let hls = null;
+const liveUrl = () => show.live?.playback || '';
+const readyLive = () => { if (liveOn && liveUrl() && !Hls) import('hls.js').then((m) => { Hls = m.default; }).catch(() => {}); };
+
+function playLive() {
+  const v = vids[0];
+  v.muted = muted;
+  v.volume = volume;
+  if (Hls?.isSupported()) {
+    hls = new Hls({ lowLatencyMode: false });
+    hls.loadSource(liveUrl());
+    hls.attachMedia(v);
+  } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+    v.src = liveUrl(); // older iPhones play HLS themselves
+  } else return say(T.noLive);
+  controls(true);
+  say('');
+  v.play().then(() => v.classList.add('on')).catch(() => say(T.tapVideo)); // in the tap itself, or the sound stays off
+}
+
 async function play() {
+  if (liveOn && liveUrl()) return playLive();
   const ac = unlockAudio();
   const mine = ++run;
   controls(true);
@@ -257,6 +283,7 @@ async function picture(n, startAt, mine) {
 let volume = 1;
 let muted = false;
 function level() {
+  if (hls || vids[0].src.startsWith('http')) { vids[0].muted = muted; vids[0].volume = volume; }
   if (master && ctx) master.gain.setTargetAtTime(muted ? 0 : volume, ctx.currentTime, 0.05);
   $('mute').setAttribute('aria-label', muted ? 'Sound on' : 'Mute');
   document.body.classList.toggle('muted', muted);
@@ -273,6 +300,9 @@ function stop(why) {
     master = null;
   }
   for (const v of vids) { v.pause(); v.classList.remove('on'); }
+  if (hls) { hls.destroy(); hls = null; }
+  if (vids[0].src.startsWith('http')) { vids[0].removeAttribute('src'); vids[0].load(); }
+  vids[0].muted = true;
   controls(false);
   say(why || (free ? '' : T.stopped));
 }
@@ -397,7 +427,10 @@ const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catc
 const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
 const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
 let door = await myDoor();
-let stage = (await fetch('/api/stage').then((r) => r.json()).catch(() => ({}))).stage || 'doors';
+const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
+let stage = firstStage.stage || 'doors';
+liveOn = !!firstStage.live;
+readyLive();
 
 function render() {
   const room = AS === 'room';
@@ -421,7 +454,8 @@ function render() {
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
   const live = AS === 'home' ? !closed : stage === 'on';
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
-  $('live-badge').hidden = stage !== 'on';
+  $('live-badge').hidden = stage !== 'on' && !liveOn;
+  $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
   $('whole').hidden = AS !== 'home' || !show.ticket.on || ticket || closed;
   $('whole').textContent = `The whole ticket · ${sats(s.artist)}`;
@@ -556,7 +590,10 @@ async function tick() {
   const fresh = await fetch('/api/show').then((r) => r.json());
   if (shownAt && fresh.updated !== shownAt) { Object.assign(show, fresh.show); words(); }
   shownAt = fresh.updated;
-  const latest = (await fetch('/api/stage').then((r) => r.json())).stage;
+  const now = await fetch('/api/stage').then((r) => r.json());
+  const latest = now.stage;
+  liveOn = !!now.live;
+  readyLive();
   if (latest === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
   stage = latest;
   if (door.drink && !door.drink.poured) {

@@ -7,6 +7,7 @@ import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
 import { showOf, ticketSplit, lastOrdersAt } from './shows.js';
+import { liveNow } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now } from './http.js';
 
@@ -32,7 +33,11 @@ const svg = (text) => new Response(text, { headers: { 'Content-Type': 'image/svg
 export function mountDoor(route, admin, pass) {
   // ---- The stage: 'doors' (chat open, the set waits), 'on' (stage lights, then the set), 'closed' (last orders).
   const STAGES = ['doors', 'on', 'closed'];
-  route('GET', '/api/stage', async () => json({ stage: await kv.get('stage', 'doors') }));
+  // The stage, and whether the artist's stream is coming in (the live light).
+  route('GET', '/api/stage', async (c) => {
+    const [stage, live] = await Promise.all([kv.get('stage', 'doors'), showOf(c).then((show) => liveNow(show.page))]);
+    return json({ stage, live });
+  });
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);

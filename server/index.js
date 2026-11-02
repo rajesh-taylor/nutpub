@@ -63,7 +63,7 @@ const attempt = (fn) => async (c) => {
 // to one). The artist's Lightning address and the stream's server and key go to the host's pages only.
 route('GET', '/api/show', async (c) => {
   const now = structuredClone(await current(c));
-  if (!isAdmin(c)) { delete now.show.lightning; delete now.show.live; }
+  if (!isAdmin(c)) { delete now.show.lightning; delete now.show.live.server; delete now.show.live.key; } // playback: signed from step 4
   const [photo, artist, bar] = await Promise.all([photoUrl(), artistKey(), barKey()]);
   return json({ ...now, photo, artistKey: artist, barKey: bar });
 });
