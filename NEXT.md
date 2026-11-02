@@ -70,7 +70,7 @@ From a web AI summary, unchecked: Eventbrite UK 6.95% + £0.59 a ticket; Satlant
 - **Who wins:** smaller headings on desktop (they compete with the wordmark) and on mobile, so The Artists and The punters sit side by side on a phone too. Balance: The punters column ends at the right edge, as The Artists starts at the left.
 - **Button** under The Artists, renamed **"Sign in as Longy"** (demo site, one artist).
 - **Punters line:** "Buy tickets and live stream access".
-- **Tagline (agreed 2 Nov, replaces "We accept Cashu" and the line that stood here):** "Pay by the minute. Leave when it gets bad." under the wordmark, with "Powered by Refueler" small beneath it; check Longy laughs. Drop "A Refueler Labs project" from the footer, so the brand appears once.
+- **Tagline (agreed 2 Nov, replaces "We accept Cashu" and the line that stood here):** "Pay by the minute. Leave when it gets bad." under the wordmark; check Longy laughs. No "Powered by Refueler": "A Refueler Labs project" stays on the bottom line, as on toothache.fyi.
 - **Punters column:** add "No tab. No tracking. No Tuesday quiz." under its line. Keep the word Cashu on the page: "Pay with Cashu" in the same column; the laurels carry the rest.
 - **Laurel hover:** nothing above the name to start with. On hover the top line appears ("Best browser wallet" / "Best original ecash and key grip"; check the wording with Rajesh) and the line below the name disappears.
 - **Footer:** "A Refueler Labs project" half a size smaller.
