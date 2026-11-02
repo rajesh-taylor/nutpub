@@ -10,7 +10,7 @@ import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl } from './photo.js';
 import { mountLive, useStream } from './live.js';
-import { current, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
+import { current, publicShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
 // route(method, '/exact/path' or /regex with (?<named>) groups/, ...steps)
@@ -62,10 +62,9 @@ const attempt = (fn) => async (c) => {
 // What every viewer page reads: the show's settings, the photo and the owners' public keys (every payment is locked
 // to one). The artist's Lightning address and the stream's server and key go to the host's pages only.
 route('GET', '/api/show', async (c) => {
-  const now = structuredClone(await current(c));
-  if (!isAdmin(c)) { delete now.show.lightning; delete now.show.live.server; delete now.show.live.key; } // playback: signed from step 4
+  const now = await current(c);
   const [photo, artist, bar] = await Promise.all([photoUrl(), artistKey(), barKey()]);
-  return json({ ...now, photo, artistKey: artist, barKey: bar });
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, artistKey: artist, barKey: bar });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {

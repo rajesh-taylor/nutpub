@@ -16,6 +16,13 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.example
 
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
+// The show as every viewer may see it: the artist's Lightning address and the stream's server and key stay with the host.
+export const publicShow = (show) => {
+  const open = structuredClone(show);
+  delete open.lightning; delete open.live.server; delete open.live.key;
+  return open;
+};
+
 export const blank = () => ({
   title: '',
   description: '',                      // optional: a line or two under the title
@@ -35,7 +42,6 @@ export const blank = () => ({
   live: { server: '', key: '', playback: '' }, // OBS: where to stream, its key (host only), the link it plays at
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
-  shape: '16:9',                        // the video: landscape 16:9 or portrait 9:16 (a phone filming upright)
   languages: ['en'],
   language: 'en',                       // the one the viewer page opens in
 });
@@ -82,7 +88,6 @@ export function clean(input = {}) {
     },
     wallet: { on: (input.wallet ?? input.pocket)?.on !== false }, // `pocket`: its name in shows saved before 6 Oct
     retry: { on: input.retry?.on !== false },
-    shape: input.shape === '9:16' ? '9:16' : '16:9', // replaces `orientation` (Tue 6 Oct), which never changed the page
     languages: LANGUAGES.filter((l) => (input.languages || []).includes(l)),
     language: LANGUAGES.includes(input.language) ? input.language : 'en',
   };

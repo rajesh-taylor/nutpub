@@ -26,3 +26,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS messages_pass ON messages (pass, id);
 CREATE INDEX IF NOT EXISTS locked_open ON locked (collected_at, id);
+-- The stretch goal's sum, read every tick: only tips, so paying every 10 s neither slows it nor writes to it.
+CREATE INDEX IF NOT EXISTS locked_tips ON locked (at) WHERE kind = 'tip';
+-- Deleted messages, also read every tick: only those rows, not the whole chat.
+CREATE INDEX IF NOT EXISTS messages_gone ON messages (id) WHERE deleted = 1;

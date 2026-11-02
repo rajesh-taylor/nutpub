@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
-import { showOf, ticketSplit, lastOrdersAt } from './shows.js';
+import { current, showOf, publicShow, ticketSplit, lastOrdersAt } from './shows.js';
 import { liveNow } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now } from './http.js';
@@ -92,10 +92,11 @@ export function mountDoor(route, admin, pass) {
     });
 
   // What this phone holds: its ticket, and its drink (poured once the bar has collected it).
-  route('GET', '/api/door/me', pass, async (c) => {
-    const d = await one(`${DRINK} WHERE d.pass = ?`, c.pass);
-    return json({ ticket: await hasTicket(c.pass), drink: d ? { id: d.id, poured: !!d.collected_at } : null });
-  });
+  const heldBy = async (id) => {
+    const d = await one(`${DRINK} WHERE d.pass = ?`, id);
+    return { ticket: await hasTicket(id), drink: d ? { id: d.id, poured: !!d.collected_at } : null };
+  };
+  route('GET', '/api/door/me', pass, async (c) => json(await heldBy(c.pass)));
 
   // The drink's QR: the bar's page with the drink's number only (the token never leaves the server's sealed list).
   route('GET', '/api/door/drink-qr.svg', async (c) => {
@@ -121,19 +122,30 @@ export function mountDoor(route, admin, pass) {
     if (!id) return json({ error: 'empty' }, 400);
     return json({ id: Number(id) });
   });
-  route('GET', '/api/messages', async (c) => {
-    const after = Number(c.url.searchParams.get('after')) || 0;
+  const chatSince = async (c, after) => {
     const [rows, tipped, gone, show] = await Promise.all([
       all('SELECT id, pass, sats, text FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
-      all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 200, 0)),
+      all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
       showOf(c),
     ]);
-    return json({
+    return {
       messages: rows.reverse().map((m) => ({ id: m.id, sats: m.sats, text: m.text, who: `guest ${String(m.pass || '').slice(0, 4)}` })),
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at),
-    });
+    };
+  };
+
+  // The gig page's one request every 2 s: the stage, the live light, the chat since `after`, the show if it has
+  // changed since `shown`, and with `door=1` this phone's drink. One request, to keep the free plan's daily limit.
+  route('GET', '/api/tick', async (c) => {
+    const q = c.url.searchParams;
+    const { show, updated } = await current(c);
+    const [stage, live, chat, door] = await Promise.all([
+      kv.get('stage', 'doors'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
+      q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
+    ]);
+    return json({ stage, live, ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

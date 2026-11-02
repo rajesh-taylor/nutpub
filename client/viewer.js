@@ -47,7 +47,6 @@ document.title = show.title ? `${show.title} · The NutPub` : 'The NutPub';
 $('billing').textContent = show.title;
 $('about').textContent = show.description;
 $('about').hidden = !show.description;
-document.body.dataset.shape = show.shape;
 const free = show.stream.mode === 'free';
 // Free shows: no price and no "This set" (there's nothing to count).
 $('price').textContent = free ? '' : T.perPiece(show.stream.price);
@@ -149,6 +148,13 @@ let playing = false;
 let run = 0;
 let next = resumeAt; // the next piece to buy (the set loops on the server: piece n is file n % pieces)
 const vids = [$('vid-a'), $('vid-b')];
+// The picture's shape comes from the video itself: however the artist holds the phone, nothing is cropped.
+const fit = ({ target: { videoWidth: w, videoHeight: h } }) => {
+  if (!w || !h) return;
+  document.body.style.setProperty('--ratio', w / h);
+  document.body.dataset.shape = h > w ? 'tall' : 'wide';
+};
+for (const v of vids) { v.addEventListener('loadedmetadata', fit); v.addEventListener('resize', fit); }
 
 function unlockAudio() {
   // At the very start of a tap, before any await, or iOS stays silent.
@@ -209,6 +215,7 @@ function playLive() {
   } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
     v.src = liveUrl(); // older iPhones play HLS themselves
   } else return say(T.noLive);
+  document.body.classList.add('live-video');
   controls(true);
   say('');
   v.play().then(() => v.classList.add('on')).catch(() => say(T.tapVideo)); // in the tap itself, or the sound stays off
@@ -301,6 +308,7 @@ function stop(why) {
   }
   for (const v of vids) { v.pause(); v.classList.remove('on'); }
   if (hls) { hls.destroy(); hls = null; }
+  document.body.classList.remove('live-video');
   if (vids[0].src.startsWith('http')) { vids[0].removeAttribute('src'); vids[0].load(); }
   vids[0].muted = true;
   controls(false);
@@ -545,9 +553,9 @@ function goal(tipped, goals) {
   $('goal-sum').textContent = `${tipped.toLocaleString('en-GB')} / ${g.at.toLocaleString('en-GB')}`;
   $('goal-bar').style.width = `${Math.min(100, (tipped / g.at) * 100)}%`;
 }
-async function chat() {
-  const r = await fetch(`/api/messages?after=${lastMsg}`).then((x) => x.json());
+function chat(r) {
   for (const m of r.messages) {
+    if (m.id <= lastMsg) continue; // two ticks crossing: already shown
     const li = document.createElement('li');
     li.dataset.id = m.id;
     const who = document.createElement('span');
@@ -574,7 +582,7 @@ async function chat() {
 function said() {
   const text = $('say-text').value.trim();
   $('say-text').value = '';
-  setTimeout(() => chat().catch(() => {}), 300);
+  setTimeout(() => tick().catch(() => {}), 300);
   return text ? { 'X-Message': encodeURIComponent(text) } : {};
 }
 $('say').onsubmit = async (e) => {
@@ -582,27 +590,27 @@ $('say').onsubmit = async (e) => {
   const text = $('say-text').value.trim();
   if (!text) return;
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-  if (r.ok) { $('say-text').value = ''; chat().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
+  if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
 
-// ---- Every 2 s: the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)
+// ---- Every 2 s, one request: the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)
 async function tick() {
-  const fresh = await fetch('/api/show').then((r) => r.json());
-  if (shownAt && fresh.updated !== shownAt) { Object.assign(show, fresh.show); words(); }
-  shownAt = fresh.updated;
-  const now = await fetch('/api/stage').then((r) => r.json());
-  const latest = now.stage;
+  const waiting = door.drink && !door.drink.poured; // the phone only needs its drink while the bar hasn't poured it
+  const now = await fetch(`/api/tick?after=${lastMsg}${shownAt ? `&shown=${encodeURIComponent(shownAt)}` : ''}${waiting ? '&door=1' : ''}`,
+    { headers: { 'X-Pass': pass } }).then((r) => r.json());
+  if (shownAt && now.show) { Object.assign(show, now.show); words(); }
+  shownAt = now.updated;
   liveOn = !!now.live;
   readyLive();
-  if (latest === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
-  stage = latest;
-  if (door.drink && !door.drink.poured) {
-    door = await myDoor();
+  if (now.stage === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
+  stage = now.stage;
+  if (now.door) {
+    door = now.door;
     if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   if (stage === 'closed') $('change').textContent = `Your change: ${sats(await wallet.balance())}, in this browser.`;
   render();
-  await chat();
+  chat(now);
 }
 render();
 tick().catch(() => {});
