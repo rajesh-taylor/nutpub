@@ -29,6 +29,29 @@
     .board .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px 12px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
     .board .field input:disabled { opacity: .6; }
     .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+    .board .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+    .board .wide { grid-column: 1 / -1; }
+    .board .split-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: center; margin: 0 0 10px; font-size: 15px; }
+    .board .split-rows .head { color: var(--smoke); }
+    .board .split-rows input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
+    .board .who-share { display: flex; align-items: center; gap: 8px; min-height: 42px; }
+    .board .who-share b { flex: 1; font-weight: 600; color: var(--cream); overflow-wrap: anywhere; }
+    .board .who-share .pct { flex: none; color: var(--amber); font: 400 22px/1 var(--poster); letter-spacing: .04em; }
+    .board .who-share input.name { flex: 1; min-width: 0; }
+    .board .who-share input.share { flex: none; width: 5em; }
+    .board .who-share .drop { flex: none; font-size: 15px; padding: 6px 9px 4px; }
+    .board .slots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding-bottom: 14px; }
+    .board .slot { position: relative; }
+    .board .slot label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0; box-sizing: border-box; font-size: 13px; color: var(--smoke); text-align: center; cursor: pointer; border: 1px dashed rgb(239 227 200 / .35); border-radius: 4px; background: center / cover no-repeat; }
+    .board .slot.tall label { width: 108px; height: 192px; }
+    .board .slot.wide label { width: 256px; height: 144px; }
+    .board .slot label.over { border-color: var(--amber); background-color: rgb(217 149 58 / .12); }
+    .board .slot.full label { border-style: solid; }
+    .board .slot.full label span { display: none; }
+    .board .slot small { font-size: 11px; }
+    .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
+    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); } }
+    .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
     .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
     .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
     .board .tag.works { color: var(--deep); background: var(--amber); }
@@ -60,7 +83,7 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
-    .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .head-new { font-size: 16px; padding: 7px 12px 5px; }
     .board .paid-wide { margin-top: 16px; }
     .board .wallet-box { margin: 0 0 16px; border-color: rgb(217 149 58 / .35); }
     .board .panel h2 { display: flex; align-items: center; gap: 10px; }
@@ -85,7 +108,7 @@
     .board .sheet-words span:nth-child(3) { font: 400 12px/1.2 var(--poster); letter-spacing: .08em; }
     .board .mini-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     .board .mini-buttons .btn { font-size: 18px; padding: 10px 14px 8px; }
-    @media (max-width: 900px) { .board .grid, .board .two { grid-template-columns: minmax(0, 1fr); } .board .page { padding: 20px 16px; } }
+    @media (max-width: 900px) { .board .grid, .board .two, .board .three { grid-template-columns: minmax(0, 1fr); } .board .page { padding: 20px 16px; } }
   </style>
 </head>
 <body class="board">
@@ -104,15 +127,11 @@
     <main>
       <div class="top">
         <div style="flex: 1 1 320px;">
-          <h1>Set up the gig</h1>
+          <h1>Set up your gig</h1>
+          <p>A new gig starts as a copy of your last one. Change what's different and you're done.</p>
         </div>
-        <div class="who-wrap">
-          <p class="coming">Venue host and Both: coming soon</p>
-          <div class="who" role="group" aria-label="Who is setting it up">
-            <button type="button" class="on" aria-pressed="true">Artist</button>
-            <button type="button" disabled>Venue</button>
-            <button type="button" disabled>Both</button>
-          </div>
+        <div class="who" role="group" aria-label="Who is playing">
+          <button type="button" class="on" aria-pressed="true">Artist</button>
         </div>
       </div>
 
@@ -124,62 +143,35 @@
       </form>
 
       <form id="form" hidden autocomplete="off">
-        <section class="panel paid-wide wallet-box">
-          <h2>My wallet details</h2>
-          <ul class="paid">
-            <li><span style="color: var(--amber);">✓</span> <a id="takings-link" target="_blank" rel="noopener">Longy's page</a>: key made in Longy's own browser</li>
-            <li><span style="color: var(--amber);">✓</span> <a id="bar-link" target="_blank" rel="noopener">The bar's page</a>: key made in the bar's own browser</li>
-            <li><span style="color: var(--smoke);">·</span> This server: no keys, no sats. It checks each payment with the mint (NUT-07) and never swaps.</li>
-          </ul>
-          <label class="field ln">The artist's Lightning address <span class="tag design">Off on the test mint</span>
-            <input data-path="lightning" type="email" placeholder="e.g. longy@walletofsatoshi.com" maxlength="120" autocapitalize="off" spellcheck="false" disabled></label>
-          <p style="margin: -6px 0 14px; font-size: 13px; color: var(--smoke);">Where the artist's page sends the takings (NUT-05). The test mint's Lightning is pretend, so on the demo the takings stay as ecash.</p>
-        </section>
-
         <div class="grid">
-          <section class="panel">
-            <h2>The event</h2>
+          <section class="panel wide">
+            <h2>Event</h2>
             <div class="two">
-              <label class="field">Show name<input data-path="title" maxlength="80"></label>
-              <label class="field">The artist's welcome<input data-path="description" maxlength="280"></label>
               <label class="field">Artist<input data-path="artist" maxlength="60"></label>
-              <label class="field">Venue<input data-path="venue" maxlength="60"></label>
+              <label class="field">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+            </div>
+            <div class="three">
               <label class="field">Date<input type="date" data-path="date"></label>
-              <label class="field">Show starts<input type="time" data-path="starts"></label>
+              <label class="field">Starts<input type="time" data-path="starts"></label>
+              <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
             </div>
-            <label class="field">Last orders <span style="color: var(--cream);">(unpoured drinks go to the artist)</span><input type="time" data-path="lastOrders"></label>
-            <label class="field">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+            <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Show splits <span class="tag design">Saved, not paid out yet</span></p>
+            <div class="split-rows" id="split-rows"></div>
+            <p style="margin: 0 0 14px;"><button type="button" class="btn quiet" id="add-split">+ Add a split</button></p>
+            <p style="margin: 0 0 14px; font-size: 13px; color: var(--smoke);">The artist gets what's left. The NutPub stays at 5%.</p>
           </section>
 
-          <section class="panel">
-            <h2>Tickets <span class="tag works">Works</span></h2>
+          <section class="panel wide">
+            <h2>Tickets</h2>
             <input type="checkbox" data-path="ticket.on" hidden>
-            <div class="two">
-              <label class="field">Ticket, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"></label>
-              <label class="field" id="drink-price">Free first drink, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
-            </div>
-            <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Free first drink</p>
-            <label class="choice"><input type="radio" name="drink" data-path="drink.mode" value="off"> <span><b>Off</b></span></label>
-            <label class="choice"><input type="radio" name="drink" data-path="drink.mode" value="artist"> <span><b>On:</b> added to the ticket price</span></label>
-            <p class="split" id="split"></p>
-            <label class="field">Card tickets: Stripe Payment Link <span class="tag design">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
+            <label class="field">Ticket price, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price"></label>
+            <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Watching from home</p>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute. Ticket holders watch free. The mint takes a small fee.</span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Free, with tips</b></span></label>
           </section>
 
-          <section class="panel">
-            <h2>Tips and messages <span class="tag works">Works</span></h2>
-            <input data-path="tip.label" hidden>
-            <div class="two">
-              <label class="field">One tap, sats<input type="number" min="21" step="1" inputmode="numeric" data-path="tip.price"></label>
-              <label class="field">Their own amount<input disabled value="21 sats or more"></label>
-            </div>
-            <label class="choice"><input type="checkbox" checked disabled> <span>Tips with a message, shown in the live chat</span></label>
-            <label class="choice"><input type="checkbox" checked disabled> <span>Host can delete a message</span></label>
-            <label class="field">Nutzaps on Nostr: Longy's npub <span class="tag design">Design only</span><input disabled placeholder="npub1…"></label>
-            <label class="field">Card tips: Stripe Payment Link <span class="tag design">Not wired up</span><input disabled placeholder="https://buy.stripe.com/…"></label>
-          </section>
-
-          <section class="panel">
-            <h2>Stretch goals <span class="tag works">Works</span></h2>
+          <section class="panel wide">
+            <h2>Stretch goals</h2>
             <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Fed by live tips. Everyone sees the bar fill.</p>
             <div class="goal-row">
               <label class="field">Goal<input data-path="goals.0.label" maxlength="60"></label>
@@ -191,15 +183,7 @@
             <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
           </section>
 
-          <section class="panel">
-            <h2>Watching at home</h2>
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as it plays:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.price" aria-label="Sats every 10 seconds"> sats every 10 seconds. Stop paying, it stops.</span></label>
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Free, with tips</b></span></label>
-            <p style="margin: 0 0 12px; font-size: 15px;">Either way they can buy <b>the whole ticket</b> in sats, once.</p>
-            <label class="choice"><input type="radio" disabled> <span><b>Card</b> through Stripe <span class="tag design">Not wired up</span></span></label>
-          </section>
-
-          <section class="panel">
+          <section class="panel wide">
             <h2>Live stream</h2>
             <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Stream from your phone with <b>Larix Broadcaster</b> (iPhone or Android): install, scan this QR with your phone, then press the red button in Larix. Free Larix puts its name over your video; <b>Larix Premium</b> $9.99/mo removes it.</p>
             <p><button type="button" class="btn primary" id="make-stream">Make my stream</button></p>
@@ -210,36 +194,51 @@
               <p style="font-size: 15px;"><b>For the full wide picture,</b> set Orientation to Landscape in Larix's settings before you start. Most people who pay will watch on a laptop. Turning the phone during the stream only leaves black bars.</p>
             </div>
             <p style="margin: 14px 0 8px; font-size: 15px; color: var(--smoke);">Streaming from a laptop: put these in OBS (Settings → Stream → Custom).</p>
-            <label class="field">Stream server (RTMP or SRT)
-              <span class="key-row"><input data-path="live.server" id="live-server" placeholder="rtmps://live.example.com:443/live/" autocapitalize="off" spellcheck="false" maxlength="300"><button type="button" class="btn quiet" id="copy-server">Copy</button></span></label>
-            <label class="field">Stream key
-              <span class="key-row"><input data-path="live.key" type="password" id="live-key" autocomplete="off" maxlength="300"><button type="button" class="btn quiet" id="show-key">Show</button><button type="button" class="btn quiet" id="copy-key">Copy</button></span></label>
+            <div class="two">
+              <label class="field">Stream server (RTMP or SRT)
+                <span class="key-row"><input data-path="live.server" id="live-server" placeholder="rtmps://live.example.com:443/live/" autocapitalize="off" spellcheck="false" maxlength="300"><button type="button" class="btn quiet" id="copy-server">Copy</button></span></label>
+              <label class="field">Stream key
+                <span class="key-row"><input data-path="live.key" type="password" id="live-key" autocomplete="off" maxlength="300"><button type="button" class="btn quiet" id="show-key">Show</button><button type="button" class="btn quiet" id="copy-key">Copy</button></span></label>
+            </div>
             <label class="field">Playback link (HLS)<input data-path="live.playback" placeholder="https://…/index.m3u8" autocapitalize="off" spellcheck="false" maxlength="300"></label>
             <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">Keep the key and the code private: anyone with them can stream as you.</p>
           </section>
-        </div>
 
+          <section class="panel wide">
+            <h2>Images</h2>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Two tall photos for phones, two wide ones for screens. Drop one in, or click. A JPEG, PNG or WebP, up to 5 MB.</p>
+            <div class="slots">
+              <div class="slot tall" data-slot="tall1"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot tall" data-slot="tall2"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot wide" data-slot="wide1"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot wide" data-slot="wide2"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+            </div>
+          </section>
+        </div>
 
         <div class="foot">
           <p id="status" role="status"></p>
-          <a class="btn primary" id="doors-open" href="/show?doors=1">The show →</a>
           <button type="submit" hidden>Save</button>
         </div>
 
         <!-- Kept for older shows and the hidden extras the script still fills. -->
         <div hidden>
           <span id="tip-preview"></span>
+          <!-- Off for the demo; they come back with a Venue/Hosts section. -->
+          <input data-path="venue"><input data-path="tip.label"><input type="number" data-path="tip.price">
+          <label id="drink-price"><input type="number" data-path="drink.price"></label>
+          <input type="radio" name="drink" data-path="drink.mode" value="off"><input type="radio" name="drink" data-path="drink.mode" value="artist">
+          <p id="split"></p><a id="takings-link"></a><a id="bar-link"></a><a id="doors-open"></a>
           <div id="langs"></div><select data-path="language" id="language"></select>
           <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on">
           <select id="tpl-list"></select><button type="button" id="tpl-load"></button><button type="button" id="tpl-delete"></button>
           <input id="tpl-name"><button type="button" id="tpl-save"></button>
-          <img id="photo-preview" alt=""><input type="file" id="photo-file"><button type="button" id="photo-reset"></button>
         </div>
       </form>
     </main>
 
     <aside id="preview" hidden aria-label="The attendee's phone">
-      <p class="cap">The attendee's phone · from the poster's QR</p>
+      <p class="cap">How ticket appears on phone - from poster's QR</p>
       <div class="phone-frame"><iframe id="preview-frame" title="The show page, as an attendee sees it"></iframe></div>
       <section class="panel mini" id="poster-panel">
         <h2>Gig poster</h2>

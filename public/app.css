@@ -500,3 +500,18 @@ body.inside-doors .chat { margin-top: 0; }
 body[data-as="room"] #card { display: none; }
 .nostr { flex-wrap: nowrap; white-space: nowrap; font-size: 12px; }
 .nostr .btn { font-size: 13px; padding: 4px 7px 2px; }
+
+/* The gig page's top: our name small and gold, then the artist biggest, then the show title if there is one. */
+.nutpub-line { font: 400 12px/1 var(--poster); letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin: 14px 0 4px; text-shadow: 0 1px 3px rgb(5 9 20 / .9); }
+body.viewer .masthead .wordmark { margin: 0 0 4px; line-height: 1.05; }
+body.viewer .masthead .tag { font: 400 24px/1.1 var(--poster); letter-spacing: .08em; color: var(--cream); margin: 0 0 4px; }
+body.viewer .masthead { margin-bottom: 8px; }
+body.framed[data-as="home"] .nutpub-line { display: none; }
+@media (min-width: 900px) { body[data-as="home"] .nutpub-line { text-align: left; margin: 0 0 4px; } }
+/* The ticket page on a phone: the words, the photo under them, and on the bottom of the photo only the ticket's buttons. */
+body.viewer.at-door .when { margin-top: 0; }
+body.viewer.at-door .backdrop i { top: var(--door-top, 170px); background-position: center 25%; }
+body.viewer.at-door .door { margin-top: auto; margin-bottom: 0; padding: 0; border: 0; background: none; }
+body.at-door #door-title, body.test-mint.at-door .door-wallet { display: none; }
+body.at-door #door .hint { margin: 0; text-align: center; color: var(--cream); text-shadow: 0 1px 3px #000, 0 0 10px #000; }
+body.at-door #door-home { background: rgb(5 9 20 / .72); }

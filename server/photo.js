@@ -14,35 +14,46 @@ const kinds = [
   { type: 'image/webp', is: (b) => starts(b, ascii('RIFF')) && starts(b, ascii('WEBP'), 8) },
 ];
 
+// Four photos: two tall for phones, two wide for screens. tall1 keeps the name the one photo always had.
+const SLOTS = ['tall1', 'tall2', 'wide1', 'wide2'];
+const named = (slot) => (slot === 'tall1' ? 'photo' : `photo-${slot}`);
+const urlOf = (slot, p) => p && `/api/show/photo${slot === 'tall1' ? '' : `/${slot}`}?v=${Date.parse(p.at).toString(36)}`;
 // { type, at } or null
-const current = () => kv.get('photo', null);
-export const photoUrl = async () => { const p = await current(); return p ? `/api/show/photo?v=${Date.parse(p.at).toString(36)}` : null; };
+const current = (slot = 'tall1') => kv.get(named(slot), null);
+export const photoUrl = async () => urlOf('tall1', await current());
+export const photoUrls = async () => Object.fromEntries(await Promise.all(SLOTS.map(async (s) => [s, urlOf(s, await current(s))])));
 
 export function mountPhoto(route, admin, store) {
-  route('GET', '/api/show/photo', async () => {
-    const p = await current();
-    const bytes = p && (await store().get('photo', 'arrayBuffer'));
+  const serve = async (slot) => {
+    const p = await current(slot);
+    const bytes = p && (await store().get(named(slot), 'arrayBuffer'));
     if (!bytes) return json({ error: 'no_photo' }, 404);
     // The URL changes with every upload.
     return new Response(bytes, { headers: { 'Content-Type': p.type, 'Cache-Control': 'public, max-age=31536000, immutable' } });
-  });
-
-  route('PUT', '/api/admin/photo', admin, async (c) => {
+  };
+  const save = async (c, slot) => {
     if (Number(c.req.headers.get('Content-Length')) > MAX) return json({ error: 'too_big', detail: 'That photo is over 5 MB.' }, 413);
     const buf = new Uint8Array(await c.req.arrayBuffer());
     if (buf.length > MAX) return json({ error: 'too_big', detail: 'That photo is over 5 MB.' }, 413);
     if (!buf.length) return json({ error: 'empty', detail: 'No photo came through.' }, 400);
     const kind = kinds.find((k) => k.is(buf));
     if (!kind) return json({ error: 'not_a_photo', detail: 'Use a JPEG, PNG or WebP photo.' }, 400);
-    await store().put('photo', buf);
-    await kv.set('photo', { type: kind.type, at: now() });
-    return json({ photo: await photoUrl() });
-  });
+    await store().put(named(slot), buf);
+    await kv.set(named(slot), { type: kind.type, at: now() });
+    return json({ photo: await photoUrl(), photos: await photoUrls() });
+  };
+  const drop = async (slot) => {
+    await store().delete(named(slot));
+    await kv.set(named(slot), null);
+    return json({ photo: await photoUrl(), photos: await photoUrls() });
+  };
+  const one = /^\/api\/admin\/photo\/(?<slot>tall1|tall2|wide1|wide2)$/;
 
+  route('GET', '/api/show/photo', () => serve('tall1'));
+  route('GET', /^\/api\/show\/photo\/(?<slot>tall1|tall2|wide1|wide2)$/, (c) => serve(c.params.slot));
+  route('PUT', '/api/admin/photo', admin, (c) => save(c, 'tall1'));
+  route('PUT', one, admin, (c) => save(c, c.params.slot));
   // Back to the default photos.
-  route('DELETE', '/api/admin/photo', admin, async () => {
-    await store().delete('photo');
-    await kv.set('photo', null);
-    return json({ photo: null });
-  });
+  route('DELETE', '/api/admin/photo', admin, () => drop('tall1'));
+  route('DELETE', one, admin, (c) => drop(c.params.slot));
 }

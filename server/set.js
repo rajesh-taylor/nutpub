@@ -6,7 +6,7 @@
 import { ASSETS } from './config.js';
 import { one, run } from './db.js';
 import { cashuGate } from './gate.js';
-import { showOf } from './shows.js';
+import { showOf, piecePrice } from './shows.js';
 import { artistKey } from './takings.js';
 import { hasTicket, addMessage, tipMessage } from './door.js';
 import { json, randomHex, now } from './http.js';
@@ -68,10 +68,10 @@ export function mountSet(route) {
   route('GET', /^\/api\/set\/audio\/(?<n>\d+)$/, pass, piece,
     async (c) => {
       if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
-      if (!(await showOf(c)).stream.price) return json({ error: 'not_ready', detail: 'No price per 10 s set yet.' }, 409);
+      if (!(await showOf(c)).stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
     },
-    cashuGate(async (c) => (await showOf(c)).stream.price, async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds`,
+    cashuGate(async (c) => piecePrice(await showOf(c)), async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds`,
       { lockTo: artistKey, kind: 'piece' }),
     async (c) => {
       await run('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)', c.pass, c.piece, c.paid, now());

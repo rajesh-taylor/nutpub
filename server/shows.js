@@ -19,12 +19,12 @@ const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.
 // The show as every viewer may see it: the artist's Lightning address and the stream's details stay with the host.
 export const publicShow = (show) => {
   const open = structuredClone(show);
-  delete open.lightning; delete open.live; // the picture's link comes with a token, from /api/live/token
+  delete open.lightning; delete open.live; delete open.splits; // the picture's link comes with a token, from /api/live/token
   return open;
 };
 
 export const blank = () => ({
-  title: '',
+  title: '',                            // optional: the artist may leave it blank
   description: '',                      // optional: a line or two under the title
   artist: '',                           // not on the tag line; the buttons use it ("Tip Longy")
   venue: '',
@@ -33,7 +33,8 @@ export const blank = () => ({
   lastOrders: '',                       // HH:MM: an unpoured drink's lock opens for the artist then (NUT-11 locktime)
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
-  stream: { mode: 'pay', price: null }, // 'pay': sats per 10 s; 'free': free to watch, tips only
+  splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
+  stream: { mode: 'pay', perMinute: null }, // 'pay': sats a minute; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
@@ -64,9 +65,16 @@ export function clean(input = {}) {
     // Empty: taken from the artist's name, once. After that it stays put, so links and posters keep working.
     page: pageName(input.page) || pageName(input.artist),
     lightning: LN_ADDRESS.test(text(input.lightning, 120)) ? text(input.lightning, 120).toLowerCase() : '',
+    // The artist gets what's left of 95%, at least 1%; The NutPub's 5% is fixed, so it isn't stored.
+    splits: (Array.isArray(input.splits) ? input.splits : []).slice(0, 8).reduce((list, s) => {
+      const used = list.reduce((sum, x) => sum + (x.percent || 0), 0);
+      const n = Math.floor(Number(s?.percent));
+      const lightning = text(s?.lightning, 120).toLowerCase();
+      return [...list, { name: text(s?.name, 40), percent: n >= 1 && used < 94 ? Math.min(n, 94 - used) : null, lightning: LN_ADDRESS.test(lightning) ? lightning : '' }];
+    }, []),
     stream: {
       mode: input.stream?.mode === 'free' ? 'free' : 'pay',
-      price: sats(input.stream?.price),
+      perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov
     },
     tip: { label: text(input.tip?.label, 40), price: sats(input.tip?.price) },
     goal: {
@@ -95,11 +103,8 @@ export function clean(input = {}) {
   if (!show.languages.includes(show.language)) show.language = show.languages[0];
 
   const problems = [];
-  if (!show.title) problems.push('title');
   if (!show.artist) problems.push('artist');
-  if (show.stream.mode === 'pay' && !show.stream.price) problems.push('stream.price');
-  if (!show.tip.label) problems.push('tip.label');
-  if (!show.tip.price) problems.push('tip.price');
+  if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
   if (show.drink.mode === 'artist' && !show.drink.price) problems.push('drink.price');
@@ -144,6 +149,9 @@ export async function deleteTemplate(name) {
   await run('DELETE FROM templates WHERE name = ?', String(name ?? ''));
   return listTemplates();
 }
+
+// A 10-second piece of the recorded set, at the show's rate a minute.
+export const piecePrice = (show) => Math.ceil(show.stream.perMinute / 6);
 
 // What a ticket costs and who gets what: the artist's price, plus the first drink if the artist added one.
 export function ticketSplit(show) {

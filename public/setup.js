@@ -1,8 +1,7 @@
 // The setup page: read the show, edit it, save it to the server. Templates save and load whole shows.
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
-  title: 'show name', artist: 'artist', 'stream.price': 'price per 10 s', 'tip.label': 'tip label',
-  'tip.price': 'tip price', 'goal.amount': 'goal', 'ticket.price': 'ticket price',
+  artist: 'artist', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price',
   'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
@@ -42,6 +41,7 @@ function set(obj, path, value) {
 function fill(s) {
   show = structuredClone(s);
   for (const el of fields) {
+    if (el === document.activeElement) continue; // still being typed in
     const v = get(show, el.dataset.path);
     if (el.type === 'checkbox') el.checked = !!v;
     else if (el.type === 'radio') el.checked = el.value === v;
@@ -50,7 +50,64 @@ function fill(s) {
   $('langs').innerHTML = Object.entries(LANGS).map(([code, name]) =>
     `<label class="choice inline"><input type="checkbox" data-lang="${code}"${show.languages.includes(code) ? ' checked' : ''}> ${name}</label>`).join('');
   languageChoices();
+  drawSplits();
   refresh();
+}
+
+// The artist's own Lightning address is an ordinary field; the rows are drawn round it.
+const fieldLightning = Object.assign(document.createElement('input'), { type: 'email', placeholder: 'e.g. longy@walletofsatoshi.com', maxLength: 120, ariaLabel: 'The artist\u2019s Lightning address' });
+fieldLightning.dataset.path = 'lightning';
+fieldLightning.autocapitalize = 'off'; fieldLightning.spellcheck = false;
+fields.push(fieldLightning);
+$('add-split').onclick = () => {
+  if (show.splits.length >= 8) return status('Eight splits at most.', 'bad');
+  show.splits.push({ name: '', percent: null, lightning: '' });
+  drawSplits();
+  refresh();
+  $('split-rows').querySelector(`[data-split="${show.splits.length - 1}"] .name`).focus();
+};
+
+// ---- The show's splits: the artist gets what's left of 95%, and The NutPub's 5% never changes.
+const NUTPUB = 5;
+const artistShare = () => 100 - NUTPUB - (show.splits || []).reduce((sum, s) => sum + (s.percent || 0), 0);
+function drawSplits() {
+  const box = $('split-rows');
+  const rows = box.querySelectorAll('[data-split]');
+  if (box.children.length && rows.length === show.splits.length) { // same rows: new values only, not under the typing
+    rows.forEach((row, i) => {
+      for (const [cls, k] of [['name', 'name'], ['share', 'percent'], ['to', 'lightning']]) {
+        const el = row.querySelector(`.${cls}`);
+        const to = cls === 'to' ? box.querySelector(`[data-of="${i}"]`) : el;
+        if (to !== document.activeElement) to.value = show.splits[i][k] ?? '';
+      }
+    });
+    return;
+  }
+  const line = (kids) => { const d = document.createElement('div'); d.className = 'who-share'; d.append(...kids); return d; };
+  const make = (tag, props) => Object.assign(document.createElement(tag), props);
+  const lightning = fieldLightning;
+  box.replaceChildren(
+    make('span', { className: 'head', textContent: 'Who and their share' }), make('span', { className: 'head', textContent: 'Lightning address' }),
+    line([make('b', { id: 'split-artist' }), make('span', { className: 'pct', id: 'split-artist-pct' })]), lightning,
+  );
+  show.splits.forEach((s, i) => {
+    const row = make('div', { className: 'who-share' });
+    row.dataset.split = i;
+    const drop = make('button', { type: 'button', className: 'btn quiet drop', textContent: '✕' });
+    drop.setAttribute('aria-label', 'Remove this split');
+    drop.onclick = () => { show.splits.splice(i, 1); drawSplits(); refresh(); form.requestSubmit(); };
+    row.append(
+      make('input', { className: 'name', value: s.name ?? '', placeholder: 'e.g. the drummer', maxLength: 40, ariaLabel: 'Who' }),
+      make('input', { className: 'share', type: 'number', min: 1, max: 94, step: 1, inputMode: 'numeric', value: s.percent ?? '', placeholder: '%', ariaLabel: 'Their share, in percent' }),
+      drop,
+    );
+    const to = make('input', { className: 'to', type: 'email', value: s.lightning ?? '', placeholder: 'name@wallet.example', maxLength: 120, ariaLabel: 'Their Lightning address' });
+    to.autocapitalize = 'off'; to.spellcheck = false;
+    to.dataset.of = i;
+    box.append(row, to);
+  });
+  box.append(line([make('b', { textContent: 'The NutPub' }), make('span', { className: 'pct', textContent: `${NUTPUB}%` })]),
+    make('span', { className: 'head', textContent: 'Fixed' }));
 }
 
 function languageChoices() {
@@ -68,6 +125,11 @@ function read() {
       : el.value;
     set(show, el.dataset.path, v);
   }
+  show.splits = [...$('split-rows').querySelectorAll('[data-split]')].map((row) => {
+    const percent = row.querySelector('.share').value;
+    return { name: row.querySelector('.name').value, percent: percent === '' ? null : Number(percent),
+      lightning: $('split-rows').querySelector(`[data-of="${row.dataset.split}"]`).value };
+  });
   show.tip.label = `Tip ${show.artist || 'the artist'}`; // the button takes the artist's name
   show.languages = [...$('langs').querySelectorAll('[data-lang]:checked')].map((el) => el.dataset.lang);
   if (!show.languages.length) show.languages = ['en'];
@@ -81,6 +143,8 @@ function refresh() {
     const v = get(show, path);
     el.hidden = want ? v !== want : !v;
   }
+  $('split-artist').textContent = show.artist || 'The artist';
+  $('split-artist-pct').textContent = `${artistShare()}%`;
   $('takings-link').textContent = `${show.artist || 'The artist'}’s takings`;
   // The small poster follows the form, like the A4 one.
   $('mini-artist').textContent = show.artist || '';
@@ -133,7 +197,7 @@ function saved(res) {
 }
 
 form.addEventListener('input', (e) => {
-  if (e.target.id === 'photo-file') return; // saved on its own, not with the form
+  if (e.target.type === 'file') return; // saved on its own, not with the form
   read();
   if (e.target.dataset.lang) languageChoices();
   refresh();
@@ -182,35 +246,45 @@ $('tpl-delete').addEventListener('click', async () => {
   catch (err) { status(err.message, 'bad'); }
 });
 
-// ---- Background photo: uploaded the moment it's picked (the server checks its type and size too).
-const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
-function photo(url) {
-  $('photo-preview').src = url || DEFAULT_PHOTO;
-  $('photo-reset').hidden = !url;
+// ---- The photos: uploaded the moment one is dropped in or picked (the server checks type and size too).
+function photos(all = {}) {
+  for (const box of form.querySelectorAll('.slot')) {
+    const url = all[box.dataset.slot];
+    box.classList.toggle('full', !!url);
+    box.querySelector('label').style.backgroundImage = url ? `url("${url}")` : '';
+    box.querySelector('.drop').hidden = !url;
+  }
 }
-$('photo-file').addEventListener('change', async () => {
-  const file = $('photo-file').files[0];
-  $('photo-file').value = '';
+async function upload(slot, file) {
   if (!file) return;
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return status('Use a JPEG, PNG or WebP photo.', 'bad');
   if (file.size > 5 * 1024 * 1024) return status('That photo is over 5 MB.', 'bad');
   status('Uploading the photo…');
   try {
-    const r = await fetch('/api/admin/photo', { method: 'PUT', headers: { 'X-Admin': key || '', 'Content-Type': file.type }, body: file });
+    const r = await fetch(`/api/admin/photo/${slot}`, { method: 'PUT', headers: { 'X-Admin': key || '', 'Content-Type': file.type }, body: file });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.detail || data.error || r.statusText);
-    photo(data.photo);
-    status('Background photo saved. The show page has it on its next load.', 'ok');
+    photos(data.photos);
+    status('Photo saved. The gig page has it on its next load.', 'ok');
   } catch (err) { status(`Photo not saved: ${err.message}`, 'bad'); }
-});
-$('photo-reset').addEventListener('click', async () => {
-  try { photo((await api('DELETE', '/api/admin/photo')).photo); status('Back to the Berlin photos.', 'ok'); }
-  catch (err) { status(err.message, 'bad'); }
-});
+}
+for (const box of form.querySelectorAll('.slot')) {
+  const { slot } = box.dataset;
+  const label = box.querySelector('label');
+  const input = box.querySelector('input');
+  input.onchange = () => { const f = input.files[0]; input.value = ''; upload(slot, f); };
+  label.ondragover = (e) => { e.preventDefault(); label.classList.add('over'); };
+  label.ondragleave = () => label.classList.remove('over');
+  label.ondrop = (e) => { e.preventDefault(); label.classList.remove('over'); upload(slot, e.dataTransfer.files[0]); };
+  box.querySelector('.drop').onclick = async () => {
+    try { photos((await api('DELETE', `/api/admin/photo/${slot}`)).photos); status('Photo removed.', 'ok'); }
+    catch (err) { status(err.message, 'bad'); }
+  };
+}
 
 // ---- The stretch goal's bar, filled by the tips so far.
 async function goalPreview() {
-  const { tipped, goals } = await fetch('/api/messages').then((r) => r.json()).catch(() => ({ tipped: 0, goals: [] }));
+  const { tipped, goals } = await fetch('/api/tick?after=999999999').then((r) => r.json()).catch(() => ({ tipped: 0, goals: [] }));
   const g = goals.find((x) => tipped < x.at) || goals[goals.length - 1];
   const n = (v) => Number(v).toLocaleString('en-GB');
   document.getElementById('goal-bar').style.width = g ? `${Math.min(100, (tipped / g.at) * 100)}%` : '0';
@@ -265,14 +339,14 @@ try {
   await templates();
   const first = await api('GET', '/api/show');
   saved(first);
-  photo(first.photo);
+  photos(first.photos);
   $('mini-photo').style.backgroundImage = `url("${first.photo || '/img/fp-32.jpg'}")`;
   $('takings-link').href = '/takings'; // 3 · Takings (the old artist-only page forwards there)
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;
   form.hidden = false;
   // The phone beside the form: the real show page. Not inside the demo page, which has its own phone.
   // The phone beside the form: the real show page. Inside the demo page, the demo's own phone is beside it instead.
-  if (top === self) { $('preview-frame').src = first.path; $('preview').hidden = false; }
+  if (top === self) { $('preview-frame').src = `${first.path}?view=ticket`; $('preview').hidden = false; }
   else document.querySelector('.board-head')?.remove(); // inside the old demo page, which has its own tabs
   goalPreview();
   setInterval(goalPreview, 5000);

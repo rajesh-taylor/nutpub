@@ -17,7 +17,7 @@
     .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
-    .board-head .head-new { margin-left: auto; font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .head-new { font-size: 16px; padding: 7px 12px 5px; }
     .page { max-width: 1440px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
     .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
     .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
@@ -33,7 +33,9 @@
     .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
     h1 { font: 400 56px/1 var(--poster); letter-spacing: .06em; margin: 0; }
     .sub { margin: 6px 0 22px; color: var(--smoke); }
-    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .across { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 32px; align-items: start; }
+    .waiting { margin: 9px 0 0; font-size: 15px; }
+    @media (max-width: 1100px) { .across { grid-template-columns: minmax(0, 1fr); } }
     .card { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 18px; background: rgb(11 20 38 / .6); }
     .card h2 { display: flex; align-items: center; gap: 10px; font: 400 28px/1 var(--poster); letter-spacing: .1em; color: var(--amber); margin: 0 0 4px; }
     .card { text-align: left; }
@@ -60,7 +62,7 @@
     .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
     .boxes div { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
     .boxes b { display: block; font: 400 20px/1.1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
-    @media (max-width: 1100px) { .pair, .boxes { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 1100px) { .boxes { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body class="board">
@@ -80,17 +82,22 @@
   <div class="page" id="page" hidden>
     <main>
       <h1>Takings</h1>
-      <p class="sub">Two pages, two browsers, two keys. Each collects only what's locked to its own key.</p>
+      <p class="sub">What fans paid, locked to the artist's key.</p>
 
       <div class="pair">
-        <section class="card" aria-labelledby="artist-h">
+        <section class="card artist-card" aria-labelledby="artist-h">
           <h2 id="artist-h"><span><span id="artist-name">Longy</span>'s takings</span></h2>
           <p class="byline">The artist's page · the key lives in the artist's browser</p>
+          <div class="across">
+          <div>
           <div class="line"><span id="l-tickets">Tickets</span><span id="v-tickets">0</span></div>
           <div class="line"><span id="l-tips">Tips and messages</span><span id="v-tips">0</span></div>
           <div class="line"><span id="l-home">Watching at home</span><span id="v-home">0</span></div>
-          <div class="line"><span id="l-drinks">Drinks not poured by last orders</span><span id="v-drinks">0</span></div>
-          <div class="line total"><span>Total</span><span id="v-artist-total">0 sats</span></div>
+          <div class="line" hidden><span id="l-drinks">Drinks not poured by last orders</span><span id="v-drinks">0</span></div>
+          <div class="line total"><span>Tonight</span><span id="v-artist-total">0 sats</span></div>
+          </div>
+          <div>
+          <p class="waiting" id="artist-waiting"></p>
           <div class="acts">
             <button type="button" class="btn primary" id="artist-collect">Collect</button>
             <button type="button" class="btn quiet" id="artist-home">Send to another wallet</button>
@@ -100,9 +107,12 @@
           <p class="key" id="artist-key"></p>
           <textarea class="token" id="artist-token" readonly rows="4" hidden aria-label="The artist's takings as one Cashu token"></textarea>
           <p class="status" id="artist-status" role="status"></p>
+          </div>
+          </div>
         </section>
 
-        <section class="card" aria-labelledby="bar-h">
+        <!-- The bar and the free drink: off for the demo; they come back with a Venue/Hosts section. -->
+        <section class="card" aria-labelledby="bar-h" hidden>
           <h2 id="bar-h">The bar's takings</h2>
           <p class="byline">The bar's page · the key lives in the bar's browser</p>
           <div id="drinks"></div>
@@ -126,7 +136,7 @@
         </section>
       </div>
 
-      <section class="card where">
+      <section class="card where" hidden>
         <h2>Where every sat went</h2>
         <div class="boxes">
           <div><b id="w-ticket">A ticket</b><span id="w-ticket-text"></span></div>

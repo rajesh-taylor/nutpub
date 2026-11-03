@@ -5,6 +5,7 @@ import { initializeCoco } from '@cashu/coco-core';
 import { IndexedDbRepositories } from '@cashu/coco-indexeddb';
 import { Wallet, getEncodedToken, decodePaymentRequest } from '@cashu/cashu-ts';
 
+const MAX_COINS = 500; // in one swap to the mint
 const hex = (b) => [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 const unhex = (s) => Uint8Array.from(s.match(/../g), (h) => parseInt(h, 16));
 
@@ -75,6 +76,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
           mintUrl, amount: Number(amount),
           target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data, ...(locktime ? { locktime, refundKeys: tag('refund') } : {}) } },
         });
+        this.lastFee = num(prepared.fee);
         const { token } = await coco.ops.send.execute(prepared);
         return coco.wallet.encodeToken(token);
       }
@@ -115,6 +117,32 @@ export async function openWallet(mintUrl, name = 'nutpub') {
         const proofs = await w.receive(token, { privkey: hex(pair.secretKey) });
         await coco.wallet.receive(getEncodedToken({ mint: mintUrl, unit: 'sat', proofs }));
       }
+    },
+    // Many payments locked to keys in this browser, in one swap: the mint's fee is per coin, rounded up per swap, so
+    // a swap per payment would cost at least a sat each. One bad coin fails a whole swap, so a failed swap is halved
+    // until the bad one stands alone. Coco's receive is safe if the reply is lost: it can recover the coins from the seed.
+    async collectAll(tokens, progress = () => {}) {
+      const parts = [];
+      for (const t of tokens) parts.push((await coco.wallet.decodeToken(t, mintUrl)).proofs);
+      let done = 0;
+      const swap = async (list) => {
+        try {
+          await coco.wallet.receive({ mint: mintUrl, unit: 'sat', proofs: list.flat() });
+          progress(done += list.length, parts.length);
+        } catch {
+          if (list.length === 1) return progress(done += 1, parts.length);
+          await swap(list.slice(0, list.length >> 1));
+          await swap(list.slice(list.length >> 1));
+        }
+      };
+      let batch = [];
+      let coins = 0;
+      for (const proofs of parts) {
+        if (batch.length && coins + proofs.length > MAX_COINS) { await swap(batch); batch = []; coins = 0; }
+        batch.push(proofs);
+        coins += proofs.length;
+      }
+      if (batch.length) await swap(batch);
     },
     pledges: () => loadPledges(),
     // After the goal closes unmet: sign each pledge's refund path with cashu-ts (Coco only tries the main lock key),

@@ -8,7 +8,7 @@ import { json, chain, body } from './http.js';
 import { mountSet } from './set.js';
 import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
-import { mountPhoto, photoUrl } from './photo.js';
+import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
 import { current, publicShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
@@ -63,8 +63,8 @@ const attempt = (fn) => async (c) => {
 // to one). The artist's Lightning address and the stream's server and key go to the host's pages only.
 route('GET', '/api/show', async (c) => {
   const now = await current(c);
-  const [photo, artist, bar] = await Promise.all([photoUrl(), artistKey(), barKey()]);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, artistKey: artist, barKey: bar });
+  const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {

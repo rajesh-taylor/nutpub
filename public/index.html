@@ -11,9 +11,10 @@
   <!-- The background photo, dimmed, with grain: two layers that take turns, so a change fades. -->
   <div class="backdrop" aria-hidden="true"><i id="bd-a"></i><i id="bd-b"></i></div>
   <main>
-    <a class="back-link" id="back-link" href="/">← Back</a>
+    <a class="back-link" id="back-link" href="/" hidden>← Back</a>
     <header class="masthead">
-      <h1 class="wordmark small-mark">THE NUTPUB</h1>
+      <p class="nutpub-line">The NutPub</p>
+      <h1 class="wordmark small-mark" id="artist-line"></h1>
       <p class="tag" id="billing"></p>
     </header>
     <p class="when" id="when"></p>
@@ -21,9 +22,10 @@
     <!-- At the door: the privacy ticket (the room), or the whole ticket (at home). -->
     <section class="door card" id="door" hidden>
       <h2 class="card-title" id="door-title">Ticket</h2>
-      <p class="hint" id="ticket-note">Includes your first drink</p>
       <p class="door-wallet">Your wallet: <b id="door-balance">…</b> test sats <button type="button" class="linkish" id="door-topup" hidden>Add 150,000 test sats</button></p>
       <button class="btn primary wide" id="buy">Pay</button>
+      <a class="btn wide" id="door-home" hidden>Watch from home</a>
+      <p class="hint" id="ticket-note"></p>
       <button class="btn quiet wide" id="card" disabled>Card · not wired up</button>
     </section>
 

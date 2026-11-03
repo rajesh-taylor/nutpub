@@ -7,6 +7,8 @@ const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
 // phone in the room, even when both are open in one browser (the demo page).
 const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 'room';
+// ?view=ticket: the setup page's picture of the ticket page, whatever this browser already holds and whatever the night.
+const TICKET_VIEW = new URLSearchParams(location.search).get('view') === 'ticket';
 const KEEP = AS === 'home' ? '-home' : '';
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
@@ -15,7 +17,7 @@ const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plen
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
   play: 'Play', stop: 'Stop',
-  perPiece: (n) => `${n} sat${n === 1 ? '' : 's'} per 10 seconds`,
+  perMinute: (n) => `${n} sat${n === 1 ? '' : 's'} a minute, plus a small mint fee`,
   full: 'Full screen', exitFull: 'Leave full screen',
   spent: (n) => `This set: ${n} sat${n === 1 ? '' : 's'}`,
   stopped: 'Stopped. Nothing more is charged.',
@@ -42,17 +44,17 @@ const T = {
 const say = (text) => { $('status').textContent = text || ''; };
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 
-const [health, { show, photo: showPhoto }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {} }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
-document.title = show.title ? `${show.title} · The NutPub` : 'The NutPub';
+document.title = `${show.artist || show.title || 'The show'} · The NutPub`;
 $('billing').textContent = show.title;
 $('about').textContent = show.description;
 $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
 // Free shows: no price and no "This set" (there's nothing to count).
-$('price').textContent = free ? '' : T.perPiece(show.stream.price);
+$('price').textContent = free ? '' : T.perMinute(show.stream.perMinute);
 $('meter').hidden = free;
 const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
 $('tip').textContent = $('ov-tip').textContent = tipText;
@@ -75,7 +77,10 @@ const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
 if (me.status === 403) pass = await getPass(true);
 else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar } = await me.json());
 spentHere += liveSpentSoFar;
-const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere); };
+// The mint's fee on live minutes: it leaves the wallet too, so it counts towards the limit. Only this browser knows it.
+let liveFees = 0;
+try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP}`)) || 0 : 0; } catch {}
+const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere + liveFees); };
 meter();
 
 // ---- The wallet (Coco, in this browser).
@@ -187,7 +192,9 @@ const backdropTo = (url) => {
 };
 function backdrop(on) {
   clearInterval(turn);
-  const list = showPhoto ? [showPhoto] : on ? BERLIN.playing : BERLIN.before;
+  // Two tall photos for phones, two wide for screens: the first until it plays, then they take turns.
+  const mine = (matchMedia('(orientation: landscape)').matches ? [showPhotos.wide1, showPhotos.wide2] : [showPhotos.tall1, showPhotos.tall2]).filter(Boolean);
+  const list = mine.length ? (on ? mine : mine.slice(0, 1)) : showPhoto ? [showPhoto] : on ? BERLIN.playing : BERLIN.before;
   let i = 0;
   backdropTo(list[0]);
   if (list.length > 1) turn = setInterval(() => backdropTo(list[(i += 1) % list.length]), 20_000);
@@ -217,13 +224,17 @@ const withToken = (url) => url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/
 const pays = () => !free && !door.ticket;
 const budget = () => Number($('budget').value) || 0;
 try { $('budget').value = localStorage.getItem(`nutpub-budget${KEEP}`) || ''; } catch {}
-$('budget').value ||= Math.max(500, (show.stream.price || 0) * 6);
+$('budget').value ||= Math.max(500, (show.stream.perMinute || 0) * 6);
 $('budget').oninput = () => { try { localStorage.setItem(`nutpub-budget${KEEP}`, $('budget').value); } catch {} };
 
 // One token: free for a ticket or a free show, otherwise a 402. Returns its reply, or null with the picture stopped.
 async function renew(mine) {
-  if (pays() && liveSpent + show.stream.price > budget()) { stop(T.budget(liveSpent)); return null; }
+  if (pays() && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
   const res = await paidFetch('/api/live/token');
+  if (res.paidWith) {
+    liveFees += wallet.lastFee;
+    try { localStorage.setItem(`nutpub-fees${KEEP}`, liveFees); } catch {}
+  }
   if (mine !== run) return null; // paused while it was on its way
   if (res.status === 409 && (await res.clone().json()).error === 'not_live') return { off: true };
   if (!res.ok) { stop(await refusal(res)); return null; }
@@ -252,7 +263,7 @@ async function playLive() {
       reply = await renew(mine);
       if (!reply) break;
       off = reply.off ? off + 1 : 0;
-      if (off >= 3) { stop(T.liveEnded); break; } // the token has run out by now: the artist has stopped
+      if (off >= 3) { stop(T.liveEnded); break; } // the artist has stopped
       if (reply.url && !started) {
         started = true;
         hls = new Hls({ lowLatencyMode: false, xhrSetup: (xhr, url) => xhr.open('GET', withToken(url)) });
@@ -263,9 +274,9 @@ async function playLive() {
       }
     } catch (e) {
       if (/insufficient|not enough|balance/i.test(e.message)) { stop(T.empty); break; }
-      if (mine === run) say(T.retrying); // the network: the token has 20 s of slack, so try again
+      if (mine === run) say(T.retrying); // the network: the token has 20 s of slack, so try again soon
     }
-    await new Promise((r) => setTimeout(r, Math.max(0, (reply?.every || 10) * 1000 - (Date.now() - at))));
+    await new Promise((r) => setTimeout(r, Math.max(0, (reply?.every || 5) * 1000 - (Date.now() - at))));
   }
 }
 
@@ -294,7 +305,7 @@ async function play() {
       break;
     }
     if (!res.ok) { stop(await refusal(res)); break; }
-    if (res.paidWith) { spentHere += show.stream.price; meter(); balance(); }
+    if (res.paidWith) { spentHere += Math.ceil(show.stream.perMinute / 6); meter(); balance(); }
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
     if (!playing || mine !== run) break; // stopped while it was on its way: don't start it
     if (startAt < ac.currentTime) startAt = ac.currentTime + 0.05; // fell behind (slow network): start now
@@ -461,8 +472,12 @@ $('player').style.background = `#000 center / cover no-repeat url("${showPhoto |
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
 function words() {
   const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
-  $('when').textContent = [day, show.starts && `starts ${show.starts}`, AS === 'home' && show.venue].filter(Boolean).join(' · ');
+  // The times are UK time: say which, for anyone watching from elsewhere.
+  const zone = show.date ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'short' }).formatToParts(new Date(`${show.date}T12:00:00Z`)).find((x) => x.type === 'timeZoneName').value.replace('+0', '') : 'UK time';
+  $('when').textContent = [day, show.starts && `starts ${show.starts} ${zone}`].filter(Boolean).join(' · ');
+  $('artist-line').textContent = show.artist;
   $('billing').textContent = show.title;
+  $('billing').hidden = !show.title;
   $('about').textContent = show.description;
   $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`;
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
@@ -482,7 +497,7 @@ const DUE = `nutpub-drink-due${KEEP}`;
 const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catch { return false; } };
 const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
 const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
-let door = await myDoor();
+let door = TICKET_VIEW ? {} : await myDoor();
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
 let stage = firstStage.stage || 'doors';
 liveOn = !!firstStage.live;
@@ -491,7 +506,7 @@ readyLive();
 function render() {
   const room = AS === 'room';
   const ticket = !!door.ticket;
-  const closed = stage === 'closed';
+  const closed = stage === 'closed' && !TICKET_VIEW;
   const s = split();
   body.dataset.stage = stage;
   // Full picture with the chat over it: the room once the set plays, and always at home.
@@ -502,6 +517,9 @@ function render() {
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
+  body.classList.toggle('test-mint', !!health.mint.test);
+  // The photo starts under the words, however many lines the artist's name takes.
+  if (body.classList.contains('at-door')) body.style.setProperty('--door-top', `${Math.ceil($('when').getBoundingClientRect().bottom) + 10}px`);
   body.classList.toggle('inside-doors', !$('inside').hidden);
   $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
   $('money').hidden = closed || (room && !ticket);
@@ -522,9 +540,12 @@ function render() {
   // At the door: the room's ticket includes the drink; at home, the whole set for the artist's part alone.
   if (!ticket) {
     $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
-    $('ticket-note').textContent = room ? (s.drink ? 'Includes your first drink' : '') : free ? 'Or watch free, with tips' : 'Or press play and pay as it plays';
-    $('buy').textContent = `Pay ${sats(room ? s.total : s.artist)}`;
+    $('ticket-note').textContent = free ? 'Or watch free, with tips.' : room ? `${T.perMinute(show.stream.perMinute)}.${health.mint.test ? ' Test sats are already in your wallet.' : ''}` : 'Or press play and pay as you watch.';
+    $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(s.artist)}`;
+    $('door-home').hidden = !room;
+    $('door-home').href = `${location.pathname}?as=home`;
   } else {
+    $('door-home').hidden = true;
     $('door-title').textContent = 'Your first drink';
     $('ticket-note').textContent = 'The ticket went through; the drink didn’t.';
     $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;

@@ -23,7 +23,7 @@ if (!artistKey) {
 }
 const health = await fetch(`${SITE}/api/health`).then((r) => r.json());
 const MINT_URL = health.mint.url;
-console.log(`Show: ${show.title || '(untitled)'} · ${show.stream.mode === 'free' ? 'free, with tips' : `${show.stream.price} sat / 10 s`} · tip ${show.tip.price} sats`);
+console.log(`Show: ${show.title || '(untitled)'} · ${show.stream.mode === 'free' ? 'free, with tips' : `${show.stream.perMinute} sats a minute`} · tip ${show.tip.price} sats`);
 
 const page = await fetch(`${SITE}${path}`);
 check(page.status === 200 && (await page.text()).includes('viewer.js'), `the show page at ${path}`);
@@ -92,7 +92,7 @@ if (show.stream.mode === 'pay') {
   try { proofs = [...proofs, ...(await back(token))]; } catch (e) { why = String(e.message); }
   check(/witness|signature/i.test(why), `the server can’t spend it: without the artist’s key the mint says “${why.slice(0, 60)}”`);
   const me = await get('/api/pass/me').then((r) => r.json());
-  check(me.spent === show.stream.price, `charged once: ${me.spent} sat(s) for piece 0`);
+  check(me.spent === Math.ceil(show.stream.perMinute / 6), `charged once: ${me.spent} sat(s) for piece 0`);
   check(me.next === 1, 'a reload carries on at piece 1, not 0 (no free replay)');
 } else {
   check((await get('/api/set/audio/0')).status === 200, 'free show: piece 0 sound served without a 402');

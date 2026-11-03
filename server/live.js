@@ -87,11 +87,11 @@ export async function signToken(sub, exp) {
   return `${signed}.${b64url(new Uint8Array(sig))}`;
 }
 
-// The gate on the live picture. A token for the input's id lasts 30 s, and a paid 402 every 10 s renews it: the 20 s
+// The gate on the live picture. A token for the input's id lasts 80 s, and a paid 402 every minute renews it: the 20 s
 // between is slack for a slow payment. Once it runs out Stream refuses the playlists and the segments, so the picture
 // stops with no word from here. Stream's segment links carry their own signature, so only the playlists need a new token.
-const PAID_FOR = 30;
-const REPEAT_WITHIN = 8; // a request this soon after a payment is a lost reply asked for again: same token time, no charge
+const MINUTE = 60;
+const SLACK = 20;
 const FREE_FOR = 60; // a ticket or a free show: nothing to pay, so a longer token, renewed every 30 s
 const seconds = () => Math.floor(Date.now() / 1000);
 const liveLink = async (show, exp) => {
@@ -105,19 +105,21 @@ export function mountLive(route, admin, pass) {
       const show = await showOf(c);
       if (!show.live.playback || !(await liveNow(show.page))) return json({ error: 'not_live' }, 409); // never charged for nothing
       if (show.stream.mode === 'free' || (await hasTicket(c.pass))) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
-      if (!show.stream.price) return json({ error: 'not_ready', detail: 'No price per 10 s set yet.' }, 409);
+      if (!show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
+      // Still inside a paid minute (a rejoin, or a lost reply asked for again): the same token, no charge.
       const last = await one('SELECT until, sats FROM live_paid WHERE pass = ?', c.pass);
-      if (last && last.until - seconds() > PAID_FOR - REPEAT_WITHIN) return json({ url: await liveLink(show, last.until), every: 10, spent: last.sats });
+      const left = last ? last.until - SLACK - seconds() : 0;
+      if (left > 0) return json({ url: await liveLink(show, last.until), every: left, spent: last.sats });
       return null;
     },
-    cashuGate(async (c) => (await showOf(c)).stream.price, async (c) => `${(await showOf(c)).title || 'The show'}: 10 seconds live`,
+    cashuGate(async (c) => (await showOf(c)).stream.perMinute, async (c) => `${(await showOf(c)).title || 'The show'}: a minute live`,
       { lockTo: artistKey, kind: 'piece' }),
     async (c) => {
-      const until = seconds() + PAID_FOR;
+      const until = seconds() + MINUTE + SLACK;
       await run(`INSERT INTO live_paid (pass, until, sats) VALUES (?, ?, ?)
                  ON CONFLICT(pass) DO UPDATE SET until = excluded.until, sats = sats + excluded.sats`, c.pass, until, c.paid);
       const { sats } = await one('SELECT sats FROM live_paid WHERE pass = ?', c.pass);
-      return json({ url: await liveLink(await showOf(c), until), every: 10, spent: sats, paid: c.paid });
+      return json({ url: await liveLink(await showOf(c), until), every: MINUTE, spent: sats, paid: c.paid });
     });
 
   // Make (or read back) the artist's stream: its server and key go into the show, on the host's pages only.

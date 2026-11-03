@@ -74,7 +74,7 @@ async function refresh() {
   $('v-tickets').textContent = n(all('ticket'));
   $('l-tips').textContent = `Tips and messages · ${n(count('tip'))}`;
   $('v-tips').textContent = n(all('tip'));
-  $('l-home').textContent = `Watching at home · ${n(count('piece'))} × 10 seconds`;
+  $('l-home').textContent = `Watching at home · ${n(count('piece'))} payments`;
   $('v-home').textContent = n(all('piece'));
   $('l-drinks').textContent = `Drinks not poured by ${show.lastOrders || 'last orders'} · ${n(toArtist.length + unpouredLate.length)}`;
   $('v-drinks').textContent = n(drinkSum);
@@ -104,6 +104,8 @@ async function refresh() {
     ? `${n(ticket)} locked to ${name}'s key, ${n(drink)} locked to the bar's key for the first drink.`
     : `${n(ticket)} locked to ${name}'s key. The free drink is off.`;
 
+  // Tonight's lines start at New night; Collect takes everything still waiting, from any night.
+  $('artist-waiting').textContent = `Waiting to collect, all nights: ${sats(locked.totals.here.sats)}`;
   $('artist-held').textContent = `Collected into this browser: ${sats(await artist.balance())}`;
   $('bar-held').textContent = `Collected into this browser: ${sats(await bar.balance())}`;
   await keyLine('artist-key', artist, locked.pubkey, name, '/api/admin/artist-key');
@@ -126,11 +128,8 @@ $('artist-collect').onclick = async () => {
   try {
     const mine = [];
     for (const p of state.waiting) if (await artist.coco.keyring.getKeyPair(p.pubkey)) mine.push(p);
-    let done = 0;
-    for (const p of mine) { // the mint's word below counts
-      try { await artist.collect(p.token, p.pubkey); } catch {}
-      $('artist-status').textContent = `Collecting… ${done += 1} of ${mine.length}`; // a viewer paying every 10 s is 360 an hour
-    }
+    const before = await artist.balance();
+    await artist.collectAll(mine.map((p) => p.token), (done, of) => { $('artist-status').textContent = `Collecting… ${done} of ${of}`; }); // the mint's word below counts
     if (afterLastOrders()) {
       for (const p of state.waiting.filter((x) => x.kind === 'drink' && x.pubkey !== state.pubkey)) {
         try { await artist.collect(p.token, p.pubkey, state.pubkey); mine.push(p); } catch {}
@@ -145,7 +144,9 @@ $('artist-collect').onclick = async () => {
       notYet.push(...part.notYet);
     }
     const got = mine.filter((p) => collected.includes(p.id)).reduce((s, p) => s + p.sats, 0);
-    $('artist-status').textContent = notYet.length ? `Collected ${sats(got)}. ${notYet.length} didn't go through: try again.` : `Collected ${sats(got)}.`;
+    const fee = Math.max(0, got - ((await artist.balance()) - before));
+    const kept = fee ? ` The mint kept ${sats(fee)} as its fee.` : '';
+    $('artist-status').textContent = notYet.length ? `Collected ${sats(got)}.${kept} ${notYet.length} didn't go through: try again.` : `Collected ${sats(got)}.${kept}`;
   } catch (e) { $('artist-status').textContent = e.message; }
   $('artist-collect').disabled = false;
   refresh().catch(() => {});
