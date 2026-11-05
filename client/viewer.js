@@ -540,7 +540,7 @@ function render() {
   // At the door: the room's ticket includes the drink; at home, the whole set for the artist's part alone.
   if (!ticket) {
     $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
-    $('ticket-note').textContent = free ? 'Or watch free, with tips.' : room ? `${T.perMinute(show.stream.perMinute)}.${health.mint.test ? ' Test sats are already in your wallet.' : ''}` : 'Or press play and pay as you watch.';
+    $('ticket-note').textContent = room ? '' : free ? 'Or watch free, with tips.' : 'Or press play and pay as you watch.'; // the ticket page has only its buttons
     $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(s.artist)}`;
     $('door-home').hidden = !room;
     $('door-home').href = `${location.pathname}?as=home`;

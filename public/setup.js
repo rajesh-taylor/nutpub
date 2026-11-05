@@ -57,6 +57,7 @@ function fill(s) {
 // The artist's own Lightning address is an ordinary field; the rows are drawn round it.
 const fieldLightning = Object.assign(document.createElement('input'), { type: 'email', placeholder: 'e.g. longy@walletofsatoshi.com', maxLength: 120, ariaLabel: 'The artist\u2019s Lightning address' });
 fieldLightning.dataset.path = 'lightning';
+fieldLightning.dataset.g = 'artist';
 fieldLightning.autocapitalize = 'off'; fieldLightning.spellcheck = false;
 fields.push(fieldLightning);
 $('add-split').onclick = () => {
@@ -81,34 +82,49 @@ function drawSplits() {
         if (to !== document.activeElement) to.value = show.splits[i][k] ?? '';
       }
     });
+    orderSplits();
     return;
   }
-  const line = (kids) => { const d = document.createElement('div'); d.className = 'who-share'; d.append(...kids); return d; };
+  const line = (kids, g) => { const d = document.createElement('div'); d.className = 'who-share'; d.dataset.g = g; d.append(...kids); return d; };
   const make = (tag, props) => Object.assign(document.createElement(tag), props);
   const lightning = fieldLightning;
   box.replaceChildren(
-    make('span', { className: 'head', textContent: 'Who and their share' }), make('span', { className: 'head', textContent: 'Lightning address' }),
-    line([make('b', { id: 'split-artist' }), make('span', { className: 'pct', id: 'split-artist-pct' })]), lightning,
+    make('span', { className: 'head' }), make('span', { className: 'head', textContent: 'Lightning address' }),
+    line([make('b', { id: 'split-artist' }), make('span', { className: 'pct', id: 'split-artist-pct' })], 'artist'), lightning,
   );
   show.splits.forEach((s, i) => {
     const row = make('div', { className: 'who-share' });
     row.dataset.split = i;
+    row.dataset.g = i;
     const drop = make('button', { type: 'button', className: 'btn quiet drop', textContent: '✕' });
     drop.setAttribute('aria-label', 'Remove this split');
     drop.onclick = () => { show.splits.splice(i, 1); drawSplits(); refresh(); form.requestSubmit(); };
-    row.append(
-      make('input', { className: 'name', value: s.name ?? '', placeholder: 'e.g. the drummer', maxLength: 40, ariaLabel: 'Who' }),
-      make('input', { className: 'share', type: 'number', min: 1, max: 94, step: 1, inputMode: 'numeric', value: s.percent ?? '', placeholder: '%', ariaLabel: 'Their share, in percent' }),
-      drop,
-    );
+    const share = make('span', { className: 'share-box' });
+    share.append(make('input', { className: 'share', type: 'number', min: 1, max: 94, step: 1, inputMode: 'numeric', value: s.percent ?? '', ariaLabel: 'Their share, in percent' }), '%');
+    row.append(make('input', { className: 'name', value: s.name ?? '', placeholder: 'e.g. the drummer', maxLength: 40, ariaLabel: 'Who' }), share);
     const to = make('input', { className: 'to', type: 'email', value: s.lightning ?? '', placeholder: 'name@wallet.example', maxLength: 120, ariaLabel: 'Their Lightning address' });
     to.autocapitalize = 'off'; to.spellcheck = false;
     to.dataset.of = i;
-    box.append(row, to);
+    const toBox = make('div', { className: 'to-box' });
+    toBox.dataset.g = i;
+    toBox.append(to, drop);
+    box.append(row, toBox);
   });
-  box.append(line([make('b', { textContent: 'The NutPub' }), make('span', { className: 'pct', textContent: `${NUTPUB}%` })]),
-    make('span', { className: 'head', textContent: 'Fixed' }));
+  const ours = make('span', { className: 'head', textContent: 'Fixed' });
+  ours.dataset.g = 'nutpub';
+  box.append(line([make('b', { textContent: 'The NutPub' }), make('span', { className: 'pct', textContent: `${NUTPUB}%` })], 'nutpub'), ours);
+  orderSplits();
 }
+
+// Most to least, The NutPub after anyone on the same 5%. Not while a share is being typed: the row moves when it's done.
+function orderSplits(force) {
+  if (!force && document.activeElement?.classList.contains('share')) return;
+  const rank = [['artist', artistShare()], ...show.splits.map((s, i) => [String(i), s.percent || 0]), ['nutpub', NUTPUB]]
+    .sort((a, b) => b[1] - a[1]);
+  const place = new Map(rank.map(([g], i) => [g, i + 1]));
+  for (const el of $('split-rows').querySelectorAll('[data-g]')) el.style.order = place.get(el.dataset.g);
+}
+$('split-rows').addEventListener('change', (e) => { if (e.target.classList.contains('share')) { read(); orderSplits(true); } });
 
 function languageChoices() {
   const sel = $('language');
@@ -217,11 +233,14 @@ addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 // ---- Templates
 async function templates(list) {
   list ??= await api('GET', '/api/admin/templates');
-  $('tpl-list').innerHTML = list.length
-    ? list.map((t) => `<option>${t.name.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</option>`).join('')
-    : '<option value="">No templates yet</option>';
+  // The word Template until there are two saved shows; then the word heads a drop-down, and choosing one loads it.
+  $('tpl-list').innerHTML = `<option value="">Template</option>${list.map((t) => `<option>${t.name.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</option>`).join('')}`;
+  $('tpl-list').hidden = list.length < 2;
+  $('tpl-word').hidden = list.length >= 2;
+  $('tpl-box').hidden = false;
   $('tpl-load').disabled = $('tpl-delete').disabled = !list.length;
 }
+$('tpl-list').onchange = () => { $('tpl-load').click(); $('tpl-list').value = ''; };
 $('tpl-save').addEventListener('click', async () => {
   read();
   const name = $('tpl-name').value.trim() || show.title;
@@ -255,6 +274,12 @@ function photos(all = {}) {
     box.querySelector('.drop').hidden = !url;
   }
 }
+// A new photo shows at once in the ticket phone and on the small poster beside the form.
+function photosChanged(data) {
+  photos(data.photos);
+  $('mini-photo').style.backgroundImage = `url("${data.photo || '/img/fp-32.jpg'}")`;
+  $('preview-frame').contentWindow?.location.reload();
+}
 async function upload(slot, file) {
   if (!file) return;
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return status('Use a JPEG, PNG or WebP photo.', 'bad');
@@ -264,8 +289,8 @@ async function upload(slot, file) {
     const r = await fetch(`/api/admin/photo/${slot}`, { method: 'PUT', headers: { 'X-Admin': key || '', 'Content-Type': file.type }, body: file });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.detail || data.error || r.statusText);
-    photos(data.photos);
-    status('Photo saved. The gig page has it on its next load.', 'ok');
+    photosChanged(data);
+    status('Photo saved.', 'ok');
   } catch (err) { status(`Photo not saved: ${err.message}`, 'bad'); }
 }
 for (const box of form.querySelectorAll('.slot')) {
@@ -277,7 +302,7 @@ for (const box of form.querySelectorAll('.slot')) {
   label.ondragleave = () => label.classList.remove('over');
   label.ondrop = (e) => { e.preventDefault(); label.classList.remove('over'); upload(slot, e.dataTransfer.files[0]); };
   box.querySelector('.drop').onclick = async () => {
-    try { photos((await api('DELETE', `/api/admin/photo/${slot}`)).photos); status('Photo removed.', 'ok'); }
+    try { photosChanged(await api('DELETE', `/api/admin/photo/${slot}`)); status('Photo removed.', 'ok'); }
     catch (err) { status(err.message, 'bad'); }
   };
 }

@@ -357,7 +357,7 @@ body.setup.wide main { max-width: 1180px; padding-top: 20px; }
 .poster-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 .poster-row > div { flex: 1 1 260px; }
 .poster-row .qr { margin: 0; background: var(--cream); }
-.panel input.inline-sats { display: inline-block !important; width: 5em !important; margin: 0 4px !important; padding: 4px 6px !important; }
+.panel input.inline-sats { display: inline-block !important; width: 3.6em !important; box-sizing: border-box; margin: 0 4px !important; padding: 4px 6px !important; }
 .panel input:disabled { opacity: .55; }
 body.viewer .money .btn.primary { background: var(--amber); color: var(--deep); }
 .signin { max-width: 560px; margin: 24px auto; text-align: left; }
@@ -502,7 +502,7 @@ body[data-as="room"] #card { display: none; }
 .nostr .btn { font-size: 13px; padding: 4px 7px 2px; }
 
 /* The gig page's top: our name small and gold, then the artist biggest, then the show title if there is one. */
-.nutpub-line { font: 400 12px/1 var(--poster); letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin: 14px 0 4px; text-shadow: 0 1px 3px rgb(5 9 20 / .9); }
+.nutpub-line { font: 400 13px/1 var(--poster); letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin: 2px 0 10px; text-shadow: 0 1px 3px rgb(5 9 20 / .9); }
 body.viewer .masthead .wordmark { margin: 0 0 4px; line-height: 1.05; }
 body.viewer .masthead .tag { font: 400 24px/1.1 var(--poster); letter-spacing: .08em; color: var(--cream); margin: 0 0 4px; }
 body.viewer .masthead { margin-bottom: 8px; }
@@ -510,8 +510,24 @@ body.framed[data-as="home"] .nutpub-line { display: none; }
 @media (min-width: 900px) { body[data-as="home"] .nutpub-line { text-align: left; margin: 0 0 4px; } }
 /* The ticket page on a phone: the words, the photo under them, and on the bottom of the photo only the ticket's buttons. */
 body.viewer.at-door .when { margin-top: 0; }
-body.viewer.at-door .backdrop i { top: var(--door-top, 170px); background-position: center 25%; }
+body.viewer.at-door .nutpub-line { margin-top: -14px; } /* close to the top edge */
+/* At the door the photo is plain, as on The show: no dimming, no gradient or grain, and its whole width. */
+body.viewer.at-door .backdrop i { top: var(--door-top, 170px); background-size: 100% auto; background-position: center top; filter: none; }
+body.viewer.at-door .backdrop::before, body.viewer.at-door .backdrop::after { display: none; }
 body.viewer.at-door .door { margin-top: auto; margin-bottom: 0; padding: 0; border: 0; background: none; }
 body.at-door #door-title, body.test-mint.at-door .door-wallet { display: none; }
 body.at-door #door .hint { margin: 0; text-align: center; color: var(--cream); text-shadow: 0 1px 3px #000, 0 0 10px #000; }
 body.at-door #door-home { background: rgb(5 9 20 / .72); }
+
+/* The night's three pages on a phone: the header in two tidy rows, and the phone picture no wider than the screen. */
+@media (max-width: 700px) {
+  body.board .board-head { padding: 0 16px; gap: 0 10px; justify-content: space-between; }
+  body.board .board-head .mark { font-size: 22px; padding: 10px 0 8px; }
+  body.board .board-head .head-back, body.board .board-head .head-new { font-size: 14px; padding: 5px 8px 3px; }
+  body.board .board-head .tabs { order: 3; width: 100%; flex-wrap: nowrap; gap: 0; justify-content: space-between; }
+  body.board .board-head .tabs a { font-size: 17px; letter-spacing: .06em; padding: 8px 2px; white-space: nowrap; }
+  body.board .page { padding: 20px 16px; }
+  body.board aside { flex: 1 1 100%; width: 100%; min-width: 0; }
+  body.board .phone-frame { width: min(390px, 100%); margin: 0 auto; }
+  body.board aside .cap { letter-spacing: .1em; }
+}
