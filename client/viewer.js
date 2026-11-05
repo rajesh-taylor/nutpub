@@ -17,9 +17,9 @@ const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plen
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
   play: 'Play', stop: 'Stop',
-  perMinute: (n) => `${n} sat${n === 1 ? '' : 's'} a minute, plus a small mint fee`,
+  perMinute: (n) => `${n} sat${n === 1 ? '' : 's'} a minute`,
   full: 'Full screen', exitFull: 'Leave full screen',
-  spent: (n) => `This set: ${n} sat${n === 1 ? '' : 's'}`,
+  spent: (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`,
   stopped: 'Stopped. Nothing more is charged.',
   paused: 'Paused. Nothing more is charged. Press play to rejoin the show, live.',
   budget: (n) => `You’ve reached your limit: ${n} sats tonight. Raise it to keep watching.`,
@@ -464,11 +464,26 @@ if (top !== self) { // inside a host page: it has its own way out, and its own t
   document.querySelector('.test-banner')?.remove();
 }
 // At home the stretch goal sits under the money buttons, in a box of its own (board 2); the chat keeps the messages.
-if (AS === 'home') $('money').after($('goal'));
+// The page of its own (not inside The show's frame): the goal over one wallet card holding all the money buttons.
+const WALLET_CARD = AS === 'home' && top === self;
+if (WALLET_CARD) {
+  body.classList.add('wallet-card');
+  // The wallet card: the wallet, what this costs, what just happened, the stretch goal.
+  document.querySelector('.purse').append($('status'), $('goal'));
+  // The show's line under the picture, as on a video site: the artist and the date.
+  const line = Object.assign(document.createElement('div'), { className: 'show-line' });
+  $('player').after(line);
+  line.append(document.querySelector('.masthead'), $('when'));
+  // Tips start from the comment box: ₿ opens the amount, and the comment goes with the tip.
+  $('say').after($('own-form'));
+  $('say-btc').onclick = () => { unlockAudio(); ownForm(true); };
+} else if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = $('closing-photo').src = showPhoto || DEFAULT_PHOTO;
 // Before the set plays, the player shows the artist's photo, like a video's cover picture.
-$('player').style.background = `#000 center / cover no-repeat url("${showPhoto || '/img/fp-32.jpg'}")`;
+// A wide photo on a wide screen.
+const cover = (matchMedia('(orientation: landscape)').matches && showPhotos.wide1) || showPhoto || '/img/fp-32.jpg';
+$('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
 function words() {
   const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
@@ -513,7 +528,7 @@ function render() {
   body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on');
   $('closing').hidden = !closed;
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
-  $('door').hidden = closed || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
+  $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
@@ -533,7 +548,9 @@ function render() {
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
   $('whole').hidden = AS !== 'home' || !show.ticket.on || ticket || closed;
-  $('whole').textContent = `The whole ticket · ${sats(s.artist)}`;
+  $('whole').textContent = `Online ticket · ${sats(s.artist)}`;
+  $('whole-card').hidden = !WALLET_CARD || $('whole').hidden;
+  $('price-box').hidden = !pays();
   $('play').disabled = $('big-play').disabled = !live;
   if (!live && playing) stop();
 

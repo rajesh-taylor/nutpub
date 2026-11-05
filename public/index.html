@@ -74,14 +74,14 @@
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
-      <p class="chat-head">Live chat <span class="works">Works</span></p>
+      <p class="chat-head">Live chat</p>
       <div class="goal" id="goal" hidden><span id="goal-label"></span><span id="goal-sum"></span><i><b id="goal-bar"></b></i></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
-        <input id="say-text" maxlength="140" autocomplete="off" placeholder="Say something (140)" aria-label="A message for the artist">
-        <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
+        <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
+        <span class="say-tools"><button type="button" class="coin" id="say-btc" aria-label="Tip in bitcoin">₿</button><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" aria-label="Send the comment">➤</button></span>
+          <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
-      <p class="nostr small"><button type="button" class="btn quiet" disabled>Nostr sign-in</button> <span>Post as you · tips as nutzaps</span> <span class="soon">Design only</span></p>
     </section>
 
     <p class="status" id="status" role="status"></p>
@@ -89,8 +89,9 @@
     <div class="bottom">
       <p class="buttons money" id="money" hidden>
         <button class="btn primary" id="tip" disabled></button>
+        <button class="btn" id="whole" hidden></button>
+        <button class="btn quiet" id="whole-card" disabled hidden>Online ticket by card · not wired up</button>
         <button class="btn" id="own" disabled>Your amount</button>
-        <button class="btn quiet" id="whole" hidden></button>
         <button class="btn quiet" id="card-tip" disabled>Card · not wired up</button>
       </p>
       <form class="own" id="own-form" hidden>
@@ -105,7 +106,11 @@
           <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
           <button class="btn quiet" id="topup" hidden>Add 150,000 test sats</button>
         </div>
-        <p class="purse-meter" id="meter"><span id="spent"></span><span id="price"></span><label id="budget-box" class="budget" hidden>Up to <input id="budget" type="number" min="0" inputmode="numeric" aria-label="Your limit in sats"> sats tonight</label></p>
+        <p class="purse-meter" id="meter">
+          <span class="stat"><small>This set</small><b id="spent"></b></span>
+          <span class="stat" id="price-box"><small>Price</small><b id="price"></b><small class="fine">plus a small mint fee</small></span>
+          <label id="budget-box" class="stat budget" hidden><small>Your limit</small><span>Up to <input id="budget" type="number" min="0" inputmode="numeric" aria-label="Your limit in sats"> sats tonight</span></label>
+        </p>
       </div>
     </div>
   </main>
