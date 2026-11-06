@@ -588,3 +588,69 @@ body.wallet-card .chat { margin: 12px 0 0; padding: 12px; border: 1px solid rgb(
   body.wallet-card .purse-meter { flex-wrap: nowrap; }
   body.wallet-card .bottom .purse .goal { align-self: center; padding-left: 20px; border-left: 1px solid rgb(239 227 200 / .08); }
 }
+
+/* ---- Session 8: home view fixes (Rajesh, 5 Nov evening). */
+/* Once Play is pressed, and in full screen, the picture sits on black: the cover photo goes (it showed at the edges,
+   and above and below the picture in full screen). */
+body.viewer.playing .player, body.viewer.full.playing .player { background: #000 !important; }
+/* Bitcoin orange is ₿'s alone: the ₿ and its outline, nothing else on the page. Gold stays NutPub's. */
+:root { --btc: #f7931a; }
+.coin.btc { color: var(--btc); background: none; border-color: var(--btc); font-size: 18px; }
+.coin.btc[aria-expanded="true"] { background: rgb(247 147 26 / .14); }
+/* While ₿ is open the comment goes with the tip: the arrow waits. */
+.coin.send:disabled { color: var(--smoke); background: none; border-color: rgb(239 227 200 / .2); }
+/* Gutters like YouTube's (24 px from the screen's edge), and a wider chat. */
+@media (min-width: 900px) {
+  body.wallet-card main { padding: 16px 8px; grid-template-columns: minmax(0, 1fr) clamp(380px, 30vw, 470px); }
+}
+/* Chat rows as YouTube's: no blocks behind them; the gold amount is the only highlight. Larger, more so on a phone. */
+body[data-as="home"] .feed { gap: 6px; }
+body[data-as="home"] .feed li, body[data-as="home"] .feed li.tipped { background: none; padding: 3px 2px; font-size: 16px; line-height: 1.4; }
+body[data-as="home"] .feed .amt { font-size: 15px; }
+@media (max-width: 600px) { body[data-as="home"] .feed li, body[data-as="home"] .feed li.tipped { font-size: 17px; } }
+/* The tip row lines up under the comment box: the amount from its left edge, Tip beside it, ✕ under the arrow. */
+body.wallet-card .chat .own { justify-content: stretch; align-items: stretch; gap: 4px; padding-right: 5px; }
+body.wallet-card .chat .own input { flex: 1 1 auto; width: auto; min-width: 0; text-align: left; padding: 9px 12px; font-size: 16px; }
+body.wallet-card .chat .own #own-pay { flex: none; font-size: 17px; padding: 9px 14px 7px; }
+body.wallet-card .chat .own #own-cancel { flex: none; width: 36px; padding: 0; font: 600 16px/1 var(--body); }
+/* Stretch goals: one black track from nothing to the last goal, a small notch at each goal, gold filling along it. */
+.goal { grid-template-columns: 1fr auto; grid-template-areas: "head sum" "track track" "list list"; align-items: baseline; }
+.goal .goal-head { grid-area: head; font: 400 13px/1.1 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--smoke); }
+.goal #goal-sum { grid-area: sum; display: inline; width: auto; height: auto; background: none; font: 400 15px/1 var(--poster); letter-spacing: .06em; color: var(--amber); }
+.goal i.track { grid-area: track; position: relative; display: block; height: 8px; border-radius: 4px; overflow: visible; background: #000; box-shadow: inset 0 0 0 1px rgb(239 227 200 / .18); }
+.goal i.track #goal-bar { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--amber); transition: width .6s; }
+.goal .notch { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: rgb(239 227 200 / .7); text-decoration: none; }
+.goal .goal-list { grid-area: list; min-width: 0; font-size: 14px; color: var(--smoke); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.goal .goal-list .met { color: var(--amber); }
+/* The wallet card: "Wallet balance" (a figure, not a link), bigger buttons; the goal level with the balance, spaced
+   like This set and the price, with more room. */
+body.wallet-card .purse-sum { cursor: default; }
+body.wallet-card .purse-actions .btn { font-size: 17px; padding: 9px 14px 7px; }
+body.wallet-card .bottom .purse .goal { display: grid; grid-template-areas: "head head" "sum sum" "track track" "list list"; gap: 6px 0; align-self: start; }
+body.wallet-card .bottom .purse .goal #goal-sum { font-size: 26px; letter-spacing: .04em; }
+@media (min-width: 1250px) {
+  body.wallet-card .purse { grid-template-columns: auto auto minmax(220px, 1fr); grid-template-areas: "sum meter goal" "actions status status"; column-gap: 28px; }
+  body.wallet-card .bottom .purse .goal { align-self: start; padding-left: 0; border-left: 0; }
+}
+
+/* Full screen: the TEST strip across the top, The NutPub under it as on the home page; the bottom bar with ₿ and the
+   goals' readout. Playing, the bars fade after a few seconds without the mouse, as on YouTube. */
+.ov-mark, .ov-btc, .ov-goal, #ov-tip, body.full #ov-tip { display: none; }
+body.viewer.full .test-banner { left: 0; right: 0; top: 0; margin: 0; padding: calc(5px + env(safe-area-inset-top)) 16px 4px; font-size: 13px; letter-spacing: .22em; border-radius: 0; opacity: 1; text-align: center; }
+body.viewer.full .ov-mark { display: block; position: absolute; z-index: 2; left: 0; right: 0; top: calc(30px + env(safe-area-inset-top)); margin: 0; text-align: center; font: 400 28px/1 var(--poster); letter-spacing: .08em; text-transform: uppercase; color: var(--cream); text-shadow: 0 2px 10px rgb(5 9 20 / .8); pointer-events: none; }
+body.viewer.full .ov-btc { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; }
+body.viewer.full .ov-btc span { font: 400 17px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; }
+body.viewer.full .ov-goal:not([hidden]) { display: inline-block; margin-right: 12px; font: 400 17px/1 var(--poster); letter-spacing: .1em; color: var(--amber); white-space: nowrap; }
+body.viewer.full .player .own { position: absolute; z-index: 3; right: max(10px, env(safe-area-inset-right)); bottom: calc(64px + env(safe-area-inset-bottom)); margin: 0; padding: 8px; gap: 6px; border-radius: 6px; background: rgb(5 9 20 / .85); }
+body.viewer.full .bar, body.viewer.full .test-banner, body.viewer.full .ov-mark { transition: opacity .4s; }
+body.viewer.full.idle .bar, body.viewer.full.idle .test-banner, body.viewer.full.idle .ov-mark { opacity: 0; pointer-events: none; }
+body.viewer.full.idle, body.viewer.full.idle .player { cursor: none; }
+body.viewer.full .player .own input { width: 10em; }
+
+/* Phones in full screen: no room for the goals' readout, so ₿ Tip and the exit button stay on the screen. */
+@media (max-width: 699px) { body.viewer.full .ov-goal:not([hidden]) { display: none; } }
+body.viewer.full .bar > * { flex-shrink: 0; }
+body.viewer.full .bar .spacer { flex: 1 1 0; min-width: 0; }
+/* The date and the times: bigger, but smaller than the artist's name. */
+body.wallet-card .when { font-size: 22px; letter-spacing: .1em; }
+@media (max-width: 699px) { body.wallet-card .when { font-size: 18px; } }

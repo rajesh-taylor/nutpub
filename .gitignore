@@ -10,3 +10,6 @@ KICKOFF*.md
 public/set-media/
 .dev.vars
 .wrangler/
+
+# local-only copies from the old Berlin hackathon folder
+archive/

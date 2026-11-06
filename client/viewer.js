@@ -192,6 +192,8 @@ const backdropTo = (url) => {
 };
 function backdrop(on) {
   clearInterval(turn);
+  // The home page has no backdrop: photos only on the ticket, the poster and the player before Play.
+  if (AS === 'home' && top === self) return;
   // Two tall photos for phones, two wide for screens: the first until it plays, then they take turns.
   const mine = (matchMedia('(orientation: landscape)').matches ? [showPhotos.wide1, showPhotos.wide2] : [showPhotos.tall1, showPhotos.tall2]).filter(Boolean);
   const list = mine.length ? (on ? mine : mine.slice(0, 1)) : showPhoto ? [showPhoto] : on ? BERLIN.playing : BERLIN.before;
@@ -204,6 +206,8 @@ backdrop(false);
 function controls(on) {
   playing = on;
   backdrop(on);
+  // The cover photo is for before Play: once playing, plain black behind the picture.
+  $('player').style.backgroundImage = on ? 'none' : `url("${cover}")`;
   $('play').setAttribute('aria-label', on ? (document.body.classList.contains('live-video') ? 'Pause' : T.stop) : T.play);
   document.body.classList.toggle('playing', on);
 }
@@ -383,12 +387,32 @@ $('big-play').onclick = toggle;
 // page alone fills the screen, with Safari's bars still round it).
 const sideways = matchMedia('(orientation: landscape) and (max-height: 540px)');
 let wantFull = false;
+// Where the tip's amount lives off full screen (under the comment box, or under the money buttons).
+const ownSpot = document.createComment('own-form');
+$('own-form').before(ownSpot);
 const layout = () => {
   const full = wantFull || sideways.matches;
   document.body.classList.toggle('full', full);
   document.body.classList.toggle('sideways', sideways.matches);
   $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
+  // In full screen ₿ sits in the bottom bar, and the amount opens on the picture above it.
+  if (full && $('own-form').parentElement !== $('player')) $('player').append($('own-form'));
+  else if (!full && $('own-form').parentElement === $('player')) ownSpot.after($('own-form'));
+  wake();
 };
+// Full screen, playing: the bars fade after 3 seconds without the mouse (or a tap), as on YouTube.
+let idle = 0;
+function wake() {
+  document.body.classList.remove('idle');
+  clearTimeout(idle);
+  idle = setTimeout(() => {
+    const busy = !$('own-form').hidden || $('player').querySelector('.bar:hover');
+    if (document.body.classList.contains('full') && playing && !busy) document.body.classList.add('idle');
+    else if (document.body.classList.contains('full')) wake();
+  }, 3000);
+}
+for (const e of ['mousemove', 'pointerdown', 'keydown']) document.addEventListener(e, wake, { passive: true });
+$('ov-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
 sideways.addEventListener('change', layout);
 layout();
 $('full').onclick = () => {
@@ -414,6 +438,7 @@ async function tip(button) {
   button.disabled = true;
   try {
     const res = await paidFetch('/api/tip', said());
+    if (res.ok) sent();
     say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
@@ -430,6 +455,9 @@ const ownSats = () => { const n = Number($('own-sats').value); return Number.isI
 const ownForm = (open) => {
   $('own-form').hidden = !open;
   $('own').hidden = open;
+  // While the amount is open the comment box's words go with the tip: its arrow waits (Return goes to the tip).
+  $('say-btc').setAttribute('aria-expanded', open);
+  $('say-send').disabled = open;
   if (open) { $('own-sats').value = ''; $('own-sats').oninput(); $('own-sats').focus(); }
 };
 $('own').onclick = () => { unlockAudio(); ownForm(true); };
@@ -447,7 +475,7 @@ $('own-form').onsubmit = async (e) => {
   try {
     const res = await paidFetch(`/api/tip/${n}`, said());
     say(res.ok ? T.ownDone(n) : await refusal(res));
-    if (res.ok) ownForm(false);
+    if (res.ok) { sent(); ownForm(false); }
   } catch (err) {
     say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
   }
@@ -476,20 +504,60 @@ if (WALLET_CARD) {
   line.append(document.querySelector('.masthead'), $('when'));
   // Tips start from the comment box: ₿ opens the amount, and the comment goes with the tip.
   $('say').after($('own-form'));
-  $('say-btc').onclick = () => { unlockAudio(); ownForm(true); };
+  ownSpot.remove();
+  $('own-form').before(ownSpot);
+  // The balance is a figure, not a link; the buttons say what they do.
+  const sum = $('wallet-link');
+  sum.removeAttribute('href');
+  sum.firstElementChild.textContent = 'Wallet balance';
+  sum.lastElementChild.hidden = true;
+  $('wallet-page').textContent = 'My browser wallet';
+  $('topup').textContent = 'Add test sats';
+  $('say-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
 } else if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
-$('welcome-photo').src = $('closing-photo').src = showPhoto || DEFAULT_PHOTO;
+$('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
+// Closing time ("Cheers", Take it home): the second wide photo, the night's last picture.
+$('closing-photo').src = showPhotos.wide2 || showPhoto || DEFAULT_PHOTO;
 // Before the set plays, the player shows the artist's photo, like a video's cover picture.
 // A wide photo on a wide screen.
 const cover = (matchMedia('(orientation: landscape)').matches && showPhotos.wide1) || showPhoto || '/img/fp-32.jpg';
 $('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
+if (playing) $('player').style.backgroundImage = 'none';
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
-function words() {
+// UK time now, as "YYYY-MM-DDTHH:MM", to compare with the show's date and times.
+const ukNow = () => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+};
+// The line under the name follows the night: the date and both times before; once the stream is live, only what's
+// next: the show's start, then when it ends.
+function whenLine() {
   const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
   // The times are UK time: say which, for anyone watching from elsewhere.
   const zone = show.date ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'short' }).formatToParts(new Date(`${show.date}T12:00:00Z`)).find((x) => x.type === 'timeZoneName').value.replace('+0', '') : 'UK time';
-  $('when').textContent = [day, show.starts && `starts ${show.starts} ${zone}`].filter(Boolean).join(' · ');
+  let line;
+  if (liveOn) {
+    const started = !show.starts || !show.date || ukNow() >= `${show.date}T${show.starts}`;
+    line = ['Live now', started ? show.lastOrders && `ends ${show.lastOrders} ${zone}` : `show ${show.starts} ${zone}`];
+  } else {
+    const times = [show.streams && `stream ${show.streams}`, show.starts && `show ${show.starts}`].filter(Boolean);
+    line = [day, times.length && `${times.join(' · ')} ${zone}`];
+  }
+  const text = line.filter(Boolean).join(' · ');
+  if ($('when').textContent !== text) { $('when').textContent = text; doorTop(); }
+}
+// At the door the photo starts under the words, however many lines the artist's name takes (page coordinates:
+// the phone may open the page scrolled, and the poster font may arrive after the first layout).
+function doorTop() {
+  if (document.body.classList.contains('at-door')) document.body.style.setProperty('--door-top', `${Math.ceil($('when').getBoundingClientRect().bottom + scrollY) + 10}px`);
+}
+try { history.scrollRestoration = 'manual'; } catch {}
+document.fonts?.ready.then(doorTop);
+addEventListener('resize', doorTop);
+function words() {
+  whenLine();
   $('artist-line').textContent = show.artist;
   $('billing').textContent = show.title;
   $('billing').hidden = !show.title;
@@ -516,8 +584,10 @@ let door = TICKET_VIEW ? {} : await myDoor();
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
 let stage = firstStage.stage || 'doors';
 liveOn = !!firstStage.live;
+whenLine();
 readyLive();
 
+let doorShown = false;
 function render() {
   const room = AS === 'room';
   const ticket = !!door.ticket;
@@ -533,8 +603,7 @@ function render() {
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
-  // The photo starts under the words, however many lines the artist's name takes.
-  if (body.classList.contains('at-door')) body.style.setProperty('--door-top', `${Math.ceil($('when').getBoundingClientRect().bottom) + 10}px`);
+  if (body.classList.contains('at-door')) { if (!doorShown) scrollTo(0, 0); doorShown = true; doorTop(); }
   body.classList.toggle('inside-doors', !$('inside').hidden);
   $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
   $('money').hidden = closed || (room && !ticket);
@@ -632,13 +701,29 @@ function lights() {
 // ---- The live chat. Every message is set as text, never as HTML.
 const feed = $('feed');
 let lastMsg = 0;
+// Short amounts for the goals: 25k, 4.2k, 1.5M.
+const short = (n) => (n < 1000 ? String(n) : n < 1e6 ? `${+(n / 1000).toFixed(n < 1e4 ? 1 : 0)}k` : `${+(n / 1e6).toFixed(1)}M`);
+// Stretch goals: one track from 0 to the last goal, a small notch at each, gold filling along it. Every goal on one line.
+let notchesFor = '';
 function goal(tipped, goals) {
-  const g = goals.find((x) => tipped < x.at) || goals[goals.length - 1];
-  $('goal').hidden = !g;
-  if (!g) return;
-  $('goal-label').textContent = g.label;
-  $('goal-sum').textContent = `${tipped.toLocaleString('en-GB')} / ${g.at.toLocaleString('en-GB')}`;
-  $('goal-bar').style.width = `${Math.min(100, (tipped / g.at) * 100)}%`;
+  const list = [...goals].sort((a, b) => a.at - b.at).slice(0, 3);
+  const top = list[list.length - 1];
+  $('goal').hidden = $('ov-goal').hidden = !top;
+  if (!top) return;
+  const next = list.find((x) => tipped < x.at) || top;
+  $('goal-sum').textContent = `${short(tipped)} / ${short(next.at)}`;
+  $('goal-bar').style.width = `${Math.min(100, (tipped / top.at) * 100)}%`;
+  const key = list.map((g) => g.at).join();
+  if (key !== notchesFor) { // redrawn only when the goals change
+    notchesFor = key;
+    $('goal-track').querySelectorAll('.notch').forEach((x) => x.remove());
+    for (const g of list.slice(0, -1)) $('goal-track').append(Object.assign(document.createElement('s'), { className: 'notch', style: `left: ${(g.at / top.at) * 100}%` }));
+  }
+  $('goal-label').replaceChildren(...list.flatMap((g, i) => {
+    const el = Object.assign(document.createElement('span'), { className: tipped >= g.at ? 'met' : '', textContent: `${tipped >= g.at ? '✓ ' : ''}${g.label} ${short(g.at)}` });
+    return i ? [' · ', el] : [el];
+  }));
+  $('ov-goal').textContent = `${next.label} · ${short(tipped)} / ${short(next.at)}`;
 }
 function chat(r) {
   for (const m of r.messages) {
@@ -666,14 +751,27 @@ function chat(r) {
   goal(r.tipped, r.goals);
 }
 // What the message box says goes with the next tip (highlighted), or on its own with Send.
+// The words stay in the box until the tip has gone through, so a failed tip loses nothing.
 function said() {
   const text = $('say-text').value.trim();
-  $('say-text').value = '';
-  setTimeout(() => tick().catch(() => {}), 300);
   return text ? { 'X-Message': encodeURIComponent(text) } : {};
 }
+function sent() {
+  $('say-text').value = '';
+  setTimeout(() => tick().catch(() => {}), 300);
+}
+// Return in the comment box while ₿ is open pays the tip with the words (the greyed arrow blocks the form's own Return).
+$('say-text').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing || $('own-form').hidden) return;
+  e.preventDefault();
+  if (ownSats()) $('own-form').requestSubmit(); else $('own-sats').focus();
+});
 $('say').onsubmit = async (e) => {
   e.preventDefault();
+  if (!$('own-form').hidden) { // ₿ is open: the words are the tip's message, never a comment on their own
+    if (ownSats()) $('own-form').requestSubmit(); else $('own-sats').focus();
+    return;
+  }
   const text = $('say-text').value.trim();
   if (!text) return;
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
@@ -688,6 +786,7 @@ async function tick() {
   if (shownAt && now.show) { Object.assign(show, now.show); words(); }
   shownAt = now.updated;
   liveOn = !!now.live;
+  whenLine();
   readyLive();
   if (now.stage === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
   stage = now.stage;

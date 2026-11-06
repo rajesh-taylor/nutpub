@@ -48,6 +48,7 @@
       <video id="vid-a" muted playsinline preload="auto"></video>
       <video id="vid-b" muted playsinline preload="auto"></video>
       <p class="doors-sign" id="doors-sign">Doors · chat open</p>
+      <p class="ov-mark" aria-hidden="true">The NutPub</p>
       <span class="live-badge" id="live-badge" hidden>Live</span>
       <button class="big-play" id="big-play" aria-label="Play" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
@@ -64,6 +65,8 @@
         </button>
         <input type="range" id="vol" min="0" max="1" step="0.05" value="1" aria-label="Volume">
         <span class="spacer"></span>
+        <span class="ov-goal" id="ov-goal" hidden></span>
+        <button type="button" class="coin btc ov-btc" id="ov-btc" aria-label="Tip in bitcoin">₿ <span>Tip</span></button>
         <button class="btn" id="ov-tip" disabled></button>
         <button class="icon" id="full" aria-label="Full screen">
           <svg class="i-full" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
@@ -75,11 +78,11 @@
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
       <p class="chat-head">Live chat</p>
-      <div class="goal" id="goal" hidden><span id="goal-label"></span><span id="goal-sum"></span><i><b id="goal-bar"></b></i></div>
+      <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
         <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
-        <span class="say-tools"><button type="button" class="coin" id="say-btc" aria-label="Tip in bitcoin">₿</button><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" aria-label="Send the comment">➤</button></span>
+        <span class="say-tools"><button type="button" class="coin btc" id="say-btc" aria-label="Tip in bitcoin" aria-expanded="false">₿</button><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send the comment">➤</button></span>
           <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
     </section>

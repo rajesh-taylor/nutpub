@@ -29,6 +29,7 @@ export const blank = () => ({
   artist: '',                           // not on the tag line; the buttons use it ("Tip Longy")
   venue: '',
   date: '',                             // YYYY-MM-DD, UK time
+  streams: '',                          // HH:MM, when the live stream starts (before the show, for a sound check)
   starts: '',                           // HH:MM, when the show starts
   lastOrders: '',                       // HH:MM: an unpoured drink's lock opens for the artist then (NUT-11 locktime)
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
@@ -39,7 +40,7 @@ export const blank = () => ({
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
-  goals: [{ label: '', at: null }, { label: '', at: null }], // stretch goals, fed by tips
+  goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
   live: { server: '', key: '', playback: '' }, // OBS: where to stream, its key (host only), the link it plays at
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
@@ -84,11 +85,12 @@ export function clean(input = {}) {
     },
     venue: text(input.venue, 60),
     date: /^\d{4}-\d{2}-\d{2}$/.test(input.date) ? input.date : '',
+    streams: TIME.test(input.streams) ? input.streams : '',
     starts: TIME.test(input.starts) ? input.starts : '',
     lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
     drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
-    goals: [0, 1].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
+    goals: [0, 1, 2].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
     live: {
       server: /^rtmps?:\/\/\S+$|^srt:\/\/\S+$/i.test(text(input.live?.server, 300)) ? text(input.live?.server, 300) : '',
       key: text(input.live?.key, 300),

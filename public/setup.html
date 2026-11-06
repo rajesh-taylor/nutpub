@@ -29,7 +29,7 @@
     .board .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px 12px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
     .board .field input:disabled { opacity: .6; }
     .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
-    .board .three { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 0 12px; } /* date, starts, ends: one line, on a phone too */
+    .board .three { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 0 12px; } /* date, stream, show, ends: one line, on a phone too */
     .board .wide { grid-column: 1 / -1; }
     .board .split-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: center; margin: 0 0 10px; font-size: 15px; }
     .board .split-rows .head { color: var(--smoke); }
@@ -60,7 +60,7 @@
     .board .slot.full label span { display: none; }
     .board .slot small { font-size: 11px; }
     .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
-    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); } }
+    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(3, minmax(0, 2fr) minmax(0, 1fr)); } }
     .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
     .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
     .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
@@ -124,7 +124,7 @@
       .board h1 { font-size: 40px; }
       .board .split-rows, .board .add-row { grid-template-columns: minmax(0, 1fr); }
       .board .split-rows .head:nth-child(-n+2) { display: none; }
-      .board .three { gap: 0 8px; }
+      .board .three { gap: 0 8px; grid-template-columns: 1fr 1fr; } /* two by two: date and stream, show and ends */
       .board .three input { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; padding: 10px 6px; font-size: 15px; text-align: center; }
       .board .three input::-webkit-calendar-picker-indicator { display: none; }
       .board .three input::-webkit-date-and-time-value { text-align: center; }
@@ -170,7 +170,8 @@
             </div>
             <div class="three">
               <label class="field">Date<input type="date" data-path="date"></label>
-              <label class="field">Starts<input type="time" data-path="starts"></label>
+              <label class="field">Stream starts<input type="time" data-path="streams"></label>
+              <label class="field">Show starts<input type="time" data-path="starts"></label>
               <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
             </div>
           </section>
@@ -199,6 +200,8 @@
               <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"></label>
               <label class="field">Goal<input data-path="goals.1.label" maxlength="60"></label>
               <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
+              <label class="field">Goal<input data-path="goals.2.label" maxlength="60"></label>
+              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.2.at"></label>
             </div>
             <div class="goal-track"><i id="goal-bar"></i></div>
             <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
