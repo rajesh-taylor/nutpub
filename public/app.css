@@ -715,3 +715,15 @@ body.wallet-card .goal i.track { margin-top: 12px; margin-bottom: 12px; }
 body.wallet-card .show-line .status { color: var(--amber); transition: opacity .8s; }
 body.wallet-card .show-line .status.fade { opacity: 0; }
 body.wallet-card .bottom .purse .goal { grid-template-areas: "head head" "sum sum" "track track" "list list" "more more"; }
+
+/* All goals met: the list folds away; two big buttons, ₿ and a card tip (Stripe's violet, calmed to sit with our
+   midnight and gold; it does nothing yet, as with "£ with card"). */
+.goal .goal-more-row { grid-area: more; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.goal .goal-more-row[hidden] { display: none; }
+.goal .goal-more-row .goal-more { margin: 0; height: 52px; padding: 0 22px; font-size: 20px; }
+.goal .goal-card { height: 52px; padding: 0 22px; border: 1px solid #7d78c8; border-radius: 6px; background: rgb(125 120 200 / .16); color: #c9c6f0; font: 400 20px/1 var(--poster); letter-spacing: .1em; text-transform: uppercase; cursor: default; }
+/* A narrow window on a computer: as on a phone, the picture edge to edge and the cards 16 px in. */
+@media (max-width: 899px) {
+  body.wallet-card main { max-width: none; padding: 0 0 24px; } /* the body already keeps 16 px each side */
+  body.wallet-card:not(.full) .player { width: auto; margin: 0 -16px; border-radius: 0; }
+}

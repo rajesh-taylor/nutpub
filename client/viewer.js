@@ -772,7 +772,8 @@ function goal(tipped, goals, thanks) {
   $('goal-sum').textContent = allMet
     ? `${fig(tipped)} sats · all goal${list.length > 1 ? 's' : ''} met`
     : `${fig(tipped)} / ${fig(next.at)}${WIDE_CARD.matches ? ' sats' : ''}`;
-  $('goal-more').hidden = !allMet; // the goals are done, the tips needn't be
+  $('goal-more-row').hidden = !allMet; // the goals are done, the tips needn't be
+  $('goal-label').hidden = allMet; // and the list of what they were folds away
   // Every goal met and the artist wrote a thank-you: the message instead of the bar.
   const done = tipped >= top.at && !!thanks;
   $('goal-thanks').hidden = !done;
