@@ -32,7 +32,7 @@
     <!-- In the room, before the set: welcome, the free drink. -->
     <section class="inside" id="inside" hidden>
       <figure class="welcome" id="welcome">
-        <img id="welcome-photo" alt="">
+        <img id="welcome-photo" alt="" loading="lazy">
         <figcaption id="about"></figcaption>
       </figure>
       <div class="drink card" id="drink" hidden>
@@ -78,7 +78,7 @@
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
       <p class="chat-head">Live chat</p>
-      <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span></div>
+      <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><button type="button" class="coin btc goal-more" id="goal-more" hidden>₿ Keep the tips coming</button></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
         <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
@@ -110,7 +110,8 @@
           <button class="btn quiet" id="topup" hidden>Add 150,000 test sats</button>
         </div>
         <p class="purse-meter" id="meter">
-          <span class="stat"><small>This set</small><b id="spent"></b></span>
+          <span class="stat" id="spent-box"><small id="spent-label">You've supported the artist tonight</small><b id="spent"></b></span>
+          <span class="stat free-note" id="free-note" hidden><small>Live stream free</small><span id="free-line"></span></span>
           <span class="stat" id="price-box"><small>Price</small><b id="price"></b><small class="fine">plus a small mint fee</small></span>
           <label id="budget-box" class="stat budget" hidden><small>Your limit</small><span>Up to <input id="budget" type="number" min="0" inputmode="numeric" aria-label="Your limit in sats"> sats tonight</span></label>
         </p>
@@ -120,7 +121,7 @@
 
   <!-- Closing time. -->
   <section class="closing" id="closing" hidden>
-    <img id="closing-photo" alt="">
+    <img id="closing-photo" alt="" loading="lazy">
     <div>
       <p class="cheers">Cheers.</p>
       <p class="small" id="change"></p>

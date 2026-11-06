@@ -132,7 +132,7 @@ export function mountDoor(route, admin, pass) {
     ]);
     return {
       messages: rows.reverse().map((m) => ({ id: m.id, sats: m.sats, text: m.text, who: `guest ${String(m.pass || '').slice(0, 4)}` })),
-      deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at),
+      deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };
 

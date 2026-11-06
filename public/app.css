@@ -657,3 +657,61 @@ body.wallet-card .when { font-size: 22px; letter-spacing: .1em; }
 
 /* Nothing shows until the first render has chosen the page: no flash of Doors before the ticket. */
 body.viewer:not(.ready) main, body.viewer:not(.ready) .closing { visibility: hidden; }
+
+/* Batch 2 (6 Nov): the wallet card. The balance fills the top of its column and the two wallet buttons the bottom,
+   big, as they're the ones used most; the stats sit right next to it; the goals take the rest, top to bottom. */
+.goal i.track #goal-bar { position: relative; }
+/* Where the tips are now: a cream mark at the end of the gold. */
+.goal i.track #goal-bar::after { content: ""; position: absolute; right: -2px; top: -5px; bottom: -5px; width: 4px; border-radius: 2px; background: var(--cream); box-shadow: 0 0 6px rgb(5 9 20 / .8); }
+.goal .goal-thanks { grid-area: track; margin: 2px 0 0; font: 400 24px/1.15 var(--poster); letter-spacing: .04em; color: var(--amber); }
+body.wallet-card .free-note span { display: block; margin-top: 4px; font-size: 16px; color: var(--cream); max-width: 22em; }
+@media (min-width: 900px) {
+  body.wallet-card .purse { grid-template-columns: clamp(300px, 24vw, 380px) auto minmax(0, 1fr); grid-template-areas: "sum meter goal" "actions status goal"; column-gap: 32px; row-gap: 14px; align-items: stretch; }
+  body.wallet-card .purse-sum b { font-size: 54px; }
+  body.wallet-card .purse-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-self: end; }
+  body.wallet-card .purse-actions .btn { display: grid; place-items: center; min-height: 58px; padding: 8px 10px 6px; font-size: 18px; white-space: normal; line-height: 1.1; text-align: center; }
+  body.wallet-card .purse-meter { flex-direction: column; flex-wrap: nowrap; gap: 14px; align-self: start; }
+  body.wallet-card .bottom .purse .goal { align-self: stretch; padding-left: 28px; border-left: 1px solid rgb(239 227 200 / .08); grid-template-rows: auto auto auto 1fr; }
+  body.wallet-card .bottom .purse .goal #goal-sum { font-size: 34px; }
+  body.wallet-card .goal i.track { height: 14px; margin: 6px 0; }
+  body.wallet-card .goal .goal-list { font-size: 18px; white-space: normal; }
+  body.wallet-card .goal .goal-thanks { font-size: 30px; }
+}
+
+/* Full screen: no The NutPub over the picture (the TEST strip stays). */
+body.viewer.full .ov-mark { display: none; }
+body.viewer.full .player { cursor: pointer; }
+
+/* The wallet card, round 2 (6 Nov): what you've given sits beside the balance, the two buttons under both, and the
+   goals take the rest of the card. What just happened sits on the show's line, from the right. */
+body.wallet-card .show-line .status { margin: 0 0 0 auto; min-height: 0; font: 400 22px/1.2 var(--poster); letter-spacing: .1em; text-transform: uppercase; color: var(--cream); text-shadow: none; text-align: right; }
+body.wallet-card .show-line .status:empty { display: none; }
+@media (max-width: 699px) { body.wallet-card .show-line .status { font-size: 18px; margin: 0; text-align: left; } }
+@media (min-width: 900px) {
+  body.wallet-card .purse { grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "sum meter goal" "actions actions goal"; }
+  body.wallet-card .purse-meter { padding-top: 2px; }
+  body.wallet-card .bottom .purse .goal { padding-left: 32px; }
+}
+
+/* 6 Nov, round 3: the card's labels all match "Wallet balance"; the goals in the page's own lettering; a microphone
+   at each goal on the track, gold once it's met. */
+body.wallet-card .stat small:not(.fine), body.wallet-card .goal .goal-head { font: 400 15px/1 var(--poster); letter-spacing: .16em; color: var(--cream); }
+body.wallet-card .goal .goal-list { font-family: var(--poster); letter-spacing: .08em; text-transform: uppercase; }
+.goal .notch.mic { top: 50%; bottom: auto; width: 26px; height: 26px; margin: 0; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%; background: #000; box-shadow: 0 0 0 1px rgb(239 227 200 / .4); color: var(--cream); z-index: 1; }
+.goal .notch.mic svg { width: 16px; height: 16px; fill: currentColor; }
+.goal .notch.mic.met { background: var(--amber); color: #000; box-shadow: none; }
+body.wallet-card .goal i.track { margin-right: 13px; margin-left: 2px; }
+body.wallet-card .goal i.track { margin-top: 12px; margin-bottom: 12px; }
+/* What you've given reads as large as the goal's figures. */
+@media (min-width: 900px) { body.wallet-card .purse-meter .stat b { font-size: 34px; } }
+
+/* Opening the wallet: words, not a giant number. */
+#balance.opening { font: 400 20px/1.2 var(--poster); letter-spacing: .08em; color: var(--smoke); white-space: normal; }
+/* All goals met: the tips can keep coming. */
+.goal .goal-more { grid-area: more; justify-self: start; margin-top: 6px; height: 40px; padding: 0 16px; font: 400 17px/1 var(--poster); letter-spacing: .1em; text-transform: uppercase; }
+.goal:has(.goal-more:not([hidden])) { row-gap: 8px; }
+.goal .goal-more:not([hidden]) { display: inline-flex; align-items: center; gap: 6px; }
+/* What just happened, in gold so it stands out from the cream line; it fades after 10 s. */
+body.wallet-card .show-line .status { color: var(--amber); transition: opacity .8s; }
+body.wallet-card .show-line .status.fade { opacity: 0; }
+body.wallet-card .bottom .purse .goal { grid-template-areas: "head head" "sum sum" "track track" "list list" "more more"; }

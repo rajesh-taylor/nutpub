@@ -41,6 +41,7 @@ export const blank = () => ({
   ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
+  goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
   live: { server: '', key: '', playback: '' }, // OBS: where to stream, its key (host only), the link it plays at
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
   retry: { on: true },                  // safe retry: paid once, retried safely
@@ -90,6 +91,7 @@ export function clean(input = {}) {
     lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
     drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
+    goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1, 2].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
     live: {
       server: /^rtmps?:\/\/\S+$|^srt:\/\/\S+$/i.test(text(input.live?.server, 300)) ? text(input.live?.server, 300) : '',

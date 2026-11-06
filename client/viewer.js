@@ -41,7 +41,19 @@ const T = {
   },
 };
 
-const say = (text) => { $('status').textContent = text || ''; };
+// What just happened. On the home page it fades after 10 s: read once, it needn't stay.
+let sayTimer = null;
+const say = (text) => {
+  clearTimeout(sayTimer);
+  $('status').classList.remove('fade');
+  $('status').textContent = text || '';
+  if (text && document.body.classList.contains('wallet-card')) {
+    sayTimer = setTimeout(() => {
+      $('status').classList.add('fade');
+      sayTimer = setTimeout(() => { $('status').textContent = ''; $('status').classList.remove('fade'); }, 800);
+    }, 10_000);
+  }
+};
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 
 const [health, { show, photo: showPhoto, photos: showPhotos = {} }] = await Promise.all([
@@ -55,7 +67,6 @@ $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
 // Free shows: no price and no "This set" (there's nothing to count).
 $('price').textContent = free ? '' : T.perMinute(show.stream.perMinute);
-$('meter').hidden = free;
 const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
@@ -71,27 +82,53 @@ async function getPass(fresh = false) {
 }
 let pass = await getPass();
 let spentHere = 0;
+let tippedHere = 0; // this browser's tips, all of them (the server keeps the total)
 let resumeAt = 0; // this pass's first unpaid piece
 let liveSpentSoFar = 0;
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
 if (me.status === 403) pass = await getPass(true);
-else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar } = await me.json());
+else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar, tipped: tippedHere = 0 } = await me.json());
 spentHere += liveSpentSoFar;
 // The mint's fee on live minutes: it leaves the wallet too, so it counts towards the limit. Only this browser knows it.
 let liveFees = 0;
 try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP}`)) || 0 : 0; } catch {}
-const meter = () => { $('spent').textContent = free ? '' : T.spent(spentHere + liveFees); };
+// What this browser has given tonight: minutes watched and tips. A free stream says so, and asks for a tip.
+const meter = () => {
+  const given = (free ? 0 : spentHere + liveFees) + tippedHere;
+  $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} tonight`;
+  $('spent').textContent = T.spent(given);
+  $('spent-box').hidden = free && !given;
+  $('free-note').hidden = !free;
+  $('free-line').textContent = `Tip ${show.artist || 'the artist'} for hosting the live show`;
+};
+// A tip went through: the server says this browser's new total.
+const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { tippedHere = j.total; meter(); } }).catch(() => {});
 meter();
 
 // ---- The wallet (Coco, in this browser).
-const wallet = await openWallet(health.mint.url, `nutpub${KEEP}`);
+// Opened in the background: a browser with a long history can take seconds, and the page needn't wait for it.
+// Everything that uses the wallet waits for it instead; the balance shows "…" until then.
+let realWallet = null;
+const walletReady = openWallet(health.mint.url, `nutpub${KEEP}`).then((w) => (realWallet = w));
+const wallet = {
+  balance: () => walletReady.then((w) => w.balance()),
+  pay: (creq) => walletReady.then((w) => w.pay(creq)),
+  topup: (n) => walletReady.then((w) => w.topup(n)),
+  topupDone: (id) => walletReady.then((w) => w.topupDone(id)),
+  on: (event, fn) => { walletReady.then((w) => w.on(event, fn)); },
+  get lastFee() { return realWallet?.lastFee || 0; },
+};
 const balance = async () => {
   const n = (await wallet.balance()).toLocaleString('en-GB');
+  $('balance').classList.remove('opening');
   $('balance').textContent = n;
   const d = document.getElementById('door-balance'); // on the door's ticket box too: you see what you have before you pay
   if (d) d.textContent = n;
 };
-await balance();
+// Until the wallet answers, say so: an empty balance would look like lost sats.
+$('balance').classList.add('opening');
+$('balance').textContent = 'Opening your wallet…';
+balance().catch(() => {});
 wallet.on('proofs:saved', balance);
 // On the test mint every wallet fills itself to 150,000 test sats when the page opens: nobody fiddles before the show.
 async function fill() {
@@ -205,6 +242,7 @@ backdrop(false);
 
 function controls(on) {
   playing = on;
+  if (on) say(''); // playing again: the "Stopped" line goes
   backdrop(on);
   // The cover photo is for before Play: once playing, plain black behind the picture.
   $('player').style.backgroundImage = on ? 'none' : `url("${cover}")`;
@@ -427,7 +465,10 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // iPhone (Low Power Mode) may refuse to start a video without a tap: any tap on the picture starts it.
+// With a mouse, a click on the picture plays and pauses it, as on YouTube (a phone's tap keeps the old way).
 $('player').addEventListener('click', (e) => {
+  const onPicture = e.target === $('player') || e.target.tagName === 'VIDEO';
+  if (onPicture && e.pointerType === 'mouse' && !$('play').disabled) return toggle();
   if (e.target.tagName === 'VIDEO') vids.find((v) => v.classList.contains('on') || v.src)?.play().catch(() => {});
 });
 
@@ -438,7 +479,7 @@ async function tip(button) {
   button.disabled = true;
   try {
     const res = await paidFetch('/api/tip', said());
-    if (res.ok) sent();
+    if (res.ok) { sent(); tipped(res); }
     say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
@@ -475,7 +516,7 @@ $('own-form').onsubmit = async (e) => {
   try {
     const res = await paidFetch(`/api/tip/${n}`, said());
     say(res.ok ? T.ownDone(n) : await refusal(res));
-    if (res.ok) { sent(); ownForm(false); }
+    if (res.ok) { sent(); tipped(res); ownForm(false); }
   } catch (err) {
     say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
   }
@@ -497,11 +538,12 @@ const WALLET_CARD = AS === 'home' && top === self;
 if (WALLET_CARD) {
   body.classList.add('wallet-card');
   // The wallet card: the wallet, what this costs, what just happened, the stretch goal.
-  document.querySelector('.purse').append($('status'), $('goal'));
+  document.querySelector('.purse').append($('goal'));
   // The show's line under the picture, as on a video site: the artist and the date.
   const line = Object.assign(document.createElement('div'), { className: 'show-line' });
   $('player').after(line);
-  line.append(document.querySelector('.masthead'), $('when'));
+  // What just happened ("Stopped. Nothing more is charged.") on the same line, from the right.
+  line.append(document.querySelector('.masthead'), $('when'), $('status'));
   // Tips start from the comment box: ₿ opens the amount, and the comment goes with the tip.
   $('say').after($('own-form'));
   ownSpot.remove();
@@ -514,6 +556,8 @@ if (WALLET_CARD) {
   $('wallet-page').textContent = 'My browser wallet';
   $('topup').textContent = 'Add test sats';
   $('say-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
+  // All the goals met: a ₿ button by them opens the tip box under the comment, as ₿ there does.
+  $('goal-more').onclick = () => { unlockAudio(); ownForm(true); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('own-sats').focus({ preventScroll: true }); };
 } else if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
@@ -548,12 +592,13 @@ function whenLine() {
   let line;
   if (liveOn) {
     const started = !show.starts || !show.date || ukNow() >= `${show.date}T${show.starts}`;
-    line = ['Live now', started ? show.lastOrders && `ends ${show.lastOrders} ${zone}` : `show ${show.starts} ${zone}`];
+    line = ['Live now', started ? show.lastOrders && `ends ${show.lastOrders} ${zone}` : `show starts ${show.starts} ${zone}`];
   } else {
-    const times = [show.streams && `stream ${show.streams}`, show.starts && `show ${show.starts}`].filter(Boolean);
+    const times = [show.streams && `stream starts ${show.streams}`, show.starts && `show starts ${show.starts}`].filter(Boolean);
     line = [day, times.length && `${times.join(' · ')} ${zone}`];
   }
-  const text = line.filter(Boolean).join(' · ');
+  // Each part stays whole on a narrow phone: the line breaks between parts, never inside "show starts 21:30".
+  const text = line.filter(Boolean).map((x) => String(x).replace(/ /g, '\u00a0')).join(' · ');
   if ($('when').textContent !== text) { $('when').textContent = text; doorTop(); }
 }
 // At the door the photo starts under the words, however many lines the artist's name takes (page coordinates:
@@ -713,22 +758,42 @@ let lastMsg = 0;
 const short = (n) => (n < 1000 ? String(n) : n < 1e6 ? `${+(n / 1000).toFixed(n < 1e4 ? 1 : 0)}k` : `${+(n / 1e6).toFixed(1)}M`);
 // Stretch goals: one track from 0 to the last goal, a small notch at each, gold filling along it. Every goal on one line.
 let notchesFor = '';
-function goal(tipped, goals) {
+const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>';
+const WIDE_CARD = matchMedia('(min-width: 900px)');
+function goal(tipped, goals, thanks) {
+  // Desktop has the room for whole figures (25,000 sats); a phone gets 25k.
+  const fig = WIDE_CARD.matches ? (n) => Number(n).toLocaleString('en-GB') : short;
   const list = [...goals].sort((a, b) => a.at - b.at).slice(0, 3);
   const top = list[list.length - 1];
   $('goal').hidden = $('ov-goal').hidden = !top;
   if (!top) return;
   const next = list.find((x) => tipped < x.at) || top;
-  $('goal-sum').textContent = `${short(tipped)} / ${short(next.at)}`;
+  const allMet = tipped >= top.at;
+  $('goal-sum').textContent = allMet
+    ? `${fig(tipped)} sats · all goal${list.length > 1 ? 's' : ''} met`
+    : `${fig(tipped)} / ${fig(next.at)}${WIDE_CARD.matches ? ' sats' : ''}`;
+  $('goal-more').hidden = !allMet; // the goals are done, the tips needn't be
+  // Every goal met and the artist wrote a thank-you: the message instead of the bar.
+  const done = tipped >= top.at && !!thanks;
+  $('goal-thanks').hidden = !done;
+  $('goal-thanks').textContent = thanks || '';
+  $('goal-track').hidden = $('goal-sum').hidden = done;
   $('goal-bar').style.width = `${Math.min(100, (tipped / top.at) * 100)}%`;
   const key = list.map((g) => g.at).join();
   if (key !== notchesFor) { // redrawn only when the goals change
     notchesFor = key;
     $('goal-track').querySelectorAll('.notch').forEach((x) => x.remove());
-    for (const g of list.slice(0, -1)) $('goal-track').append(Object.assign(document.createElement('s'), { className: 'notch', style: `left: ${(g.at / top.at) * 100}%` }));
+    for (const g of list) {
+      const mic = Object.assign(document.createElement('s'), { className: 'notch mic', title: g.label });
+      mic.style.left = `${(g.at / top.at) * 100}%`;
+      mic.dataset.at = g.at;
+      mic.innerHTML = MIC; // our own fixed icon, never the artist's text
+      $('goal-track').append(mic);
+    }
   }
+  $('goal-track').querySelectorAll('.mic').forEach((m) => m.classList.toggle('met', tipped >= Number(m.dataset.at)));
   $('goal-label').replaceChildren(...list.flatMap((g, i) => {
-    const el = Object.assign(document.createElement('span'), { className: tipped >= g.at ? 'met' : '', textContent: `${tipped >= g.at ? '✓ ' : ''}${g.label} ${short(g.at)}` });
+    const el = Object.assign(document.createElement('span'), { className: tipped >= g.at ? 'met' : '', textContent: `${tipped >= g.at ? '✓ ' : ''}${g.label} ${fig(g.at)}` });
     return i ? [' · ', el] : [el];
   }));
   $('ov-goal').textContent = `${next.label} · ${short(tipped)} / ${short(next.at)}`;
@@ -756,7 +821,7 @@ function chat(r) {
   for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
   while (feed.children.length > 60) feed.firstElementChild.remove();
   feed.scrollTop = feed.scrollHeight;
-  goal(r.tipped, r.goals);
+  goal(r.tipped, r.goals, r.thanks);
 }
 // What the message box says goes with the next tip (highlighted), or on its own with Send.
 // The words stay in the box until the tip has gone through, so a failed tip loses nothing.
