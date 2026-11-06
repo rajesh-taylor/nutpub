@@ -654,3 +654,6 @@ body.viewer.full .bar .spacer { flex: 1 1 0; min-width: 0; }
 /* The date and the times: bigger, but smaller than the artist's name. */
 body.wallet-card .when { font-size: 22px; letter-spacing: .1em; }
 @media (max-width: 699px) { body.wallet-card .when { font-size: 18px; } }
+
+/* Nothing shows until the first render has chosen the page: no flash of Doors before the ticket. */
+body.viewer:not(.ready) main, body.viewer:not(.ready) .closing { visibility: hidden; }

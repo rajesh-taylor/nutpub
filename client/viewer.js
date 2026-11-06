@@ -521,9 +521,17 @@ $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
 $('closing-photo').src = showPhotos.wide2 || showPhoto || DEFAULT_PHOTO;
 // Before the set plays, the player shows the artist's photo, like a video's cover picture.
 // A wide photo on a wide screen.
-const cover = (matchMedia('(orientation: landscape)').matches && showPhotos.wide1) || showPhoto || '/img/fp-32.jpg';
-$('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
-if (playing) $('player').style.backgroundImage = 'none';
+const WIDE = matchMedia('(orientation: landscape)');
+let cover;
+const setCover = () => {
+  cover = (WIDE.matches && showPhotos.wide1) || showPhoto || '/img/fp-32.jpg';
+  $('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
+  if (playing) $('player').style.backgroundImage = 'none';
+};
+setCover();
+// A window dragged narrow (or a phone turned) swaps to the tall photo, and back.
+let wasWide = WIDE.matches;
+addEventListener('resize', () => { if (WIDE.matches === wasWide) return; wasWide = WIDE.matches; setCover(); backdrop(playing); });
 // The words that come from the setup page: redrawn whenever it saves (the demo changes prices live).
 // UK time now, as "YYYY-MM-DDTHH:MM", to compare with the show's date and times.
 const ukNow = () => {
@@ -799,5 +807,6 @@ async function tick() {
   chat(now);
 }
 render();
+document.body.classList.add('ready'); // the page shows once it knows what to show (no flash of Doors before the ticket)
 tick().catch(() => {});
 setInterval(() => tick().catch(() => {}), 2000);
