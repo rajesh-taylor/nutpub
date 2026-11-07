@@ -35,7 +35,8 @@ export const blank = () => ({
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
-  stream: { mode: 'pay', perMinute: null }, // 'pay': sats a minute; 'free': free to watch, tips only
+  stream: { mode: 'pay', perMinute: null }, // watching from home: 'ticket' (an Online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
+  online: { price: null, fiat: null, locked: false }, // the Online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null, fiat: null, locked: false }, // the room ticket in sats; fiat: £, the card price, which fills the sats unless locked
@@ -79,9 +80,10 @@ export function clean(input = {}) {
       return [...list, { name: text(s?.name, 40), percent: n >= 1 && used < 94 ? Math.min(n, 94 - used) : null, lightning: LN_ADDRESS.test(lightning) ? lightning : '' }];
     }, []),
     stream: {
-      mode: input.stream?.mode === 'free' ? 'free' : 'pay',
+      mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',
       perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov
     },
+    online: { price: sats(input.online?.price), fiat: pounds(input.online?.fiat), locked: on(input.online?.locked) },
     tip: { label: text(input.tip?.label, 40), price: sats(input.tip?.price) },
     goal: {
       on: on(input.goal?.on),
@@ -115,6 +117,7 @@ export function clean(input = {}) {
   if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
+  if (show.stream.mode === 'ticket' && !show.online.price) problems.push('online.price');
   if (show.drink.mode === 'artist' && !show.drink.price) problems.push('drink.price');
   if (show.drink.mode === 'artist' && !(show.date && show.lastOrders)) problems.push('lastOrders');
   return { show, problems };

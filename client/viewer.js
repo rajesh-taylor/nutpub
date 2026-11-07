@@ -65,8 +65,11 @@ $('billing').textContent = show.title;
 $('about').textContent = show.description;
 $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
+const online = show.stream.mode === 'ticket'; // watching from home needs an Online ticket (or a room ticket)
+// A stream-only gig (no room tickets): the show's link opens the home view.
+if (AS === 'room' && !show.ticket.on && show.stream.mode !== 'off' && top === self && !TICKET_VIEW) location.replace(`${location.pathname}?as=home`);
 // Free shows: no price and no "This set" (there's nothing to count).
-$('price').textContent = free ? '' : T.perMinute(show.stream.perMinute);
+$('price').textContent = free || online ? '' : T.perMinute(show.stream.perMinute);
 const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
@@ -83,6 +86,7 @@ async function getPass(fresh = false) {
 let pass = await getPass();
 let spentHere = 0;
 let tippedHere = 0; // this browser's tips, all of them (the server keeps the total)
+let ticketHere = 0; // what this browser's ticket cost: it counts as support too
 let resumeAt = 0; // this pass's first unpaid piece
 let liveSpentSoFar = 0;
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
@@ -94,7 +98,7 @@ let liveFees = 0;
 try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP}`)) || 0 : 0; } catch {}
 // What this browser has given tonight: minutes watched and tips. A free stream says so, and asks for a tip.
 const meter = () => {
-  const given = (free ? 0 : spentHere + liveFees) + tippedHere;
+  const given = (free ? 0 : spentHere + liveFees) + tippedHere + ticketHere;
   $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} tonight`;
   $('spent').textContent = T.spent(given);
   $('spent-box').hidden = free && !given;
@@ -263,7 +267,7 @@ const readyLive = () => { if (liveOn && !Hls) import('hls.js').then((m) => { Hls
 const withToken = (url) => url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/, `$1${liveToken}$2`);
 
 // The viewer's limit for the night, kept in this browser. Tickets and free shows pay nothing, so have none.
-const pays = () => !free && !door.ticket;
+const pays = () => !free && !online && !door.ticket;
 const budget = () => Number($('budget').value) || 0;
 try { $('budget').value = localStorage.getItem(`nutpub-budget${KEEP}`) || ''; } catch {}
 $('budget').value ||= Math.max(500, (show.stream.perMinute || 0) * 6);
@@ -634,6 +638,8 @@ const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catc
 const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
 const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
 let door = TICKET_VIEW ? {} : await myDoor();
+ticketHere = door.ticketSats || 0;
+meter();
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
 let stage = firstStage.stage || 'doors';
 liveOn = !!firstStage.live;
@@ -669,8 +675,8 @@ function render() {
   $('budget-box').hidden = !liveOn || !pays();
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
-  $('whole').hidden = AS !== 'home' || !show.ticket.on || ticket || closed;
-  $('whole').textContent = `Online ticket · ${sats(s.artist)}`;
+  $('whole').hidden = AS !== 'home' || !online || !show.online?.price || ticket || closed;
+  $('whole').textContent = `Online ticket · ${sats(show.online?.price)}`;
   $('whole-card').hidden = !WALLET_CARD || $('whole').hidden;
   $('price-box').hidden = !pays();
   $('play').disabled = $('big-play').disabled = !live;
@@ -680,8 +686,8 @@ function render() {
   if (!ticket) {
     $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
     $('ticket-note').textContent = room ? '' : free ? 'Or watch free, with tips.' : 'Or press play and pay as you watch.'; // the ticket page has only its buttons
-    $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(s.artist)}`;
-    $('door-home').hidden = !room;
+    $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(show.online?.price || 0)}`;
+    $('door-home').hidden = !room || show.stream.mode === 'off';
     $('door-home').href = `${location.pathname}?as=home`;
   } else {
     $('door-home').hidden = true;
@@ -706,7 +712,7 @@ $('buy').onclick = async () => {
   unlockAudio();
   // Enough in the wallet for what's left to pay? Say so before paying half of it.
   const s = split();
-  const due = (door.ticket ? 0 : AS === 'room' ? s.total : s.artist) - (door.ticket ? -s.drink : 0);
+  const due = (door.ticket ? 0 : AS === 'room' ? s.total : show.online?.price || 0) - (door.ticket ? -s.drink : 0);
   const have = await wallet.balance();
   if (have < due && health.mint.test) {
     // On the test mint, short at the door: fill up by itself and carry on.
@@ -717,7 +723,7 @@ $('buy').onclick = async () => {
   $('buy').disabled = true;
   say('Paying at the door…');
   try {
-    let res = door.ticket ? null : await paidFetch('/api/door/ticket');
+    let res = door.ticket ? null : await paidFetch(AS === 'home' ? '/api/door/ticket?as=home' : '/api/door/ticket');
     if (res && !res.ok) throw new Error(await refusal(res));
     if (AS === 'room' && split().drink) {
       res = await paidFetch('/api/door/drink');
@@ -729,6 +735,8 @@ $('buy').onclick = async () => {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
   }
   door = await myDoor();
+  ticketHere = door.ticketSats || 0;
+  meter();
   render();
   $('buy').disabled = false;
   balance();

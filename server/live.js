@@ -104,7 +104,9 @@ export function mountLive(route, admin, pass) {
     async (c) => {
       const show = await showOf(c);
       if (!show.live.playback || !(await liveNow(show.page))) return json({ error: 'not_live' }, 409); // never charged for nothing
+      if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
       if (show.stream.mode === 'free' || (await hasTicket(c.pass))) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
+      if (show.stream.mode === 'ticket') return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);
       if (!show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       // Still inside a paid minute (a rejoin, or a lost reply asked for again): the same token, no charge.
       const last = await one('SELECT until, sats FROM live_paid WHERE pass = ?', c.pass);

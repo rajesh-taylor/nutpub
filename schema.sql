@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS paid (pass TEXT NOT NULL, piece INTEGER NOT NULL, sat
 -- The live picture: how long this pass's token lasts, and what it has paid tonight. One row per pass, however long it watches.
 CREATE TABLE IF NOT EXISTS live_paid (pass TEXT PRIMARY KEY, until INTEGER NOT NULL, sats INTEGER NOT NULL) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS tips (pass TEXT, sats INTEGER NOT NULL, at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL);
+-- kind: 'room' (the room ticket) or 'home' (the Online ticket). Added 7 Nov: ALTER TABLE tickets ADD COLUMN kind TEXT NOT NULL DEFAULT 'room';
+CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room');
 CREATE TABLE IF NOT EXISTS drinks (id INTEGER PRIMARY KEY, pass TEXT UNIQUE NOT NULL, locked INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, pass TEXT, sats INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL,

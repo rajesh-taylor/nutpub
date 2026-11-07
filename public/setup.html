@@ -62,23 +62,46 @@
     .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
     @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(3, minmax(0, 2fr) minmax(0, 1fr)); } }
     .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
-    .board .price-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; align-items: end; }
-    .board .price-row .fiat { color: #c9c6f0; }
+    .board .price-row { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: flex-start; }
+    .board .price-row > .field { flex: none; }
+    .board .price-row .fiat { width: 7em; color: #c9c6f0; }
     .board .price-row .fiat input { border-color: #7d78c8; }
+    .board .price-row .sats-field { width: 10.5em; }
+    .board .price-row .sats-field > label { display: block; margin: 0; }
     .board .sats-box { position: relative; display: block; margin-top: 6px; }
-    .board .sats-box > input { margin-top: 0 !important; padding-right: 150px !important; }
-    .board .sats-box .lock { position: absolute; inset: 1px 1px 1px auto; display: flex; align-items: center; gap: 6px; padding: 0 12px; cursor: pointer; border-left: 1px solid rgb(239 227 200 / .18); border-radius: 0 3px 3px 0; color: var(--cream); font-size: 13px; }
-    .board .sats-box .lock input { position: absolute; opacity: 0; pointer-events: none; }
-    .board .sats-box .lock svg { width: 18px; height: 18px; flex: none; }
+    .board .sats-box > input { margin-top: 0 !important; padding-right: 54px !important; }
+    .board .sats-box .lock { position: absolute; inset: 1px 1px 1px auto; margin: 0; width: 44px; display: grid; place-items: center; cursor: pointer; border-left: 1px solid rgb(239 227 200 / .18); border-radius: 0 3px 3px 0; }
+    .board .sats-box .lock input { position: absolute; opacity: 0; pointer-events: none; width: 1px !important; }
+    .board .sats-box .lock svg { width: 26px; height: 26px; }
     .board .sats-box .lock .open { color: #8fc79a; }
     .board .sats-box .lock .shut { color: var(--amber); display: none; }
-    .board .sats-box .lock:has(input:checked) { color: var(--amber); background: rgb(217 149 58 / .12); }
+    .board .sats-box .lock:has(input:checked) { background: rgb(217 149 58 / .12); }
     .board .sats-box .lock:has(input:checked) .open { display: none; }
     .board .sats-box .lock:has(input:checked) .shut { display: block; }
     .board .sats-box .lock:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: -2px; }
-    @media (max-width: 600px) { .board .price-row { grid-template-columns: 1fr; } }
-    .board .home-choices { display: flex; flex-wrap: wrap; gap: 0 28px; align-items: center; }
-    .board .rate-line { margin: -8px 0 14px; font-size: 13px; color: var(--smoke); }
+    .board .home-choices { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+    .board .home-choices .choice { margin-bottom: 0; align-items: center; min-height: 44px; }
+    .board .ticket-split { display: grid; grid-template-columns: 20.5em minmax(0, 1fr); margin-bottom: 10px; }
+    .board .ticket-split .half { min-width: 0; }
+    .board .ticket-split .half + .half { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
+    .board .half-head { margin: 0 0 10px; font: 400 15px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); }
+    @media (max-width: 700px) {
+      .board .ticket-split { grid-template-columns: 1fr; }
+      .board .ticket-split .half + .half { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
+    }
+    /* Room tickets: a yes/no, so a switch (Square, Toast and YouTube Studio do the same); the row underneath shows when it's on. */
+    .board .room-switch { align-items: center; gap: 14px; min-height: 44px; margin: 0 0 10px; }
+    .board .room-switch input { appearance: none; -webkit-appearance: none; position: relative; width: 44px !important; height: 26px !important; margin: 0 !important; border-radius: 13px; background: rgb(239 227 200 / .18); border: 1px solid rgb(239 227 200 / .3); cursor: pointer; transition: background .15s; }
+    .board .room-switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--cream); transition: transform .15s; }
+    .board .room-switch input:checked { background: var(--amber); border-color: var(--amber); }
+    .board .room-switch input:checked::after { transform: translateX(18px); background: var(--deep); }
+    .board .room-switch input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    /* ≈ between £ and sats: they follow each other (not a swap button). */
+    .board .price-row { gap: 0 8px; }
+    .board .price-row .about { align-self: flex-end; height: 44px; display: grid; place-items: center; width: 1.2em; font-size: 22px; color: var(--smoke); }
+    .board .online-row { margin: 0 0 6px 28px; }
+    .board .choice-note { display: block; font-size: 13px; font-weight: 400; color: var(--smoke); }
+    .board .rate-line { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
     .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
     .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
     .board .tag.works { color: var(--deep); background: var(--amber); }
@@ -195,19 +218,35 @@
 
           <section class="panel wide">
             <h2>Ticket Price</h2>
-            <input type="checkbox" data-path="ticket.on" hidden>
-            <div class="price-row" data-price="ticket">
+            <div class="ticket-split">
+              <div class="half">
+                <label class="choice room-switch"><b>Room tickets</b><input type="checkbox" role="switch" data-path="ticket.on" aria-label="Sell room tickets"></label>
+                <div class="price-row" data-price="ticket" data-when="ticket.on">
               <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
-              <div class="field"><label for="ticket-sats">Bitcoin Sats</label>
+              <span class="about" aria-hidden="true">≈</span>
+              <div class="field sats-field"><label for="ticket-sats">Bitcoin price in Sats</label>
                 <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
-                  <label class="lock" title="Set your own sats figure: the £ price no longer changes it"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><small>Set own figure</small></label></span></div>
+                  <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
+                </div>
+              </div>
+              <div class="half">
+                <h3 class="half-head">Watching from home</h3>
+                <div class="home-choices">
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Online ticket</b></span></label>
+                <div class="price-row online-row" data-price="online" data-when="stream.mode=ticket">
+                  <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="online.fiat" aria-label="Online ticket price in pounds, by card"></label>
+                  <span class="about" aria-hidden="true">≈</span>
+                  <div class="field sats-field"><label for="online-sats">Bitcoin price in Sats</label>
+                    <span class="sats-box"><input id="online-sats" type="number" min="1" step="1" inputmode="numeric" data-path="online.price">
+                      <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="online.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
+                </div>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute</span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b><small class="choice-note">£20 (up to 100 viewers, 3 hours)</small></span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
+                </div>
+              </div>
             </div>
             <p class="rate-line" id="rate-line"></p>
-            <p style="margin: 0 0 8px; font-size: 15px; color: var(--smoke);">Punters watching from home</p>
-            <div class="home-choices">
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute</span></label>
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b></span></label>
-            </div>
           </section>
 
           <section class="panel wide">

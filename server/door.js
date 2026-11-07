@@ -16,6 +16,7 @@ export const barKey = () => kv.get('barKey');
 
 const DRINK = 'SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked';
 export const hasTicket = async (pass) => !!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', pass));
+const ticketOf = (pass) => one('SELECT kind, sats FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
 const siteOf = (c) => SITE_URL || c.url.origin;
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
@@ -61,16 +62,21 @@ export function mountDoor(route, admin, pass) {
   });
 
   // ---- The door, step 1: the artist's part of the ticket. Paid already: in (a retry is safe).
+  // ?as=home buys the Online ticket instead: its own price, no drink, and it watches the stream but isn't a way into
+  // the room. A room ticket watches from home too.
+  const home = (c) => c.url.searchParams.get('as') === 'home';
   const ticketOn = async (c) => {
     const show = await showOf(c);
+    if (home(c)) return show.stream.mode === 'ticket' && show.online.price ? null : json({ error: 'not_ready', detail: 'No Online ticket on this show.' }, 409);
     return show.ticket.on && show.ticket.price ? null : json({ error: 'not_ready', detail: 'No ticket price set yet.' }, 409);
   };
   route('GET', '/api/door/ticket', pass, ticketOn,
     async (c) => ((await hasTicket(c.pass)) ? json({ in: true }) : null),
-    cashuGate(async (c) => ticketSplit(await showOf(c)).artist, async (c) => `${(await showOf(c)).title || 'The show'}: privacy ticket`,
+    cashuGate(async (c) => (home(c) ? (await showOf(c)).online.price : ticketSplit(await showOf(c)).artist),
+      async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'online ticket' : 'privacy ticket'}`,
       { lockTo: artistKey, kind: 'ticket' }),
     async (c) => {
-      await run('INSERT OR IGNORE INTO tickets (pass, sats, at) VALUES (?, ?, ?)', c.pass, c.paid, now());
+      await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind) VALUES (?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room');
       return json({ in: true });
     });
 
@@ -94,7 +100,8 @@ export function mountDoor(route, admin, pass) {
   // What this phone holds: its ticket, and its drink (poured once the bar has collected it).
   const heldBy = async (id) => {
     const d = await one(`${DRINK} WHERE d.pass = ?`, id);
-    return { ticket: await hasTicket(id), drink: d ? { id: d.id, poured: !!d.collected_at } : null };
+    const t = await ticketOf(id);
+    return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
   route('GET', '/api/door/me', pass, async (c) => json(await heldBy(c.pass)));
 
