@@ -731,3 +731,6 @@ body.wallet-card .bottom .purse .goal { grid-template-areas: "head head" "sum su
 /* No up/down arrows in number boxes, anywhere (Rajesh, 7 Nov). */
 input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Comments off (setup): the chat keeps the goals and the tips, without a box for words. */
+body.no-comments #say-text, body.no-comments #say-send, body.no-comments #say-free { display: none !important; }

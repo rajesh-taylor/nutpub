@@ -123,6 +123,7 @@ export function mountDoor(route, admin, pass) {
 
   // ---- The live chat. Free messages: one per 10 s per phone. Tips with a message arrive through the tip routes.
   route('POST', '/api/message', pass, async (c) => {
+    if ((await showOf(c)).comments === false) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
     const last = await one('SELECT at FROM messages WHERE pass = ? AND sats = 0 ORDER BY id DESC LIMIT 1', c.pass);
     if (last && Date.now() - Date.parse(last.at) < 10_000) return json({ error: 'too_soon', detail: 'One message every 10 seconds.' }, 429);
     const id = await addMessage(c.pass, (await body(c))?.text);
@@ -137,8 +138,9 @@ export function mountDoor(route, admin, pass) {
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
       showOf(c),
     ]);
+    const words = show.comments !== false; // off: only the tips, without their words
     return {
-      messages: rows.reverse().map((m) => ({ id: m.id, sats: m.sats, text: m.text, who: `guest ${String(m.pass || '').slice(0, 4)}` })),
+      messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '', who: `guest ${String(m.pass || '').slice(0, 4)}` })),
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };

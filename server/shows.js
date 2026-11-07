@@ -35,6 +35,7 @@ export const blank = () => ({
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
+  comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
   stream: { mode: 'pay', perMinute: null }, // watching from home: 'ticket' (an Online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
   online: { price: null, fiat: null, locked: false }, // the Online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
@@ -79,6 +80,7 @@ export function clean(input = {}) {
       const lightning = text(s?.lightning, 120).toLowerCase();
       return [...list, { name: text(s?.name, 40), percent: n >= 1 && used < 94 ? Math.min(n, 94 - used) : null, lightning: LN_ADDRESS.test(lightning) ? lightning : '' }];
     }, []),
+    comments: input.comments !== false,
     stream: {
       mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',
       perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov

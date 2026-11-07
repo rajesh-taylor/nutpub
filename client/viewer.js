@@ -65,7 +65,8 @@ $('billing').textContent = show.title;
 $('about').textContent = show.description;
 $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
-const online = show.stream.mode === 'ticket'; // watching from home needs an Online ticket (or a room ticket)
+const online = show.stream.mode === 'ticket';
+document.body.classList.toggle('no-comments', show.comments === false); // tips stay; the words go // watching from home needs an Online ticket (or a room ticket)
 // A stream-only gig (no room tickets): the show's link opens the home view.
 // The setup page's phone (view=ticket) follows the same rule, and turns back when room tickets are switched on again.
 const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
