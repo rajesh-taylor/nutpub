@@ -727,3 +727,7 @@ body.wallet-card .bottom .purse .goal { grid-template-areas: "head head" "sum su
   body.wallet-card main { max-width: none; padding: 0 0 24px; } /* the body already keeps 16 px each side */
   body.wallet-card:not(.full) .player { width: auto; margin: 0 -16px; border-radius: 0; }
 }
+
+/* No up/down arrows in number boxes, anywhere (Rajesh, 7 Nov). */
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

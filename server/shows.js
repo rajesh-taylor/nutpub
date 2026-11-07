@@ -38,7 +38,7 @@ export const blank = () => ({
   stream: { mode: 'pay', perMinute: null }, // 'pay': sats a minute; 'free': free to watch, tips only
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
-  ticket: { on: false, price: null },   // the privacy ticket: what the buyer pays (the drink included)
+  ticket: { on: false, price: null, fiat: null, locked: false }, // the room ticket in sats; fiat: £, the card price, which fills the sats unless locked
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
   goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
@@ -59,6 +59,10 @@ export function clean(input = {}) {
     return Number.isFinite(n) && n >= 1 && n <= 1_000_000 ? n : null;
   };
   const on = (v) => v === true;
+  const pounds = (v) => { // £0.01 to £100,000, to the penny
+    const p = Math.round(Number(v) * 100);
+    return v !== null && v !== '' && Number.isFinite(p) && p >= 1 && p <= 10_000_000 ? p / 100 : null;
+  };
 
   const show = {
     title: text(input.title, 80),
@@ -89,7 +93,7 @@ export function clean(input = {}) {
     streams: TIME.test(input.streams) ? input.streams : '',
     starts: TIME.test(input.starts) ? input.starts : '',
     lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
-    ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price) },
+    ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price), fiat: pounds(input.ticket?.fiat), locked: on(input.ticket?.locked) },
     drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1, 2].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),

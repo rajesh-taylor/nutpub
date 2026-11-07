@@ -28,11 +28,22 @@ const same = (a, b) => a.replace(/\/+$/, '') === b.replace(/\/+$/, '');
 
 // `name`: the viewer's wallet is 'nutpub'; the takings page keeps its own ('nutpub-takings'), so a Mac that opens
 // both never mixes the artist's takings with a viewer's change.
+// A payment locked to someone else's key (every NutPub payment) can never come back to this wallet, but Coco keeps
+// it "pending" until it sees the coins spent, and at every start it asks the mint about each pending one in turn,
+// behind its own limit of 20 requests and then one every 3 s. A long test history made opening take 10–30 s.
+// So: mark such a send done as soon as it's made (local only; Coco itself refuses to roll one back).
+const settle = (coco, id) => coco.ops.send.finalize(id).catch(() => {});
+
 export async function openWallet(mintUrl, name = 'nutpub') {
+  const started = performance.now();
   const repo = new IndexedDbRepositories({ name });
   await repo.init();
   const coco = await initializeCoco({ repo, seedGetter: async () => seed(name) });
   await coco.mint.addMint(mintUrl, { trusted: true });
+  // Tidy the ones left from before this fix, so the next opening is quick.
+  const stale = (await coco.ops.send.listInFlight().catch(() => [])).filter((op) => op.method === 'p2pk');
+  for (const op of stale) await settle(coco, op.id);
+  console.info(`[wallet] ${name} opened in ${Math.round(performance.now() - started)} ms` + (stale.length ? `, ${stale.length} old payments tidied` : ''));
 
   return {
     coco,
@@ -78,6 +89,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
         });
         this.lastFee = num(prepared.fee);
         const { token } = await coco.ops.send.execute(prepared);
+        await settle(coco, prepared.id);
         return coco.wallet.encodeToken(token);
       }
       const req = await coco.paymentRequests.parse(creq);
@@ -98,6 +110,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
         target: { type: 'p2pk', options: { kind: 'P2PK', data: lock.data, locktime, refundKeys: [refund.publicKeyHex] } },
       });
       const { token } = await coco.ops.send.execute(prepared);
+      await settle(coco, prepared.id);
       const encoded = coco.wallet.encodeToken(token);
       savePledges([...loadPledges(), { token: encoded, sk: hex(refund.secretKey), locktime, amount: Number(req.amount) }]);
       return encoded;

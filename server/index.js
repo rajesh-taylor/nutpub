@@ -10,6 +10,7 @@ import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
+import { mountRate } from './rate.js';
 import { current, publicShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -84,6 +85,7 @@ mountDoor(route, admin, pass);
 mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
 mountLive(route, admin, pass);
+mountRate(route);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

@@ -1,4 +1,5 @@
 // The setup page: read the show, edit it, save it to the server. Templates save and load whole shows.
+import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
   artist: 'artist', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price',
@@ -212,8 +213,29 @@ function saved(res) {
     todo.length ? 'todo' : 'ok');
 }
 
+// ---- Prices: £ beside sats. Typing £ fills the sats from the rate (CoinGecko, kept 30 minutes on the server), unless
+// the lock is on: then the sats are the artist's own figure (some give 5–10% off for bitcoin). Typing in the sats turns
+// the lock on; turning it off fills them from £ again. Once filled, the sats stay put: they don't follow the rate.
+let rate = null;
+async function loadRate() {
+  try { rate = await (await fetch('/api/rate')).json(); } catch { rate = null; }
+  const at = rate?.at ? new Date(rate.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  $('rate-line').textContent = !rate ? 'No bitcoin rate just now: type the sats yourself.'
+    : `£${Math.round(rate.gbp).toLocaleString('en-GB')} a bitcoin` + (rate.at ? ` (last updated: ${at} on ${rate.source === 'coingecko' ? 'CoinGecko' : rate.source})` : ' (a rough figure: the price feeds are out of reach)');
+}
+loadRate();
+setInterval(loadRate, 30 * 60 * 1000);
+function priceRow(e) {
+  const row = e.target.closest('[data-price]');
+  if (!row) return;
+  const [fiat, sats, lock] = ['input[step="0.01"]', 'input[step="1"]', 'input[type=checkbox]'].map((q) => row.querySelector(q));
+  if (e.target === sats) lock.checked = true;
+  if (!lock.checked && fiat.value !== '' && rate?.gbp) sats.value = satsFrom(fiat.value, rate.gbp) ?? '';
+}
+
 form.addEventListener('input', (e) => {
   if (e.target.type === 'file') return; // saved on its own, not with the form
+  priceRow(e);
   read();
   if (e.target.dataset.lang) languageChoices();
   refresh();
