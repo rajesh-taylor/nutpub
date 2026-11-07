@@ -201,11 +201,16 @@ function shareLink(path) {
   $('share-link').onclick = () => navigator.share({ title: show.title || 'The NutPub', url: link }).catch(() => {});
 }
 
+let phoneKind = '';
 function saved(res) {
   fill(res.show);
   shareLink(res.path);
   larix();
   dirty = false;
+  // The phone shows the door or the home view by these two: reload it when either changes.
+  const kind = `${res.show.ticket.on}/${res.show.stream.mode}`;
+  if (phoneKind && kind !== phoneKind) $('preview-frame').contentWindow?.location.reload();
+  phoneKind = kind;
   const at = res.updated ? new Date(res.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';

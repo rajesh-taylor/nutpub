@@ -67,7 +67,10 @@ $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
 const online = show.stream.mode === 'ticket'; // watching from home needs an Online ticket (or a room ticket)
 // A stream-only gig (no room tickets): the show's link opens the home view.
-if (AS === 'room' && !show.ticket.on && show.stream.mode !== 'off' && top === self && !TICKET_VIEW) location.replace(`${location.pathname}?as=home`);
+// The setup page's phone (view=ticket) follows the same rule, and turns back when room tickets are switched on again.
+const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
+if (AS === 'room' && homeOnly && (top === self || TICKET_VIEW)) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
+if (AS === 'home' && TICKET_VIEW && !homeOnly) location.replace(`${location.pathname}?view=ticket`);
 // Free shows: no price and no "This set" (there's nothing to count).
 $('price').textContent = free || online ? '' : T.perMinute(show.stream.perMinute);
 const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
