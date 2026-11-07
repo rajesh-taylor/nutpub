@@ -101,7 +101,8 @@
     .board .price-row .about { align-self: flex-end; height: 44px; display: grid; place-items: center; width: 1.2em; font-size: 22px; color: var(--smoke); }
     .board .online-row { margin: 0 0 6px 28px; }
     .board .choice-note { display: block; font-size: 13px; font-weight: 400; color: var(--smoke); }
-    .board .rate-line { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
+    .board .rate-line { margin: -6px 0 0; font-size: 13px; color: var(--smoke); } /* as far under the boxes as their labels are above */
+    .board .switch-note { margin: 0 0 6px; font-size: 15px; color: var(--cream); }
     .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
     .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
     .board .tag.works { color: var(--deep); background: var(--amber); }
@@ -228,6 +229,7 @@
                 <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
                   <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
                 </div>
+                <p class="rate-line" id="rate-line"></p>
               </div>
               <div class="half">
                 <h3 class="half-head">Live stream</h3>
@@ -241,18 +243,17 @@
                       <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="online.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
                 </div>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute</span></label>
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b><small class="choice-note">£20 (up to 100 viewers, 3 hours)</small></span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b></span></label>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
                 </div>
               </div>
             </div>
-            <p class="rate-line" id="rate-line"></p>
           </section>
 
           <section class="panel wide">
             <h2>Comments</h2>
             <label class="choice room-switch"><b>Comments in the live chat</b><input type="checkbox" role="switch" data-path="comments" aria-label="Comments in the live chat"></label>
-            <p class="rate-line">Off: viewers can still tip, and the chat shows each tip without words. Admins and moderators come later.</p>
+            <p class="switch-note">Off: viewers can still tip, and the chat shows each tip without words. Admins and moderators come later.</p>
           </section>
           <section class="panel wide">
             <h2>Show Splits</h2>
