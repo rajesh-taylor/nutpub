@@ -715,6 +715,7 @@ function render() {
     $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
     $('ticket-note').textContent = room ? '' : free ? 'Or watch free, with tips.' : 'Or press play and pay as you watch.'; // the ticket page has only its buttons
     $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(show.online?.price || 0)}`;
+    if (room && door.soldOut) { $('buy').textContent = 'Sold out'; $('buy').disabled = true; }
     $('door-home').hidden = !room || show.stream.mode === 'off';
     $('door-home').href = `${location.pathname}?as=home`;
   } else {

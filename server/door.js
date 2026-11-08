@@ -74,8 +74,14 @@ export function mountDoor(route, admin, pass) {
     if (home(c)) return show.stream.mode === 'ticket' && show.online.price ? null : json({ error: 'not_ready', detail: 'No Online ticket on this show.' }, 409);
     return show.ticket.on && show.ticket.price ? null : json({ error: 'not_ready', detail: 'No ticket price set yet.' }, 409);
   };
+  // The room's limit: room tickets only, checked before any payment. Blank capacity: no limit.
+  const roomFull = async (c) => {
+    const cap = (await showOf(c)).capacity;
+    return !!cap && (await one("SELECT COUNT(*) AS n FROM tickets WHERE kind = 'room'")).n >= cap;
+  };
   route('GET', '/api/door/ticket', pass, ticketOn,
     async (c) => ((await hasTicket(c.pass)) ? json({ in: true }) : null),
+    async (c) => (!home(c) && (await roomFull(c)) ? json({ error: 'sold_out', detail: 'Sold out.' }, 409) : null),
     cashuGate(async (c) => (home(c) ? (await showOf(c)).online.price : ticketSplit(await showOf(c)).artist),
       async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'online ticket' : 'privacy ticket'}`,
       { lockTo: artistKey, kind: 'ticket' }),
@@ -107,7 +113,7 @@ export function mountDoor(route, admin, pass) {
     const t = await ticketOf(id);
     return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
-  route('GET', '/api/door/me', pass, async (c) => json(await heldBy(c.pass)));
+  route('GET', '/api/door/me', pass, async (c) => json({ ...(await heldBy(c.pass)), soldOut: await roomFull(c) }));
 
   // The drink's QR: the bar's page with the drink's number only (the token never leaves the server's sealed list).
   route('GET', '/api/door/drink-qr.svg', async (c) => {

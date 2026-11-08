@@ -3,7 +3,7 @@ import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
   artist: 'artist', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Online ticket price',
-  'drink.price': 'drink price', lastOrders: 'date and last orders',
+  date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
 // The admin key comes after the # (so it never reaches a server log), then is kept on this computer only.
@@ -242,10 +242,30 @@ function priceRow(e) {
   if (!lock.checked && fiat.value !== '' && rate?.gbp) sats.value = satsFrom(fiat.value, rate.gbp) ?? '';
 }
 
+// After a sale: the name and address are fixed (the server holds to this too); a date can still move, with a warning.
+let soldCount = 0;
+let soldWhen = '';
+const whenNow = () => [show.date, show.starts].join(' ');
+function fixAfterSale(n) {
+  soldCount = n;
+  soldWhen = whenNow();
+  for (const id of ['field-artist', 'field-page']) {
+    const box = $(id);
+    box.classList.toggle('fixed', n > 0);
+    box.title = n > 0 ? 'Locked: tickets have sold. New night unlocks it.' : '';
+    box.querySelector('input').readOnly = n > 0;
+  }
+}
+function dateWarning() {
+  const moved = soldCount > 0 && whenNow() !== soldWhen;
+  $('date-warn').hidden = !moved;
+  $('date-warn').textContent = moved ? `${soldCount} ticket${soldCount === 1 ? '' : 's'} sold. Buyers see the new date when they open their link, but nobody is told: announce it yourself too.` : '';
+}
 form.addEventListener('input', (e) => {
   if (e.target.type === 'file') return; // saved on its own, not with the form
   priceRow(e);
   read();
+  dateWarning();
   if (e.target.dataset.lang) languageChoices();
   refresh();
   dirty = true;
@@ -396,6 +416,8 @@ try {
   const first = await api('GET', '/api/show');
   saved(first);
   photos(first.photos);
+  const sold = await api('GET', '/api/admin/sold');
+  fixAfterSale((sold.room || 0) + (sold.home || 0));
   $('mini-photo').style.backgroundImage = `url("${first.photo || '/img/fp-32.jpg'}")`;
   $('takings-link').href = '/takings'; // 3 · Takings (the old artist-only page forwards there)
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;

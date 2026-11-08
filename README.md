@@ -1,6 +1,6 @@
 # The NutPub
 
-**A gig paid for in Cashu ecash.** A Refueler Labs concept, from a value-for-value (V4V) and privacy hackathon project, now entered in [NutNovember](https://nutnovember.org): fans buy a ticket or pay as they watch the live stream, get a free first drink at the door, and tip the band, all from a wallet in their browser. No app, no account, no email.
+**A gig paid for in Cashu ecash.** A Refueler Labs concept, from a value-for-value (V4V) and privacy hackathon project, now entered in [NutNovember](https://nutnovember.org): fans buy a room or online ticket, or pay as they watch the live stream, and tip the band, all from a wallet in their browser. No app, no account, no email.
 
 **Live demo:** https://thenutpub.com (test mint, test sats only)
 
@@ -11,27 +11,29 @@
 An artist streams from a phone (Larix Broadcaster) or a laptop (OBS) to Cloudflare Stream. The plain video link is refused: the picture only plays with a signed token.
 
 1. The viewer presses play. The site answers with an HTTP 402, and the wallet in their browser pays it (NUT-24).
-2. The reply carries a token lasting 30 seconds, signed by the site. The next payment, 10 seconds later, brings a new one, and hls.js puts the newest token in every playlist request.
+2. The reply carries a short-lived token, signed by the site, good for the minute paid for plus a little slack. The next minute's payment brings a new one, and hls.js puts the newest token in every playlist request.
 3. Stop paying and the token runs out: Stream refuses the playlists and the segments, and the picture stops. Nobody has to cut anyone off.
 
-The viewer sets a limit for the night and can pause at any time. A lost reply asked for again isn't charged twice, and nothing is charged while the stream is off. Ticket holders and free shows get their tokens without paying. Live video needs a browser with Media Source support: on iPhone, iOS 17.1 or later.
+The viewer sets a limit for the night and can pause at any time. A lost reply asked for again isn't charged twice, and nothing is charged while the stream is off. Ticket holders and free shows get their tokens without paying. Prices are the artist's: an Online ticket, sats a minute, or free with comments and tips. Live video needs a browser with Media Source support: on iPhone, iOS 17.1 or later.
 
-## The night, in three pages
+## A gig, from weeks out to the night
+
+Most artists do all of this alone, so a gig is set up once, weeks or months ahead.
 
 | Page | What it does |
 |---|---|
-| **1 · Show setup** (`/setup`) | The artist sets up the gig: the event, the ticket price, an optional free first drink added to the ticket, tips, stretch goals, watching at home, the live stream (a QR that sets up Larix, or the server and key for OBS), and an A4 gig poster whose QR opens the ticket page. The attendee's phone sits beside the form and follows every change. |
-| **2 · The show** (`/show`) | The host's doors, Start the show (three stage lights, then the set) and End the night. The view from home: the artist's live stream when one is on, otherwise a recorded set, with live chat and tips with a message. The bar pours drinks; the attendee's phone shows the pint. |
-| **3 · Takings** (`/takings`) | The artist's and the bar's takings side by side: Collect, Pour ("Already poured, mate" on a second try), Send to another wallet, and where every sat went. |
+| **1 · Show setup** (`/setup`) | Artist, show name, page address, date and times, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off; the live stream as an Online ticket, pay as you watch, free with comments and tips, or none. Comments on or off, stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
+| **2 · The show** (`/show`) | Doors, Start the show and End the night. The view from home: the live stream when one is on, otherwise a recorded set, with live chat and tips with a message. |
+| **3 · Takings** (`/takings`) | Collect every payment into the artist's own wallet in one swap, and send it on. |
 
-The attendee's page is the show's own address (e.g. `/longy`): ticket, welcome, free-drink QR, the set, chat and tips.
+**For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
 
 ## No custody
 
 Every payment is locked to the key of whoever it's for (NUT-11 P2PK). The server checks each payment and never swaps it, so it never holds a sat.
 
-- **A ticket** is the artist's part, locked to the artist's key. With the free drink on, a second payment is locked to the bar's key, with a locktime at last orders and a refund to the artist: a drink nobody poured becomes the artist's, and the mint enforces it.
-- **Tips, and every 10 seconds watched**, are locked to the artist's key.
+- **Tickets, tips and every minute watched** are locked to the artist's key.
+- **A first drink added to the ticket** (built, and hidden on the setup page for now) is locked to the bar's key, with a locktime at last orders and a refund to the artist, enforced by the mint.
 - **The keys** are made in the artist's and the bar's own browsers. Only the public halves reach the server.
 
 ## NUTs used
@@ -43,19 +45,34 @@ Every payment is locked to the key of whoever it's for (NUT-11 P2PK). The server
 | 07 | "Spent yet?": how the bar knows a drink was poured, and how the phone shows the pint |
 | 10 · 11 | Every payment locked to its owner's key; the drink with a locktime and a refund |
 | 18 | Payment requests: the amount, the mint and the lock |
-| 24 | HTTP 402: the ticket, every 10 seconds of the stream or the set, every tip |
+| 24 | HTTP 402: the ticket, every minute of the live stream, every 10 seconds of the recorded set, every tip |
 | NIP-61 (next) | Nutzaps: the same locked tip, published on Nostr |
 
 Built on [Coco](https://github.com/cashubtc/coco) (the wallet in the browser) and [cashu-ts](https://github.com/cashubtc/cashu-ts) (payment requests, locks and checks).
 
 ## Not wired up yet
 
-Card payments (Stripe), Nostr sign-in and nutzaps, Send to Lightning (off on the test mint), and the venue host's setup.
+Card payments (Stripe; the £ prices are shown, the card buttons do nothing), payouts of Show Splits (they are saved, **not paid out**), Nostr sign-in and nutzaps, and Send to Lightning (off on the test mint).
+
+## Being worked on
+
+Open while NutNovember runs (to 27 Nov 2026):
+
+- Sales so far on Takings, and a viewer cap for free streams.
+- A hands-free night: times set in advance do the work; free, then paid; moderators and slow mode.
+- One watcher at a time per Online ticket.
+- A way in for judges that doesn't give out the stream key; passkey sign-in with a backup for the artist's key.
+- Saving a second show as a template (one gig at a time for now).
+- A page left open before the gig day asks the server every 2 seconds; it should slow down.
+- The design of The show, the ticket and Take home pages; a desktop preview of the ticket page in setup.
 
 ## Known limits
 
 - **The artist's key lives only in the browser that opened Takings, with no backup yet.** Closing the browser loses nothing. Clearing site data, a private window, another device or Safari's 7 days without a visit do, and uncollected sats stay locked for good. Passkey sign-in with a sealed backup and a recovery code is planned, before any real gig on a real mint.
-- **The test mint charges a fee** of 0.1 sat per coin, at least 1 sat per swap, which is a large share of a 10-sat payment. Mints set their own fees.
+- **A ticket link is a key.** Anyone it's forwarded to holds the ticket, and nothing at a room's door checks tickets yet.
+- **A cancelled gig has no automatic refund:** payments are locked to the artist, who would refund people themselves. Nobody's contact details are kept, so buyers aren't told of a date change either; the artist announces it.
+- **The test mint may reset** over months, and the charge below is the test mint's.
+- **The test mint charges a fee** of 0.1 sat per coin, at least 1 sat per swap, which is a large share of a small payment. Mints set their own fees.
 - **A token outlasts its payment,** as slack for a slow payment. A tampered page could pay less often, and a token could be shared until it runs out. Accepted for a test concept.
 
 ## Run it

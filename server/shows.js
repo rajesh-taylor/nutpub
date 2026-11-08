@@ -28,6 +28,7 @@ export const blank = () => ({
   description: '',                      // optional: a line or two under the title
   artist: '',                           // not on the tag line; the buttons use it ("Tip Longy")
   venue: '',
+  capacity: null,                       // how many room tickets can be sold; blank: no limit
   date: '',                             // YYYY-MM-DD, UK time
   streams: '',                          // HH:MM, when the live stream starts (before the show, for a sound check)
   starts: '',                           // HH:MM, when the show starts
@@ -93,6 +94,7 @@ export function clean(input = {}) {
       minutes: Math.min(Math.max(Math.floor(Number(input.goal?.minutes)) || b.goal.minutes, 1), 600),
     },
     venue: text(input.venue, 60),
+    capacity: (() => { const n = Math.floor(Number(input.capacity)); return input.capacity !== '' && input.capacity != null && n >= 1 && n <= 100_000 ? n : null; })(),
     date: /^\d{4}-\d{2}-\d{2}$/.test(input.date) ? input.date : '',
     streams: TIME.test(input.streams) ? input.streams : '',
     starts: TIME.test(input.starts) ? input.starts : '',
@@ -116,6 +118,8 @@ export function clean(input = {}) {
 
   const problems = [];
   if (!show.artist) problems.push('artist');
+  if (!show.date) problems.push('date');
+  else if (show.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })) problems.push('date.past');
   if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
@@ -135,6 +139,12 @@ export async function currentShow() {
 
 export async function saveShow(input) {
   const { show } = clean(input);
+  // Once a ticket has sold the name and the address are fixed until New night: posters and saved links depend on them.
+  if ((await one('SELECT 1 AS x FROM tickets LIMIT 1'))) {
+    const before = (await currentShow()).show;
+    show.artist = before.artist;
+    show.page = before.page;
+  }
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), now());
   return currentShow();

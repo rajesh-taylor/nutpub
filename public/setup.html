@@ -28,8 +28,15 @@
     .board .field { display: block; margin: 0 0 14px; font-size: 15px; color: var(--smoke); }
     .board .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px 12px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
     .board .field input:disabled { opacity: .6; }
+    .board .event-names { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+    @media (max-width: 900px) { .board .event-names { grid-template-columns: minmax(0, 1fr); } }
+    .board .field.fixed { position: relative; }
+    .board .field.fixed input { padding-right: 40px; color: var(--smoke); }
+    .board .field.fixed::after { content: ""; position: absolute; right: 12px; bottom: 11px; width: 20px; height: 20px; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='10' width='16' height='11' rx='2' fill='%23d9953a'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3' fill='none' stroke='%23d9953a' stroke-width='2'/%3E%3C/svg%3E"); }
+    .board .three input { height: 52px; } /* Safari draws date and time boxes taller than number boxes */
+    .board .date-warn { margin: 0 0 12px; font-size: 14px; color: var(--amber); }
     .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
-    .board .three { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 0 12px; } /* date, stream, show, ends: one line, on a phone too */
+    .board .three { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; gap: 0 12px; } /* date, stream, show, ends: one line, on a phone too */
     .board .wide { grid-column: 1 / -1; }
     .board .split-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: center; margin: 0 0 10px; font-size: 15px; }
     .board .split-rows .head { color: var(--smoke); }
@@ -151,6 +158,12 @@
     .board .mini p { margin: 12px 0 14px; font-size: 14px; color: var(--smoke); }
     .board .mini p a { color: var(--cream); }
     .board .sheet { width: 210px; height: 297px; margin: 0 auto; background: #1c1611; border-radius: 3px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgb(0 0 0 / .5); text-align: left; }
+    /* The poster runs to the panel's edges, as the phone's photo does. */
+    .board #poster-panel .sheet { width: calc(100% + 36px); height: auto; aspect-ratio: 210 / 297; margin: 0 -18px; border-radius: 0; box-shadow: none; }
+    .board #poster-panel .sheet-words { padding: 6px 26px 18px; gap: 8px; }
+    .board #poster-panel .sheet-words b { font-size: 76px; }
+    .board #poster-panel .sheet-words span:nth-child(2) { font-size: 22px; }
+    .board #poster-panel .sheet-words span:nth-child(3) { font-size: 22px; }
     .board .sheet-photo { height: 50%; background: #000 center 30% / cover no-repeat; flex: none; position: relative; }
     .board .sheet-photo::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(rgb(28 22 17 / 0), #1c1611); }
     .board .sheet-words { padding: 4px 14px 12px; display: flex; flex-direction: column; gap: 4px; color: #f3e6cf; }
@@ -205,16 +218,19 @@
         <div class="grid">
           <section class="panel wide">
             <h2>Event</h2>
-            <div class="two">
-              <label class="field">Artist<input data-path="artist" maxlength="60"></label>
-              <label class="field">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+            <div class="event-names">
+              <label class="field" id="field-artist">Artist<input data-path="artist" maxlength="60"></label>
+              <label class="field">Show name<input data-path="title" maxlength="80" placeholder="Optional"></label>
+              <label class="field" id="field-page">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
             </div>
             <div class="three">
               <label class="field">Date<input type="date" data-path="date"></label>
               <label class="field">Stream starts<input type="time" data-path="streams"></label>
               <label class="field">Show starts<input type="time" data-path="starts"></label>
               <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
+              <label class="field">Venue capacity<input type="number" min="1" max="100000" inputmode="numeric" data-path="capacity" placeholder="No limit"></label>
             </div>
+            <p class="date-warn" id="date-warn" hidden></p>
           </section>
 
           <section class="panel wide">
