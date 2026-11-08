@@ -113,6 +113,7 @@ body.wallet textarea {
   font: 400 15px/1.2 var(--poster); letter-spacing: .22em; text-transform: uppercase;
   color: var(--deep); background: var(--amber); text-align: center;
 }
+body.board .test-banner { margin: 0; } /* the artist's pages have no body padding to cancel: it pushed them 16 px sideways */
 
 /* ---- The viewer page */
 /* The background photo: dimmed, with a little grain, behind everything. */
