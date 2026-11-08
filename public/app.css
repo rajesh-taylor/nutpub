@@ -748,9 +748,10 @@ body.no-comments #say-text, body.no-comments #say-send, body.no-comments #say-fr
 .unit button:disabled { opacity: .4; cursor: default; }
 .goal .unit { grid-area: head; justify-self: end; align-self: center; }
 /* The switch has the "Stretch goals" row to itself, so a long figure can wrap without running under it. */
-body.wallet-card .bottom .purse .goal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head unit" "sum sum" "track track" "list list" "more more"; }
-body.wallet-card .bottom .purse .goal .unit { grid-area: unit; }
-body.wallet-card .bottom .purse .goal .goal-head { align-self: center; }
+body:not(.wallet-card) .goal, body.wallet-card .bottom .purse .goal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head unit" "sum sum" "track track" "list list" "more more"; }
+body:not(.wallet-card) .goal .unit, body.wallet-card .bottom .purse .goal .unit { grid-area: unit; }
+.goal .goal-head { align-self: center; }
+body:not(.wallet-card) .goal #goal-sum { justify-self: start; }
 /* A narrowed desktop window: three columns squeezed the goals to nothing; they take a full row under the wallet instead. */
 @media (min-width: 900px) and (max-width: 1449px) {
   body.wallet-card .purse { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "sum meter" "actions status" "goal goal"; column-gap: 24px; }
@@ -762,3 +763,19 @@ body.viewer.full.tip-typing .player .own { position: fixed; left: max(8px, env(s
 body.viewer.full.tip-typing .player .own input { flex: 1 1 auto; width: auto; min-width: 0; }
 body.viewer.full.tip-typing .test-banner, body.viewer.full.tip-typing .player .bar { visibility: hidden; }
 .purse-sum .unit { margin-top: 5px; }
+
+/* ---- Your ticket: the receipt and the one thing to do with it. See-through over the photo in the room. */
+.save-ticket { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 22px 20px; text-align: center; color: var(--cream); background: rgb(5 9 20 / .85); border: 1px solid rgb(217 149 58 / .55); border-radius: 12px; }
+.save-ticket h2 { margin: 0; font: 400 30px/1.05 var(--poster); letter-spacing: .06em; }
+.save-ticket .receipt { margin: 0; font-size: 17px; line-height: 1.5; }
+.save-ticket .btn { width: 100%; padding: 16px 12px 14px; font-size: 22px; }
+.welcome { position: relative; }
+/* Bought ahead of the night: only the photo and the receipt; the card sits low so the photo's subject stays clear. */
+body.confirmed .chat, body.confirmed .goal, body.confirmed #money, body.confirmed .purse, body.confirmed .own, body.confirmed #doors-sign, body.confirmed .player .bar, body.confirmed #big-play, body.confirmed .status { display: none !important; }
+body.confirmed .welcome { position: relative; flex: 1 1 auto; display: block; margin: 0 -16px; height: calc(100svh - 260px); min-height: 440px; }
+body.confirmed .welcome img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 30% 20%; }
+.welcome .save-ticket { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(90%, 360px); }
+body.wallet-card.confirmed main { grid-template-columns: minmax(0, 1fr); }
+body.wallet-card.confirmed .bottom { display: flex; justify-content: center; }
+body.wallet-card.confirmed .bottom > .save-ticket { width: min(100%, 420px); }
+.bottom > .save-ticket { margin: 12px 0 0; }

@@ -16,7 +16,7 @@ export const barKey = () => kv.get('barKey');
 
 const DRINK = 'SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked';
 export const hasTicket = async (pass) => !!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', pass));
-const ticketOf = (pass) => one('SELECT kind, sats FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
+const ticketOf = (pass) => one('SELECT kind, sats, at FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
 const siteOf = (c) => SITE_URL || c.url.origin;
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
@@ -53,6 +53,10 @@ export function mountDoor(route, admin, pass) {
     await kv.set('stage', 'doors');
     return json({ stage: 'doors' });
   });
+
+  // Tickets sold since the last New night: New night cancels them, and the artist should see that before pressing it.
+  route('GET', '/api/admin/sold', admin, async () => json(Object.fromEntries(
+    (await all('SELECT kind, COUNT(*) AS n FROM tickets GROUP BY kind')).map((r) => [r.kind, r.n]))));
 
   // ---- The bar's key: made in the bar's own browser; only the public half comes here.
   route('PUT', '/api/admin/bar-key', admin, async (c) => {
@@ -101,7 +105,7 @@ export function mountDoor(route, admin, pass) {
   const heldBy = async (id) => {
     const d = await one(`${DRINK} WHERE d.pass = ?`, id);
     const t = await ticketOf(id);
-    return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
+    return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
   route('GET', '/api/door/me', pass, async (c) => json(await heldBy(c.pass)));
 

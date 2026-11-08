@@ -87,7 +87,13 @@ const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.repla
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
 // ---- This phone's pass: what paid pieces are recorded against. Kept in this browser.
+// A saved ticket link (…#ticket=<pass>): this browser takes that pass, ticket and all. After the #, so it never reaches a server log.
+const linkedPass = new URLSearchParams(location.hash.slice(1)).get('ticket');
+const fromLink = /^[\w-]{8,128}$/.test(linkedPass || '') ? linkedPass : null;
+if (linkedPass) history.replaceState(null, '', location.pathname + location.search);
+if (fromLink) { try { localStorage.setItem(`nutpub-pass${KEEP}`, fromLink); } catch {} }
 async function getPass(fresh = false) {
+  if (!fresh && fromLink) return fromLink;
   let id = null;
   try { id = fresh ? null : localStorage.getItem(`nutpub-pass${KEEP}`); } catch {}
   if (!id) {
@@ -675,6 +681,12 @@ function render() {
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
   $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
   $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
+  // Bought ahead of the night: the page is only the confirmation (the photo, the receipt, the link). The tips, goals,
+  // chat and wallet come on the gig day, or as soon as the stream or the show is on.
+  const confirmed = ticket && !closed && !TICKET_VIEW && top === self && stage === 'doors' && !liveOn && show.date !== ukNow().slice(0, 10);
+  body.classList.toggle('confirmed', confirmed);
+  $('save-ticket').hidden = !confirmed;
+  if (confirmed) receipt();
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
@@ -685,7 +697,7 @@ function render() {
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
   $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
-  const live = AS === 'home' ? !closed : stage === 'on';
+  const live = AS === 'home' ? !closed && !confirmed : stage === 'on';
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
   $('live-badge').hidden = stage !== 'on' && !liveOn;
   $('budget-box').hidden = !liveOn || !pays();
@@ -868,6 +880,25 @@ $('own-sats').addEventListener('focus', () => { tipAboveKeyboard(); setTimeout(t
 $('own-sats').addEventListener('blur', tipAboveKeyboard);
 vv?.addEventListener('resize', tipAboveKeyboard);
 vv?.addEventListener('scroll', tipAboveKeyboard);
+// ---- Save your ticket: it lives in this browser, which can forget it after a week away. The link brings it back, on any device.
+if (AS === 'home') document.querySelector('.bottom').append($('save-ticket'));
+else $('welcome').append($('save-ticket')); // in the room: over the photo
+const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
+const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
+const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.starts].filter(Boolean).join(' · ');
+// The card is the receipt: what it's for and what was paid. Paid amounts stay in sats, whatever the page reads in.
+function receipt() {
+  const lines = [gigLine(), `${door.ticketKind === 'home' ? 'Online ticket' : 'Room ticket'} · ${sats(door.ticketSats)}`, door.ticketAt ? `Paid ${shortDay(door.ticketAt)}` : ''].filter(Boolean);
+  $('receipt').replaceChildren(...lines.flatMap((l, i) => (i ? [document.createElement('br'), l] : [l])));
+}
+$('save-link').onclick = async () => {
+  const url = ticketLink();
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) return await navigator.share({ title: 'My ticket', text: `My ticket: ${gigLine()}`, url });
+    await navigator.clipboard.writeText(url);
+    $('save-link').textContent = 'Link copied ✓';
+  } catch { /* the share sheet was closed */ }
+};
 // ---- The ₿ / £ / $ switch: £ and $ first, ₿ to their right.
 const unitBox = Object.assign(document.createElement('span'), { className: 'unit', id: 'unit' });
 unitBox.setAttribute('role', 'group');

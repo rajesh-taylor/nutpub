@@ -19,6 +19,7 @@ const form = $('form');
 const fields = [...form.querySelectorAll('[data-path]')];
 let show = null;
 let dirty = false;
+let artistReady = true;
 
 async function api(method, path, body) {
   const r = await fetch(path, {
@@ -214,7 +215,9 @@ function saved(res) {
   const at = res.updated ? new Date(res.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
-  status(todo.length ? `${head} Still to fill in before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
+  if ('artistKey' in res) artistReady = !!res.artistKey;
+  if (!artistReady) todo.push('open 3 · Takings once (it makes the key payments lock to; nothing can be sold until then)');
+  status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
 }
 
