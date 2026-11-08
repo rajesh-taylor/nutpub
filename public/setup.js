@@ -111,7 +111,7 @@ function drawSplits() {
     toBox.append(to, drop);
     box.append(row, toBox);
   });
-  const ours = make('span', { className: 'head', textContent: 'Fixed' });
+  const ours = make('input', { placeholder: 'Fixed', readOnly: true, tabIndex: -1, ariaLabel: 'The NutPub\u2019s 5% is fixed' }); // a box like the Lightning address's, with nothing to type
   ours.dataset.g = 'nutpub';
   box.append(line([make('b', { textContent: 'The NutPub' }), make('span', { className: 'pct', textContent: `${NUTPUB}%` })], 'nutpub'), ours);
   orderSplits();
@@ -341,7 +341,7 @@ async function goalPreview() {
   const g = goals.find((x) => tipped < x.at) || goals[goals.length - 1];
   const n = (v) => Number(v).toLocaleString('en-GB');
   document.getElementById('goal-bar').style.width = g ? `${Math.min(100, (tipped / g.at) * 100)}%` : '0';
-  document.getElementById('goal-note').textContent = g ? `${g.label}: ${n(tipped)} of ${n(g.at)} sats` : `Tips so far: ${n(tipped)} sats`;
+  document.getElementById('goal-note').textContent = !g ? `Tips so far: ${n(tipped)} sats` : tipped >= g.at ? `All goals met: ${n(tipped)} sats` : `${g.label}: ${n(tipped)} of ${n(g.at)} sats`;
 }
 
 // ---- The stream key: hidden like a password; Show reveals it.

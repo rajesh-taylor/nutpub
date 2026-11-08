@@ -170,7 +170,6 @@ body.playing .i-stop, body.full .i-exit { display: block; }
 /* Live, Stop is a pause: nothing more is charged, and play rejoins the show. */
 .i-pause, body.live-video.playing .i-stop { display: none; }
 body.live-video.playing .i-pause { display: block; }
-body.sideways #full { visibility: hidden; } /* turning the phone back is the way out */
 .spacer { flex: 1; }
 #ov-tip { display: none; flex: none; font-size: 17px; padding: 8px 12px 6px; background: rgb(5 9 20 / .6); }
 body.full #ov-tip { display: inline-block; }
@@ -735,3 +734,31 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 /* Comments off (setup): the chat keeps the goals and the tips, without a box for words. */
 body.no-comments #say-text, body.no-comments #say-send, body.no-comments #say-free { display: none !important; }
+
+/* ---- ₿ / £ / $ for the whole page: faint drawn flags (emoji flags show as letters on Windows); orange is ₿'s alone. */
+.unit { display: inline-flex; gap: 7px; flex: none; }
+.unit button { position: relative; isolation: isolate; overflow: hidden; width: 48px; height: 38px; padding: 0; font: 700 20px/1 var(--body); color: var(--cream); text-shadow: 0 1px 3px #000; background: none; border: 1px solid rgb(239 227 200 / .45); border-radius: 5px; cursor: pointer; }
+.unit button::before { content: ""; position: absolute; inset: 0; z-index: -1; background: center / cover no-repeat; opacity: .6; }
+.unit button[data-unit="gbp"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='xMidYMid slice'%3E%3Crect width='60' height='40' fill='%23012169'/%3E%3Cpath d='M0 0L60 40M60 0L0 40' stroke='%23fff' stroke-width='8'/%3E%3Cpath d='M0 0L60 40M60 0L0 40' stroke='%23C8102E' stroke-width='3'/%3E%3Cpath d='M30 0V40M0 20H60' stroke='%23fff' stroke-width='13'/%3E%3Cpath d='M30 0V40M0 20H60' stroke='%23C8102E' stroke-width='8'/%3E%3C/svg%3E"); }
+.unit button[data-unit="usd"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='xMidYMid slice'%3E%3Crect width='60' height='40' fill='%23fff'/%3E%3Cpath d='M30 0V40' stroke='%23B31942' stroke-width='60' stroke-dasharray='3.08'/%3E%3Crect width='26' height='21.5' fill='%230A3161'/%3E%3Cpath d='M3 6H24M3 15H24' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-dasharray='0 5'/%3E%3C/svg%3E"); }
+.unit button[data-unit="btc"] { color: var(--btc); border-color: rgb(247 147 26 / .55); text-shadow: none; }
+.unit button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--amber); border-color: transparent; }
+.unit button[aria-pressed="true"]::before { opacity: 1; }
+.unit button[data-unit="btc"][aria-pressed="true"] { color: var(--deep); background: var(--btc); box-shadow: 0 0 0 2px var(--btc); }
+.unit button:disabled { opacity: .4; cursor: default; }
+.goal .unit { grid-area: head; justify-self: end; align-self: center; }
+/* The switch has the "Stretch goals" row to itself, so a long figure can wrap without running under it. */
+body.wallet-card .bottom .purse .goal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head unit" "sum sum" "track track" "list list" "more more"; }
+body.wallet-card .bottom .purse .goal .unit { grid-area: unit; }
+body.wallet-card .bottom .purse .goal .goal-head { align-self: center; }
+/* A narrowed desktop window: three columns squeezed the goals to nothing; they take a full row under the wallet instead. */
+@media (min-width: 900px) and (max-width: 1449px) {
+  body.wallet-card .purse { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "sum meter" "actions status" "goal goal"; column-gap: 24px; }
+  body.wallet-card .purse-meter { flex-wrap: wrap; }
+  body.wallet-card .bottom .purse .goal { padding: 10px 0 0; border-left: 0; border-top: 1px solid rgb(239 227 200 / .08); }
+}
+/* Full screen on a phone, typing a tip: the box sits at the top of what the keyboard leaves. */
+body.viewer.full.tip-typing .player .own { position: fixed; left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); bottom: auto; margin-top: env(safe-area-inset-top); z-index: 9; justify-content: stretch; }
+body.viewer.full.tip-typing .player .own input { flex: 1 1 auto; width: auto; min-width: 0; }
+body.viewer.full.tip-typing .test-banner, body.viewer.full.tip-typing .player .bar { visibility: hidden; }
+.purse-sum .unit { margin-top: 5px; }

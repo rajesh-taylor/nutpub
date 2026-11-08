@@ -2,6 +2,7 @@
 // a 402, paid in the same request from this browser's own wallet); its picture comes with it. Stop paying and it
 // stops at once. "Free, with tips" shows play without a 402. The tip button is a 402 of its own.
 import { openWallet } from './wallet.js';
+import { money, satsFrom } from '../server/money.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -55,6 +56,14 @@ const say = (text) => {
   }
 };
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
+// ₿ / £ / $: what the page's figures read in, remembered in this browser. Only the reading changes: every payment is in sats.
+const SYMBOL = { gbp: '£', usd: '$' };
+let rate = null; // from /api/rate; none, and the page stays in sats
+let unit = 'btc';
+try { unit = localStorage.getItem('nutpub-unit') || 'btc'; } catch {}
+const inFiat = () => !!rate && !!SYMBOL[unit];
+const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
+const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
 const [health, { show, photo: showPhoto, photos: showPhotos = {} }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
@@ -104,7 +113,7 @@ try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP
 const meter = () => {
   const given = (free ? 0 : spentHere + liveFees) + tippedHere + ticketHere;
   $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} tonight`;
-  $('spent').textContent = T.spent(given);
+  $('spent').textContent = inFiat() ? fiat(given) : T.spent(given);
   $('spent-box').hidden = free && !given;
   $('free-note').hidden = !free;
   $('free-line').textContent = `Tip ${show.artist || 'the artist'} for hosting the live show`;
@@ -127,9 +136,10 @@ const wallet = {
   get lastFee() { return realWallet?.lastFee || 0; },
 };
 const balance = async () => {
-  const n = (await wallet.balance()).toLocaleString('en-GB');
+  const have = await wallet.balance();
+  const n = have.toLocaleString('en-GB');
   $('balance').classList.remove('opening');
-  $('balance').textContent = n;
+  $('balance').textContent = inFiat() ? fiat(have) : n;
   const d = document.getElementById('door-balance'); // on the door's ticket box too: you see what you have before you pay
   if (d) d.textContent = n;
 };
@@ -433,11 +443,12 @@ $('big-play').onclick = toggle;
 // page alone fills the screen, with Safari's bars still round it).
 const sideways = matchMedia('(orientation: landscape) and (max-height: 540px)');
 let wantFull = false;
+let sidewaysOut = false; // a sideways phone starts full screen; the button steps out to the page (comments, wallet) until it's turned again
 // Where the tip's amount lives off full screen (under the comment box, or under the money buttons).
 const ownSpot = document.createComment('own-form');
 $('own-form').before(ownSpot);
 const layout = () => {
-  const full = wantFull || sideways.matches;
+  const full = wantFull || (sideways.matches && !sidewaysOut);
   document.body.classList.toggle('full', full);
   document.body.classList.toggle('sideways', sideways.matches);
   $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
@@ -459,9 +470,10 @@ function wake() {
 }
 for (const e of ['mousemove', 'pointerdown', 'keydown']) document.addEventListener(e, wake, { passive: true });
 $('ov-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
-sideways.addEventListener('change', layout);
+sideways.addEventListener('change', () => { sidewaysOut = false; layout(); });
 layout();
 $('full').onclick = () => {
+  if (sideways.matches && !wantFull) { sidewaysOut = !sidewaysOut; layout(); return; }
   wantFull = !document.body.classList.contains('full');
   const doc = document.documentElement;
   if (wantFull) (doc.requestFullscreen || doc.webkitRequestFullscreen)?.call(doc)?.catch?.(() => {});
@@ -500,7 +512,7 @@ $('ov-tip').onclick = () => tip($('ov-tip'));
 
 // ---- Tip sats, your amount: type it, then "Tip n sats" pays exactly that (its own 402).
 const MIN_TIP = 21; // the server's minimum too (server/set.js)
-const ownSats = () => { const n = Number($('own-sats').value); return Number.isInteger(n) && n >= MIN_TIP && n <= 1_000_000 ? n : 0; };
+const ownSats = () => { const v = $('own-sats').value; const n = inFiat() ? satsFrom(v, rate[unit]) : Number(v); return Number.isInteger(n) && n >= MIN_TIP && n <= 1_000_000 ? n : 0; };
 const ownForm = (open) => {
   $('own-form').hidden = !open;
   $('own').hidden = open;
@@ -623,9 +635,9 @@ function words() {
   $('billing').textContent = show.title;
   $('billing').hidden = !show.title;
   $('about').textContent = show.description;
-  $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`;
+  $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${reads(show.tip.price || 0)}`;
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
-  $('say-tip').textContent = `Send with ${sats(show.tip.price || 0)}`;
+  $('say-tip').textContent = `Send with ${reads(show.tip.price || 0)}`;
 }
 words();
 let shownAt = null;
@@ -770,20 +782,26 @@ let lastMsg = 0;
 const short = (n) => (n < 1000 ? String(n) : n < 1e6 ? `${+(n / 1000).toFixed(n < 1e4 ? 1 : 0)}k` : `${+(n / 1e6).toFixed(1)}M`);
 // Stretch goals: one track from 0 to the last goal, a small notch at each, gold filling along it. Every goal on one line.
 let notchesFor = '';
+let lastGoal = null; // redrawn when ₿ / £ / $ changes
 const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>';
 const WIDE_CARD = matchMedia('(min-width: 900px)');
 function goal(tipped, goals, thanks) {
   // Desktop has the room for whole figures (25,000 sats); a phone gets 25k.
-  const fig = WIDE_CARD.matches ? (n) => Number(n).toLocaleString('en-GB') : short;
+  lastGoal = [tipped, goals, thanks];
+  const fiatOn = inFiat();
+  const fig = fiatOn ? fiat : WIDE_CARD.matches ? (n) => Number(n).toLocaleString('en-GB') : short;
+  const word = fiatOn ? '' : ' sats';
   const list = [...goals].sort((a, b) => a.at - b.at).slice(0, 3);
   const top = list[list.length - 1];
   $('goal').hidden = $('ov-goal').hidden = !top;
+  const spot = top ? $('goal') : $('wallet-link'); // the switch sits by the goal figure, or by the balance on a gig with no goals
+  if ($('unit') && $('unit').parentNode !== spot) spot.append($('unit'));
   if (!top) return;
   const next = list.find((x) => tipped < x.at) || top;
   const allMet = tipped >= top.at;
   $('goal-sum').textContent = allMet
-    ? `${fig(tipped)} sats · all goal${list.length > 1 ? 's' : ''} met`
-    : `${fig(tipped)} / ${fig(next.at)}${WIDE_CARD.matches ? ' sats' : ''}`;
+    ? `${fig(tipped)}${word} · all goal${list.length > 1 ? 's' : ''} met`
+    : `${fig(tipped)} / ${fig(next.at)}${WIDE_CARD.matches ? word : ''}`;
   $('goal-more-row').hidden = !allMet; // the goals are done, the tips needn't be
   $('goal-label').hidden = allMet; // and the list of what they were folds away
   // Every goal met and the artist wrote a thank-you: the message instead of the bar.
@@ -809,7 +827,8 @@ function goal(tipped, goals, thanks) {
     const el = Object.assign(document.createElement('span'), { className: tipped >= g.at ? 'met' : '', textContent: `${tipped >= g.at ? '✓ ' : ''}${g.label} ${fig(g.at)}` });
     return i ? [' · ', el] : [el];
   }));
-  $('ov-goal').textContent = `${next.label} · ${short(tipped)} / ${short(next.at)}`;
+  const ov = fiatOn ? fiat : short;
+  $('ov-goal').textContent = allMet ? `All goals met · ${ov(tipped)}` : `${next.label} · ${ov(tipped)} / ${ov(next.at)}`;
 }
 function chat(r) {
   for (const m of r.messages) {
@@ -824,7 +843,8 @@ function chat(r) {
       li.className = 'tipped';
       const amt = document.createElement('b');
       amt.className = 'amt';
-      amt.textContent = m.sats.toLocaleString('en-GB');
+      amt.dataset.sats = m.sats;
+      amt.textContent = inFiat() ? fiat(m.sats) : m.sats.toLocaleString('en-GB');
       li.append(amt, ' ');
     }
     if (m.text) li.append(m.text);
@@ -836,6 +856,74 @@ function chat(r) {
   feed.scrollTop = feed.scrollHeight;
   goal(r.tipped, r.goals, r.thanks);
 }
+// Full screen on a phone: the keyboard covers the tip box (sideways it leaves only a strip), so while typing the box
+// goes to the top of the part still visible, and the bars get out of its way.
+const vv = window.visualViewport;
+function tipAboveKeyboard() {
+  const typing = body.classList.contains('full') && document.activeElement === $('own-sats') && matchMedia('(pointer: coarse)').matches;
+  body.classList.toggle('tip-typing', typing);
+  $('own-form').style.top = typing ? `${(vv?.offsetTop || 0) + 8}px` : '';
+}
+$('own-sats').addEventListener('focus', () => { tipAboveKeyboard(); setTimeout(tipAboveKeyboard, 350); });
+$('own-sats').addEventListener('blur', tipAboveKeyboard);
+vv?.addEventListener('resize', tipAboveKeyboard);
+vv?.addEventListener('scroll', tipAboveKeyboard);
+// ---- The ₿ / £ / $ switch: £ and $ first, ₿ to their right.
+const unitBox = Object.assign(document.createElement('span'), { className: 'unit', id: 'unit' });
+unitBox.setAttribute('role', 'group');
+unitBox.setAttribute('aria-label', 'Show amounts in');
+unitBox.innerHTML = '<button type="button" data-unit="gbp" aria-label="Pounds">£</button><button type="button" data-unit="usd" aria-label="Dollars">$</button><button type="button" data-unit="btc" aria-label="Sats">₿</button>';
+$('wallet-link').append(unitBox);
+let ownMode = 'btc';
+function drawUnit() {
+  const mode = inFiat() ? unit : 'btc';
+  for (const b of unitBox.children) {
+    b.setAttribute('aria-pressed', b.dataset.unit === mode);
+    if (b.dataset.unit !== 'btc') b.disabled = !rate; // no real rate: sats only
+  }
+  const label = document.querySelector('#balance + span'); // "test sats", beside a figure that's now in £
+  if (label) label.hidden = WALLET_CARD || mode !== 'btc';
+  balance().catch(() => {});
+  meter();
+  words();
+  if (lastGoal) goal(...lastGoal);
+  for (const a of feed.querySelectorAll('.amt')) a.textContent = inFiat() ? fiat(Number(a.dataset.sats)) : Number(a.dataset.sats).toLocaleString('en-GB');
+  if (mode === ownMode) return;
+  // The tip box takes pounds or dollars; its button still says the sats that will be paid.
+  ownMode = mode;
+  const box = $('own-sats');
+  box.value = '';
+  if (mode === 'btc') {
+    Object.assign(box, { min: 21, max: 1_000_000, step: 1, inputMode: 'numeric', placeholder: '21 sats or more' });
+    box.setAttribute('aria-label', 'Tip amount in sats, 21 or more');
+  } else {
+    let pence = 1;
+    while (satsFrom(pence / 100, rate[mode]) < MIN_TIP) pence++;
+    box.removeAttribute('max');
+    Object.assign(box, { min: pence / 100, step: 0.01, inputMode: 'decimal', placeholder: `${SYMBOL[mode]}${(pence / 100).toFixed(2)} or more` });
+    box.setAttribute('aria-label', `Tip amount in ${mode === 'gbp' ? 'pounds' : 'dollars'}`);
+  }
+  box.oninput();
+}
+unitBox.onclick = (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  e.preventDefault(); // it can sit inside the wallet link
+  unit = b.dataset.unit;
+  try { localStorage.setItem('nutpub-unit', unit); } catch {}
+  drawUnit();
+};
+addEventListener('storage', (e) => { if (e.key === 'nutpub-unit' && e.newValue) { unit = e.newValue; drawUnit(); } }); // the page's other frames follow
+async function readRate() {
+  try {
+    const r = await (await fetch('/api/rate')).json();
+    rate = r.source !== 'fixed' && r.gbp > 0 && r.usd > 0 ? r : null; // the fixed rough figure is for setup, not for telling people what they hold
+  } catch { /* keep the last one */ }
+  drawUnit();
+}
+drawUnit();
+readRate();
+setInterval(readRate, 10 * 60_000);
 // What the message box says goes with the next tip (highlighted), or on its own with Send.
 // The words stay in the box until the tip has gone through, so a failed tip loses nothing.
 function said() {
