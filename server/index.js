@@ -35,8 +35,9 @@ route('GET', '/takings.html', redirect('/takings')); // the artist-only page, be
 route('GET', '/', page('home.html'));
 route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
-// The night's three pages: 1 Show setup, 2 The show, 3 Takings.
+// The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End the night (/takings).
 route('GET', '/setup', page('setup.html'));
+route('GET', '/doors', page('doors.html'));
 route('GET', '/show', page('show.html'));
 route('GET', '/takings', page('night-takings.html'));
 route('GET', '/last-orders', redirect('/takings')); // its name before 29 Oct
@@ -105,6 +106,8 @@ export default {
     PHOTOS = env.PHOTOS;
     useStream(env);
     const url = new URL(req.url);
+    if (url.protocol === 'http:' && req.headers.get('x-forwarded-proto') === 'http') { // the visitor's own connection; not local dev
+      url.protocol = 'https:'; return Response.redirect(url.toString(), 301); }
     const c = { req, url, params: {} };
     try {
       const method = req.method === 'HEAD' ? 'GET' : req.method;

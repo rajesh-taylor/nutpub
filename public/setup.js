@@ -216,7 +216,7 @@ function saved(res) {
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
   if ('artistKey' in res) artistReady = !!res.artistKey;
-  if (!artistReady) todo.push('open 3 · Takings once (it makes the key payments lock to; nothing can be sold until then)');
+  if (!artistReady) todo.push('open 4 · End the night once (it makes the key payments lock to; nothing can be sold until then)');
   status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
 }
@@ -252,7 +252,7 @@ function fixAfterSale(n) {
   for (const id of ['field-artist', 'field-page']) {
     const box = $(id);
     box.classList.toggle('fixed', n > 0);
-    box.title = n > 0 ? 'Locked: tickets have sold. New night unlocks it.' : '';
+    box.title = n > 0 ? 'Locked: tickets have sold. Set up my next gig unlocks it.' : '';
     box.querySelector('input').readOnly = n > 0;
   }
 }
@@ -418,6 +418,7 @@ try {
   photos(first.photos);
   const sold = await api('GET', '/api/admin/sold');
   fixAfterSale((sold.room || 0) + (sold.home || 0));
+  $('next-gig').hidden = !sold.over;
   $('mini-photo').style.backgroundImage = `url("${first.photo || '/img/fp-32.jpg'}")`;
   $('takings-link').href = '/takings'; // 3 · Takings (the old artist-only page forwards there)
   $('bar-link').href = `/bar.html#k=${encodeURIComponent(key)}`;

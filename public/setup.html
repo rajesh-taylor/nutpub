@@ -192,10 +192,10 @@
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
       <a class="on" href="/setup" aria-current="page">1 · Show setup</a>
-      <a href="/show?doors=1">2 · The show</a>
-      <a href="/takings">3 · Takings</a>
+      <a href="/doors">2 · Doors</a>
+      <a href="/show">3 · The show</a>
+      <a href="/takings">4 · End the night</a>
     </nav>
-    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
   <div class="page">
     <main>
@@ -213,6 +213,10 @@
         <p><button class="btn primary">Sign in</button></p>
         <p class="hint" id="signin-note"></p>
       </form>
+
+      <section class="panel" id="next-gig" hidden>
+        <p>This gig is over. <button type="button" class="btn primary" id="next-gig-go">Set up my next gig</button></p>
+      </section>
 
       <form id="form" hidden autocomplete="off">
         <div class="grid">

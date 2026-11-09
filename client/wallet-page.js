@@ -11,9 +11,10 @@ const health = await fetch('/api/health').then((r) => r.json());
 // The wallet belongs to the address this page was opened at (localhost and the public address are two wallets).
 $('where').textContent = location.host;
 // Back to the page that sent us here (an artist's page, once there are several); else the home page.
-try { const from = new URL(document.referrer); if (from.origin === location.origin && from.pathname !== location.pathname) $('back').href = from.pathname; } catch {}
+try { const from = new URL(document.referrer); if (from.origin === location.origin && from.pathname !== location.pathname) $('back').href = from.pathname + from.search; } catch {}
 
-const wallet = await openWallet(health.mint.url);
+// Watching at home and in the room are two wallets: the page that sent us here says which (?as=home).
+const wallet = await openWallet(health.mint.url, new URLSearchParams(location.search).get('as') === 'home' ? 'nutpub-home' : 'nutpub');
 const show = async () => { $('balance').textContent = await wallet.balance(); };
 await show();
 wallet.on('proofs:saved', show);

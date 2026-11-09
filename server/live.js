@@ -133,6 +133,7 @@ export function mountLive(route, admin, pass) {
     async (c) => {
       const show = await showOf(c);
       if (!show.live.playback || !(await liveNow(show.page))) return json({ error: 'not_live' }, 409); // never charged for nothing
+      if ((await kv.get('stage')) === 'closed') return json({ error: 'closed', detail: 'The show has ended.' }, 409);
       if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
       const ticketed = await hasTicket(c.pass);
       if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);

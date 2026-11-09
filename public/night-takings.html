@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Takings · The NutPub</title>
+  <title>End the night · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* Page 2, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
@@ -60,6 +60,9 @@
     .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; }
     .where { margin-top: 16px; }
     .sold { margin-bottom: 16px; }
+    .host.end { margin-top: 14px; }
+    .host.end .count { margin-left: 0; }
+    .key.warn { color: var(--cream); }
     .sold .line:last-child { border-bottom: 0; }
     .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
     .boxes div { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
@@ -73,18 +76,21 @@
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
       <a href="/setup">1 · Show setup</a>
-      <a href="/show">2 · The show</a>
-      <a class="on" href="/takings" aria-current="page">3 · Takings</a>
+      <a href="/doors">2 · Doors</a>
+      <a href="/show">3 · The show</a>
+      <a class="on" href="/takings" aria-current="page">4 · End the night</a>
     </nav>
-    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
 
   <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
 
   <div class="page" id="page" hidden>
     <main>
-      <h1>Takings</h1>
-      <p class="sub">What fans paid, locked to the artist's key.</p>
+      <h1>End the night</h1>
+      <div class="host end">
+        <button class="btn quiet" data-stage="closed">End the night</button>
+        <span class="count">Then stop Larix on your phone and press Collect. Any time after the gig is fine.</span>
+      </div>
 
       <section class="card sold" aria-labelledby="sold-h">
         <h2 id="sold-h">Sold so far</h2>
@@ -113,7 +119,9 @@
           <p class="note" id="artist-held"></p>
           <p class="note">Send to my Lightning wallet <span class="soon">Off on the test mint</span></p>
           <p class="key" id="artist-key"></p>
+          <p class="key warn">Your key lives only in this browser. Open this page at least once a week, and Collect here: if the browser forgets the key, payments locked to it can't be collected.</p>
           <textarea class="token" id="artist-token" readonly rows="4" hidden aria-label="The artist's takings as one Cashu token"></textarea>
+          <p class="acts" id="artist-token-done" hidden><button type="button" class="btn quiet" id="artist-token-clear">It's in my wallet: remove this</button></p>
           <p class="status" id="artist-status" role="status"></p>
           </div>
           </div>
@@ -154,12 +162,8 @@
       </section>
 
     </main>
-    <aside aria-label="The attendee's phone">
-      <p class="cap" style="text-align: center">The attendee's phone</p>
-      <div class="phone-frame"><iframe id="phone" title="The attendee's phone"></iframe></div>
-    </aside>
   </div>
   <script type="module" src="/js/night.js"></script>
-  <script src="/newnight.js" defer></script>
+  <script type="module" src="/stage.js"></script>
 </body>
 </html>

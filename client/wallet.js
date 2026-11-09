@@ -34,12 +34,18 @@ const same = (a, b) => a.replace(/\/+$/, '') === b.replace(/\/+$/, '');
 // So: mark such a send done as soon as it's made (local only; Coco itself refuses to roll one back).
 const settle = (coco, id) => coco.ops.send.finalize(id).catch(() => {});
 
+// Which step of opening we're on: a phone that hangs can say where.
+export const walletStep = { now: 'starting' };
 export async function openWallet(mintUrl, name = 'nutpub') {
   const started = performance.now();
+  walletStep.now = 'storage';
   const repo = new IndexedDbRepositories({ name });
   await repo.init();
+  walletStep.now = 'coco';
   const coco = await initializeCoco({ repo, seedGetter: async () => seed(name) });
+  walletStep.now = 'mint';
   await coco.mint.addMint(mintUrl, { trusted: true });
+  walletStep.now = 'tidying';
   // Tidy the ones left from before this fix, so the next opening is quick.
   const stale = (await coco.ops.send.listInFlight().catch(() => [])).filter((op) => op.method === 'p2pk');
   for (const op of stale) await settle(coco, op.id);

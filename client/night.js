@@ -26,7 +26,6 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
-$('phone').src = info.path;
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
 const bar = await openWallet(health.mint.url, 'nutpub-bar');
 
@@ -186,6 +185,28 @@ async function pour(id) {
 }
 
 // ---- Send to another wallet: everything collected in this browser, as one token for any Cashu wallet.
+// The token is the money once it has left the wallet: it stays here, through a reload, until the artist says it landed.
+const kept = (id) => `nutpub-sent-${id}`;
+function keepToken(id, token) {
+  try { localStorage.setItem(kept(id), token); } catch {}
+  if ($(`${id}-done`)) $(`${id}-done`).hidden = false;
+}
+function showKept(id) {
+  let token = null;
+  try { token = localStorage.getItem(kept(id)); } catch {}
+  if (!token || !$(`${id}-done`)) return;
+  $(id).value = token;
+  $(id).hidden = false;
+  $(`${id}-done`).hidden = false;
+}
+$('artist-token-clear').onclick = () => {
+  if (!confirm('Is it safely in your other wallet? Once removed it can\'t be shown again.')) return;
+  try { localStorage.removeItem(kept('artist-token')); } catch {}
+  $('artist-token').hidden = true;
+  $('artist-token').value = '';
+  $('artist-token-done').hidden = true;
+};
+showKept('artist-token');
 function sendHome(wallet, tokenId, statusId) {
   return async () => {
     try {
@@ -193,6 +214,7 @@ function sendHome(wallet, tokenId, statusId) {
       if (!out) { $(statusId).textContent = 'Nothing collected here yet.'; return; }
       $(tokenId).value = out.token;
       $(tokenId).hidden = false;
+      keepToken(tokenId, out.token);
       await navigator.clipboard?.writeText(out.token).catch(() => {});
       $(statusId).textContent = `${sats(out.amount)} as one token: copied. Paste it into any Cashu wallet.`;
     } catch (e) { $(statusId).textContent = e.message; }

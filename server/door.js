@@ -46,9 +46,13 @@ export function mountDoor(route, admin, pass) {
     return json({ stage: await kv.set('stage', stage) });
   });
 
-  // A new night, for a rehearsal: every phone back to the door, the chat empty, doors open. Payments already locked
+  // The gig has been: the host ended the night, or its date has gone. Only then can the next gig clear its tickets.
+  const gigOver = async (c) => (await kv.get('stage')) === 'closed' || (await current(c)).problems.includes('date.past');
+
+  // The next gig, from Setup: every phone back to the door, the chat empty, doors open. Payments already locked
   // stay as they are: they belong to the artist and the bar, to collect.
-  route('POST', '/api/admin/new-night', admin, async () => {
+  route('POST', '/api/admin/new-night', admin, async (c) => {
+    if ((await one('SELECT 1 AS x FROM tickets LIMIT 1')) && !(await gigOver(c))) return json({ error: 'not_over', detail: 'This gig has tickets sold and hasn\u2019t happened yet.' }, 409);
     await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key = 'freeFrom'"), sql('UPDATE messages SET deleted = 1')]);
     await kv.set('nightStart', now()); // Takings counts tonight from here
     await kv.set('stage', 'doors');
@@ -57,8 +61,8 @@ export function mountDoor(route, admin, pass) {
   });
 
   // Tickets sold since the last New night: New night cancels them, and the artist should see that before pressing it.
-  route('GET', '/api/admin/sold', admin, async () => json(Object.fromEntries(
-    (await all('SELECT kind, COUNT(*) AS n FROM tickets GROUP BY kind')).map((r) => [r.kind, r.n]))));
+  route('GET', '/api/admin/sold', admin, async (c) => json({ ...Object.fromEntries(
+    (await all('SELECT kind, COUNT(*) AS n FROM tickets GROUP BY kind')).map((r) => [r.kind, r.n])), over: await gigOver(c) }));
 
   // ---- The bar's key: made in the bar's own browser; only the public half comes here.
   route('PUT', '/api/admin/bar-key', admin, async (c) => {

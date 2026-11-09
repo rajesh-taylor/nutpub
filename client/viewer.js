@@ -1,7 +1,7 @@
 // The viewer page: the set, 10 seconds at a time. Each piece's sound is bought just before it plays (NUT-24:
 // a 402, paid in the same request from this browser's own wallet); its picture comes with it. Stop paying and it
 // stops at once. "Free, with tips" shows play without a 402. The tip button is a 402 of its own.
-import { openWallet } from './wallet.js';
+import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 
 const $ = (id) => document.getElementById(id);
@@ -44,15 +44,17 @@ const T = {
 
 // What just happened. On the home page it fades after 10 s: read once, it needn't stay.
 let sayTimer = null;
-const say = (text) => {
+// `shine`: good news about sats: Bitcoin orange, a shimmer, and it stays 30 s so it gets seen.
+const say = (text, shine = false) => {
   clearTimeout(sayTimer);
   $('status').classList.remove('fade');
+  $('status').classList.toggle('shine', shine);
   $('status').textContent = text || '';
   if (text && document.body.classList.contains('wallet-card')) {
     sayTimer = setTimeout(() => {
       $('status').classList.add('fade');
-      sayTimer = setTimeout(() => { $('status').textContent = ''; $('status').classList.remove('fade'); }, 800);
-    }, 10_000);
+      sayTimer = setTimeout(() => { $('status').textContent = ''; $('status').classList.remove('fade', 'shine'); }, 800);
+    }, shine ? 30_000 : 10_000);
   }
 };
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
@@ -118,7 +120,7 @@ try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP
 // What this browser has given tonight: minutes watched and tips. A free stream says so, and asks for a tip.
 const meter = () => {
   const given = (free ? 0 : spentHere + liveFees) + tippedHere + ticketHere;
-  $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} tonight`;
+  $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} with`;
   $('spent').textContent = inFiat() ? fiat(given) : T.spent(given);
   $('spent-box').hidden = free && !given;
   $('free-note').hidden = !free;
@@ -151,7 +153,15 @@ const balance = async () => {
 };
 // Until the wallet answers, say so: an empty balance would look like lost sats.
 $('balance').classList.add('opening');
-$('balance').textContent = 'Opening your wallet…';
+$('balance').textContent = '';
+// If it never opens, say so: every wallet button waits for it, and a button that does nothing looks broken.
+const walletTrouble = (text) => { $('balance').classList.add('opening'); $('balance').textContent = text; };
+let walletFailed = false;
+walletReady.catch((e) => { // Safari with Block All Cookies, for one, refuses a site its storage
+  walletFailed = true;
+  walletTrouble(e.name === 'SecurityError' ? 'This browser won\u2019t let the wallet save here. Try another browser.' : `Your wallet didn't open: ${e.message}`);
+});
+setTimeout(() => { if (!realWallet && !walletFailed) walletTrouble(`Wallet stuck: ${walletStep.now}. Try reloading.`); }, 20_000);
 balance().catch(() => {});
 wallet.on('proofs:saved', balance);
 // On the test mint every wallet fills itself to 150,000 test sats when the page opens: nobody fiddles before the show.
@@ -173,11 +183,12 @@ $('own').disabled = false;
 $('door-topup').onclick = () => $('topup').onclick();
 $('topup').onclick = async () => {
   $('topup').disabled = true;
+  if (!realWallet) say('Your wallet is still opening. One moment…');
   try {
     const { id } = await wallet.topup(TOP_UP);
     for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
     await balance();
-    say(`+${TOP_UP.toLocaleString('en-GB')} test sats.`);
+    say(`+${TOP_UP.toLocaleString('en-GB')} test sats.`, true);
   } catch (e) { say(e.message); }
   $('topup').disabled = false;
 };
@@ -507,7 +518,7 @@ async function tip(button) {
   try {
     const res = await paidFetch('/api/tip', said());
     if (res.ok) { sent(); tipped(res); }
-    say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res));
+    say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res), res.ok);
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
   }
@@ -542,7 +553,7 @@ $('own-form').onsubmit = async (e) => {
   $('own-pay').disabled = true;
   try {
     const res = await paidFetch(`/api/tip/${n}`, said());
-    say(res.ok ? T.ownDone(n) : await refusal(res));
+    say(res.ok ? T.ownDone(n) : await refusal(res), res.ok);
     if (res.ok) { sent(); tipped(res); ownForm(false); }
   } catch (err) {
     say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
@@ -588,6 +599,7 @@ if (WALLET_CARD) {
 } else if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
+if (AS === 'home') for (const a of document.querySelectorAll('a[href="/wallet.html"]')) a.href = '/wallet.html?as=home'; // its own wallet
 // Closing time ("Cheers", Take it home): the second wide photo, the night's last picture.
 $('closing-photo').src = showPhotos.wide2 || showPhoto || DEFAULT_PHOTO;
 // Before the set plays, the player shows the artist's photo, like a video's cover picture.
@@ -905,12 +917,12 @@ $('save-link').onclick = async () => {
 const unitBox = Object.assign(document.createElement('span'), { className: 'unit', id: 'unit' });
 unitBox.setAttribute('role', 'group');
 unitBox.setAttribute('aria-label', 'Show amounts in');
-unitBox.innerHTML = '<button type="button" data-unit="gbp" aria-label="Pounds">£</button><button type="button" data-unit="usd" aria-label="Dollars">$</button><button type="button" data-unit="btc" aria-label="Sats">₿</button>';
+unitBox.innerHTML = '<span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span>';
 $('wallet-link').append(unitBox);
 let ownMode = 'btc';
 function drawUnit() {
   const mode = inFiat() ? unit : 'btc';
-  for (const b of unitBox.children) {
+  for (const b of unitBox.querySelectorAll('button')) {
     b.setAttribute('aria-pressed', b.dataset.unit === mode);
     if (b.dataset.unit !== 'btc') b.disabled = !rate; // no real rate: sats only
   }
@@ -1012,6 +1024,7 @@ async function tick() {
     door = now.door;
     if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
+  if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player
   if (stage === 'closed') $('change').textContent = `Your change: ${sats(await wallet.balance())}, in this browser.`;
   render();
   chat(now);

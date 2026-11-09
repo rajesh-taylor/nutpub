@@ -779,3 +779,34 @@ body.wallet-card.confirmed main { grid-template-columns: minmax(0, 1fr); }
 body.wallet-card.confirmed .bottom { display: flex; justify-content: center; }
 body.wallet-card.confirmed .bottom > .save-ticket { width: min(100%, 420px); }
 .bottom > .save-ticket { margin: 12px 0 0; }
+
+/* Flags the shape of flags, 3:2. */
+.unit button { width: 57px; }
+/* The wallet card on a phone: the balance, its two buttons on one line, the flags on their own line above the goals,
+   the two tip buttons side by side. */
+@media (max-width: 700px) {
+  body.wallet-card .purse { grid-template-columns: minmax(0, 1fr); grid-template-areas: "sum" "actions" "meter" "status" "goal"; }
+  body.wallet-card .purse-actions { flex-wrap: nowrap; }
+  body.wallet-card .purse-actions .btn { flex: 1 1 0; min-width: 0; text-align: center; font-size: 15px; padding: 10px 4px 8px; }
+  body.wallet-card .bottom .purse .goal { grid-template-columns: minmax(0, 1fr); grid-template-areas: "unit" "head" "sum" "track" "list" "more"; }
+  body.wallet-card .bottom .purse .goal .unit { justify-self: start; margin-bottom: 8px; }
+  .goal .goal-more-row { flex-wrap: nowrap; }
+  .goal .goal-more-row > * { flex: 1 1 0; min-width: 0; height: 52px; padding: 0 6px; font-size: 17px; justify-content: center; white-space: nowrap; }
+}
+
+/* The currency switch: names only on the phone card, where the flags run the full width. */
+.unit > span { display: inline-flex; }
+.unit small { display: none; }
+@media (max-width: 700px) {
+  body.wallet-card .bottom .purse .goal .unit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; justify-self: stretch; }
+  body.wallet-card .goal .unit > span { display: grid; gap: 5px; }
+  body.wallet-card .goal .unit small { display: block; font: 400 14px/1 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--smoke); }
+  body.wallet-card .goal .unit button { width: 100%; height: auto; aspect-ratio: 3 / 2; font-size: 28px; }
+}
+
+/* Bitcoin tips in the chat are Bitcoin orange; card tips will get their own colour in the colour session. */
+.feed .amt { background: var(--btc); }
+/* Good news about sats: orange, with a slow shimmer. */
+.status.shine { color: transparent; background: linear-gradient(100deg, var(--btc) 42%, #ffe2b8 50%, var(--btc) 58%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: shine 2.6s linear infinite; }
+@keyframes shine { from { background-position: 125% 0; } to { background-position: -125% 0; } }
+@media (prefers-reduced-motion: reduce) { .status.shine { color: var(--btc); background: none; animation: none; } }

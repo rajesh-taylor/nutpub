@@ -7,7 +7,7 @@
   <title>The show · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
-    /* Page 2, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
+    /* Page 3, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
        show, the chat beside it) and the room's phone. Every frame is the real page, so payments and chat are real. */
     body.board { padding: 0; text-align: left; background: #050914; font: 16px/1.45 var(--body); }
     .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
@@ -43,10 +43,10 @@
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
       <a href="/setup">1 · Show setup</a>
-      <a class="on" href="/show" aria-current="page">2 · The show</a>
-      <a href="/takings">3 · Takings</a>
+      <a href="/doors">2 · Doors</a>
+      <a class="on" href="/show" aria-current="page">3 · The show</a>
+      <a href="/takings">4 · End the night</a>
     </nav>
-    <button type="button" class="btn quiet head-new" id="head-new-night">New night</button>
   </header>
 
   <p class="locked-note" id="locked" hidden>This is the host's page. <a class="btn primary" href="/setup">Sign in as artist</a></p>
@@ -55,9 +55,7 @@
     <main>
       <div class="host">
         <span class="label">Host</span>
-        <button class="btn quiet" data-stage="doors">Doors · chat open</button>
         <button class="btn quiet" data-stage="on">Start the show</button>
-        <button class="btn quiet" data-stage="closed">End the night</button>
       </div>
       <div class="host bar-strip" id="bar-strip" hidden>
         <span class="label">The bar</span>
@@ -74,35 +72,7 @@
     </aside>
   </div>
 
-  <script type="module">
-    const $ = (id) => document.getElementById(id);
-    // The host's key, kept in this browser by the setup page's sign-in.
-    let key = null;
-    try { key = localStorage.getItem('nutpub-admin'); } catch {}
-    const api = (method, url, body) => fetch(url, { method, headers: { 'X-Admin': key || '', 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) })
-      .then(async (r) => { if (!r.ok) throw Object.assign(new Error(r.statusText), { status: r.status }); return r.json(); });
-
-    try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = false; throw new Error('signed out'); }
-    $('page').hidden = false;
-    const { path } = await fetch('/api/show').then((r) => r.json());
-    $('home').src = `${path}?as=home`;
-    $('phone').src = path;
-
-    // ---- Doors, Start the show, Last orders. Every phone follows within 2 seconds.
-    async function stage(next) {
-      const { stage: now } = next ? await api('POST', '/api/admin/stage', { stage: next }) : await fetch('/api/stage').then((r) => r.json());
-      for (const b of document.querySelectorAll('[data-stage]')) b.classList.toggle('on', b.dataset.stage === now);
-    }
-    for (const b of document.querySelectorAll('[data-stage]')) b.onclick = () => stage(b.dataset.stage);
-
-    // Coming from page 1, the night starts at the door: doors open, chat open.
-    if (new URLSearchParams(location.search).has('doors')) {
-      history.replaceState(null, '', '/show');
-      await stage('doors');
-    } else stage();
-    setInterval(() => { if (!document.hidden) stage().catch(() => {}); }, 30_000);
-  </script>
+  <script type="module" src="/stage.js"></script>
   <script type="module" src="/js/barstrip.js"></script>
-  <script src="/newnight.js" defer></script>
 </body>
 </html>
