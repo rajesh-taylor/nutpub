@@ -7,53 +7,75 @@
   <title>The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
-    body.home main { max-width: 980px; text-align: left; }
+    body.home main { max-width: 1560px; width: auto; padding-inline: clamp(16px, 4vw, 64px); text-align: left; }
     .home .wordmark, .home .tag { text-align: center; }
     .home .tag { margin-bottom: 32px; }
     .billing { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 18px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
-    .billing::before, .billing::after { content: ""; flex: 1; border-top: 1px solid rgb(232 163 61 / .45); }
+    .billing::before, .billing::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgb(232 163 61 / .45)); }
+    .billing::after { transform: scaleX(-1); }
     .wins { margin: 8px 0 32px; }
-    .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-    .two h2 { font: 400 clamp(44px, 6vw, 64px)/.95 var(--poster); letter-spacing: .02em; margin: 0 0 14px; color: var(--cream); }
-    .two .band h2 { color: var(--amber); }
-    .two p { margin: 0; font-size: 19px; line-height: 1.45; }
-    @media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); gap: 22px; } .two h2 { margin-bottom: 8px; } }
-    .one-way { text-align: center; margin: 0 0 40px; }
-    .one-way .btn { font-size: 24px; padding: 14px 28px 12px; }
+    .two { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+    .two > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .two .fans { text-align: center; align-items: center; }
+    .two .biz { text-align: right; align-items: flex-end; }
+    .two h2 { font: 400 clamp(28px, 3.6vw, 40px)/.95 var(--poster); letter-spacing: .02em; margin: 0; color: var(--amber); }
+    .two .biz h2 { color: rgb(250 250 250); }
+    .two p { margin: 0; font-size: 18px; line-height: 1.4; color: rgb(250 250 250); }
+    .wins { margin-top: 100px; }
+    .two .line { font: italic 19px/1.35 Georgia, "Times New Roman", serif; }
+    @media (max-width: 760px) { .wins { margin-top: 48px; } .lineup { margin-top: 64px; } }
+    .two .btn { margin-top: auto; font-size: 20px; padding: 12px 18px 10px; text-align: center; }
+    .two .band .btn { align-self: flex-start; }
+    .two .soon { background: rgb(250 250 250); border-color: rgb(250 250 250); color: #050914; cursor: default; }
+    @media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); gap: 32px; } .two > div, .two .biz { text-align: center; align-items: center; } .two .band .btn { align-self: center; } }
 
-    /* Supporting acts: gold award laurels. Glow only on the two big ones (Coco, cashu-ts). */
-    .lineup { text-align: center; }
-    .heads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 0 0 28px; }
-    .big { position: relative; display: block; aspect-ratio: 1; max-width: 280px; width: 100%; margin: 0 auto; text-decoration: none; }
-    .big svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 3px 0 #5e3b10) drop-shadow(0 0 12px rgb(255 186 80 / .55)); }
-    .big .txt { position: absolute; inset: 22% 19%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
-    .big .k { font: 600 10px/1.35 Georgia, "Times New Roman", serif; letter-spacing: .26em; text-transform: uppercase; color: #e8b65e; }
-    .big .alt { display: none; }
-    .big:hover .k1, .big:focus-visible .k1 { display: none; }
-    .big:hover .alt, .big:focus-visible .alt { display: inline; }
-    .big .n { font: 700 42px/1 Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .02em; color: #f6cf7a; text-shadow: 0 3px 0 #5e3b10, 0 0 18px rgb(255 186 80 / .55); }
-    .big .n.long { font-size: 30px; }
-    .big .d { font: 11px/1.35 var(--mono); color: var(--cream); }
-    .smalls { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
-    .sm { position: relative; aspect-ratio: 1; }
-    .sm svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 2px 0 #4a2f0c); }
-    .sm .txt { position: absolute; inset: 24% 18%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-    .sm b { font: 400 clamp(15px, 2vw, 20px)/1 var(--poster); letter-spacing: .03em; color: #f0c26a; white-space: nowrap; }
-    .sm span { font: 11px/1.2 var(--mono); color: #c9cfdc; }
+    /* The Golden Lion board: gold serif on black, a thin gold edge, the letters on a curve. */
+    .home .wordmark { margin: 0 auto 10px; max-width: 972px; line-height: 0; }
+    .board { display: block; width: 100%; height: auto; }
+    .home .tag { width: fit-content; margin-inline: auto; color: transparent; background: linear-gradient(100deg, var(--amber) 40%, #fff3d0 50%, var(--amber) 60%) 100% 0 / 200% 100%; -webkit-background-clip: text; background-clip: text; animation: tag-shine 4.5s linear infinite; }
+    /* The sign's shimmer: a pale copy shown through a moving mask. One clock with the tagline: the sign for 3 s, then the tagline for 1.5 s. */
+    .home .wordmark { position: relative; }
+    .shine { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; -webkit-mask: linear-gradient(100deg, transparent 35%, #000 50%, transparent 65%) 100% 0 / 200% 100% no-repeat; mask: linear-gradient(100deg, transparent 35%, #000 50%, transparent 65%) 100% 0 / 200% 100% no-repeat; animation: sign-shine 4.5s linear infinite; }
+    .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
+    @keyframes sign-shine { 0% { -webkit-mask-position: 100% 0; mask-position: 100% 0; } 66.67%, 100% { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+    @keyframes tag-shine { 0%, 66.67% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .shine { display: none; } .home .tag { animation: none; } }
+    .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
+    .board .btc { fill: #f7931a; }
+
+    /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
+    .lineup { text-align: center; margin-top: 150px; }
+    .lineup .billing { margin-bottom: 32px; }
+    .acts { --lw: min(calc((100vw - 8vw - 72px) / 9), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
+    .heads, .rows, .smalls { display: contents; }
+    .big:nth-child(2) { order: 2; }
+    .sm { order: 1; }
+    .big, .sm { position: relative; display: block; aspect-ratio: 1; flex: 0 0 var(--lw); width: var(--lw); text-decoration: none; }
+    .big svg, .sm svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 2px 0 #4a2f0c); }
+    .big .txt { position: absolute; inset: 22% 14%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+    .big .k { font: 600 calc(var(--lw) * .05)/1.25 Georgia, "Times New Roman", serif; letter-spacing: .14em; text-transform: uppercase; color: #e8b65e; }
+    .big .n { font: 700 calc(var(--lw) * .155)/1 Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .02em; color: #f6cf7a; text-shadow: 0 1px 0 #5e3b10; white-space: nowrap; }
+    .big .n.long { font-size: calc(var(--lw) * .115); }
+    .sm .txt { position: absolute; inset: 24% 14%; display: flex; align-items: center; justify-content: center; }
+    .sm b { font: 400 calc(var(--lw) * .135)/1 var(--poster); letter-spacing: .03em; color: #f0c26a; white-space: nowrap; }
     .sm.next { opacity: .55; }
     .wreath-s { display: none; }
-    @media (max-width: 760px) {
-      .heads { gap: 8px; }
-      .big .txt { inset: 23% 17%; gap: 4px; }
-      .big .k { font-size: 7.5px; letter-spacing: .2em; }
-      .big .n { font-size: 26px; } .big .n.long { font-size: 19px; }
-      .big .d { font-size: 9.5px; }
-      .smalls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-      .sm .txt { inset: 22% 14%; gap: 2px; } .sm b { font-size: 12.5px; } .sm span { font-size: 8.5px; }
+    @media (max-width: 860px) {
+      .acts { --lw: min(28vw, 150px); flex-wrap: wrap; justify-content: center; }
       .wreath-l { display: none; } .wreath-s { display: inline; }
     }
-    .home .foot { margin: 40px 0 8px; padding-top: 18px; border-top: 1px solid rgb(239 227 200 / .18); }
-    .home .foot a { font-size: 13px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
+    /* The nut menu, top right. */
+    .nut-menu { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 44px); right: clamp(16px, 4vw, 64px); z-index: 5; text-align: right; }
+    .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }
+    .nut-menu summary::-webkit-details-marker { display: none; }
+    .nut-menu summary svg { display: block; width: 38px; height: 38px; fill: #e8a845; transition: transform .2s; }
+    .nut-menu summary:hover svg, .nut-menu[open] summary svg { transform: rotate(-14deg); }
+    .nut-menu summary:focus-visible { outline: 2px solid var(--amber); border-radius: 4px; }
+    .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 8px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: grid; gap: 8px; font-size: 16px; white-space: nowrap; }
+    .nut-menu a { color: var(--amber); }
+    .nut-menu .later { opacity: .65; }
+    .home .foot { margin: 32px 0 8px; }
+    .home .foot a { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
     .home .foot a:hover { color: var(--amber); opacity: 1; }
   </style>
 </head>
@@ -66,6 +88,17 @@
       </linearGradient>
       <path id="leaf" d="M0 0 C5 -7 15 -8 25 -1 C16 5 6 6 0 0Z"/>
       <g id="sprig"><use href="#leaf" transform="rotate(146)" fill="url(#gold)"/><use href="#leaf" transform="rotate(214)" fill="url(#gold)"/></g>
+      <!-- Wear: small specks knocked out, like old paint. Remove the filter="url(#worn)" attributes to go back to clean. -->
+      <filter id="worn" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 9 -1.5" result="m"/>
+        <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      </filter>
+      <filter id="worn-sign" filterUnits="userSpaceOnUse" x="-20" y="-20" width="840" height="240">
+        <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 9 -1.5" result="m"/>
+        <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      </filter>
       <path id="star" d="M0 -6 L1.8 -1.9 L6 -1.9 L2.6 0.8 L3.9 5 L0 2.4 L-3.9 5 L-2.6 0.8 L-6 -1.9 L-1.8 -1.9Z"/>
       <g id="branch">
         <path d="M94 181 A80 80 0 0 1 55 34" fill="none" stroke="url(#gold)" stroke-width="2.4" stroke-linecap="round"/>
@@ -102,31 +135,49 @@
       </g>
     </defs>
   </svg>
+  <!-- Icon: peanut-outline, from Material Design Icons (Apache 2.0). -->
+  <details class="nut-menu">
+    <summary aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 23c-.47 0-.93-.05-1.39-.15c-3.51-.75-5.74-4.21-4.99-7.72c.25-1.18.83-2.26 1.66-3.13a.93.93 0 0 0 0-1.28c-2.08-2.58-1.68-6.36.9-8.44s6.36-1.673 8.44.91c1.77 2.19 1.77 5.31 0 7.53c-.29.41-.25.98.1 1.34c2.45 2.62 2.32 6.74-.31 9.19A6.44 6.44 0 0 1 12 23m0-20c-.91 0-1.8.31-2.5.89a3.98 3.98 0 0 0-.62 5.61c.96 1.14.89 2.83-.15 3.91c-1.7 1.81-1.6 4.66.21 6.36s4.66 1.61 6.36-.21a4.5 4.5 0 0 0 0-6.15a3 3 0 0 1-.18-4a4 4 0 0 0-.62-5.62c-.5-.38-1.03-.65-1.62-.79zm0 3c0 .55.45 1 1 1s1-.45 1-1s-.45-1-1-1s-1 .45-1 1m2 13c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1m-1-3c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1m-2 2c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1"/></svg></summary>
+    <ul>
+      <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub</a></li>
+      <li class="later">Demo notes · soon</li>
+    </ul>
+  </details>
   <main>
-    <h1 class="wordmark">THE NUTPUB</h1>
-    <p class="tag">We accept Cashu</p>
-    <section class="wins" aria-label="Who wins">
-      <p class="billing">Who wins</p>
+    <h1 class="wordmark" aria-label="The NutPub">
+      <svg class="board" viewBox="0 10 800 170" style="overflow: visible" aria-hidden="true">
+        <text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6" filter="url(#worn-sign)">THENUTPU<tspan class="btc">₿</tspan></text>
+      </svg>
+      <svg class="shine" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6">THENUTPU₿</text></svg>
+    </h1>
+    <p class="tag">Pay by the minute. Leave when it gets bad.</p>
+    <section class="wins" aria-label="Who it's for">
       <div class="two">
-        <div class="band"><h2>The Artists</h2><p>Get paid on the night,<br>straight into their wallet.<br>Accept bitcoin and ecash.</p></div>
-        <div><h2>The punters</h2><p>Buy gig tickets &amp; live gig access.</p></div>
+        <div class="band"><h2>The Artists</h2><p class="line">Get paid on the night.</p><a class="btn primary" href="/setup">Sign in as Longy</a></div>
+        <div class="fans"><h2>The Punters</h2><p class="line">Buy tickets and live stream access</p><p class="line">No apps. No tracking.</p><a class="btn primary" href="/longy">Try it with test sats</a></div>
+        <div class="biz"><h2>Small Businesses</h2><p class="line">Collab with Artists.</p><p class="line">Integrated ticketing</p><span class="btn soon">Coming soon</span></div>
       </div>
     </section>
-    <p class="one-way"><a class="btn primary" href="/setup">Sign in as artist</a></p>
     <section class="lineup" aria-label="Built with">
-      <p class="billing">Supporting acts</p>
+      <p class="billing">Best Supporting Acts</p>
+      <div class="acts">
       <div class="heads">
-        <a class="big" href="https://github.com/cashubtc/coco"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="k"><span class="k1">Best wallet</span><span class="alt">Best browser wallet</span></span><span class="n">Coco</span><span class="d">The wallet in the fan's browser</span></span></a>
-        <a class="big" href="https://github.com/cashubtc/cashu-ts"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="k"><span class="k1">Best library</span><span class="alt">Best original ecash and key grip</span></span><span class="n long">cashu-ts</span><span class="d">Makes and checks the ecash</span></span></a>
+        <a class="big" href="https://github.com/cashubtc/coco"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="n">Coco</span></span></a>
+        <a class="big" href="https://github.com/cashubtc/cashu-ts"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="n long">cashu-ts</span></span></a>
       </div>
+      <div class="rows">
       <div class="smalls">
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-00–03</b><span>Ecash</span></div></div>
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-04</b><span>Sats in</span></div></div>
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-07</b><span>Spent yet?</span></div></div>
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-10·11</b><span>Locks</span></div></div>
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-18</b><span>Requests</span></div></div>
-        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-24</b><span>HTTP 402</span></div></div>
-        <div class="sm next"><svg viewBox="0 0 200 200" aria-hidden="true"><use class="wreath-l" href="#wreath"/><use class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b><span>Nutzaps · next</span></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-00–03</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-04</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-07</b></div></div>
+        </div>
+      <div class="smalls">
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-10·11</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-18</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-24</b></div></div>
+        <div class="sm next"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b></div></div>
+      </div>
+      </div>
       </div>
     </section>
     <footer class="foot"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></footer>
