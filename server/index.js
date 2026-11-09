@@ -37,7 +37,7 @@ route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End the night (/takings).
 route('GET', '/setup', page('setup.html'));
-route('GET', '/doors', page('doors.html'));
+route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
 route('GET', '/takings', page('night-takings.html'));
 route('GET', '/last-orders', redirect('/takings')); // its name before 29 Oct

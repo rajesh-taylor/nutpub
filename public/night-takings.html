@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>End the night · The NutPub</title>
+  <title>Takings · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* Page 2, The show: board A made live. The host's controls, the view from home (Longy's clip plays as the live
@@ -60,8 +60,11 @@
     .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; }
     .where { margin-top: 16px; }
     .sold { margin-bottom: 16px; }
-    .host.end { margin-top: 14px; }
-    .host.end .count { margin-left: 0; }
+    .steps { margin: 12px 0 18px; padding-left: 24px; font-size: 18px; }
+    .seen { margin-top: 16px; }
+    .previews { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 12px; }
+    .desk { width: 640px; max-width: 100%; height: 400px; overflow: hidden; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; }
+    .desk iframe { width: 1280px; height: 800px; border: 0; transform: scale(.5); transform-origin: 0 0; }
     .key.warn { color: var(--cream); }
     .sold .line:last-child { border-bottom: 0; }
     .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
@@ -75,10 +78,9 @@
     <a class="btn quiet head-back" href="/">← Back</a>
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
-      <a href="/setup">1 · Show setup</a>
-      <a href="/doors">2 · Doors</a>
-      <a href="/show">3 · The show</a>
-      <a class="on" href="/takings" aria-current="page">4 · End the night</a>
+      <a href="/setup">1 · Gig Set Up</a>
+      <a href="/show">2 · Show Time</a>
+      <a class="on" href="/takings" aria-current="page">3 · Takings</a>
     </nav>
   </header>
 
@@ -86,11 +88,12 @@
 
   <div class="page" id="page" hidden>
     <main>
-      <h1>End the night</h1>
-      <div class="host end">
-        <button class="btn quiet" data-stage="closed">End the night</button>
-        <span class="count">Then stop Larix on your phone and press Collect. Any time after the gig is fine.</span>
-      </div>
+      <h1>Takings</h1>
+      <ol class="steps">
+        <li><b>Collect</b> your money into this browser.</li>
+        <li><b>Send to another wallet</b> to get it as one long code.</li>
+        <li><b>Paste</b> the code into your own Cashu wallet.</li>
+      </ol>
 
       <section class="card sold" aria-labelledby="sold-h">
         <h2 id="sold-h">Sold so far</h2>
@@ -161,9 +164,15 @@
         </div>
       </section>
 
+      <section class="card seen" aria-labelledby="seen-h">
+        <h2 id="seen-h">What your fans see at the end</h2>
+        <div class="previews">
+          <div><p class="cap">Computer</p><div class="desk"><iframe id="seen-desk" title="The end of the night on a computer"></iframe></div></div>
+          <div><p class="cap">Phone</p><div class="phone-frame"><iframe id="seen-phone" title="The end of the night on a phone"></iframe></div></div>
+        </div>
+      </section>
     </main>
   </div>
   <script type="module" src="/js/night.js"></script>
-  <script type="module" src="/stage.js"></script>
 </body>
 </html>

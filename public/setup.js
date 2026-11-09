@@ -216,7 +216,7 @@ function saved(res) {
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
   if ('artistKey' in res) artistReady = !!res.artistKey;
-  if (!artistReady) todo.push('open 4 · End the night once (it makes the key payments lock to; nothing can be sold until then)');
+  if (!artistReady) todo.push('open 3 · Takings once (it makes the key payments lock to; nothing can be sold until then)');
   status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
 }
@@ -252,7 +252,7 @@ function fixAfterSale(n) {
   for (const id of ['field-artist', 'field-page']) {
     const box = $(id);
     box.classList.toggle('fixed', n > 0);
-    box.title = n > 0 ? 'Locked: tickets have sold. Set up my next gig unlocks it.' : '';
+    box.title = n > 0 ? 'Locked: tickets have sold. A new date after the gig unlocks it.' : '';
     box.querySelector('input').readOnly = n > 0;
   }
 }
@@ -277,7 +277,11 @@ let autosave;
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   read();
-  try { saved(await api('PUT', '/api/admin/show', show)); } catch (err) { status(`Not saved: ${err.message}`, 'bad'); }
+  try {
+    saved(await api('PUT', '/api/admin/show', show));
+    // A new date after the gig has just cleared it: the page starts again for the next one.
+    if (!$('next-gig').hidden && !(await api('GET', '/api/admin/sold')).over) location.reload();
+  } catch (err) { status(`Not saved: ${err.message}`, 'bad'); }
 });
 addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 

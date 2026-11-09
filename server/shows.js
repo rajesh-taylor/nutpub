@@ -1,6 +1,6 @@
 // The show: what the account holder (artist or venue) sets on /setup before going live. One current show,
 // plus named templates to start the next one from. Both live in D1.
-import { one, all, run } from './db.js';
+import { one, all, run, sql, batch, kv } from './db.js';
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
@@ -137,8 +137,23 @@ export async function currentShow() {
   return { show, problems, updated: row?.updated ?? null, path: show.page ? `/${show.page}` : '/' };
 }
 
+// The gig has been: the host ended the night, or its date has gone.
+export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' || settled.problems.includes('date.past');
+
+// A finished gig clears itself when the artist gives the next one a date: tickets, chat and stage. Payments stay to collect.
+export async function clearGig() {
+  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key = 'freeFrom'"), sql('UPDATE messages SET deleted = 1')]);
+  const at = now();
+  await kv.set('nightStart', at); // Takings counts this gig from here
+  await kv.set('stage', 'doors');
+  await kv.set('stageAt', at);
+}
+
 export async function saveShow(input) {
-  const { show } = clean(input);
+  const { show, problems } = clean(input);
+  const was = await currentShow();
+  // A new date on a gig that hasn't happened is a postponement: its tickets stand.
+  if (show.date && show.date !== was.show.date && !problems.includes('date.past') && (await gigOver(was))) await clearGig();
   // Once a ticket has sold the name and the address are fixed until New night: posters and saved links depend on them.
   if ((await one('SELECT 1 AS x FROM tickets LIMIT 1'))) {
     const before = (await currentShow()).show;

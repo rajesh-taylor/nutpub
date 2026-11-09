@@ -26,6 +26,8 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
+$('seen-desk').src = `${info.path}?as=home&view=closing`;
+$('seen-phone').src = `${info.path}?as=home&view=closing`;
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
 const bar = await openWallet(health.mint.url, 'nutpub-bar');
 

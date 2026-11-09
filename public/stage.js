@@ -1,4 +1,4 @@
-// Doors and The show: sign-in, the two views, and the stage button. Also the End the night button on Takings.
+// Show Time: sign-in, the two views, and the two big buttons. Only the next step is lit.
 const $ = (id) => document.getElementById(id);
 let key = null;
 try { key = localStorage.getItem('nutpub-admin'); } catch {}
@@ -16,7 +16,8 @@ if ($('home')) {
 const buttons = [...document.querySelectorAll('[data-stage]')];
 async function stage(next) {
   const { stage: now } = next ? await api('POST', '/api/admin/stage', { stage: next }) : await fetch('/api/stage').then((r) => r.json());
-  for (const b of buttons) b.classList.toggle('on', b.dataset.stage === now);
+  for (const b of buttons) b.disabled = b.dataset.stage === 'on' ? now === 'on' : now !== 'on';
+  $('after').hidden = now !== 'closed';
   document.body.dataset.stage = now;
 }
 for (const b of buttons) {

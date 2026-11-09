@@ -10,6 +10,7 @@ const $ = (id) => document.getElementById(id);
 const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 'room';
 // ?view=ticket: the setup page's picture of the ticket page, whatever this browser already holds and whatever the night.
 const TICKET_VIEW = new URLSearchParams(location.search).get('view') === 'ticket';
+const CLOSING_VIEW = new URLSearchParams(location.search).get('view') === 'closing'; // Takings' picture of the end of the night
 const KEEP = AS === 'home' ? '-home' : '';
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
@@ -685,7 +686,7 @@ let doorShown = false;
 function render() {
   const room = AS === 'room';
   const ticket = !!door.ticket;
-  const closed = stage === 'closed' && !TICKET_VIEW;
+  const closed = (stage === 'closed' && !TICKET_VIEW) || CLOSING_VIEW;
   const s = split();
   body.dataset.stage = stage;
   // Full picture with the chat over it: the room once the set plays, and always at home.
@@ -1025,7 +1026,11 @@ async function tick() {
     if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player
-  if (stage === 'closed') $('change').textContent = `Your change: ${sats(await wallet.balance())}, in this browser.`;
+  if (stage === 'closed' || CLOSING_VIEW) {
+    const left = await wallet.balance();
+    $('change').textContent = left ? `You have ${sats(left)} left in this temp browser wallet. Move them into your Cashu/Lightning wallet. Best done now: this browser will forget them after 7 days. Permanently.` : '';
+    $('take-home').hidden = !left;
+  }
   render();
   chat(now);
 }

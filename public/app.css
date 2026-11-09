@@ -810,3 +810,7 @@ body.wallet-card.confirmed .bottom > .save-ticket { width: min(100%, 420px); }
 .status.shine { color: transparent; background: linear-gradient(100deg, var(--btc) 42%, #ffe2b8 50%, var(--btc) 58%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: shine 2.6s linear infinite; }
 @keyframes shine { from { background-position: 125% 0; } to { background-position: -125% 0; } }
 @media (prefers-reduced-motion: reduce) { .status.shine { color: var(--btc); background: none; animation: none; } }
+
+/* The shimmer, past the show line's own colour. */
+body.wallet-card .show-line .status.shine, .status.shine { color: transparent; background: linear-gradient(100deg, var(--btc) 35%, #fff 50%, var(--btc) 65%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+@media (prefers-reduced-motion: reduce) { body.wallet-card .show-line .status.shine, .status.shine { color: var(--btc); background: none; animation: none; } }

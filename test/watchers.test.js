@@ -6,13 +6,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { configure } from '../server/config.js';
 import { useDb, kv, run } from '../server/db.js';
 import { takeSeat, VIEWER_LIMIT } from '../server/live.js';
-import { pollEvery } from '../server/shows.js';
+import { pollEvery, saveShow, currentShow } from '../server/shows.js';
 
 // D1's few calls, over an in-memory SQLite with the real tables.
 beforeEach(() => {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync('schema.sql', 'utf8'));
-  useDb({ prepare: (text) => ({ bind: (...args) => {
+  useDb({ batch: (list) => Promise.all(list.map((st) => st.run())), prepare: (text) => ({ bind: (...args) => {
     const st = db.prepare(text);
     return { first: async () => st.get(...args) ?? null, all: async () => ({ results: st.all(...args) }), run: async () => st.run(...args) };
   } }) });
@@ -69,4 +69,20 @@ test('how often pages ask', () => {
   assert.equal(pollEvery({ date: '2026-12-25', live: true }, at), 2);  // on air
   assert.equal(pollEvery({ date: '2026-12-25', stageAt: new Date(at - 60_000).toISOString() }, at), 2); // rehearsal
   assert.equal(pollEvery({ date: '2026-12-25', stageAt: new Date(at - 31 * 60_000).toISOString() }, at), 60);
+});
+
+test('a new date clears a finished gig, and only a finished one', async () => {
+  const later = (d) => new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+  await saveShow({ artist: 'A', date: later(10) });
+  await run("INSERT INTO tickets (pass, sats, at) VALUES ('t', 1, 'x')");
+  await saveShow({ artist: 'A', date: later(20) }); // postponed
+  assert.equal((await currentShow()).show.date, later(20));
+  assert.ok(await kv.get('stage') !== 'closed');
+  const { one } = await import('../server/db.js');
+  assert.equal((await one('SELECT COUNT(*) AS n FROM tickets')).n, 1);
+  await kv.set('stage', 'closed');
+  await saveShow({ artist: 'B', date: later(30) }); // the next gig
+  assert.equal((await one('SELECT COUNT(*) AS n FROM tickets')).n, 0);
+  assert.equal(await kv.get('stage'), 'doors');
+  assert.equal((await currentShow()).show.artist, 'B'); // the lock has gone with the tickets
 });

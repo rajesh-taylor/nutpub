@@ -22,9 +22,9 @@ Most artists do all of this alone, so a gig is set up once, weeks or months ahea
 
 | Page | What it does |
 |---|---|
-| **1 · Show setup** (`/setup`) | Artist, show name, page address, date and times, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off; the live stream as an Online ticket, pay as you watch, free with comments and tips, or none. Comments on or off, stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
-| **2 · The show** (`/show`) | Doors, Start the show and End the night. The view from home: the live stream when one is on, otherwise a recorded set, with live chat and tips with a message. |
-| **3 · Takings** (`/takings`) | Collect every payment into the artist's own wallet in one swap, and send it on. |
+| **1 · Gig Set Up** (`/setup`) | Artist, show name, page address, date and times, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off; the live stream as an Online ticket, pay as you watch, free with comments and tips, or none. Comments on or off, stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
+| **2 · Show Time** (`/show`) | Two big buttons, Start the show and End the night, only the next step lit. The view from home: the live stream when one is on, otherwise a recorded set, with live chat and tips with a message. |
+| **3 · Takings** (`/takings`) | Tickets sold; three steps to collect every payment into the artist's own wallet in one swap and send it on; what fans see at the end of the night. A finished gig clears itself when the next date is saved on Gig Set Up. |
 
 **For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
 
@@ -58,16 +58,16 @@ Card payments (Stripe; the £ prices are shown, the card buttons do nothing), pa
 
 Open while NutNovember runs (to 27 Nov 2026):
 
-- Sales so far on Takings, and a viewer cap for free streams.
-- A hands-free night: times set in advance do the work; free, then paid; moderators and slow mode.
-- One watcher at a time per Online ticket.
-- A way in for judges that doesn't give out the stream key; passkey sign-in with a backup for the artist's key.
+- A hands-free night: a stream check before going public, free then paid; moderators and slow mode.
+- A way in for judges that doesn't give out the stream key; a door page with limited door and bar links; passkey sign-in with a backup for the artist's key.
+- A guide for fans to move leftover sats into their own wallet.
+- Safari on one test iPhone refuses the browser wallet its storage (Brave on the same phone works): being traced.
 - Saving a second show as a template (one gig at a time for now).
-- A page left open before the gig day asks the server every 2 seconds; it should slow down.
-- The design of The show, the ticket and Take home pages; a desktop preview of the ticket page in setup.
+- The design of Show Time, the ticket and Takings pages; a desktop preview of the ticket page in setup.
 
 ## Known limits
 
+- **While on the test mint, a live stream takes 10 viewers at once**, and a free stream runs for 3 hours, to keep the Cloudflare bill small. A ticket plays on one screen at a time; the newest screen takes over.
 - **The artist's key lives only in the browser that opened Takings, with no backup yet.** Closing the browser loses nothing. Clearing site data, a private window, another device or Safari's 7 days without a visit do, and uncollected sats stay locked for good. Passkey sign-in with a sealed backup and a recovery code is planned, before any real gig on a real mint.
 - **A ticket link is a key.** Anyone it's forwarded to holds the ticket, and nothing at a room's door checks tickets yet.
 - **A cancelled gig has no automatic refund:** payments are locked to the artist, who would refund people themselves. Nobody's contact details are kept, so buyers aren't told of a date change either; the artist announces it.
