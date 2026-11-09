@@ -32,13 +32,13 @@
     /* The Golden Lion board: gold serif on black, a thin gold edge, the letters on a curve. */
     .home .wordmark { margin: 0 auto 10px; max-width: 972px; line-height: 0; }
     .board { display: block; width: 100%; height: auto; }
-    .home .tag { width: fit-content; margin-inline: auto; color: transparent; background: linear-gradient(100deg, var(--amber) 40%, #fff3d0 50%, var(--amber) 60%) 96% 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; animation: tag-shine 5.55s linear infinite; }
-    /* The sign's shimmer: a pale copy shown through a moving mask. One clock with the tagline: the sign for 4 s, then the tagline for 1.5 s. */
+    .home .tag { width: fit-content; margin-inline: auto; color: transparent; background: linear-gradient(100deg, var(--amber) 40%, #fff3d0 50%, var(--amber) 60%) 96% 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; animation: tag-shine 9.55s linear infinite; }
+    /* The sign's shimmer: a pale copy shown through a moving mask. One clock with the tagline: the sign for 4 s, 2 s rest, the tagline for 1.5 s, 2 s rest. */
     .home .wordmark { position: relative; }
-    .shine { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: sign-shine 5.55s linear infinite; }
+    .shine { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: sign-shine 9.55s linear infinite; }
     .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
-    @keyframes sign-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 72.97% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 72.98%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
-    @keyframes tag-shine { 0%, 72.97% { background-position: 96% 0; } 100% { background-position: 4% 0; } }
+    @keyframes sign-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 42.41% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 42.42%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
+    @keyframes tag-shine { 0%, 63.35% { background-position: 96% 0; } 79.06% { background-position: 4% 0; } 79.07%, 100% { background-position: 96% 0; } }
     @media (prefers-reduced-motion: reduce) { .shine { display: none; } .home .tag { animation: none; } }
     .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
     .board .btc { fill: #f7931a; }
