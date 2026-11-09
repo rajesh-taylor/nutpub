@@ -3,6 +3,7 @@
 // The artist streams to it from Larix or OBS; Stream records each broadcast and deletes it after 30 days.
 import QRCode from 'qrcode';
 import { kv } from './db.js';
+import { MINT_TEST } from './config.js';
 import { current, showOf, saveShow } from './shows.js';
 import { one, run } from './db.js';
 import { cashuGate } from './gate.js';
@@ -99,15 +100,46 @@ const liveLink = async (show, exp) => {
   return show.live.playback.replace(uid, await signToken(uid, exp));
 };
 
+// A seat at the live picture, so Stream's bill has a ceiling. One row per pass, kept for a little longer than the
+// longest gap between renewals. Who counts: everyone on a free stream, and on the test mint everyone (test sats cost
+// nothing, Stream's minutes do). People already watching are never turned away. A ticket opens one screen at a time:
+// the newest takes over (`start=1` on its first token) and the old one is told at its next renewal.
+export const VIEWER_LIMIT = 10;
+const FREE_HOURS = 3; // from the night's first free viewer; New night starts it again
+const SEAT = 90;
+export async function takeSeat(c, show, ticketed) {
+  const t = seconds();
+  const free = show.stream.mode === 'free';
+  if (free) {
+    const from = (await kv.get('freeFrom')) ?? (await kv.set('freeFrom', t));
+    if (t - from > FREE_HOURS * 3600) return json({ error: 'free_over', detail: 'This free stream has run its three hours.' }, 409);
+  }
+  const screen = c.req.headers.get('X-Screen') || '';
+  const mine = await one('SELECT screen FROM watchers WHERE pass = ? AND until > ?', c.pass, t);
+  if (ticketed && mine && mine.screen !== screen && c.url.searchParams.get('start') !== '1') {
+    return json({ error: 'moved', detail: 'Now playing on another screen.' }, 409);
+  }
+  if (!mine && (free || MINT_TEST)) {
+    const { n } = await one('SELECT COUNT(*) AS n FROM watchers WHERE until > ?', t);
+    if (n >= VIEWER_LIMIT) return json({ error: 'full', detail: 'This stream is full. Try again in a minute.' }, 409);
+  }
+  await run(`INSERT INTO watchers (pass, screen, until) VALUES (?, ?, ?)
+             ON CONFLICT(pass) DO UPDATE SET screen = excluded.screen, until = excluded.until`, c.pass, screen, t + SEAT);
+  return null;
+}
+
 export function mountLive(route, admin, pass) {
   route('GET', '/api/live/token', pass,
     async (c) => {
       const show = await showOf(c);
       if (!show.live.playback || !(await liveNow(show.page))) return json({ error: 'not_live' }, 409); // never charged for nothing
       if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
-      if (show.stream.mode === 'free' || (await hasTicket(c.pass))) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
-      if (show.stream.mode === 'ticket') return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);
-      if (!show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
+      const ticketed = await hasTicket(c.pass);
+      if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);
+      if (show.stream.mode === 'pay' && !ticketed && !show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
+      const refused = await takeSeat(c, show, ticketed); // before any payment: nobody pays for a seat they can't have
+      if (refused) return refused;
+      if (show.stream.mode === 'free' || ticketed) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
       // Still inside a paid minute (a rejoin, or a lost reply asked for again): the same token, no charge.
       const last = await one('SELECT until, sats FROM live_paid WHERE pass = ?', c.pass);
       const left = last ? last.until - SLACK - seconds() : 0;

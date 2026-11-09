@@ -116,7 +116,7 @@ if (drinkId) {
 }
 await refresh();
 $('page').hidden = false;
-setInterval(() => refresh().catch(() => {}), 5000);
+setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30_000);
 
 // Inside page 3 (Takings): compact, without its own title and links.
 if (top !== self) document.body.classList.add('framed');

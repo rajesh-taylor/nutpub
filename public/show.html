@@ -100,7 +100,7 @@
       history.replaceState(null, '', '/show');
       await stage('doors');
     } else stage();
-    setInterval(() => stage().catch(() => {}), 3000);
+    setInterval(() => { if (!document.hidden) stage().catch(() => {}); }, 30_000);
   </script>
   <script type="module" src="/js/barstrip.js"></script>
   <script src="/newnight.js" defer></script>

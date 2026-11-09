@@ -293,10 +293,11 @@ try { $('budget').value = localStorage.getItem(`nutpub-budget${KEEP}`) || ''; } 
 $('budget').value ||= Math.max(500, (show.stream.perMinute || 0) * 6);
 $('budget').oninput = () => { try { localStorage.setItem(`nutpub-budget${KEEP}`, $('budget').value); } catch {} };
 
+const SCREEN = Math.random().toString(36).slice(2); // this page, this time: a ticket opens one screen at a time
 // One token: free for a ticket or a free show, otherwise a 402. Returns its reply, or null with the picture stopped.
-async function renew(mine) {
+async function renew(mine, first) {
   if (pays() && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
-  const res = await paidFetch('/api/live/token');
+  const res = await paidFetch(`/api/live/token${first ? '?start=1' : ''}`, { 'X-Screen': SCREEN });
   if (res.paidWith) {
     liveFees += wallet.lastFee;
     try { localStorage.setItem(`nutpub-fees${KEEP}`, liveFees); } catch {}
@@ -326,7 +327,7 @@ async function playLive() {
     const at = Date.now();
     let reply = null;
     try {
-      reply = await renew(mine);
+      reply = await renew(mine, !started);
       if (!reply) break;
       off = reply.off ? off + 1 : 0;
       if (off >= 3) { stop(T.liveEnded); break; } // the artist has stopped
@@ -984,13 +985,24 @@ $('say').onsubmit = async (e) => {
   if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
 
-// ---- Every 2 s, one request: the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)
+// ---- One request, as often as the server says (every 2 s on the night, once a minute before it; not at all from a
+// hidden tab): the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)
+let tickEvery = 2;
+let tickTimer = null;
+function nextTick() {
+  clearTimeout(tickTimer);
+  tickTimer = setTimeout(() => {
+    if (document.hidden) nextTick();
+    else tick().catch(() => {}).finally(nextTick);
+  }, tickEvery * 1000);
+}
 async function tick() {
   const waiting = door.drink && !door.drink.poured; // the phone only needs its drink while the bar hasn't poured it
   const now = await fetch(`/api/tick?after=${lastMsg}${shownAt ? `&shown=${encodeURIComponent(shownAt)}` : ''}${waiting ? '&door=1' : ''}`,
     { headers: { 'X-Pass': pass } }).then((r) => r.json());
   if (shownAt && now.show) { Object.assign(show, now.show); words(); }
   shownAt = now.updated;
+  tickEvery = now.every || 2;
   liveOn = !!now.live;
   whenLine();
   readyLive();
@@ -1006,5 +1018,5 @@ async function tick() {
 }
 render();
 document.body.classList.add('ready'); // the page shows once it knows what to show (no flash of Doors before the ticket)
-tick().catch(() => {});
-setInterval(() => tick().catch(() => {}), 2000);
+tick().catch(() => {}).finally(nextTick);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tick().catch(() => {}).finally(nextTick); });

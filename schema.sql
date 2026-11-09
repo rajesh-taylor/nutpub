@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS passes (id TEXT PRIMARY KEY, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS paid (pass TEXT NOT NULL, piece INTEGER NOT NULL, sats INTEGER NOT NULL, at TEXT NOT NULL, PRIMARY KEY (pass, piece));
 -- The live picture: how long this pass's token lasts, and what it has paid tonight. One row per pass, however long it watches.
 CREATE TABLE IF NOT EXISTS live_paid (pass TEXT PRIMARY KEY, until INTEGER NOT NULL, sats INTEGER NOT NULL) WITHOUT ROWID;
+-- Who is watching the live picture right now: one row per pass, and which screen holds it. The viewer limit counts these.
+CREATE TABLE IF NOT EXISTS watchers (pass TEXT PRIMARY KEY, screen TEXT NOT NULL, until INTEGER NOT NULL) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS watchers_until ON watchers (until);
 CREATE TABLE IF NOT EXISTS tips (pass TEXT, sats INTEGER NOT NULL, at TEXT NOT NULL);
 -- kind: 'room' (the room ticket) or 'home' (the Online ticket). Added 7 Nov: ALTER TABLE tickets ADD COLUMN kind TEXT NOT NULL DEFAULT 'room';
 CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room');

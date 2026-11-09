@@ -59,6 +59,8 @@
     .poured-box p { margin: 2px 0 0; font-size: 13px; color: var(--smoke); }
     .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; }
     .where { margin-top: 16px; }
+    .sold { margin-bottom: 16px; }
+    .sold .line:last-child { border-bottom: 0; }
     .boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; font-size: 15px; }
     .boxes div { border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; padding: 12px; }
     .boxes b { display: block; font: 400 20px/1.1 var(--poster); letter-spacing: .08em; color: var(--amber); margin-bottom: 4px; }
@@ -83,6 +85,12 @@
     <main>
       <h1>Takings</h1>
       <p class="sub">What fans paid, locked to the artist's key.</p>
+
+      <section class="card sold" aria-labelledby="sold-h">
+        <h2 id="sold-h">Sold so far</h2>
+        <div class="line" id="r-room"><span>Room tickets</span><span id="v-room">0</span></div>
+        <div class="line" id="r-online"><span>Online tickets</span><span id="v-online">0</span></div>
+      </section>
 
       <div class="pair">
         <section class="card artist-card" aria-labelledby="artist-h">

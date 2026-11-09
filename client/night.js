@@ -70,6 +70,14 @@ async function refresh() {
   const poured = drinks.filter((d) => d.poured && d.collected_by !== 'artist');
   const drinkSum = [...toArtist, ...unpouredLate].reduce((s, d) => s + d.sats, 0);
 
+  // Sold so far: what's sold since the last New night, however far ahead of the gig.
+  const soldLine = (id, on, s = {}, cap) => {
+    $(`r-${id}`).hidden = !on && !s.count;
+    $(`v-${id}`).textContent = `${n(s.count)}${cap ? ` of ${n(cap)}` : ''} · ${sats(s.sats)}`;
+  };
+  soldLine('room', show.ticket.on, takings.sold.room, show.capacity);
+  soldLine('online', show.stream.mode === 'ticket', takings.sold.home);
+
   $('l-tickets').textContent = `Tickets · ${n(count('ticket'))}`;
   $('v-tickets').textContent = n(all('ticket'));
   $('l-tips').textContent = `Tips and messages · ${n(count('tip'))}`;
@@ -195,4 +203,4 @@ $('artist-home').onclick = sendHome(artist, 'artist-token', 'artist-status');
 $('bar-home').onclick = sendHome(bar, 'bar-token', 'bar-status');
 
 await refresh();
-setInterval(() => refresh().catch(() => {}), 5000);
+setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 60_000); // each refresh is 4 requests

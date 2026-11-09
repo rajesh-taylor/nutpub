@@ -193,6 +193,14 @@ export function lastOrdersAt(show) {
   return Math.floor(guess.getTime() / 1000) - hours * 3600;
 }
 
+// How often (in seconds) a page should ask the server. Every 2 s on the gig day (6am to 6am UK time), while the stream
+// is on air, and for half an hour after the host presses a stage button (a rehearsal); otherwise once a minute: a tab
+// left open for weeks mustn't eat the free plan's 100,000 requests a day.
+export function pollEvery({ live, date, stageAt }, at = Date.now()) {
+  if (live || (stageAt && at - Date.parse(stageAt) < 30 * 60_000)) return 2;
+  return new Date(at - 6 * 3_600_000).toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) === date ? 2 : 60;
+}
+
 // The show, read once per request.
 export const current = (c) => (c.current ??= currentShow());
 export const showOf = async (c) => (await current(c)).show;

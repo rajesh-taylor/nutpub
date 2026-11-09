@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
-import { current, showOf, publicShow, ticketSplit, lastOrdersAt } from './shows.js';
+import { current, showOf, publicShow, ticketSplit, lastOrdersAt, pollEvery } from './shows.js';
 import { liveNow } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now } from './http.js';
@@ -42,15 +42,17 @@ export function mountDoor(route, admin, pass) {
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);
+    await kv.set('stageAt', now()); // pages ask every 2 s for the next half hour: a rehearsal feels live
     return json({ stage: await kv.set('stage', stage) });
   });
 
   // A new night, for a rehearsal: every phone back to the door, the chat empty, doors open. Payments already locked
   // stay as they are: they belong to the artist and the bar, to collect.
   route('POST', '/api/admin/new-night', admin, async () => {
-    await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('UPDATE messages SET deleted = 1')]);
+    await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key = 'freeFrom'"), sql('UPDATE messages SET deleted = 1')]);
     await kv.set('nightStart', now()); // Takings counts tonight from here
     await kv.set('stage', 'doors');
+    await kv.set('stageAt', now());
     return json({ stage: 'doors' });
   });
 
@@ -155,16 +157,16 @@ export function mountDoor(route, admin, pass) {
     };
   };
 
-  // The gig page's one request every 2 s: the stage, the live light, the chat since `after`, the show if it has
+  // The gig page's one request (every 2 s or once a minute: `every`, see pollEvery): the stage, the live light, the chat since `after`, the show if it has
   // changed since `shown`, and with `door=1` this phone's drink. One request, to keep the free plan's daily limit.
   route('GET', '/api/tick', async (c) => {
     const q = c.url.searchParams;
     const { show, updated } = await current(c);
-    const [stage, live, chat, door] = await Promise.all([
-      kv.get('stage', 'doors'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
+    const [stage, stageAt, live, chat, door] = await Promise.all([
+      kv.get('stage', 'doors'), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
     ]);
-    return json({ stage, live, ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
+    return json({ stage, live, every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

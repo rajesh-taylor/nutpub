@@ -55,4 +55,4 @@ async function refresh() {
 }
 
 await refresh();
-setInterval(() => refresh().catch(() => {}), 3000);
+setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30_000);
