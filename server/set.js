@@ -89,7 +89,7 @@ export function mountSet(route) {
 
   const thanks = async (c) => {
     await run('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)', c.pass, c.paid, now());
-    await addMessage(c.pass, tipMessage(c), c.paid, (await modOf(c))?.name ?? null); // in the live chat, highlighted, with or without words
+    await addMessage(c.pass, tipMessage(c), c.paid, await modOf(c)); // in the live chat, highlighted, with or without words
     return json({ tipped: c.paid, total: await tipped(c.pass) });
   };
 

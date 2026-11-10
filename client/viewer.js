@@ -938,11 +938,27 @@ function modBar(slow) {
   $('slow-note').hidden = !slow || !!MOD;
   $('mod-bar').hidden = !MOD;
   if (!MOD) return;
-  $('mod-who').textContent = `Mod · ${MOD.name}`;
+  $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
+  $('pin-btn').hidden = !MOD.main;
   $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}`;
   $('slow-btn').setAttribute('aria-pressed', !!slow);
   $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
 }
+// The pinned message, beside "Live chat": the artist's (Gig Set Up) or the main mod's. Links work in it.
+let pinNow = null;
+function pin(text = '') {
+  if (text === pinNow) return;
+  pinNow = text;
+  $('pin').hidden = !text;
+  $('pin-text').replaceChildren(...withLinks(text));
+  $('pin').title = text;
+}
+$('pin-btn').onclick = async () => {
+  const text = prompt('Pinned message, over the chat (140 characters; links work). Empty it to take it down.', pinNow || '');
+  if (text === null) return;
+  const r = await fetch('/api/mod/pin', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+  if (r.ok) pin((await r.json()).pin); else say((await r.json().catch(() => ({}))).detail || 'Not pinned.');
+};
 $('slow-btn').onclick = async () => {
   const on = $('slow-btn').getAttribute('aria-pressed') !== 'true';
   const r = await fetch('/api/mod/slow', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) });
@@ -957,6 +973,10 @@ function chat(r) {
     who.className = 'from';
     who.textContent = m.who;
     li.append(who, ' ');
+    if (m.mod) { // the name first, then the artist's icon for them and the Mod tag
+      if (m.icon) li.append(Object.assign(document.createElement('span'), { className: `mod-icon${m.icon === '₿' ? ' btc' : ''}`, textContent: m.icon }), ' ');
+      li.append(Object.assign(document.createElement('span'), { className: 'mod-tag', textContent: 'Mod' }), ' ');
+    }
     if (m.sats) { // the name first, then what they tipped, in gold
       li.className = 'tipped';
       const amt = document.createElement('b');
@@ -981,6 +1001,7 @@ function chat(r) {
   }
   for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
   modBar(r.slow);
+  pin(r.pin);
   while (feed.children.length > 60) feed.firstElementChild.remove();
   feed.scrollTop = feed.scrollHeight;
   goal(r.tipped, r.goals, r.thanks);

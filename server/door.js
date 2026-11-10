@@ -10,7 +10,7 @@ import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageN
 import { liveNow } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now } from './http.js';
-import { modOf, hasLink, slowMode, SLOW, NORMAL } from './mods.js';
+import { modOf, hasLink, slowMode, pinned, SLOW, NORMAL } from './mods.js';
 
 const COMPRESSED = /^0[23][0-9a-f]{64}$/;
 export const barKey = () => kv.get('barKey');
@@ -25,7 +25,7 @@ const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' '
 export async function addMessage(pass, text, sats = 0, mod = null) {
   const t = clip(text);
   if (!t && !sats) return null;
-  return (await run('INSERT INTO messages (at, pass, sats, text, mod) VALUES (?, ?, ?, ?, ?)', now(), pass, sats, t, mod)).meta.last_row_id;
+  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon) VALUES (?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.
 export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(await modOf(c))
@@ -133,26 +133,28 @@ export function mountDoor(route, admin, pass) {
   // links. Tips with a message arrive through the tip routes.
   route('POST', '/api/message', pass, noGuestLinks(async (c) => (await body(c))?.text), async (c) => {
     const mod = await modOf(c);
-    if ((await showOf(c)).comments === false && !mod) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
+    if ((await showOf(c)).comments === false) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
     const last = mod ? null : await one('SELECT at FROM messages WHERE pass = ? AND sats = 0 ORDER BY id DESC LIMIT 1', c.pass);
     const wait = (await slowMode()) ? SLOW : NORMAL;
     if (last && Date.now() - Date.parse(last.at) < wait) return json({ error: 'too_soon', detail: `One message every ${wait / 1000} seconds${wait === SLOW ? ': slow mode is on' : ''}.` }, 429);
-    const id = await addMessage(c.pass, (await body(c))?.text, 0, mod?.name ?? null);
+    const id = await addMessage(c.pass, (await body(c))?.text, 0, mod);
     if (!id) return json({ error: 'empty' }, 400);
     return json({ id: Number(id) });
   });
   const chatSince = async (c, after) => {
-    const [rows, tipped, gone, show, slow] = await Promise.all([
-      all('SELECT id, pass, sats, text, mod FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
+    const [rows, tipped, gone, show, slow, pin] = await Promise.all([
+      all('SELECT id, pass, sats, text, mod, mod_icon FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
-      showOf(c), slowMode(),
+      showOf(c), slowMode(), pinned(),
     ]);
     const words = show.comments !== false; // off: only the tips, without their words
     return {
-      messages: rows.reverse().filter((m) => words || m.sats > 0 || m.mod).map((m) => ({ id: m.id, sats: m.sats, text: words || m.mod ? m.text : '',
-        who: m.mod ? `Mod · ${m.mod}` : `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true } : {}) })), slow,
+      // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
+      messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
+        who: m.mod || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}) })),
+      slow, pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };

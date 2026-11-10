@@ -153,13 +153,16 @@
     .board .ln { max-width: 520px; margin-top: 4px; }
     .board .key-row { display: flex; gap: 8px; margin-top: 6px; }
     .board .mod-rows { display: grid; gap: 10px; margin: 0 0 14px; }
-    .board .mod-row { display: grid; grid-template-columns: minmax(80px, auto) minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+    .board .mod-row { display: grid; grid-template-columns: auto minmax(80px, auto) minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; }
+    .board .mod-row select, .board .mod-add select { margin: 0; width: auto; font-size: 20px; padding: 4px 6px; }
+    .board .mod-main { display: flex; align-items: center; gap: 4px; margin: 0; font-size: 14px; color: var(--smoke); white-space: nowrap; }
+    .board .mod-main input { margin: 0; }
     .board .mod-row b { font: 400 20px/1 var(--poster); letter-spacing: .08em; color: var(--cream); }
     .board .mod-row input { margin: 0; font-size: 14px; }
     .board .mod-row .btn, .board .mod-add .btn { font-size: 16px; padding: 8px 12px 6px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
     .board .mod-add .field { flex: 1; margin: 0; }
-    @media (max-width: 600px) { .board .mod-row { grid-template-columns: 1fr auto auto; } .board .mod-row input { grid-column: 1 / -1; grid-row: 2; } }
+    @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly] { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
     .board .key-row input { margin-top: 0; flex: 1; }
     .board .key-row .btn { font-size: 16px; padding: 8px 12px 6px; }
     .board .mini { margin-top: 18px; padding-bottom: 18px; text-align: center; }
@@ -277,15 +280,15 @@
           </section>
 
           <section class="panel wide">
-            <h2>Comments</h2>
+            <h2>Comments and moderators</h2>
             <label class="choice room-switch"><b>Comments in the live chat</b><input type="checkbox" role="switch" data-path="comments" aria-label="Comments in the live chat"></label>
-            <p class="switch-note">Off: viewers can still tip, and the chat shows each tip without words. Moderators can still write.</p>
-          </section>
-          <section class="panel wide">
-            <h2>Moderators</h2>
-            <p class="switch-note">A private link each, to send to someone you trust. They can be in the room or at home. With it they see your stream before it opens, free, say hi in the chat, post links (only mods can), delete messages and turn slow mode on. Never this page, your takings or your stream key. Cancel a link and it stops at once.</p>
+            <p class="switch-note" data-when="comments=false">Off: tips still show in the chat, without words. No moderators.</p>
+            <div data-when="comments">
+            <label class="field">Pinned message <span class="optional">· optional, over the chat; links work here</span><input id="pin-text" maxlength="140" placeholder="e.g. Merch at longy.com · next gig Fri 12 Dec" autocomplete="off"></label>
+            <p class="switch-note">Moderators: a private link each, for people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never this page, your takings or your stream key.</p>
             <div class="mod-rows" id="mod-rows"></div>
-            <div class="mod-add"><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
+            <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
+            </div>
           </section>
           <section class="panel wide">
             <h2>Show Splits</h2>

@@ -87,8 +87,8 @@
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
-      <p class="chat-head">Live chat</p>
-      <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><small id="mod-say"></small></div>
+      <div class="chat-top"><p class="chat-head">Live chat</p><p class="pin" id="pin" hidden><span aria-hidden="true">📌</span> <span id="pin-text"></span></p></div>
+      <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><button type="button" class="btn quiet" id="pin-btn" hidden>Pin a message</button><small id="mod-say"></small></div>
       <p class="slow-note" id="slow-note" hidden>Slow mode: one message every 30 seconds.</p>
       <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><span class="goal-more-row" id="goal-more-row" hidden><button type="button" class="coin btc goal-more" id="goal-more">Tip in ₿itcoin</button><button type="button" class="goal-card" id="goal-card" title="Card tips through Stripe: not wired up yet">Tip with Card</button></span></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>

@@ -159,7 +159,7 @@ function refresh() {
   for (const el of form.querySelectorAll('[data-when]')) {
     const [path, want] = el.dataset.when.split('=');
     const v = get(show, path);
-    el.hidden = want ? v !== want : !v;
+    el.hidden = want ? String(v) !== want : !v;
   }
   $('split-artist').textContent = show.artist || 'The artist';
   $('split-artist-pct').textContent = `${artistShare()}%`;
@@ -262,7 +262,7 @@ function dateWarning() {
   $('date-warn').textContent = moved ? `${soldCount} ticket${soldCount === 1 ? '' : 's'} sold. Buyers see the new date when they open their link, but nobody is told: announce it yourself too.` : '';
 }
 form.addEventListener('input', (e) => {
-  if (e.target.type === 'file' || e.target.id === 'mod-name') return; // saved on their own, not with the form
+  if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
   priceRow(e);
   read();
   dateWarning();
@@ -412,11 +412,29 @@ const MOD_KEYS = 'nutpub-mod-keys';
 const modKeys = () => { try { return JSON.parse(localStorage.getItem(MOD_KEYS) || '{}'); } catch { return {}; } };
 const keepModKey = (id, k) => { const all = modKeys(); if (k) all[id] = k; else delete all[id]; try { localStorage.setItem(MOD_KEYS, JSON.stringify(all)); } catch {} };
 const modLink = (k) => `${site}${show?.page ? `/${show.page}` : ''}?as=home#mod=${k}`;
+const iconPicker = (icons, value) => {
+  const sel = document.createElement('select');
+  sel.append(...icons.map((i) => Object.assign(document.createElement('option'), { value: i, textContent: i, selected: i === value })));
+  return sel;
+};
+let pinShown = null;
 async function drawMods() {
-  const list = await api('GET', '/api/admin/mods');
+  const { mods: list, icons, pin } = await api('GET', '/api/admin/mods');
   const keys = modKeys();
+  if (pinShown === null || document.activeElement !== $('pin-text')) { $('pin-text').value = pin; pinShown = pin; }
+  if (!$('mod-icon').options.length) $('mod-icon').replaceWith(Object.assign(iconPicker(icons, icons[0]), { id: 'mod-icon' }));
+  const used = list.map((m) => m.icon);
+  if (!$('mod-name').value) $('mod-icon').value = icons.find((i) => !used.includes(i)) || icons[0]; // a new icon for each new mod
   $('mod-rows').replaceChildren(...list.map((m) => {
     const row = Object.assign(document.createElement('div'), { className: 'mod-row' });
+    const icon = iconPicker(icons, m.icon);
+    icon.setAttribute('aria-label', `${m.name}'s icon`);
+    icon.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { icon: icon.value }); status(`${m.name}'s icon changed.`, 'ok'); };
+    const main = Object.assign(document.createElement('label'), { className: 'mod-main', title: 'The main mod can also change the pinned message' });
+    const radio = Object.assign(document.createElement('input'), { type: 'radio', name: 'mod-main', checked: !!m.main });
+    radio.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { main: true }); status(`${m.name} is the main mod.`, 'ok'); drawMods(); };
+    main.append(radio, 'Main');
+    main.hidden = list.length < 2; // one mod is the main mod anyway
     const link = Object.assign(document.createElement('input'), { readOnly: true, value: keys[m.id] ? modLink(keys[m.id]) : 'Made on another browser: cancel it and make a new one to see the link.' });
     link.setAttribute('aria-label', `${m.name}'s moderator link`);
     const copyBtn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Copy', disabled: !keys[m.id] });
@@ -429,18 +447,28 @@ async function drawMods() {
       status(`${m.name}'s link is cancelled.`, 'ok');
       drawMods();
     };
-    row.append(Object.assign(document.createElement('b'), { textContent: m.name }), link, copyBtn, cancel);
+    row.append(icon, Object.assign(document.createElement('b'), { textContent: m.name }), link, main, copyBtn, cancel);
     return row;
   }));
   $('mod-make').disabled = list.length >= 5;
 }
+// The pinned message: saved on its own as you type, like the rest of the page.
+let pinTimer = null;
+$('pin-text').addEventListener('input', () => {
+  clearTimeout(pinTimer);
+  status('Saving…', 'todo');
+  pinTimer = setTimeout(async () => {
+    try { pinShown = (await api('PUT', '/api/admin/pin', { text: $('pin-text').value })).pin; status('Pinned message saved.', 'ok'); }
+    catch (err) { status(`Not saved: ${err.message}`, 'bad'); }
+  }, 700);
+});
 // Inside the gig's own form (which saves as you type), so it's a button, not a form of its own.
 $('mod-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('mod-make').click(); } });
 $('mod-make').onclick = async () => {
   const name = $('mod-name').value.trim();
   if (!name) return $('mod-name').focus();
   try {
-    const m = await api('POST', '/api/admin/mods', { name });
+    const m = await api('POST', '/api/admin/mods', { name, icon: $('mod-icon').value });
     keepModKey(m.id, m.key);
     $('mod-name').value = '';
     status(`${m.name}'s link is ready: copy it and send it to them privately.`, 'ok');
