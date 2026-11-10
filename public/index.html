@@ -148,11 +148,12 @@
     </div>
   </section>
   <div class="door-screen" id="door-screen" role="dialog" aria-modal="true" aria-label="Your ticket, for the door" hidden>
-    <p class="door-mark">The NutPub</p>
-    <p class="door-gig" id="door-gig"></p>
-    <img id="door-qr" alt="Your ticket's QR code, for the door">
-    <p class="door-in" id="door-in" hidden>You’re in</p>
-    <p class="door-small" id="door-small">Works once at the door.</p>
+    <div class="door-top"><p class="door-mark">The NutPub</p><p class="door-artist" id="door-artist"></p><p class="door-when" id="door-when"></p></div>
+    <div class="door-mid">
+      <img id="door-qr" alt="Your ticket's QR code, for the door">
+      <p class="door-in" id="door-in" hidden>You’re in</p>
+      <p class="door-small" id="door-small">Show this at the door.</p>
+    </div>
     <button type="button" class="btn quiet" id="door-close">Close</button>
   </div>
   <div class="pint-screen" id="pint-screen" hidden>

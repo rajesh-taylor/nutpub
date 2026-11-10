@@ -176,7 +176,12 @@ const walletTrouble = (text) => { $('balance').classList.add('opening'); $('bala
 let walletFailed = false;
 walletReady.catch((e) => { // Safari with Block All Cookies, for one, refuses a site its storage
   walletFailed = true;
-  walletTrouble(e.name === 'SecurityError' ? 'This browser won\u2019t let the wallet save here. Try another browser.' : `Your wallet didn't open: ${e.message}`);
+  // The error can come wrapped (Coco's own Error with "SecurityError ..." in its message), so read both.
+  const blocked = /SecurityError|security context|insecure/i.test(`${e.name} ${e.message}`);
+  walletTrouble(blocked ? (/iPhone|iPad/.test(navigator.userAgent)
+    ? 'This browser blocks the wallet. In Settings → Apps → Safari → Advanced, turn off Block All Cookies, then reload. Or use another browser.'
+    : 'This browser blocks the wallet: it may be set to block all cookies. Allow them for this site and reload, or use another browser.')
+    : `Your wallet didn't open: ${e.message}`);
 });
 setTimeout(() => { if (!realWallet && !walletFailed) walletTrouble(`Wallet stuck: ${walletStep.now}. Try reloading.`); }, 20_000);
 balance().catch(() => {});
@@ -798,8 +803,9 @@ function render() {
 
 // The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
 $('door-show').onclick = () => {
-  $('door-gig').textContent = gigLine();
-  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = 'Works once at the door.';
+  $('door-artist').textContent = show.artist || '';
+  $('door-when').textContent = [shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
+  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = 'Show this at the door.';
   $('door-screen').hidden = false;
   $('door-close').focus();
 };
