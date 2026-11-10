@@ -251,6 +251,20 @@ body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-st
 .feed li { font-size: 14px; line-height: 1.35; padding: 4px 8px; border-radius: 6px; overflow-wrap: anywhere; }
 .feed .from { color: var(--smoke); font-weight: 600; }
 .feed li.tipped { background: rgb(217 149 58 / .16); }
+/* Moderators (10 Nov): their messages in blue, their links underlined; the delete × only on a mod's own screen.
+   The colours are for the colour session. */
+.feed li.mod { background: rgb(90 169 255 / .14); }
+.feed li.mod .from { color: #7db9ff; }
+.feed li.mod a { color: #a9d0ff; text-decoration: underline; }
+.feed .del { float: right; margin: -2px -4px 0 8px; padding: 0 6px; border: 0; background: none; color: var(--smoke); font-size: 18px; line-height: 1; cursor: pointer; }
+.feed .del:hover { color: var(--cream); }
+.mod-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 8px; padding: 6px 8px; border-radius: 6px; background: rgb(90 169 255 / .12); }
+.mod-bar b { font: 400 16px/1 var(--poster); letter-spacing: .1em; color: #7db9ff; }
+.mod-bar .btn { font-size: 14px; padding: 5px 10px 3px; }
+.mod-bar .btn[aria-pressed="true"] { border-color: #7db9ff; color: #7db9ff; }
+.mod-bar small { flex-basis: 100%; color: var(--smoke); font-size: 13px; }
+.mod-bar small:empty { display: none; }
+.slow-note { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 .feed .amt { font: 400 14px/1 var(--poster); letter-spacing: .1em; color: var(--deep); background: var(--amber); border-radius: 3px; padding: 3px 6px 2px; }
 .say { display: flex; gap: 8px; margin: 8px 0 0; }
 .say input { flex: 1; min-width: 0; padding: 9px 10px; font: 15px var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
@@ -298,22 +312,42 @@ body.immersive[data-as="home"] .door { position: relative; z-index: 2; align-sel
 body.immersive[data-as="home"] .doors-sign { background: rgb(5 9 20 / .35); }
 body.immersive .back-link { position: fixed; top: 42px; left: 64px; z-index: 3; }
 
-/* Stage lights: three, one by one, then they fade and the set is there. */
-.lights { position: fixed; inset: 0; z-index: 9; background: #000; display: flex; justify-content: center; align-items: flex-start; gap: 18%; padding-top: 12%; }
-.lights i { width: 46px; height: 46px; border-radius: 50%; background: #2a2010; box-shadow: none; }
-.lights.go i { animation: lamp .4s ease-out forwards; }
-.lights.go i:nth-child(2) { animation-delay: .7s; }
-.lights.go i:nth-child(3) { animation-delay: 1.4s; }
-.lights.go { animation: lights-out .8s 2.6s ease-in forwards; }
-@keyframes lamp { to { background: #ffd27a; box-shadow: 0 0 40px 18px rgb(255 190 90 / .55), 0 260px 160px -40px rgb(255 190 90 / .18); } }
-@keyframes lights-out { to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .lights.go, .lights.go i { animation-duration: .01s; animation-delay: 0s; } }
+/* Before the start time: a countdown on the artist's picture. A soft dark centre keeps it readable on a busy photo;
+   the numbers are the poster's, the seconds turn amber in the last minute. Sized by the player, not the screen. */
+.player { container-type: inline-size; }
+.countdown { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2cqi; text-align: center; pointer-events: none;
+  background: radial-gradient(ellipse 70% 62% at 50% 50%, rgb(5 9 20 / .7), rgb(5 9 20 / .35) 60%, rgb(5 9 20 / .1)); }
+.countdown p { margin: 0; }
+.cd-label { font: 400 clamp(13px, 2.6cqi, 26px)/1 var(--poster); letter-spacing: .42em; padding-left: .42em; color: var(--amber); text-shadow: 0 1px 8px rgb(5 9 20 / .9); }
+.cd-digits { display: flex; align-items: flex-start; gap: 1.6cqi; color: var(--cream); }
+.cd-unit { display: grid; justify-items: center; gap: .6cqi; min-width: 2.2ch; }
+.cd-unit b { font: 400 clamp(46px, 14cqi, 168px)/.9 var(--poster); letter-spacing: .02em; font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 18px rgb(5 9 20 / .85), 0 0 42px rgb(217 149 58 / .22); }
+.cd-unit small { font: 400 clamp(10px, 1.7cqi, 18px)/1 var(--poster); letter-spacing: .3em; padding-left: .3em; color: var(--smoke); text-transform: uppercase; }
+.cd-sep { font: 400 clamp(36px, 10cqi, 120px)/1 var(--poster); color: rgb(239 227 200 / .35); margin-top: .5cqi; }
+.cd-unit b.tick { animation: cd-tick .5s ease-out; }
+@keyframes cd-tick { from { opacity: .35; transform: translateY(-4%); } to { opacity: 1; transform: none; } }
+.countdown.final .cd-unit:last-child b { color: var(--amber); }
+.countdown.last10 .cd-digits { animation: cd-pulse 1s ease-in-out infinite; }
+@keyframes cd-pulse { 50% { transform: scale(1.035); } }
+.cd-soon { font: 400 clamp(40px, 10cqi, 120px)/1 var(--poster); letter-spacing: .08em; color: var(--cream); text-shadow: 0 2px 18px rgb(5 9 20 / .85), 0 0 42px rgb(217 149 58 / .22); }
+.countdown.now .cd-soon { animation: cd-breathe 2.4s ease-in-out infinite; }
+@keyframes cd-breathe { 50% { opacity: .55; } }
+.cd-when { font-size: clamp(12px, 1.9cqi, 18px); letter-spacing: .04em; color: var(--cream); text-shadow: 0 1px 6px rgb(5 9 20 / .95); }
+body.counting .big-play, body.counting .live-badge { display: none; }
+@media (prefers-reduced-motion: reduce) { .cd-unit b.tick, .countdown.last10 .cd-digits, .countdown.now .cd-soon { animation: none; } }
 
 /* Closing time. */
-.closing { position: fixed; inset: 0; z-index: 5; display: flex; align-items: flex-end; text-align: center; }
-.closing img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.5); }
-.closing div { position: relative; width: 100%; padding: 0 24px 48px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.cheers { font: 400 72px/.9 var(--poster); color: var(--amber); margin: 0; letter-spacing: .04em; }
+.closing { position: fixed; inset: 0; z-index: 5; display: flex; align-items: stretch; text-align: center; }
+.closing img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; } /* the photo as the artist gave it: nothing dims it */
+/* Cheers at the top, in the photo's dark ceiling; the card about the sats at the bottom, in thumb's reach. */
+.closing > div { position: relative; width: 100%; box-sizing: border-box; padding: max(56px, calc(env(safe-area-inset-top) + 40px)) 24px max(40px, calc(env(safe-area-inset-bottom) + 24px)); display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; }
+.cheers { font: 400 72px/.9 var(--poster); color: var(--amber); margin: 0; letter-spacing: .04em; text-shadow: 0 2px 12px rgb(5 9 20 / .85), 0 0 32px rgb(5 9 20 / .6); }
+/* The words about the sats left, in a dark card of their own, so they read on any photo. Nothing left: no card. */
+.closing-card { max-width: 30em; padding: 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; border-radius: 10px;
+  background: rgb(5 9 20 / .78); border: 1px solid rgb(239 227 200 / .14); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.closing-card p { margin: 0; color: var(--cream); }
+.closing-card:has(#change:empty) { display: none; }
 .zero { font: 400 24px/1 var(--poster); letter-spacing: .12em; margin: 0; padding: 8px 14px 6px; border: 1px solid var(--cream); border-radius: 3px; background: rgb(5 9 20 / .6); }
 
 /* ---- The bar: its drinks, and the pint (from the hackathon's Pint Signal). */

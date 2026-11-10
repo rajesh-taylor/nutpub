@@ -8,7 +8,8 @@ import { one, run } from './db.js';
 import { cashuGate } from './gate.js';
 import { showOf, piecePrice } from './shows.js';
 import { artistKey } from './takings.js';
-import { hasTicket, addMessage, tipMessage } from './door.js';
+import { hasTicket, addMessage, tipMessage, noGuestLinks } from './door.js';
+import { modOf } from './mods.js';
 import { json, randomHex, now } from './http.js';
 
 const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
@@ -88,18 +89,18 @@ export function mountSet(route) {
 
   const thanks = async (c) => {
     await run('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)', c.pass, c.paid, now());
-    await addMessage(c.pass, tipMessage(c), c.paid); // in the live chat, highlighted, with or without words
+    await addMessage(c.pass, tipMessage(c), c.paid, (await modOf(c))?.name ?? null); // in the live chat, highlighted, with or without words
     return json({ tipped: c.paid, total: await tipped(c.pass) });
   };
 
   // The tip button: its own 402, at the label and price set on the setup page.
-  route('GET', '/api/tip', pass,
+  route('GET', '/api/tip', pass, noGuestLinks(tipMessage),
     async (c) => ((await showOf(c)).tip.price ? null : json({ error: 'not_ready', detail: 'No tip price set yet.' }, 409)),
     cashuGate(async (c) => (await showOf(c)).tip.price, async (c) => (await showOf(c)).tip.label || 'A tip', { lockTo: artistKey, kind: 'tip' }),
     thanks);
 
   // Tip sats, your amount: the viewer picks the amount; a 402 of its own for exactly that.
-  route('GET', /^\/api\/tip\/(?<sats>[^/]+)$/, pass,
+  route('GET', /^\/api\/tip\/(?<sats>[^/]+)$/, pass, noGuestLinks(tipMessage),
     async (c) => {
       const n = Number(c.params.sats);
       if (!Number.isInteger(n) || n > 1_000_000) return json({ error: 'bad_amount' }, 400);

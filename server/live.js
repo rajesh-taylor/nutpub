@@ -4,11 +4,12 @@
 import QRCode from 'qrcode';
 import { kv } from './db.js';
 import { MINT_TEST } from './config.js';
-import { current, showOf, saveShow } from './shows.js';
+import { current, showOf, saveShow, stageNow } from './shows.js';
 import { one, run } from './db.js';
 import { cashuGate } from './gate.js';
 import { artistKey } from './takings.js';
 import { hasTicket } from './door.js';
+import { modOf } from './mods.js';
 import { json } from './http.js';
 
 let ACCOUNT = '';
@@ -133,7 +134,13 @@ export function mountLive(route, admin, pass) {
     async (c) => {
       const show = await showOf(c);
       if (!show.live.playback || !(await liveNow(show.page))) return json({ error: 'not_live' }, 409); // never charged for nothing
-      if ((await kv.get('stage')) === 'closed') return json({ error: 'closed', detail: 'The show has ended.' }, 409);
+      const stage = await stageNow(show);
+      if (stage === 'closed') return json({ error: 'closed', detail: 'The show has ended.' }, 409);
+      if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
+      // A moderator watches from before the start time, free, and takes none of the viewers' places.
+      if (await modOf(c)) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
+      // Before the start time the artist may be streaming (a sound check): nobody watches it, so nobody pays for it.
+      if (stage === 'doors') return json({ error: 'soon', detail: 'The stream hasn’t started yet.' }, 409);
       if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
       const ticketed = await hasTicket(c.pass);
       if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);
@@ -156,6 +163,14 @@ export function mountLive(route, admin, pass) {
       const { sats } = await one('SELECT sats FROM live_paid WHERE pass = ?', c.pass);
       return json({ url: await liveLink(await showOf(c), until), every: MINUTE, spent: sats, paid: c.paid });
     });
+
+  // The artist's own look at the stream on Show Time, before and during the show: no seat, no charge. Renewed every
+  // minute; the token lasts two.
+  route('GET', '/api/admin/live/preview', admin, async (c) => {
+    const show = await showOf(c);
+    if (!show.live.playback || !(await liveNow(show.page))) return json({ off: true });
+    return json({ url: await liveLink(show, seconds() + 2 * MINUTE), every: MINUTE });
+  });
 
   // Make (or read back) the artist's stream: its server and key go into the show, on the host's pages only.
   route('POST', '/api/admin/live', admin, async (c) => {

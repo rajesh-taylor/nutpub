@@ -6,10 +6,11 @@ import QRCode from 'qrcode';
 import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
-import { current, showOf, publicShow, ticketSplit, lastOrdersAt, pollEvery, gigOver } from './shows.js';
+import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver } from './shows.js';
 import { liveNow } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now } from './http.js';
+import { modOf, hasLink, slowMode, SLOW, NORMAL } from './mods.js';
 
 const COMPRESSED = /^0[23][0-9a-f]{64}$/;
 export const barKey = () => kv.get('barKey');
@@ -21,23 +22,28 @@ const siteOf = (c) => SITE_URL || c.url.origin;
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
 const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 140);
-export async function addMessage(pass, text, sats = 0) {
+export async function addMessage(pass, text, sats = 0, mod = null) {
   const t = clip(text);
   if (!t && !sats) return null;
-  return (await run('INSERT INTO messages (at, pass, sats, text) VALUES (?, ?, ?, ?)', now(), pass, sats, t)).meta.last_row_id;
+  return (await run('INSERT INTO messages (at, pass, sats, text, mod) VALUES (?, ?, ?, ?, ?)', now(), pass, sats, t, mod)).meta.last_row_id;
 }
+// Before a guest's words go out, with a tip or without: links are for the moderators.
+export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(await modOf(c))
+  ? json({ error: 'no_links', detail: 'Links are for the moderators.' }, 400) : null);
 // The X-Message header on a tip: URI-encoded, so any language survives the header.
 export const tipMessage = (c) => { try { return decodeURIComponent(c.req.headers.get('X-Message') || ''); } catch { return ''; } };
 
 const svg = (text) => new Response(text, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 
 export function mountDoor(route, admin, pass) {
-  // ---- The stage: 'doors' (chat open, the set waits), 'on' (stage lights, then the set), 'closed' (last orders).
-  const STAGES = ['doors', 'on', 'closed'];
-  // The stage, and whether the artist's stream is coming in (the live light).
+  // ---- The stage (see stageNow): doors, open, on, closed. Show Time's three buttons move it on.
+  const STAGES = ['doors', 'open', 'on', 'closed'];
+  // The stage, whether the artist's stream is coming in (the live light), when it opens by itself, and the server's
+  // clock, so every countdown ends at the same moment whatever the phone's own clock says.
   route('GET', '/api/stage', async (c) => {
-    const [stage, live] = await Promise.all([kv.get('stage', 'doors'), showOf(c).then((show) => liveNow(show.page))]);
-    return json({ stage, live });
+    const show = await showOf(c);
+    const [stage, live] = await Promise.all([stageNow(show), liveNow(show.page)]);
+    return json({ stage, live, opensAt: opensAt(show), now: Date.now() });
   });
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
@@ -123,26 +129,30 @@ export function mountDoor(route, admin, pass) {
   route('GET', '/api/admin/drinks', admin, async () =>
     json((await all(`${DRINK} ORDER BY d.id`)).map((d) => ({ ...d, poured: !!d.collected_at }))));
 
-  // ---- The live chat. Free messages: one per 10 s per phone. Tips with a message arrive through the tip routes.
-  route('POST', '/api/message', pass, async (c) => {
-    if ((await showOf(c)).comments === false) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
-    const last = await one('SELECT at FROM messages WHERE pass = ? AND sats = 0 ORDER BY id DESC LIMIT 1', c.pass);
-    if (last && Date.now() - Date.parse(last.at) < 10_000) return json({ error: 'too_soon', detail: 'One message every 10 seconds.' }, 429);
-    const id = await addMessage(c.pass, (await body(c))?.text);
+  // ---- The live chat. Free messages: one per 10 s per phone, 30 s in slow mode; mods any time, and only they may post
+  // links. Tips with a message arrive through the tip routes.
+  route('POST', '/api/message', pass, noGuestLinks(async (c) => (await body(c))?.text), async (c) => {
+    const mod = await modOf(c);
+    if ((await showOf(c)).comments === false && !mod) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
+    const last = mod ? null : await one('SELECT at FROM messages WHERE pass = ? AND sats = 0 ORDER BY id DESC LIMIT 1', c.pass);
+    const wait = (await slowMode()) ? SLOW : NORMAL;
+    if (last && Date.now() - Date.parse(last.at) < wait) return json({ error: 'too_soon', detail: `One message every ${wait / 1000} seconds${wait === SLOW ? ': slow mode is on' : ''}.` }, 429);
+    const id = await addMessage(c.pass, (await body(c))?.text, 0, mod?.name ?? null);
     if (!id) return json({ error: 'empty' }, 400);
     return json({ id: Number(id) });
   });
   const chatSince = async (c, after) => {
-    const [rows, tipped, gone, show] = await Promise.all([
-      all('SELECT id, pass, sats, text FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
+    const [rows, tipped, gone, show, slow] = await Promise.all([
+      all('SELECT id, pass, sats, text, mod FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
-      showOf(c),
+      showOf(c), slowMode(),
     ]);
     const words = show.comments !== false; // off: only the tips, without their words
     return {
-      messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '', who: `guest ${String(m.pass || '').slice(0, 4)}` })),
+      messages: rows.reverse().filter((m) => words || m.sats > 0 || m.mod).map((m) => ({ id: m.id, sats: m.sats, text: words || m.mod ? m.text : '',
+        who: m.mod ? `Mod · ${m.mod}` : `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true } : {}) })), slow,
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };
@@ -153,10 +163,10 @@ export function mountDoor(route, admin, pass) {
     const q = c.url.searchParams;
     const { show, updated } = await current(c);
     const [stage, stageAt, live, chat, door] = await Promise.all([
-      kv.get('stage', 'doors'), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
+      stageNow(show), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
     ]);
-    return json({ stage, live, every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
+    return json({ stage, live, opensAt: opensAt(show), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

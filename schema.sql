@@ -28,8 +28,11 @@ CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL
 CREATE TABLE IF NOT EXISTS drinks (id INTEGER PRIMARY KEY, pass TEXT UNIQUE NOT NULL, locked INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, pass TEXT, sats INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL,
-  deleted INTEGER NOT NULL DEFAULT 0
+  deleted INTEGER NOT NULL DEFAULT 0,
+  mod TEXT                         -- a moderator's name; null for a guest. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod TEXT;
 );
+-- Moderators: a name and the SHA-256 of their link's key (the key itself is never kept).
+CREATE TABLE IF NOT EXISTS mods (id INTEGER PRIMARY KEY, name TEXT NOT NULL, key_hash TEXT UNIQUE NOT NULL, created TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS messages_pass ON messages (pass, id);
 CREATE INDEX IF NOT EXISTS locked_open ON locked (collected_at, id);
 -- The stretch goal's sum, read every tick: only tips, so paying every 10 s neither slows it nor writes to it.

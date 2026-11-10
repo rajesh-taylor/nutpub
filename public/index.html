@@ -55,6 +55,11 @@
       <p class="doors-sign" id="doors-sign" hidden>Doors · chat open</p>
       <p class="ov-mark" aria-hidden="true">The NutPub</p>
       <span class="live-badge" id="live-badge" hidden>Live</span>
+      <div class="countdown" id="countdown" role="timer" hidden>
+        <p class="cd-label" id="cd-label">Live in</p>
+        <div class="cd-digits" id="cd-digits"></div>
+        <p class="cd-when" id="cd-when"></p>
+      </div>
       <button class="big-play" id="big-play" aria-label="Play" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
       </button>
@@ -83,6 +88,8 @@
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
       <p class="chat-head">Live chat</p>
+      <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><small id="mod-say"></small></div>
+      <p class="slow-note" id="slow-note" hidden>Slow mode: one message every 30 seconds.</p>
       <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><span class="goal-more-row" id="goal-more-row" hidden><button type="button" class="coin btc goal-more" id="goal-more">Tip in ₿itcoin</button><button type="button" class="goal-card" id="goal-card" title="Card tips through Stripe: not wired up yet">Tip with Card</button></span></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
@@ -129,8 +136,10 @@
     <img id="closing-photo" alt="" loading="lazy">
     <div>
       <p class="cheers">Cheers.</p>
-      <p class="small" id="change"></p>
-      <a class="btn quiet" href="/wallet.html" id="take-home" hidden>Move my sats</a>
+      <div class="closing-card">
+        <p class="small" id="change"></p>
+        <a class="btn quiet" href="/wallet.html" id="take-home" hidden>Move my sats</a>
+      </div>
     </div>
   </section>
   <div class="pint-screen" id="pint-screen" hidden>
@@ -161,7 +170,6 @@
     <p id="pint-line">Enjoy your pint, cheers!</p>
     <p class="small">One drink per ticket.</p>
   </div>
-  <div class="lights" id="lights" hidden aria-hidden="true"><i></i><i></i><i></i></div>
   <script type="module" src="/js/viewer.js"></script>
 </body>
 </html>

@@ -16,6 +16,22 @@ const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
 const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plenty of tips
 
+// A moderator's link (…#mod=<key>): kept in this browser, then taken out of the address bar so it isn't passed on by
+// mistake. The key only moderates: the stream before it opens (free), links, delete, slow mode.
+let MOD_KEY = null;
+try {
+  MOD_KEY = new URLSearchParams(location.hash.slice(1)).get('mod') || localStorage.getItem('nutpub-mod');
+  if (MOD_KEY) localStorage.setItem('nutpub-mod', MOD_KEY);
+} catch {}
+if (/(^|[#&])mod=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+let MOD = null; // { name, slow } once the server knows the key
+if (MOD_KEY && top === self) {
+  const r = await fetch('/api/mod/me', { headers: { 'X-Mod': MOD_KEY } }).catch(() => null);
+  if (r?.ok) MOD = await r.json();
+  else if (r?.status === 403) { try { localStorage.removeItem('nutpub-mod'); } catch {} }
+}
+const modH = () => (MOD ? { 'X-Mod': MOD_KEY } : {});
+
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
   play: 'Play', stop: 'Stop',
@@ -198,7 +214,7 @@ $('topup').onclick = async () => {
 // Safe retry (if on): a lost reply is asked for again with the same token, which the server answers without
 // charging twice.
 async function paidFetch(url, extra = {}) {
-  const headers = { 'X-Pass': pass, ...extra };
+  const headers = { 'X-Pass': pass, ...modH(), ...extra };
   const res = await fetch(url, { headers });
   if (res.status !== 402) return res;
   const token = await wallet.pay(res.headers.get('X-Cashu'));
@@ -299,7 +315,7 @@ const readyLive = () => { if (liveOn && !Hls) import('hls.js').then((m) => { Hls
 const withToken = (url) => url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/, `$1${liveToken}$2`);
 
 // The viewer's limit for the night, kept in this browser. Tickets and free shows pay nothing, so have none.
-const pays = () => !free && !online && !door.ticket;
+const pays = () => !free && !online && !door.ticket && !MOD; // a mod watches free
 const budget = () => Number($('budget').value) || 0;
 try { $('budget').value = localStorage.getItem(`nutpub-budget${KEEP}`) || ''; } catch {}
 $('budget').value ||= Math.max(500, (show.stream.perMinute || 0) * 6);
@@ -563,7 +579,7 @@ $('own-form').onsubmit = async (e) => {
   balance();
 };
 
-// ---- The night: the door, the welcome and the free drink, the stage (doors, on, closed), the live chat.
+// ---- The night: the door, the welcome and the free drink, the stage (doors, open, on, closed), the live chat.
 const body = document.body;
 body.dataset.as = AS;
 if (top !== self) { // inside a host page: it has its own way out, and its own test strip
@@ -630,13 +646,9 @@ function whenLine() {
   // The times are UK time: say which, for anyone watching from elsewhere.
   const zone = show.date ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'short' }).formatToParts(new Date(`${show.date}T12:00:00Z`)).find((x) => x.type === 'timeZoneName').value.replace('+0', '') : 'UK time';
   let line;
-  if (liveOn) {
-    const started = !show.starts || !show.date || ukNow() >= `${show.date}T${show.starts}`;
-    line = ['Live now', started ? show.lastOrders && `ends ${show.lastOrders} ${zone}` : `show starts ${show.starts} ${zone}`];
-  } else {
-    const times = [show.streams && `stream starts ${show.streams}`, show.starts && `show starts ${show.starts}`].filter(Boolean);
-    line = [day, times.length && `${times.join(' · ')} ${zone}`];
-  }
+  // One start time (10 Nov): the stream's.
+  if (liveOn) line = ['Live now', show.lastOrders && `ends ${show.lastOrders} ${zone}`];
+  else line = [day, show.streams && `starts ${show.streams} ${zone}`];
   // Each part stays whole on a narrow phone: the line breaks between parts, never inside "show starts 21:30".
   const text = line.filter(Boolean).map((x) => String(x).replace(/ /g, '\u00a0')).join(' · ');
   if ($('when').textContent !== text) { $('when').textContent = text; doorTop(); }
@@ -676,9 +688,20 @@ const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then
 let door = TICKET_VIEW ? {} : await myDoor();
 ticketHere = door.ticketSats || 0;
 meter();
+// The server's stage: doors, open, on, closed. 'open' is still the doors in the room (the phone is the ticket until
+// Start the show), but at home the stream is public: before it, a countdown and no picture.
+let opened = false;
+let opensAt = null;
+let skew = 0; // the server's clock less this phone's, so every countdown ends together
+function takeStage(s) {
+  opened = s.stage === 'open' || s.stage === 'on';
+  opensAt = s.opensAt || null;
+  if (s.now) skew = s.now - Date.now();
+  return s.stage === 'open' ? 'doors' : s.stage || 'doors';
+}
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
-let stage = firstStage.stage || 'doors';
-liveOn = !!firstStage.live;
+let stage = takeStage(firstStage);
+liveOn = !!firstStage.live && (opened || !!MOD); // a sound check before the start time is live only for the mods
 whenLine();
 readyLive();
 
@@ -711,7 +734,11 @@ function render() {
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
   $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
-  const live = AS === 'home' ? !closed && !confirmed : stage === 'on';
+  const live = AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on';
+  const counting = AS === 'home' && !closed && !confirmed && !opened && !TICKET_VIEW && !MOD;
+  $('countdown').hidden = !counting;
+  body.classList.toggle('counting', counting);
+  countdown();
   $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
   $('live-badge').hidden = stage !== 'on' && !liveOn;
   $('budget-box').hidden = !liveOn || !pays();
@@ -793,13 +820,47 @@ function pint() {
   setTimeout(() => { $('pint-screen').hidden = true; }, 7000);
 }
 
-// ---- Stage lights: three, one by one, then the set (a tap on Play starts the sound: browsers want a tap).
-function lights() {
-  $('lights').hidden = false;
-  $('lights').classList.remove('go');
-  void $('lights').offsetWidth;
-  $('lights').classList.add('go');
-  setTimeout(() => { $('lights').hidden = true; }, 3400);
+// ---- The countdown to the start time, on the artist's picture: days, then hours, then minutes and seconds.
+let cdTimer = null;
+let cdShape = '';
+const pad = (v) => String(v).padStart(2, '0');
+function countdown() {
+  const box = $('countdown');
+  if (box.hidden) { clearInterval(cdTimer); cdTimer = null; return; }
+  cdTimer ??= setInterval(countdown, 250);
+  const left = opensAt ? Math.ceil(opensAt - (Date.now() + skew) / 1000) : null;
+  let units = null;
+  if (left > 0) {
+    const d = Math.floor(left / 86400), h = Math.floor(left / 3600) % 24, m = Math.floor(left / 60) % 60, sec = left % 60;
+    units = d ? [[d, d === 1 ? 'day' : 'days'], [pad(h), 'hrs'], [pad(m), 'min']]
+      : h ? [[pad(h), 'hrs'], [pad(m), 'min'], [pad(sec), 'sec']] : [[pad(m), 'min'], [pad(sec), 'sec']];
+  }
+  const shape = units ? units.map((u) => u[1]).join() : left === null ? 'soon' : 'now';
+  if (shape !== cdShape) { // a new layout: build it once, then only the numbers change
+    cdShape = shape;
+    const digits = $('cd-digits');
+    if (units) {
+      digits.replaceChildren(...units.flatMap(([, label], i) => {
+        const unit = Object.assign(document.createElement('span'), { className: 'cd-unit' });
+        unit.append(document.createElement('b'), Object.assign(document.createElement('small'), { textContent: label }));
+        return i ? [Object.assign(document.createElement('span'), { className: 'cd-sep', textContent: ':', ariaHidden: 'true' }), unit] : [unit];
+      }));
+    } else digits.replaceChildren(Object.assign(document.createElement('span'), { className: 'cd-soon', textContent: left === null ? 'Starting soon' : 'Starting now' }));
+    $('cd-label').hidden = !units;
+    $('cd-when').textContent = opensAt ? `${new Date(opensAt * 1000).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} your time` : '';
+  }
+  if (units) {
+    const bs = $('cd-digits').querySelectorAll('b');
+    units.forEach(([v], i) => {
+      if (bs[i].textContent === String(v)) return;
+      bs[i].textContent = v;
+      bs[i].classList.remove('tick'); void bs[i].offsetWidth; bs[i].classList.add('tick');
+    });
+    box.setAttribute('aria-label', `Live in ${units.map(([v, l]) => `${Number(v)} ${l}`).join(' ')}`);
+  } else box.setAttribute('aria-label', left === null ? 'Starting soon' : 'Starting now');
+  box.classList.toggle('final', left !== null && left > 0 && left <= 60);
+  box.classList.toggle('last10', left !== null && left > 0 && left <= 10);
+  box.classList.toggle('now', left !== null && left <= 0);
 }
 
 // ---- The live chat. Every message is set as text, never as HTML.
@@ -857,6 +918,36 @@ function goal(tipped, goals, thanks) {
   const ov = fiatOn ? fiat : short;
   $('ov-goal').textContent = allMet ? `All goals met · ${ov(tipped)}` : `${next.label} · ${ov(tipped)} / ${ov(next.at)}`;
 }
+// A mod's links: http(s) only, opened in a new tab, the rest of the words as text.
+const LINKS = /\b(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|me|app|xyz|link|ly|gg|tv|fm|shop|store|info|biz|music|band|live|events?)\b(?:\/\S*)?/gi;
+function withLinks(text) {
+  const out = [];
+  let at = 0;
+  for (const m of text.matchAll(LINKS)) {
+    const url = m[0].replace(/[.,!?;:)\]]+$/, '');
+    out.push(text.slice(at, m.index));
+    const a = Object.assign(document.createElement('a'), { href: /^https?:\/\//i.test(url) ? url : `https://${url}`, textContent: url, target: '_blank', rel: 'noopener noreferrer nofollow ugc' });
+    out.push(a);
+    at = m.index + url.length;
+  }
+  out.push(text.slice(at));
+  return out.filter((x) => x !== '');
+}
+// The mod's strip over the chat (their name, slow mode), and the line guests see while slow mode is on.
+function modBar(slow) {
+  $('slow-note').hidden = !slow || !!MOD;
+  $('mod-bar').hidden = !MOD;
+  if (!MOD) return;
+  $('mod-who').textContent = `Mod · ${MOD.name}`;
+  $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}`;
+  $('slow-btn').setAttribute('aria-pressed', !!slow);
+  $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
+}
+$('slow-btn').onclick = async () => {
+  const on = $('slow-btn').getAttribute('aria-pressed') !== 'true';
+  const r = await fetch('/api/mod/slow', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) });
+  if (r.ok) modBar((await r.json()).slow); else say('Slow mode not changed: is your mod link still on?');
+};
 function chat(r) {
   for (const m of r.messages) {
     if (m.id <= lastMsg) continue; // two ticks crossing: already shown
@@ -874,11 +965,22 @@ function chat(r) {
       amt.textContent = inFiat() ? fiat(m.sats) : m.sats.toLocaleString('en-GB');
       li.append(amt, ' ');
     }
-    if (m.text) li.append(m.text);
+    if (m.mod) li.classList.add('mod');
+    if (m.text) li.append(...(m.mod ? withLinks(m.text) : [m.text])); // only a mod's links are links
+    if (MOD) {
+      const del = Object.assign(document.createElement('button'), { type: 'button', className: 'del', textContent: '×', title: 'Delete this message' });
+      del.setAttribute('aria-label', 'Delete this message');
+      del.onclick = async () => {
+        const r = await fetch(`/api/mod/messages/${m.id}`, { method: 'DELETE', headers: modH() });
+        if (r.ok) li.remove(); else say('Not deleted: is your mod link still on?');
+      };
+      li.append(del);
+    }
     feed.append(li);
     lastMsg = Math.max(lastMsg, m.id);
   }
   for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
+  modBar(r.slow);
   while (feed.children.length > 60) feed.firstElementChild.remove();
   feed.scrollTop = feed.scrollHeight;
   goal(r.tipped, r.goals, r.thanks);
@@ -900,7 +1002,7 @@ if (AS === 'home') document.querySelector('.bottom').append($('save-ticket'));
 else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
-const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.starts].filter(Boolean).join(' · ');
+const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
 // The card is the receipt: what it's for and what was paid. Paid amounts stay in sats, whatever the page reads in.
 function receipt() {
   const lines = [gigLine(), `${door.ticketKind === 'home' ? 'Online ticket' : 'Room ticket'} · ${sats(door.ticketSats)}`, door.ticketAt ? `Paid ${shortDay(door.ticketAt)}` : ''].filter(Boolean);
@@ -994,7 +1096,7 @@ $('say').onsubmit = async (e) => {
   }
   const text = $('say-text').value.trim();
   if (!text) return;
-  const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+  const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
 
@@ -1016,11 +1118,11 @@ async function tick() {
   if (shownAt && now.show) { Object.assign(show, now.show); words(); }
   shownAt = now.updated;
   tickEvery = now.every || 2;
-  liveOn = !!now.live;
+  const next = takeStage(now);
+  liveOn = !!now.live && (opened || !!MOD);
   whenLine();
   readyLive();
-  if (now.stage === 'on' && stage !== 'on' && (AS === 'home' || door.ticket)) lights();
-  stage = now.stage;
+  stage = next;
   if (now.door) {
     door = now.door;
     if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
