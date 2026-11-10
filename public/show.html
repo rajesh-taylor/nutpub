@@ -34,14 +34,25 @@
     .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
     .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
     .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
-    .night-btns { display: flex; justify-content: space-between; gap: 48px; margin: 0 0 18px; }
-    .big { flex: 0 1 380px; min-height: 96px; border: 0; border-radius: 10px; font: 400 40px/1 var(--poster); letter-spacing: .08em; color: #fff; cursor: pointer; }
+    .night-btns { display: flex; justify-content: space-between; gap: 32px; margin: 0 0 12px; }
+    .big { flex: 0 1 340px; min-height: 64px; border: 0; border-radius: 10px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: #fff; cursor: pointer; }
+    .big.stream { background: var(--amber); color: var(--deep); }
     .big.go { background: #1f9d55; }
     .big.end { background: #7a4fd0; }
     .big:disabled { opacity: .25; cursor: default; }
     .after { margin: 0 0 18px; font-size: 18px; color: var(--cream); }
     .after a { color: var(--amber); }
-    @media (max-width: 700px) { .night-btns { gap: 28px; } .big { font-size: 26px; min-height: 80px; } }
+    @media (max-width: 700px) { .night-btns { gap: 12px; } .big { font-size: 24px; min-height: 80px; padding: 6px; } }
+    /* Is the stream reaching us: the dot is grey until it is, then green. The preview is the real picture. */
+    .signal { display: flex; align-items: center; gap: 16px; padding: 8px 14px; margin: 0 0 12px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .signal p { margin: 0; }
+    .signal > div:last-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; min-width: 0; }
+    .signal-head { display: flex; align-items: center; gap: 10px; font: 400 20px/1.2 var(--poster); white-space: nowrap; letter-spacing: .08em; color: var(--cream); }
+    .signal .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--smoke); flex: none; }
+    .signal.on .dot { background: #2ecc71; box-shadow: 0 0 0 4px rgb(46 204 113 / .2); }
+    .signal-text { font-size: 15px; color: var(--smoke); }
+    .preview-box { flex: 0 0 144px; aspect-ratio: 16 / 9; background: #000; border-radius: 4px; overflow: hidden; }
+    .preview-box video { width: 100%; height: 100%; object-fit: contain; display: block; }
     .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
   </style>
 </head>
@@ -61,8 +72,16 @@
   <div class="page" id="page" hidden>
     <main>
       <div class="night-btns">
+        <button type="button" class="big stream" id="stream-btn" data-stage="open">Start the stream</button>
         <button type="button" class="big go" data-stage="on">Start the show</button>
         <button type="button" class="big end" data-stage="closed">End the night</button>
+      </div>
+      <div class="signal" id="signal">
+        <div class="preview-box" id="preview-box" hidden><video id="preview" muted playsinline controls></video></div>
+        <div>
+          <p class="signal-head"><span class="dot" aria-hidden="true"></span><span id="signal-head">No stream coming in yet</span></p>
+          <p class="signal-text" id="signal-text"></p>
+        </div>
       </div>
       <p class="after" id="after" hidden>The night is over. Stop your stream, then go to <a href="/takings">Takings</a> for your money.</p>
       <div class="host bar-strip" id="bar-strip" hidden>
@@ -76,11 +95,11 @@
     <aside aria-label="The attendee's phone">
       <p class="cap" style="text-align: center">In the room · the attendee's phone</p>
       <div class="phone-frame"><iframe id="phone" title="The attendee's phone"></iframe></div>
-      <p class="note">On Start the show: three stage lights, then the video, on every phone.</p>
+      <p class="note">On Start the show, the room's phones change from the ticket to the picture.</p>
     </aside>
   </div>
 
-  <script type="module" src="/stage.js"></script>
+  <script type="module" src="/js/showtime.js"></script>
   <script type="module" src="/js/barstrip.js"></script>
 </body>
 </html>
