@@ -713,11 +713,14 @@ function render() {
   const s = split();
   body.dataset.stage = stage;
   // Full picture with the chat over it: the room once the set plays, and always at home.
-  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on');
+  // The door check: late, after Start the show, the QR comes first, then the set.
+  const doorCheck = !!(show.ticket.on && show.door?.on);
+  const atDoor = room && ticket && door.ticketKind === 'room' && doorCheck && !door.checkedAt && stage === 'on';
+  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on' && !atDoor);
   $('closing').hidden = !closed;
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
   $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
-  $('inside').hidden = closed || !room || !ticket || stage !== 'doors';
+  $('inside').hidden = closed || !room || !ticket || (stage !== 'doors' && !atDoor);
   // Bought ahead of the night: the page is only the confirmation (the photo, the receipt, the link). The tips, goals,
   // chat and wallet come on the gig day, or as soon as the stream or the show is on.
   const confirmed = ticket && !closed && !TICKET_VIEW && top === self && stage === 'doors' && !liveOn && show.date !== ukNow().slice(0, 10);
@@ -729,7 +732,7 @@ function render() {
   body.classList.toggle('test-mint', !!health.mint.test);
   if (body.classList.contains('at-door')) { if (!doorShown) scrollTo(0, 0); doorShown = true; doorTop(); }
   body.classList.toggle('inside-doors', !$('inside').hidden);
-  $('player').hidden = closed || (room && (!ticket || stage !== 'on'));
+  $('player').hidden = closed || (room && (!ticket || stage !== 'on' || atDoor));
   $('money').hidden = closed || (room && !ticket);
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
   $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
@@ -766,8 +769,25 @@ function render() {
     $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;
   }
 
+  // The door's QR, on the gig day (a QR weeks ahead would need a second device to show it). Scanned once, the page says
+  // so by itself.
+  const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.code;
+  $('door-pass').hidden = !passOn;
+  if (passOn) {
+    const inRoom = !!door.checkedAt;
+    $('door-show').hidden = inRoom;
+    $('door-pass-title').textContent = inRoom ? 'You’re in' : 'Your ticket';
+    $('door-pass-note').textContent = inRoom ? '· enjoy the night' : '';
+    if (!$('door-qr').src.includes(door.code)) $('door-qr').src = `/api/door/ticket-qr.svg?code=${door.code}`;
+    // Scanned while the QR is open: it says so, then closes by itself.
+    if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
+      $('door-in').hidden = false; $('door-qr').hidden = true; $('door-small').textContent = 'Enjoy the night.';
+      setTimeout(() => { $('door-screen').hidden = true; }, 3000);
+    }
+  }
+
   // The free drink: a QR with its number only. The bar's page finds the locked token and pours it.
-  $('drink').hidden = !door.drink;
+  $('drink').hidden = !door.drink || !s.drink; // the drink is off until after 27 Nov: a drink bought before stays out of sight
   if (door.drink) {
     $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
     $('drink-title').textContent = door.drink.poured ? 'Enjoy your pint, cheers!' : 'Get your free drink';
@@ -776,6 +796,14 @@ function render() {
   }
 }
 
+// The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
+$('door-show').onclick = () => {
+  $('door-gig').textContent = gigLine();
+  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = 'Works once at the door.';
+  $('door-screen').hidden = false;
+  $('door-close').focus();
+};
+$('door-close').onclick = () => { $('door-screen').hidden = true; };
 $('whole').onclick = () => $('buy').onclick();
 $('say-tip').onclick = () => tip($('tip'));
 $('buy').onclick = async () => {
@@ -1133,7 +1161,8 @@ function nextTick() {
   }, tickEvery * 1000);
 }
 async function tick() {
-  const waiting = door.drink && !door.drink.poured; // the phone only needs its drink while the bar hasn't poured it
+  // The phone only needs its door state while the door hasn't scanned it, or the bar hasn't poured its drink.
+  const waiting = (show.door?.on && door.ticketKind === 'room' && !door.checkedAt) || (door.drink && !door.drink.poured);
   const now = await fetch(`/api/tick?after=${lastMsg}${shownAt ? `&shown=${encodeURIComponent(shownAt)}` : ''}${waiting ? '&door=1' : ''}`,
     { headers: { 'X-Pass': pass } }).then((r) => r.json());
   if (shownAt && now.show) { Object.assign(show, now.show); words(); }
@@ -1145,8 +1174,9 @@ async function tick() {
   readyLive();
   stage = next;
   if (now.door) {
-    door = now.door;
-    if (door.drink?.poured) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
+    const pouredBefore = door.drink?.poured;
+    door = { ...door, ...now.door };
+    if (door.drink?.poured && !pouredBefore) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player
   if (stage === 'closed' || CLOSING_VIEW) {

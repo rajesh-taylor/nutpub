@@ -683,6 +683,8 @@ body.wallet-card .bottom .purse .goal #goal-sum { font-size: 26px; letter-spacin
 .ov-mark, .ov-btc, .ov-goal, #ov-tip, body.full #ov-tip { display: none; }
 body.viewer.full .test-banner { left: 0; right: 0; top: 0; margin: 0; padding: calc(5px + env(safe-area-inset-top)) 16px 4px; font-size: 13px; letter-spacing: .22em; border-radius: 0; opacity: 1; text-align: center; }
 body.viewer.full .ov-mark { display: block; position: absolute; z-index: 2; left: 0; right: 0; top: calc(30px + env(safe-area-inset-top)); margin: 0; text-align: center; font: 400 28px/1 var(--poster); letter-spacing: .08em; text-transform: uppercase; color: var(--cream); text-shadow: 0 2px 10px rgb(5 9 20 / .8); pointer-events: none; }
+/* The Live chip sits under the TEST strip, beside The NutPub, never under the strip (10 Nov). */
+body.viewer.full .live-badge { position: fixed; top: calc(36px + env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); z-index: 3; }
 body.viewer.full .ov-btc { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; }
 body.viewer.full .ov-btc span { font: 400 17px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; }
 body.viewer.full .ov-goal:not([hidden]) { display: inline-block; margin-right: 12px; font: 400 17px/1 var(--poster); letter-spacing: .1em; color: var(--amber); white-space: nowrap; }
@@ -859,3 +861,26 @@ body.wallet-card.confirmed .bottom > .save-ticket { width: min(100%, 420px); }
 /* The shimmer, past the show line's own colour. */
 body.wallet-card .show-line .status.shine, .status.shine { color: transparent; background: linear-gradient(100deg, var(--btc) 35%, #fff 50%, var(--btc) 65%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
 @media (prefers-reduced-motion: reduce) { body.wallet-card .show-line .status.shine, .status.shine { color: var(--btc); background: none; animation: none; } }
+
+/* The door's page (10 Nov): one big answer per scan. The look is for the design sessions. */
+.door-result { text-align: center; padding: 28px 16px; }
+.door-big { font: 400 clamp(56px, 16vw, 88px)/1 var(--poster); margin: 0 0 8px; }
+.door-result[data-state="in"] .door-big { color: #5fd38a; }
+.door-result[data-state="already"] .door-big, .door-result[data-state="unknown"] .door-big, .door-result[data-state="online"] .door-big { color: #ff7a6b; }
+.door-result[data-state="off"] .door-big { color: var(--smoke); }
+
+/* The ticket at the door (10 Nov): one slim line under the photo; the QR opens full screen, cream on midnight.
+   A pattern like Luma's "My ticket", in our own colours; the look is for the design sessions. */
+.door-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 0; padding: 10px 12px 10px 16px; border: 1px solid rgb(217 149 58 / .5); border-radius: 8px; background: rgb(5 9 20 / .78); }
+.door-line[hidden] { display: none; }
+.door-line p { margin: 0; text-align: left; font-size: 15px; color: var(--smoke); }
+.door-line b { font: 400 22px/1 var(--poster); letter-spacing: .08em; color: var(--cream); }
+.door-line .btn { flex: none; }
+.door-screen { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: var(--deep); text-align: center; }
+.door-screen[hidden] { display: none; }
+.door-screen p { margin: 0; }
+.door-mark { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
+.door-gig { font: 400 26px/1.1 var(--poster); letter-spacing: .08em; color: var(--cream); }
+.door-screen img { width: min(80vw, 56vh, 380px); aspect-ratio: 1; padding: 14px; box-sizing: border-box; border-radius: 12px; background: var(--cream); }
+.door-in { font: 400 clamp(56px, 18vw, 96px)/1 var(--poster); color: #5fd38a; }
+.door-small { font-size: 15px; color: var(--smoke); }

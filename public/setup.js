@@ -452,6 +452,30 @@ async function drawMods() {
   }));
   $('mod-make').disabled = list.length >= 5;
 }
+// Scan at the door needs the venue's yes: turning it on asks first (a click that's cancelled leaves it off, unsaved).
+$('door-on').addEventListener('click', (e) => {
+  if ($('door-on').checked && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach room ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
+});
+
+// ---- The door link: a key of its own, which opens the door page only. Kept in this browser, like the mod links.
+const DOOR_KEY = 'nutpub-door-link';
+function doorLink(made) {
+  let k = null;
+  try { k = localStorage.getItem(DOOR_KEY); } catch {}
+  $('door-link').value = k ? `${site}/door.html#k=${k}` : made ? 'Made on another browser: make a new one to see it here.' : 'No door link yet.';
+  $('copy-door').disabled = !k;
+  $('new-door').textContent = made ? 'New link' : 'Make the link';
+}
+$('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); status('Door link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
+$('new-door').onclick = async () => {
+  const made = $('new-door').textContent === 'New link';
+  if (made && !confirm('Make a new door link? The old one stops working at once.')) return;
+  const { key: k } = await api('POST', '/api/admin/door-link');
+  try { localStorage.setItem(DOOR_KEY, k); } catch {}
+  doorLink(true);
+  status('The door link is ready: copy it and send it to the door.', 'ok');
+};
+
 // The pinned message: saved on its own as you type, like the rest of the page.
 let pinTimer = null;
 $('pin-text').addEventListener('input', () => {
@@ -504,6 +528,7 @@ try {
   goalPreview();
   setInterval(goalPreview, 5000);
   drawMods().catch(() => {});
+  api('GET', '/api/admin/door-link').then((d) => doorLink(d.made)).catch(() => {});
 } catch (err) {
   $('locked').hidden = false;
   if (err.status !== 403) $('signin-note').textContent = `Couldn't reach the server: ${err.message}`;

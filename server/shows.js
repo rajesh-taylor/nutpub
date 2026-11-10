@@ -13,6 +13,7 @@ export const pageName = (name) => {
 };
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DRINK_LATER = true;
 const LN_ADDRESS = /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i; // name@wallet.example
 
 // A new show. Prices are left for the account holder: what a pint or a coffee costs depends on the town.
@@ -30,8 +31,8 @@ export const blank = () => ({
   venue: '',
   capacity: null,                       // how many room tickets can be sold; blank: no limit
   date: '',                             // YYYY-MM-DD, UK time
-  streams: '',                          // HH:MM, when the live stream starts (before the show, for a sound check)
-  starts: '',                           // HH:MM, when the show starts
+  streams: '',                          // HH:MM, the one start time: the stream opens to the public then
+  starts: '',                           // HH:MM, the show's start: gone from setup 10 Nov (one start time), kept for old shows
   lastOrders: '',                       // HH:MM: an unpoured drink's lock opens for the artist then (NUT-11 locktime)
   page: '',                             // the show page's address (/longy): set once, kept when the artist is renamed
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
@@ -42,6 +43,7 @@ export const blank = () => ({
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null, fiat: null, locked: false }, // the room ticket in sats; fiat: £, the card price, which fills the sats unless locked
+  door: { on: false },                  // door check: each room ticket's QR is scanned once at the door (off by default)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
   goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
@@ -100,7 +102,10 @@ export function clean(input = {}) {
     starts: TIME.test(input.starts) ? input.starts : '',
     lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price), fiat: pounds(input.ticket?.fiat), locked: on(input.ticket?.locked) },
-    drink: { price: sats(input.drink?.price), mode: ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
+    door: { on: on(input.door?.on) },
+    // The first drink is off on every gig until after 27 Nov (decided 9 Nov): one kind of ticket for everyone. When it
+    // comes back it should lock once a gig's first ticket sells, as the artist's name does.
+    drink: { price: sats(input.drink?.price), mode: DRINK_LATER ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1, 2].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
     live: {
@@ -198,14 +203,26 @@ export function ticketSplit(show) {
   return { artist, drink, total: artist + drink };
 }
 
-// Last orders as Unix seconds. The times are UK time: the offset is read for that date, so summer time works too.
-export function lastOrdersAt(show) {
-  if (!show.date || !show.lastOrders) return null;
-  const guess = new Date(`${show.date}T${show.lastOrders}:00Z`);
+// A UK time on the gig's date as Unix seconds. The offset is read for that date, so summer time works too.
+function ukAt(date, hhmm) {
+  if (!date || !hhmm) return null;
+  const guess = new Date(`${date}T${hhmm}:00Z`);
   const tz = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' })
     .formatToParts(guess).find((x) => x.type === 'timeZoneName').value; // "GMT" or "GMT+1"
   const hours = Number(tz.replace('GMT', '') || 0);
   return Math.floor(guess.getTime() / 1000) - hours * 3600;
+}
+// Last orders: an unpoured drink's lock opens for the artist then.
+export const lastOrdersAt = (show) => ukAt(show.date, show.lastOrders);
+// The one start time: the stream opens to the public then, by itself, unless the artist opened it early.
+export const opensAt = (show) => ukAt(show.date, show.streams);
+
+// The stage: 'doors' (the public waits: a countdown, no picture), 'open' (the stream is public), 'on' (the show has
+// started: room phones show the picture), 'closed' (the night is over). Doors turns open by itself at the start time.
+export async function stageNow(show) {
+  const stage = await kv.get('stage', 'doors');
+  const at = opensAt(show);
+  return stage === 'doors' && at && Date.now() / 1000 >= at ? 'open' : stage;
 }
 
 // How often (in seconds) a page should ask the server. Every 2 s on the gig day (6am to 6am UK time), while the stream

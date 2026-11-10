@@ -40,6 +40,11 @@
         <img id="welcome-photo" alt="" loading="lazy">
         <figcaption id="about"></figcaption>
       </figure>
+      <!-- On the gig day, with Scan at the door on: one slim line; the QR opens full screen. Scanned once: "You're in". -->
+      <div class="door-line" id="door-pass" hidden>
+        <p><b id="door-pass-title">Your ticket</b> <span id="door-pass-note"></span></p>
+        <button type="button" class="btn primary" id="door-show">Show at the door</button>
+      </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">
         <div>
@@ -142,6 +147,14 @@
       </div>
     </div>
   </section>
+  <div class="door-screen" id="door-screen" role="dialog" aria-modal="true" aria-label="Your ticket, for the door" hidden>
+    <p class="door-mark">The NutPub</p>
+    <p class="door-gig" id="door-gig"></p>
+    <img id="door-qr" alt="Your ticket's QR code, for the door">
+    <p class="door-in" id="door-in" hidden>You’re in</p>
+    <p class="door-small" id="door-small">Works once at the door.</p>
+    <button type="button" class="btn quiet" id="door-close">Close</button>
+  </div>
   <div class="pint-screen" id="pint-screen" hidden>
     <svg class="pint" viewBox="0 0 200 320" role="img" aria-label="A pint being poured">
       <defs>

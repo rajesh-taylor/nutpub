@@ -24,7 +24,10 @@ CREATE TABLE IF NOT EXISTS watchers (pass TEXT PRIMARY KEY, screen TEXT NOT NULL
 CREATE INDEX IF NOT EXISTS watchers_until ON watchers (until);
 CREATE TABLE IF NOT EXISTS tips (pass TEXT, sats INTEGER NOT NULL, at TEXT NOT NULL);
 -- kind: 'room' (the room ticket) or 'home' (the Online ticket). Added 7 Nov: ALTER TABLE tickets ADD COLUMN kind TEXT NOT NULL DEFAULT 'room';
-CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room');
+-- code: the door's code for a room ticket (its QR), never the pass; checked_at: when the door scanned it. Added 10 Nov:
+-- ALTER TABLE tickets ADD COLUMN code TEXT; ALTER TABLE tickets ADD COLUMN checked_at TEXT; (scripts/door-migration.sql)
+CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room', code TEXT, checked_at TEXT);
+CREATE UNIQUE INDEX IF NOT EXISTS tickets_code ON tickets (code);
 CREATE TABLE IF NOT EXISTS drinks (id INTEGER PRIMARY KEY, pass TEXT UNIQUE NOT NULL, locked INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, pass TEXT, sats INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL,

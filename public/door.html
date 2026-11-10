@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>The door · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="setup takings door-page">
+  <main>
+    <h1 class="wordmark">THE NUTPUB</h1>
+    <p class="tag">The door</p>
+    <p class="locked" id="locked" hidden>This page needs the door link from the artist (Gig Set Up). Open it once on this phone, in its usual browser.</p>
+    <div id="page" hidden>
+      <section class="panel door-result" id="result" data-state="wait">
+        <p class="door-big" id="big">Ready</p>
+        <p id="small">Scan a ticket's QR with this phone's camera.</p>
+      </section>
+      <section class="panel"><p class="amount">In: <b id="inside">…</b> of <b id="sold">…</b> room tickets</p></section>
+    </div>
+  </main>
+  <script type="module" src="/js/door.js"></script>
+</body>
+</html>
