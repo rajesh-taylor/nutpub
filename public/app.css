@@ -899,3 +899,11 @@ body[data-as="room"] .chat > .slow-note { order: 3; }
 body[data-as="room"] .chat > .chat-top { order: 4; }
 body[data-as="room"] .chat > .feed { order: 5; }
 body[data-as="room"] .chat > .say { order: 6; }
+
+/* Free, then paid (10 Nov): Plan gig's "First [ ] minutes free" under Pay as you watch; on the gig page, when the free
+   minutes end, the picture stops under one plain question. */
+.free-first { display: block; margin: -2px 0 10px 30px; font-size: 15px; color: var(--smoke); }
+.free-first[hidden] { display: none; }
+.free-over { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; text-align: center; background: rgb(5 9 20 / .82); }
+.free-over p { margin: 0; display: grid; gap: 6px; font-size: 17px; color: var(--cream); }
+.free-over b { font: 400 30px/1.05 var(--poster); letter-spacing: .06em; }

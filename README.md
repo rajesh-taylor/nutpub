@@ -14,7 +14,7 @@ An artist streams from a phone (Larix Broadcaster) or a laptop (OBS) to Cloudfla
 2. The reply carries a short-lived token, signed by the site, good for the minute paid for plus a little slack. The next minute's payment brings a new one, and hls.js puts the newest token in every playlist request.
 3. Stop paying and the token runs out: Stream refuses the playlists and the segments, and the picture stops. Nobody has to cut anyone off.
 
-The viewer sets a limit for the night and can pause at any time. A lost reply asked for again isn't charged twice, and nothing is charged while the stream is off. Ticket holders and free shows get their tokens without paying. Prices are the artist's: an Online ticket, sats a minute, or free with comments and tips. Live video needs a browser with Media Source support: on iPhone, iOS 17.1 or later.
+The viewer sets a limit for the night and can pause at any time. A lost reply asked for again isn't charged twice, and nothing is charged while the stream is off. Ticket holders and free shows get their tokens without paying. Prices are the artist's: an Online ticket, sats a minute, or free with comments and tips. **Free, then paid:** with sats a minute, the artist can make the first minutes free (up to 30). The free clock starts when the stream is first on air and public, so a late start costs nobody free time. When it ends, the picture stops under one **Keep watching** button: nobody's wallet pays until they tap it. Live video needs a browser with Media Source support: on iPhone, iOS 17.1 or later.
 
 ## A gig, from weeks out to the night
 
@@ -22,13 +22,13 @@ Most artists do all of this alone, so a gig is set up once, weeks or months ahea
 
 | Page | What it does |
 |---|---|
-| **1 · Gig Set Up** (`/setup`) | Artist, show name, page address, date, one start time, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off, and **Scan at the door** (off unless the venue agrees): a private door link, and each ticket's QR scanned once. The live stream as an Online ticket, pay as you watch, free with comments and tips, or none. **Comments and moderators:** a pinned message, and up to five moderators, each with a private link and an icon. Stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
-| **2 · Show Time** (`/show`) | Three big buttons, only the next step lit: **Start the stream** (the public sees it from now; it opens by itself at the start time), **Start the show** (room phones change from the ticket to the picture), **End the night**. Before the start time the artist can stream a sound check: Show Time says "Your stream is reaching us" with a small preview, while the public sees a countdown and pays nothing. The view from home and the room's phone, with live chat and tips with a message. |
-| **3 · Takings** (`/takings`) | Tickets sold; three steps to collect every payment into the artist's own wallet in one swap and send it on; what fans see at the end of the night. A finished gig clears itself when the next date is saved on Gig Set Up. |
+| **1 · Plan gig** (`/setup`) | Artist, show name, page address, date, one start time, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off, and **Scan at the door** (off unless the venue agrees): a private door link, and each ticket's QR scanned once. The live stream as an Online ticket, pay as you watch, free with comments and tips, or none. **Comments and moderators:** a pinned message, and up to five moderators, each with a private link and an icon. Stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
+| **2 · Show Time** (`/show`) | Three big buttons, only the next step lit: **Start stream** (the public sees it from now; it opens by itself at the start time), **Start show** (room phones change from the ticket to the picture), **End night**. Before the start time the artist can stream a sound check: Show Time says "Your stream is reaching us" with a small preview, while the public sees a countdown and pays nothing. The view from home and the room's phone, with live chat and tips with a message. |
+| **3 · Takings** (`/takings`) | Tickets sold; three steps to collect every payment into the artist's own wallet in one swap and send it on; what fans see at the end of the night. A finished gig clears itself when the next date is saved on Plan gig. |
 
-**For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. With Scan at the door on, the room ticket shows **Show at the door** on the gig day: a full-screen QR, then "You're in" by itself once scanned. Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
+**For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. With Scan at the door on, the room ticket shows **Show at the door** on the gig day: a full-screen QR with the artist and date ("Show this at the door"), then "You're in" by itself once scanned. Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
 
-**Moderators** open the gig page with their own link. They see the stream before it opens, free; chat; post links (guests can't); delete messages; and turn on slow mode (one message every 30 seconds for guests). The main mod can change the pinned message. A mod's link never opens Gig Set Up, Takings or the stream key.
+**Moderators** open the gig page with their own link. They see the stream before it opens, free; chat; post links (guests can't); delete messages; and turn on slow mode (one message every 30 seconds for guests). The main mod can change the pinned message. A mod's link never opens Plan gig, Takings or the stream key.
 
 ## No custody
 
@@ -60,18 +60,18 @@ Card payments (Stripe; the £ prices are shown, the card buttons do nothing), pa
 
 Open while NutNovember runs (to 27 Nov 2026):
 
-- Free, then paid: the first minutes of a stream free, then one tap to keep watching.
 - The room ticket in Apple, Google and open wallets, holding only the door code.
 - Judges read Longy's filled-in pages, view only, and join as a guest with test sats; passkey sign-in with a backup for the artist's key.
 - A guide for fans to move leftover sats into their own wallet.
-- Safari on one test iPhone refuses the browser wallet its storage (Brave on the same phone works): being traced.
-- Saving a second show as a template (one gig at a time for now).
+- Saving a second show as a template; more than one gig planned at a time (one gig at a time for now).
+- A faster Collect when many payments wait.
 - The design of Show Time, the ticket and Takings pages; a desktop preview of the ticket page in setup.
 
 ## Known limits
 
 - **While on the test mint, a live stream takes 10 viewers at once**, and a free stream runs for 3 hours, to keep the Cloudflare bill small. A ticket plays on one screen at a time; the newest screen takes over.
 - **The artist's key lives only in the browser that opened Takings, with no backup yet.** Closing the browser loses nothing. Clearing site data, a private window, another device or Safari's 7 days without a visit do, and uncollected sats stay locked for good. Passkey sign-in with a sealed backup and a recovery code is planned, before any real gig on a real mint.
+- **Safari with Block All Cookies on** (Settings → Apps → Safari → Advanced) gives sites no storage, so the browser wallet can't open. The page says so and how to turn it off; other browsers work.
 - **A ticket link is a key.** Anyone it's forwarded to holds the ticket. With Scan at the door on, it gets one person in, once.
 - **A cancelled gig has no automatic refund:** payments are locked to the artist, who would refund people themselves. Nobody's contact details are kept, so buyers aren't told of a date change either; the artist announces it.
 - **The test mint may reset** over months, and the charge below is the test mint's.

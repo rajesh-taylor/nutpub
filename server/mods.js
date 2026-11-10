@@ -1,4 +1,4 @@
-// Moderators: a private link each, made and cancelled by the artist on Gig Set Up, each with an icon the artist picks.
+// Moderators: a private link each, made and cancelled by the artist on Plan gig, each with an icon the artist picks.
 // One of them is the main mod (the first made, unless the artist picks another), who may also change the pinned
 // message over the chat. The link opens the gig page with a
 // key of its own (#mod=<key>), and that key does only this: see the stream before the start time, never pay for it,
@@ -30,7 +30,7 @@ export const slowMode = () => kv.get('slow', false);
 export const SLOW = 30_000;
 export const NORMAL = 10_000;
 
-// The pinned message over the chat: set by the artist on Gig Set Up, or by the main mod. Links are allowed in it.
+// The pinned message over the chat: set by the artist on Plan gig, or by the main mod. Links are allowed in it.
 export const pinned = () => kv.get('pin', '');
 const setPin = (text) => kv.set('pin', String(text ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 140));
 // Exactly one main mod while there are any: the one marked, else the first made.
@@ -42,7 +42,7 @@ async function oneMain() {
 export function mountMods(route, admin) {
   const mod = async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'This mod link has been cancelled.' }, 403));
 
-  // ---- The artist, on Gig Set Up.
+  // ---- The artist, on Plan gig.
   route('GET', '/api/admin/mods', admin, async () => json({ mods: await all('SELECT id, name, icon, main, created FROM mods ORDER BY id'), icons: ICONS, pin: await pinned() }));
   route('PUT', '/api/admin/pin', admin, async (c) => json({ pin: await setPin((await body(c))?.text) }));
   route('POST', '/api/admin/mods', admin, async (c) => {

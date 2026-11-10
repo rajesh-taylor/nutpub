@@ -38,7 +38,7 @@ export const blank = () => ({
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
-  stream: { mode: 'pay', perMinute: null }, // watching from home: 'ticket' (an Online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
+  stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (an Online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
   online: { price: null, fiat: null, locked: false }, // the Online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
@@ -87,6 +87,7 @@ export function clean(input = {}) {
     stream: {
       mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',
       perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov
+      freeMinutes: Number.isInteger(Number(input.stream?.freeMinutes)) && Number(input.stream.freeMinutes) >= 1 ? Math.min(30, Number(input.stream.freeMinutes)) : null, // 30 at most: it's on our Stream bill
     },
     online: { price: sats(input.online?.price), fiat: pounds(input.online?.fiat), locked: on(input.online?.locked) },
     tip: { label: text(input.tip?.label, 40), price: sats(input.tip?.price) },
@@ -147,7 +148,7 @@ export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' |
 
 // A finished gig clears itself when the artist gives the next one a date: tickets, chat and stage. Payments stay to collect.
 export async function clearGig() {
-  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key = 'freeFrom'"), sql('UPDATE messages SET deleted = 1')]);
+  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom')"), sql('UPDATE messages SET deleted = 1')]);
   const at = now();
   await kv.set('nightStart', at); // Takings counts this gig from here
   await kv.set('stage', 'doors');

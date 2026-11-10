@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050914">
   <meta name="robots" content="noindex">
-  <title>Set up the gig · The NutPub</title>
+  <title>Plan gig · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* Board A, made live (Thu 29 Oct): the layout from the design canvas, every field bound to the real show. */
@@ -205,7 +205,7 @@
     <a class="btn quiet head-back" href="/">← Back</a>
     <p class="mark">THE NUTPUB</p>
     <nav class="tabs" aria-label="The night">
-      <a class="on" href="/setup" aria-current="page">1 · Gig Set Up</a>
+      <a class="on" href="/setup" aria-current="page">1 · Plan gig</a>
       <a href="/show">2 · Show Time</a>
       <a href="/takings">3 · Takings</a>
     </nav>
@@ -214,7 +214,7 @@
     <main>
       <div class="top">
         <div style="flex: 1 1 320px;">
-          <h1>Set up your gig</h1>
+          <h1>Plan your gig</h1>
           <!-- The word Template; with two or more saved shows it's a drop-down that loads one. -->
           <p class="template" id="tpl-box" hidden><span id="tpl-word">Template</span><select id="tpl-list" aria-label="Start from a template" hidden></select></p>
         </div>
@@ -285,6 +285,7 @@
                       <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="online.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
                 </div>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute</span></label>
+            <label class="free-first" data-when="stream.mode=pay">First <input class="inline-sats" type="number" min="1" max="30" step="1" inputmode="numeric" data-path="stream.freeMinutes" aria-label="Minutes free at the start" placeholder="0"> minutes free, then they choose to pay</label>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b></span></label>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
                 </div>

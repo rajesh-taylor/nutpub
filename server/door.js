@@ -7,7 +7,7 @@ import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
 import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver } from './shows.js';
-import { liveNow } from './live.js';
+import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
 import { modOf, hasLink, slowMode, pinned, SLOW, NORMAL } from './mods.js';
@@ -82,7 +82,7 @@ export function mountDoor(route, admin, pass) {
   route('GET', '/api/stage', async (c) => {
     const show = await showOf(c);
     const [stage, live] = await Promise.all([stageNow(show), liveNow(show.page)]);
-    return json({ stage, live, opensAt: opensAt(show), now: Date.now() });
+    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now() });
   });
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
@@ -209,7 +209,7 @@ export function mountDoor(route, admin, pass) {
       stageNow(show), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
     ]);
-    return json({ stage, live, opensAt: opensAt(show), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
+    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

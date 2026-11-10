@@ -1,6 +1,6 @@
 // Show Time: sign-in, the two views, the artist's own look at the stream, and three big buttons. Only the next step
-// is lit: Start the stream (the public sees it from now; it opens by itself at the start time), Start the show (room
-// phones change to the picture), End the night.
+// is lit: Start stream (the public sees it from now; it opens by itself at the start time), Start show (room
+// phones change to the picture), End night.
 const $ = (id) => document.getElementById(id);
 let key = null;
 try { key = localStorage.getItem('nutpub-admin'); } catch {}
@@ -38,9 +38,9 @@ function signal() {
     ? (before ? 'Your stream is reaching us' : now.stage === 'closed' ? 'Your stream is still coming in' : 'You’re live')
     : 'No stream coming in yet';
   $('signal-text').textContent = now.live
-    ? (before ? `Viewers see the countdown and nobody pays yet. ${now.opensAt ? `It opens by itself at ${clock(now.opensAt)}, or press Start the stream.` : 'It opens when you press Start the stream.'}`
+    ? (before ? `Viewers see the countdown and nobody pays yet. ${now.opensAt ? `It opens by itself at ${clock(now.opensAt)}, or press Start stream.` : 'It opens when you press Start stream.'}`
       : now.stage === 'closed' ? 'The night is over: stop streaming in Larix, OBS or Ecamm.' : 'Viewers can watch now.')
-    : `Start streaming from Larix, OBS or Ecamm (the server and key are on Gig Set Up).${before && now.opensAt ? ` The stream opens to viewers at ${clock(now.opensAt)}.` : ''}`;
+    : `Start streaming from Larix, OBS or Ecamm (the server and key are on Plan gig).${before && now.opensAt ? ` The stream opens to viewers at ${clock(now.opensAt)}.` : ''}`;
   preview();
 }
 
@@ -83,7 +83,7 @@ async function preview() {
 for (const b of buttons) {
   b.onclick = () => {
     const s = b.dataset.stage;
-    if (s === 'closed' && !confirm('End the night? Every phone goes to Cheers and everyone watching stops.')) return;
+    if (s === 'closed' && !confirm('End night? Every phone goes to Cheers and everyone watching stops.')) return;
     if (s === 'open' && now.opensAt && Date.now() / 1000 < now.opensAt
       && !confirm(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`)) return;
     stage(s);

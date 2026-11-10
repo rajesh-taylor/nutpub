@@ -36,6 +36,8 @@ const modH = () => (MOD ? { 'X-Mod': MOD_KEY } : {});
 const T = {
   play: 'Play', stop: 'Stop',
   perMinute: (n) => `${n} sat${n === 1 ? '' : 's'} a minute`,
+  freeFirst: (m, n) => `First ${m} minute${m === 1 ? '' : 's'} free, then ${n} sats a minute`,
+  freeLeft: (m, n) => `Free for ${m} more minute${m === 1 ? '' : 's'}, then ${n} sats a minute`,
   full: 'Full screen', exitFull: 'Leave full screen',
   spent: (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`,
   stopped: 'Stopped. Nothing more is charged.',
@@ -101,7 +103,18 @@ const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
 if (AS === 'room' && homeOnly && (top === self || TICKET_VIEW)) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
 if (AS === 'home' && TICKET_VIEW && !homeOnly) location.replace(`${location.pathname}?view=ticket`);
 // Free shows: no price and no "This set" (there's nothing to count).
-$('price').textContent = free || online ? '' : T.perMinute(show.stream.perMinute);
+// Free, then paid: the price says how long is left free; it's redrawn on every tick.
+let freeUntil = null; // when the free minutes end, on the server's clock (seconds); null until the stream first goes public
+let agreed = false;   // said yes to paying: tapped Keep watching, or pressed Play once the free part was over
+const freeMinutes = () => (show.stream.mode === 'pay' && show.stream.freeMinutes) || 0;
+const freeLeft = () => (!freeMinutes() ? 0 : freeUntil ? freeUntil - (Date.now() + skew) / 1000 : Infinity);
+function priceLine() {
+  if (free || online) return void ($('price').textContent = '');
+  const n = show.stream.perMinute;
+  const left = freeLeft();
+  $('price').textContent = !left || left <= 0 ? T.perMinute(n)
+    : left === Infinity ? T.freeFirst(freeMinutes(), n) : T.freeLeft(Math.ceil(left / 60), n);
+}
 const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
 $('tip').textContent = $('ov-tip').textContent = tipText;
 
@@ -329,22 +342,36 @@ $('budget').oninput = () => { try { localStorage.setItem(`nutpub-budget${KEEP}`,
 const SCREEN = Math.random().toString(36).slice(2); // this page, this time: a ticket opens one screen at a time
 // One token: free for a ticket or a free show, otherwise a 402. Returns its reply, or null with the picture stopped.
 async function renew(mine, first) {
-  if (pays() && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
-  const res = await paidFetch(`/api/live/token${first ? '?start=1' : ''}`, { 'X-Screen': SCREEN });
+  if (pays() && !agreed && freeUntil && freeLeft() <= 0) { freeOver(); return null; } // nobody starts paying without saying so
+  if (pays() && agreed && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
+  const res = await paidFetch(`/api/live/token${first ? '?start=1' : ''}`, { 'X-Screen': SCREEN, ...(pays() && !agreed ? { 'X-Free-Only': '1' } : {}) });
   if (res.paidWith) {
     liveFees += wallet.lastFee;
     try { localStorage.setItem(`nutpub-fees${KEEP}`, liveFees); } catch {}
   }
   if (mine !== run) return null; // paused while it was on its way
-  if (res.status === 409 && (await res.clone().json()).error === 'not_live') return { off: true };
+  const why = res.status === 409 ? (await res.clone().json()).error : '';
+  if (why === 'not_live') return { off: true };
+  if (why === 'free_over') { freeUntil = (await res.json()).freeUntil || freeUntil; freeOver(); return null; }
   if (!res.ok) { stop(await refusal(res)); return null; }
   const reply = await res.json();
+  if (reply.freeUntil) freeUntil = reply.freeUntil;
   if (reply.spent != null) { spentHere += reply.spent - liveSpent; liveSpent = reply.spent; meter(); balance(); }
   liveToken = new URL(reply.url).pathname.split('/')[1];
   return reply;
 }
 
+// The free minutes are up and this viewer hasn't said yes to paying: the picture stops under one question.
+function freeOver() {
+  stop(' ');
+  $('free-over-price').textContent = T.perMinute(show.stream.perMinute);
+  $('free-over').hidden = false;
+}
+$('keep-watching').onclick = () => { agreed = true; $('free-over').hidden = true; playLive(); };
+
 async function playLive() {
+  if (freeLeft() <= 0) agreed = true; // Play with the free part over (or none) is a yes, as before free minutes
+  $('free-over').hidden = true;
   const v = vids[0];
   v.muted = muted;
   v.volume = volume;
@@ -694,7 +721,7 @@ let door = TICKET_VIEW ? {} : await myDoor();
 ticketHere = door.ticketSats || 0;
 meter();
 // The server's stage: doors, open, on, closed. 'open' is still the doors in the room (the phone is the ticket until
-// Start the show), but at home the stream is public: before it, a countdown and no picture.
+// Start show), but at home the stream is public: before it, a countdown and no picture.
 let opened = false;
 let opensAt = null;
 let skew = 0; // the server's clock less this phone's, so every countdown ends together
@@ -702,12 +729,14 @@ function takeStage(s) {
   opened = s.stage === 'open' || s.stage === 'on';
   opensAt = s.opensAt || null;
   if (s.now) skew = s.now - Date.now();
+  if (s.freeUntil !== undefined) freeUntil = s.freeUntil;
   return s.stage === 'open' ? 'doors' : s.stage || 'doors';
 }
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
 let stage = takeStage(firstStage);
 liveOn = !!firstStage.live && (opened || !!MOD); // a sound check before the start time is live only for the mods
 whenLine();
+priceLine();
 readyLive();
 
 let doorShown = false;
@@ -718,7 +747,7 @@ function render() {
   const s = split();
   body.dataset.stage = stage;
   // Full picture with the chat over it: the room once the set plays, and always at home.
-  // The door check: late, after Start the show, the QR comes first, then the set.
+  // The door check: late, after Start show, the QR comes first, then the set.
   const doorCheck = !!(show.ticket.on && show.door?.on);
   const atDoor = room && ticket && door.ticketKind === 'room' && doorCheck && !door.checkedAt && stage === 'on';
   body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on' && !atDoor);
@@ -741,7 +770,7 @@ function render() {
   $('money').hidden = closed || (room && !ticket);
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
   $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
-  // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start the show.
+  // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start show.
   const live = AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on';
   const counting = AS === 'home' && !closed && !confirmed && !opened && !TICKET_VIEW && !MOD;
   $('countdown').hidden = !counting;
@@ -978,7 +1007,7 @@ function modBar(slow) {
   $('slow-btn').setAttribute('aria-pressed', !!slow);
   $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
 }
-// The pinned message, beside "Live chat": the artist's (Gig Set Up) or the main mod's. Links work in it.
+// The pinned message, beside "Live chat": the artist's (Plan gig) or the main mod's. Links work in it.
 let pinNow = null;
 function pin(text = '') {
   if (text === pinNow) return;
@@ -1177,6 +1206,7 @@ async function tick() {
   const next = takeStage(now);
   liveOn = !!now.live && (opened || !!MOD);
   whenLine();
+  priceLine();
   readyLive();
   stage = next;
   if (now.door) {

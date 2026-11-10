@@ -129,6 +129,18 @@ export async function takeSeat(c, show, ticketed) {
   return null;
 }
 
+// Free, then paid (Pay as you watch only): the first minutes are free for everyone, timed from the first moment the
+// stream is both on air and public (a sound check before the start time doesn't count). One clock for the night: a
+// dropped stream doesn't restart it; the next gig does (clearGig). Returns when the free part ends (server seconds),
+// null while it hasn't started, undefined when the gig has no free minutes.
+export async function freeUntil(show, stage, live) {
+  const mins = show.stream.mode === 'pay' && show.stream.freeMinutes;
+  if (!mins) return undefined;
+  let from = await kv.get('liveFrom');
+  if (!from && live && (stage === 'open' || stage === 'on')) from = await kv.set('liveFrom', seconds());
+  return from ? from + mins * 60 : null;
+}
+
 export function mountLive(route, admin, pass) {
   route('GET', '/api/live/token', pass,
     async (c) => {
@@ -148,6 +160,14 @@ export function mountLive(route, admin, pass) {
       const refused = await takeSeat(c, show, ticketed); // before any payment: nobody pays for a seat they can't have
       if (refused) return refused;
       if (show.stream.mode === 'free' || ticketed) return json({ url: await liveLink(show, seconds() + FREE_FOR), every: 30 });
+      // The free minutes: a token that runs out when they do. After them, a viewer who hasn't said yes to paying
+      // (X-Free-Only) is told so instead of being asked for a payment their page would make by itself.
+      const freeEnd = await freeUntil(show, stage, true);
+      if (freeEnd) {
+        const left = freeEnd - seconds();
+        if (left > 0) return json({ url: await liveLink(show, freeEnd), every: Math.min(30, left), freeUntil: freeEnd });
+        if (c.req.headers.get('X-Free-Only')) return json({ error: 'free_over', freeUntil: freeEnd }, 409);
+      }
       // Still inside a paid minute (a rejoin, or a lost reply asked for again): the same token, no charge.
       const last = await one('SELECT until, sats FROM live_paid WHERE pass = ?', c.pass);
       const left = last ? last.until - SLACK - seconds() : 0;
