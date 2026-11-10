@@ -5,6 +5,11 @@ export let MINT_TEST = true;
 export let ADMIN_KEY = '';
 export let VERSION = '0';
 export let ASSETS;
+// The wallet card: our Apple Pass Type ID, the team it belongs to, and its key and certificate (secrets, PEM).
+export let PASS_TYPE = '';
+export let PASS_TEAM = '';
+export let PASS_KEY = '';
+export let PASS_CERT = '';
 
 const trim = (url) => String(url).replace(/\/+$/, '');
 export function configure(env) {
@@ -18,4 +23,8 @@ export function configure(env) {
   ADMIN_KEY = env.ADMIN_KEY || '';
   VERSION = env.VERSION || '0';
   ASSETS = env.ASSETS;
+  PASS_TYPE = env.PASS_TYPE || '';
+  PASS_TEAM = env.PASS_TEAM || '';
+  PASS_KEY = env.PASS_KEY || '';
+  PASS_CERT = env.PASS_CERT || '';
 }

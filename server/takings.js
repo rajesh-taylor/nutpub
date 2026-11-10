@@ -38,19 +38,26 @@ export function mountTakings(route, admin) {
     const ids = [...new Set((Array.isArray(b?.ids) ? b.ids : []).map(Number).filter(Number.isInteger))].slice(0, 500);
     const collected = [];
     const notYet = [];
+    // One question to the mint for all of them (it used to be one per payment).
+    const rows = [];
     for (const id of ids) {
       const row = await one('SELECT token FROM locked WHERE id = ? AND collected_at IS NULL', id);
       if (!row) continue;
-      let states;
-      try {
-        states = await proofStates(getDecodedToken(row.token, await keysetIds()).proofs);
-      } catch (e) {
-        return json({ error: 'mint_unreachable', detail: String(e.message || e), collected }, 502);
-      }
-      if (states.every((s) => s === 'SPENT')) {
-        await run('UPDATE locked SET collected_at = ?, collected_by = ? WHERE id = ? AND collected_at IS NULL', now(), by, id);
-        collected.push(id);
-      } else notYet.push(id);
+      try { rows.push({ id, proofs: getDecodedToken(row.token, await keysetIds()).proofs }); } catch { notYet.push(id); }
+    }
+    let states;
+    try {
+      states = rows.length ? await proofStates(rows.flatMap((r) => r.proofs)) : [];
+    } catch (e) {
+      return json({ error: 'mint_unreachable', detail: String(e.message || e), collected }, 502);
+    }
+    let at = 0;
+    for (const r of rows) {
+      const mine = states.slice(at, at += r.proofs.length);
+      if (mine.every((s) => s === 'SPENT')) {
+        await run('UPDATE locked SET collected_at = ?, collected_by = ? WHERE id = ? AND collected_at IS NULL', now(), by, r.id);
+        collected.push(r.id);
+      } else notYet.push(r.id);
     }
     return json({ collected, notYet });
   });

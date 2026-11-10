@@ -20,7 +20,10 @@
     // A public test mint run by the Cashu developers: fake Lightning, no real value. Never a real mint.
     "MINT_URL": "https://testnut.cashu.space",
     "SITE_URL": "https://thenutpub.com",
-    "MINT_TEST": "1"
+    "MINT_TEST": "1",
+    // The wallet card (Apple Pass Type ID and team). Its key and certificate are secrets: PASS_KEY, PASS_CERT.
+    "PASS_TYPE": "pass.com.thenutpub.ticket",
+    "PASS_TEAM": "H5NRV4JGDB"
   },
   // Keep only the Worker's own lines (errors, payments). No per-request record: that holds the visitor's IP and
   // headers (X-Admin, X-Pass) for 7 days.

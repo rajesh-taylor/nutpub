@@ -35,6 +35,7 @@
         <h2>You've got your ticket</h2>
         <p class="receipt" id="receipt"></p>
         <button type="button" class="btn primary" id="save-link">Save this link</button>
+        <a class="btn wallet-add" id="save-wallet" hidden>Add to Apple Wallet</a>
       </div>
       <figure class="welcome" id="welcome">
         <img id="welcome-photo" alt="" loading="lazy">
@@ -43,7 +44,10 @@
       <!-- On the gig day, with Scan at the door on: one slim line; the QR opens full screen. Scanned once: "You're in". -->
       <div class="door-line" id="door-pass" hidden>
         <p><b id="door-pass-title">Your ticket</b> <span id="door-pass-note"></span></p>
-        <button type="button" class="btn primary" id="door-show">Show at the door</button>
+        <span class="door-btns">
+          <button type="button" class="btn primary" id="door-show">Show at the door</button>
+          <a class="btn wallet-add" id="door-wallet" hidden>Add to Apple Wallet</a>
+        </span>
       </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">

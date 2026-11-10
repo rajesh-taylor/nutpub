@@ -761,6 +761,7 @@ function render() {
   body.classList.toggle('confirmed', confirmed);
   $('save-ticket').hidden = !confirmed;
   if (confirmed) receipt();
+  walletLinks(room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
@@ -1087,6 +1088,18 @@ else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
+// The room ticket in the phone's wallet (the door check on): Apple Wallet, or an open wallet on Android (Catima,
+// PassAndroid), which read the same file. The card carries the same door QR as the page.
+const APPLE = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
+function walletLinks(code) {
+  for (const id of ['save-wallet', 'door-wallet']) {
+    const a = $(id);
+    a.hidden = !code;
+    if (!code) continue;
+    a.href = `/api/door/ticket.pkpass?code=${code}`;
+    a.textContent = APPLE ? 'Add to Apple Wallet' : 'Add to wallet';
+  }
+}
 // The card is the receipt: what it's for and what was paid. Paid amounts stay in sats, whatever the page reads in.
 function receipt() {
   const lines = [gigLine(), `${door.ticketKind === 'home' ? 'Online ticket' : 'Room ticket'} · ${sats(door.ticketSats)}`, door.ticketAt ? `Paid ${shortDay(door.ticketAt)}` : ''].filter(Boolean);

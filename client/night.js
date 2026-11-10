@@ -26,8 +26,6 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
-$('seen-desk').src = `${info.path}?as=home&view=closing`;
-$('seen-phone').src = `${info.path}?as=home&view=closing`;
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
 const bar = await openWallet(health.mint.url, 'nutpub-bar');
 
@@ -138,21 +136,31 @@ $('artist-collect').onclick = async () => {
     const mine = [];
     for (const p of state.waiting) if (await artist.coco.keyring.getKeyPair(p.pubkey)) mine.push(p);
     const before = await artist.balance();
-    await artist.collectAll(mine.map((p) => p.token), (done, of) => { $('artist-status').textContent = `Collecting… ${done} of ${of}`; }); // the mint's word below counts
-    if (afterLastOrders()) {
-      for (const p of state.waiting.filter((x) => x.kind === 'drink' && x.pubkey !== state.pubkey)) {
-        try { await artist.collect(p.token, p.pubkey, state.pubkey); mine.push(p); } catch {}
-      }
-    }
-    // Ten at a time: each one is a D1 read and a call to the mint, and one Worker request on the free plan allows 50.
+    // Marked on the server as each swap lands (ten per request, three requests at a time), so nothing is collected twice.
     const collected = [];
     const notYet = [];
-    for (let i = 0; i < mine.length; i += 10) {
-      const part = await api('POST', '/api/admin/locked/collected', { ids: mine.slice(i, i + 10).map((p) => p.id), by: 'artist' });
-      collected.push(...part.collected);
-      notYet.push(...part.notYet);
+    const mark = async (ids) => {
+      const chunks = [];
+      for (let i = 0; i < ids.length; i += 10) chunks.push(ids.slice(i, i + 10));
+      for (let i = 0; i < chunks.length; i += 3) {
+        for (const part of await Promise.all(chunks.slice(i, i + 3).map((c) => api('POST', '/api/admin/locked/collected', { ids: c, by: 'artist' })))) {
+          collected.push(...part.collected);
+          notYet.push(...part.notYet);
+        }
+      }
+    };
+    const res = await artist.collectAll(mine, { saved: mark,
+      progress: (done, of) => { $('artist-status').textContent = `Collecting… ${done} of ${of}`; } });
+    const late = [];
+    if (afterLastOrders()) {
+      for (const p of state.waiting.filter((x) => x.kind === 'drink' && x.pubkey !== state.pubkey)) {
+        try { await artist.collect(p.token, p.pubkey, state.pubkey); late.push(p.id); mine.push(p); } catch {}
+      }
+      if (late.length) await mark(late);
     }
-    const got = mine.filter((p) => collected.includes(p.id)).reduce((s, p) => s + p.sats, 0);
+    // Already spent at the mint: collected on an earlier visit. Counted as collected, not as tonight's money in.
+    const earlier = new Set(res.spent);
+    const got = mine.filter((p) => collected.includes(p.id) && !earlier.has(p.id)).reduce((s, p) => s + p.sats, 0);
     const fee = Math.max(0, got - ((await artist.balance()) - before));
     const kept = fee ? ` The mint kept ${sats(fee)} as its fee.` : '';
     $('artist-status').textContent = notYet.length ? `Collected ${sats(got)}.${kept} ${notYet.length} didn't go through: try again.` : `Collected ${sats(got)}.${kept}`;

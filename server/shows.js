@@ -155,6 +155,20 @@ export async function clearGig() {
   await kv.set('stageAt', at);
 }
 
+// Next gig (Plan gig, once a gig is over): one tap clears it, as a new date would, and keeps every setting. A date
+// that has gone becomes today, so the page is ready to use at once. Refused while a gig is still on: it would cancel
+// tickets people hold.
+export async function nextGig() {
+  const was = await currentShow();
+  if (!(await gigOver(was))) throw new Error('This gig isn\u2019t over yet.');
+  await clearGig();
+  if (was.problems.includes('date.past')) {
+    const show = { ...was.show, date: new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) };
+    await run("UPDATE shows SET settings = ?, updated = ? WHERE id = 'current'", JSON.stringify(show), now());
+  }
+  return currentShow();
+}
+
 export async function saveShow(input) {
   const { show, problems } = clean(input);
   const was = await currentShow();

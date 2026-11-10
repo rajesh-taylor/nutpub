@@ -12,7 +12,8 @@ import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
 import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
-import { current, publicShow, saveShow, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
+import { mountWallet } from './wallet.js';
+import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
 // route(method, '/exact/path' or /regex with (?<named>) groups/, ...steps)
@@ -76,6 +77,7 @@ route('GET', '/api/show/qr.svg', async (c) => {
   return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 });
 route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
+route('POST', '/api/admin/next-gig', admin, attempt(() => nextGig()));
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
 route('POST', '/api/admin/templates', admin, attempt(async (c) => { const b = await body(c); return saveTemplate(b?.name, b?.show); }));
 route('POST', '/api/admin/templates/load', admin, attempt(async (c) => loadTemplate((await body(c))?.name)));
@@ -89,6 +91,7 @@ mountPhoto(route, admin, () => PHOTOS);
 mountLive(route, admin, pass);
 mountRate(route);
 mountMods(route, admin);
+mountWallet(route);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

@@ -137,31 +137,51 @@ export async function openWallet(mintUrl, name = 'nutpub') {
         await coco.wallet.receive(getEncodedToken({ mint: mintUrl, unit: 'sat', proofs }));
       }
     },
-    // Many payments locked to keys in this browser, in one swap: the mint's fee is per coin, rounded up per swap, so
-    // a swap per payment would cost at least a sat each. One bad coin fails a whole swap, so a failed swap is halved
-    // until the bad one stands alone. Coco's receive is safe if the reply is lost: it can recover the coins from the seed.
-    async collectAll(tokens, progress = () => {}) {
+    // Many payments locked to keys in this browser, in as few swaps as possible: the mint's fee is per coin, rounded up
+    // per swap, so a swap per payment would cost at least a sat each. First one question to the mint: payments already
+    // spent (collected before, on a page that was closed halfway) are left out, so a swap seldom meets a bad coin.
+    // One that does is halved until the bad one stands alone. `saved(ids)` is told after each swap, so leaving the page
+    // halfway loses nothing. Coco's receive is safe if the reply is lost: it can recover the coins from the seed.
+    // items: [{ id, token }]. Returns { swapped: ids, spent: ids (gone already), failed: ids }.
+    async collectAll(items, { progress = () => {}, saved = async () => {} } = {}) {
       const parts = [];
-      for (const t of tokens) parts.push((await coco.wallet.decodeToken(t, mintUrl)).proofs);
-      let done = 0;
+      for (const it of items) parts.push({ id: it.id, proofs: (await coco.wallet.decodeToken(it.token, mintUrl)).proofs });
+      const w = new Wallet(mintUrl, { unit: 'sat' });
+      await w.loadMint();
+      const all = parts.flatMap((p) => p.proofs);
+      const states = [];
+      for (let i = 0; i < all.length; i += 1000) states.push(...(await w.checkProofsStates(all.slice(i, i + 1000))).map((s) => s.state));
+      let at = 0;
+      const spent = [], fresh = [];
+      for (const p of parts) {
+        const mine = states.slice(at, at += p.proofs.length);
+        (mine.every((s) => s === 'UNSPENT') ? fresh : spent).push(p);
+      }
+      const out = { swapped: [], spent: spent.map((p) => p.id), failed: [] };
+      let done = spent.length;
+      progress(done, parts.length);
+      if (out.spent.length) await saved(out.spent);
       const swap = async (list) => {
         try {
-          await coco.wallet.receive({ mint: mintUrl, unit: 'sat', proofs: list.flat() });
+          await coco.wallet.receive({ mint: mintUrl, unit: 'sat', proofs: list.flatMap((p) => p.proofs) });
+          out.swapped.push(...list.map((p) => p.id));
+          await saved(list.map((p) => p.id));
           progress(done += list.length, parts.length);
         } catch {
-          if (list.length === 1) return progress(done += 1, parts.length);
+          if (list.length === 1) { out.failed.push(list[0].id); return progress(done += 1, parts.length); }
           await swap(list.slice(0, list.length >> 1));
           await swap(list.slice(list.length >> 1));
         }
       };
       let batch = [];
       let coins = 0;
-      for (const proofs of parts) {
-        if (batch.length && coins + proofs.length > MAX_COINS) { await swap(batch); batch = []; coins = 0; }
-        batch.push(proofs);
-        coins += proofs.length;
+      for (const p of fresh) {
+        if (batch.length && coins + p.proofs.length > MAX_COINS) { await swap(batch); batch = []; coins = 0; }
+        batch.push(p);
+        coins += p.proofs.length;
       }
       if (batch.length) await swap(batch);
+      return out;
     },
     pledges: () => loadPledges(),
     // After the goal closes unmet: sign each pledge's refund path with cashu-ts (Coco only tries the main lock key),
