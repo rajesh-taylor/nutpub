@@ -24,9 +24,9 @@ Most artists do all of this alone, so a gig is set up once, weeks or months ahea
 |---|---|
 | **1 · Plan gig** (`/setup`) | Artist, show name, page address, date, one start time, venue capacity. Ticket price in £ and sats (from a live rate, or the artist's own figure). Room tickets on or off, and **Scan at the door** (off unless the venue agrees): a private door link, and each ticket's QR scanned once. The live stream as an Online ticket, pay as you watch, free with comments and tips, or none. **Comments and moderators:** a pinned message, and up to five moderators, each with a private link and an icon. Stretch goals, photos, the live stream (a QR that sets up Larix, or the server and key for OBS) and an A4 poster whose QR opens the ticket page. The ticket page on a phone sits beside the form and follows every change. Once a ticket has sold, the artist's name and the address lock, as posters and saved links depend on them. |
 | **2 · Show Time** (`/show`) | Three big buttons, only the next step lit: **Start stream** (the public sees it from now; it opens by itself at the start time), **Start show** (room phones change from the ticket to the picture), **End night**. Before the start time the artist can stream a sound check: Show Time says "Your stream is reaching us" with a small preview, while the public sees a countdown and pays nothing. The view from home and the room's phone, with live chat and tips with a message. |
-| **3 · Takings** (`/takings`) | Tickets sold; three steps to collect every payment into the artist's own wallet in one swap and send it on; what fans see at the end of the night. A finished gig clears itself when the next date is saved on Plan gig. |
+| **3 · Takings** (`/takings`) | Tickets sold; three steps to collect every payment into the artist's own wallet and send it on. **Collect** asks the mint once which payments are already in, then takes the rest in a few big swaps, saving after each, so leaving the page halfway loses nothing (about 100 payments in seconds). Once a gig is over, **Next gig** on Plan gig clears it in one tap and keeps every setting; collecting can wait. |
 
-**For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. With Scan at the door on, the room ticket shows **Show at the door** on the gig day: a full-screen QR with the artist and date ("Show this at the door"), then "You're in" by itself once scanned. Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
+**For the buyer** (the show's own address, e.g. `/longy`; no app, no account, no email): pay in sats, then a confirmation page with the receipt and **Save this link**, which brings the ticket back on any device. Tips, goals, chat and the wallet appear on the gig day. With Scan at the door on, the room ticket shows **Show at the door** on the gig day: a full-screen QR with the artist and date ("Show this at the door"), then "You're in" by itself once scanned. **Add to Apple Wallet** sits beside it (and on the confirmation page, weeks ahead): a signed card with the same door QR, "The NutPub" under it, the artist, date and venue, and the venue, time and the gig's description on the back. It holds the door code only, nothing about the buyer. Android's open wallets (Catima, PassAndroid) read the same file ("Add to wallet"). Every amount reads in £, $ or ₿, the viewer's choice, and every payment is in sats.
 
 **Moderators** open the gig page with their own link. They see the stream before it opens, free; chat; post links (guests can't); delete messages; and turn on slow mode (one message every 30 seconds for guests). The main mod can change the pinned message. A mod's link never opens Plan gig, Takings or the stream key.
 
@@ -60,11 +60,10 @@ Card payments (Stripe; the £ prices are shown, the card buttons do nothing), pa
 
 Open while NutNovember runs (to 27 Nov 2026):
 
-- The room ticket in Apple, Google and open wallets, holding only the door code.
+- Google Wallet for the room ticket; updating a card already in a wallet, and a reminder a day or two before.
 - Judges read Longy's filled-in pages, view only, and join as a guest with test sats; passkey sign-in with a backup for the artist's key.
 - A guide for fans to move leftover sats into their own wallet.
 - Saving a second show as a template; more than one gig planned at a time (one gig at a time for now).
-- A faster Collect when many payments wait.
 - The design of Show Time, the ticket and Takings pages; a desktop preview of the ticket page in setup.
 
 ## Known limits
@@ -92,10 +91,14 @@ npx wrangler secret put STREAM_ACCOUNT                  # Cloudflare account id,
 npx wrangler secret put STREAM_TOKEN                    # API token with Stream: Edit
 npx wrangler secret put STREAM_KEY_ID                   # from POST /accounts/{id}/stream/keys: its id
 npx wrangler secret put STREAM_KEY_JWK                  # and its jwk, kept as Stream returns it
+npx wrangler secret put PASS_KEY                        # wallet card: the Pass Type ID's private key, PKCS#8 PEM
+npx wrangler secret put PASS_CERT                       # and its certificate from Apple, PEM (PASS_TYPE, PASS_TEAM in wrangler.jsonc)
 npm run deploy                                          # build and publish
 npm run setup                                           # opens the host's private setup link
 SITE=https://thenutpub.com npm run check                # a phone's night from the command line
 ```
+
+The wallet card is signed on the Worker with WebCrypto (`server/pass.js`, about 4 ms of CPU; a CMS library took 5 to 50 ms, over the free plan's 10). `npm test` checks the signature against pkijs, OpenSSL and a known answer, with a test-only stand-in key.
 
 Live video needs a paid Stream plan: recorded live inputs need Stream's storage block ($5 a month for 1,000 minutes), and viewing costs $1 per 1,000 minutes. Everything else stays on the free plan.
 
