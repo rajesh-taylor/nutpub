@@ -46,3 +46,10 @@ CREATE INDEX IF NOT EXISTS locked_open ON locked (collected_at, id);
 CREATE INDEX IF NOT EXISTS locked_tips ON locked (at) WHERE kind = 'tip';
 -- Deleted messages, also read every tick: only those rows, not the whole chat.
 CREATE INDEX IF NOT EXISTS messages_gone ON messages (id) WHERE deleted = 1;
+-- Passkeys for tickets (server/passkey.js): the public key and which ticket's pass it opens; nothing about the person.
+-- count: the passkey's sign count (0 for synced ones); synced: its password manager backs it up. Added 12 Nov:
+-- scripts/passkey-migration.sql. challenges: WebAuthn challenges already used (kept five minutes, so none is used twice).
+CREATE TABLE IF NOT EXISTS passkeys (id TEXT PRIMARY KEY, pass TEXT NOT NULL, pubkey TEXT NOT NULL, alg INTEGER NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
+CREATE INDEX IF NOT EXISTS passkeys_pass ON passkeys (pass);
+CREATE TABLE IF NOT EXISTS challenges (value TEXT PRIMARY KEY, at INTEGER NOT NULL);

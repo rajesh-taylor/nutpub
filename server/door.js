@@ -18,7 +18,7 @@ export const barKey = () => kv.get('barKey');
 
 const DRINK = 'SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked';
 export const hasTicket = async (pass) => !!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', pass));
-const ticketOf = (pass) => one('SELECT kind, sats, at, code, secret, checked_at FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
+const ticketOf = (pass) => one('SELECT kind, sats, at, code, secret, checked_at, (SELECT COUNT(*) FROM passkeys p WHERE p.pass = t.pass) AS keys FROM tickets t WHERE pass = ?', pass); // kind: 'room' | 'home'
 const siteOf = (c) => SITE_URL || c.url.origin;
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
@@ -154,10 +154,12 @@ export function mountDoor(route, admin, pass) {
     const d = await one(`${DRINK} WHERE d.pass = ?`, id);
     const t = await ticketOf(id);
     // code and secret: the room ticket's door code and its time code's secret, for its QR (the page shows it only
-    // when the door check is on). Only this phone's own pass is given them.
+    // when the door check is on). Only this phone's own pass is given them, and the secret only while the ticket has
+    // no passkey: after that, only a passkey check gives it (passkey.js), so a copied ticket link can't open the door QR.
     const room = t?.kind === 'room';
-    return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null,
-      code: room ? t.code : null, secret: room ? t.secret : null, checkedAt: t?.checked_at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
+    const keys = t?.keys ?? 0;
+    return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null, passkey: keys > 0,
+      code: room ? t.code : null, secret: room && !keys ? t.secret : null, checkedAt: t?.checked_at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
   route('GET', '/api/door/me', pass, async (c) => json({ ...(await heldBy(c.pass)), soldOut: await roomFull(c) }));
 

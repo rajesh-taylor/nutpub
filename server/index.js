@@ -14,6 +14,7 @@ import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
+import { mountPasskeys } from './passkey.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -28,7 +29,9 @@ const page = (file) => async (c) => {
   if (!res.ok) return null;
   let html = await res.text();
   html = html.replace(/(["'])(\/(?:app\.css|(?:js\/)?[a-z-]+\.js))\1/g, `$1$2?v=${VERSION}$1`);
-  if (MINT_TEST) html = html.replace(/<body[^>]*>/, '$&\n  <div class="test-banner" role="note" data-t="test.banner">Test mint · no real value</div>'
+  // The gig page's strip carries the name too (its masthead has only the artist and the date).
+  const strip = file === 'index.html' ? '<b>The NutPub</b> · Test mint · no real value' : 'Test mint · no real value';
+  if (MINT_TEST) html = html.replace(/<body[^>]*>/, `$&\n  <div class="test-banner" role="note" data-t="test.banner">${strip}</div>`
     // Inside the setup page's frames the page already says so: only the phone keeps its own.
     + '<script>if (top !== self && !/^\\/[a-z0-9-]+$/.test(location.pathname)) document.currentScript.previousElementSibling.remove();</script>');
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
@@ -94,6 +97,7 @@ mountRate(route);
 mountMods(route, admin);
 mountWallet(route);
 mountGoogleWallet(route);
+mountPasskeys(route, pass);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

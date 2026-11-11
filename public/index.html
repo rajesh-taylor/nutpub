@@ -13,7 +13,6 @@
   <main>
     <a class="back-link" id="back-link" href="/" hidden>← Back</a>
     <header class="masthead">
-      <p class="nutpub-line">The NutPub</p>
       <h1 class="wordmark small-mark" id="artist-line"></h1>
       <p class="tag" id="billing"></p>
     </header>
@@ -24,6 +23,8 @@
       <h2 class="card-title" id="door-title">Ticket</h2>
       <p class="door-wallet">Your wallet: <b id="door-balance">…</b> test sats <button type="button" class="linkish" id="door-topup" hidden>Add 150,000 test sats</button></p>
       <button class="btn primary wide" id="buy">Pay</button>
+      <!-- Find my ticket: the passkey made with it brings it back (cleared browser, new phone). Under the tips at home. -->
+      <button type="button" class="btn wide" id="find" hidden>Find my ticket</button>
       <a class="btn wide" id="door-home" hidden>Watch from home</a>
       <p class="hint" id="ticket-note"></p>
       <button class="btn quiet wide" id="card" disabled>Card · not wired up</button>
@@ -34,6 +35,11 @@
       <div class="save-ticket" id="save-ticket" hidden>
         <h2>You've got your ticket</h2>
         <p class="receipt" id="receipt"></p>
+        <!-- Keep it with a passkey: shown straight after paying, until it's done. Moved beside the ticket on the gig day. -->
+        <div class="keep" id="keep" hidden>
+          <button type="button" class="btn primary" id="keep-btn">Press to save ticket now</button>
+          <p class="hint" id="keep-note">Safely secured in case web browser is cleared.</p>
+        </div>
         <button type="button" class="btn primary" id="save-link">Save this link</button>
         <a class="btn wallet-add" id="save-wallet" hidden>Add to Apple Wallet</a>
         <a class="wallet-file" id="save-wallet-file" hidden>Open-source wallet, no account</a>
@@ -46,10 +52,11 @@
       <div class="door-line" id="door-pass" hidden>
         <p><b id="door-pass-title">Your ticket</b> <span id="door-pass-note"></span></p>
         <span class="door-btns">
-          <button type="button" class="btn primary" id="door-show">Show at the door</button>
+          <button type="button" class="btn primary" id="door-show">Show at door on the night</button>
           <a class="btn wallet-add" id="door-wallet" hidden>Add to Apple Wallet</a>
           <a class="wallet-file" id="door-wallet-file" hidden>Open-source wallet, no account</a>
         </span>
+        <p class="hint door-where" id="door-where" hidden></p>
       </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">

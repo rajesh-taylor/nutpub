@@ -4,6 +4,7 @@
 import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 import { totp, stepAt } from '../server/totp.js';
+import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -717,7 +718,24 @@ const split = () => {
 const DUE = `nutpub-drink-due${KEEP}`;
 const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catch { return false; } };
 const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
-const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
+// The door QR's secret: the server gives it while the ticket has no passkey, and after that only to a passkey check.
+// Kept in this browser once given, with its door code, so the QR still works with no signal.
+const SECRET = `nutpub-door${KEEP}`;
+function withSecret(d) {
+  try {
+    if (d?.code && d.secret) localStorage.setItem(SECRET, JSON.stringify({ code: d.code, secret: d.secret }));
+    else if (d?.code) { const k = JSON.parse(localStorage.getItem(SECRET) || 'null'); if (k?.code === d.code) d.secret = k.secret; }
+  } catch {}
+  return d;
+}
+const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).then(withSecret).catch(() => ({}));
+// Passkeys (passkey.js): on the page itself, not in the setup page's frames.
+const PASSKEYS = passkeysWork() && top === self && !TICKET_VIEW;
+// The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
+let keepTried = false;
+// Wallet cards are held back from fans before 27 Nov (12 Nov): a card can't get anyone in (Apple won't let us change
+// its QR), but people take a Wallet card for the ticket. The code stays (server/pass.js, gwallet.js); the buttons go.
+const WALLET_CARDS = false;
 let door = TICKET_VIEW ? {} : await myDoor();
 ticketHere = door.ticketSats || 0;
 meter();
@@ -779,7 +797,7 @@ function render() {
   body.classList.toggle('confirmed', confirmed);
   $('save-ticket').hidden = !confirmed;
   if (confirmed) receipt();
-  walletLinks(room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
+  walletLinks(WALLET_CARDS && room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
@@ -822,10 +840,31 @@ function render() {
     $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;
   }
 
+  // Find my ticket, where a ticket is bought; Keep it with a passkey, straight after paying until it's done: in the
+  // ticket's box ahead of the gig, beside the door's line on the gig day, under the tips at home.
+  // At home too whenever the gig sells tickets, even with a free stream (a room ticket can be found from there).
+  const findOn = PASSKEYS && !ticket && !closed && (room ? !$('door').hidden : !!(show.ticket.on || (online && show.online?.price)));
+  $('find').hidden = !findOn;
+  const keepOn = PASSKEYS && ticket && !door.passkey && !door.checkedAt && !closed && (confirmed || (room ? !$('inside').hidden : true));
+  const keepFirst = keepOn && !keepTried; // nothing else to press until it's done
+  $('keep').hidden = !keepOn;
+  if (keepOn) {
+    if (confirmed) { if ($('keep').nextElementSibling !== $('save-link')) $('save-link').before($('keep')); }
+    else { const spot = room ? $('door-pass') : $('money'); if ($('keep').previousElementSibling !== spot) spot.after($('keep')); }
+  }
+  $('save-link').classList.toggle('primary', !keepOn);
+  $('save-link').hidden = keepFirst || PASSKEYS; // the passkey is the safe copy; the link stays for phones without one
+  if (findOn || keepOn) warm();
+
   // The door's QR, on the gig day (a QR weeks ahead would need a second device to show it). Scanned once, the page says
   // so by itself.
-  const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.code;
+  const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.code && !keepFirst;
   $('door-pass').hidden = !passOn;
+  // One thing at a time until they're in: save the passkey, then Show at the door. Goals, tips and chat come after.
+  body.classList.toggle('ticket-steps', keepFirst || (passOn && !door.checkedAt));
+  // Under Show at the door: where this page lives, so it's easy to find again on the night.
+  $('door-where').hidden = !(passOn && !door.checkedAt);
+  $('door-where').textContent = `Your ticket lives at ${location.host}${location.pathname}`;
   if (passOn) {
     const inRoom = !!door.checkedAt;
     $('door-show').hidden = inRoom;
@@ -834,7 +873,7 @@ function render() {
     doorQr();
     // Scanned while the QR is open: it says so, then closes by itself.
     if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
-      $('door-in').hidden = false; $('door-qr').hidden = true; $('door-small').textContent = 'Enjoy the night.';
+      $('door-in').hidden = false; $('door-qr').hidden = true; $('door-small').textContent = 'Enjoy the night.'; $('door-small').classList.remove('door-url');
       setTimeout(() => { $('door-screen').hidden = true; }, 3000);
     }
   }
@@ -850,14 +889,45 @@ function render() {
 }
 
 // The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
-$('door-show').onclick = () => {
+$('door-show').onclick = async () => {
+  // A ticket with a passkey: its check first, once in this browser (then the QR works with no signal).
+  if (door.code && !door.secret && door.passkey) {
+    try {
+      const t = await checkPasskey();
+      if (!t) return;
+      if (t.code !== door.code) return say('That passkey is for another ticket: pick the one made with this one.');
+      door = withSecret({ ...door, secret: t.secret });
+    } catch (e) { return say(e.message); }
+  }
   $('door-artist').textContent = show.artist || '';
   $('door-when').textContent = [shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
-  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = 'Show this at the door.';
+  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = `${location.host}${location.pathname}`; $('door-small').classList.add('door-url'); // the artist's own address
   $('door-screen').hidden = false;
   $('door-close').focus();
 };
 $('door-close').onclick = () => { $('door-screen').hidden = true; };
+// Keep it with a passkey: the password manager lists it by the artist and the date.
+$('keep-btn').onclick = async () => {
+  try {
+    const name = ['NutPub ticket', show.artist, shortDay(show.date && `${show.date}T12:00:00Z`)].filter(Boolean).join(' · ');
+    if (!(await makePasskey(pass, name))) { keepTried = true; return render(); }
+    door.passkey = true;
+    render();
+  } catch (e) { keepTried = true; render(); say(e.message); }
+};
+// Find my ticket: the passkey picks the ticket; this browser takes its pass (and door secret), then opens its page.
+$('find').onclick = async () => {
+  try {
+    const t = await checkPasskey();
+    if (!t) return;
+    const keep = t.kind === 'home' ? '-home' : '';
+    try {
+      localStorage.setItem(`nutpub-pass${keep}`, t.pass);
+      if (t.secret) localStorage.setItem(`nutpub-door${keep}`, JSON.stringify({ code: t.code, secret: t.secret }));
+    } catch { return say('This browser can’t keep the ticket (private window?).'); }
+    location.replace(`${location.pathname}${t.kind === 'home' ? '?as=home' : ''}`);
+  } catch (e) { say(e.message); }
+};
 $('whole').onclick = () => $('buy').onclick();
 $('say-tip').onclick = () => tip($('tip'));
 $('buy').onclick = async () => {
@@ -1102,6 +1172,7 @@ vv?.addEventListener('resize', tipAboveKeyboard);
 vv?.addEventListener('scroll', tipAboveKeyboard);
 // ---- Save your ticket: it lives in this browser, which can forget it after a week away. The link brings it back, on any device.
 if (AS === 'home') document.querySelector('.bottom').append($('save-ticket'));
+if (AS === 'home') $('money').after($('find')); // Find my ticket: under the tips at home (the ticket box is the room's)
 else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
@@ -1246,7 +1317,7 @@ async function tick() {
   stage = next;
   if (now.door) {
     const pouredBefore = door.drink?.poured;
-    door = { ...door, ...now.door };
+    door = withSecret({ ...door, ...now.door, secret: now.door.secret || door.secret });
     if (door.drink?.poured && !pouredBefore) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player

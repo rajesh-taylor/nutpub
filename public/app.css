@@ -918,3 +918,31 @@ body[data-as="room"] .chat > .say { order: 6; }
 /* The door link's QR on Plan gig (session 17; look to design) */
 .door-link-qr { display: block; width: 200px; max-width: 100%; margin: 10px 0 0; border-radius: 8px; }
 .door-link-qr[hidden] { display: none; }
+
+/* Passkeys (12 Nov, technical; the look is for design): Keep it with a passkey, Find my ticket. */
+.keep { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; }
+.keep[hidden] { display: none; }
+.keep .hint { margin: 0; font-size: 15px; line-height: 1.4; text-align: center; color: var(--cream); }
+.save-ticket .keep { margin: 0; }
+#find { margin-top: 10px; }
+body.at-door #find { background: rgb(5 9 20 / .72); }
+.bottom > #find { width: 100%; margin: 12px 0 0; }
+/* The gig page's strip carries The NutPub (12 Nov): its masthead is the artist and the date, closer to the top. */
+body.viewer .test-banner { font-size: 14px; letter-spacing: .12em; }
+.test-banner b { font-weight: 400; }
+body.viewer main { padding-top: 14px; }
+
+/* One thing at a time until they're in (12 Nov): the photo, the name and one button. */
+body.ticket-steps #goal, body.ticket-steps #chat, body.ticket-steps .bottom { display: none !important; }
+/* The two ticket steps look alike: one wide button, one line under it, a little lower (12 Nov). */
+body.ticket-steps .keep { margin-top: 28px; }
+body.ticket-steps .door-line { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 28px 0 0; padding: 0; border: 0; background: none; }
+body.ticket-steps .door-line > p:first-child { display: none; }
+body.ticket-steps .door-btns { display: flex; flex-direction: column; }
+body.ticket-steps #door-show { width: 100%; }
+body .door-line .door-where { margin: 0; font-size: 15px; line-height: 1.4; text-align: center; color: var(--cream); }
+.door-where[hidden] { display: none; }
+/* Both ticket steps' buttons: one line, the same size (12 Nov). */
+body.ticket-steps #keep-btn, body.ticket-steps #door-show { box-sizing: border-box; height: 56px; padding: 0 12px; font-size: 22px; line-height: 56px; white-space: nowrap; }
+/* Under the door QR: the artist's address, in the gold of The NutPub above it. */
+.door-small.door-url { font: 400 20px/1.2 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
