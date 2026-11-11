@@ -6,6 +6,16 @@
 
 > **Test only.** The demo runs on the public Cashu test mint (testnut.cashu.space): a fake Lightning wallet. Its sats have no value, and it can't pay a real invoice.
 
+## New this week (10–11 Nov)
+
+- **A ticket you can't lose, with no email or account.** Straight after paying, one button saves the ticket as a passkey in the phone's password manager (iCloud Keychain, Google, Proton Pass, Bitwarden, KeePassDX; a YubiKey or Nitrokey works too). **Find my ticket** brings it back after the browser's data is cleared, or on a new phone.
+- **A door QR that can't be copied.** The ticket page's QR changes every 30 seconds, worked out on the phone with no signal needed, so a screenshot gets "Old QR" at the door. Once a ticket has a passkey, the QR only appears after the passkey check, so a forwarded ticket link can't get anyone in.
+- **One thing at a time.** Until a fan is in, the page shows the artist, the date and one button: save the ticket, then "Show at door on the night". Tips, goals and chat come once they're in.
+- **The Door scanner.** The artist turns any phone into the door's scanner with one QR; each ticket gets in once.
+- **Plan gig by kind of night** (room only, room + live stream, live stream only), with a "Still to fill in" box that turns green when the gig is ready.
+- **Wallet cards, built and held back.** Apple and Google Wallet cards work, but a card that looks like a ticket and can't open the door would confuse people (Apple doesn't let us change a card's code). They come back when they can be a real way in.
+- **Nothing about the buyer.** No name, email or address is asked for or kept: the NutPub holds the ticket and its passkey's public key, nothing about the person. Next: blind-signed tickets, so not even the NutPub can link who paid to who came in.
+
 ## The 402 on live video
 
 An artist streams from a phone (Larix Broadcaster) or a laptop (OBS) to Cloudflare Stream. The plain video link is refused: the picture only plays with a signed token.

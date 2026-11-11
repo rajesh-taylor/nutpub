@@ -477,7 +477,7 @@ Then 15 to 17 Nov build what's left of the design; Stripe Connect when a session
 | Online-only gigs | Tips and a paid entry already work without a venue. | — |
 | Two or more tickets | Today one browser holds one ticket per gig: a fan buying for friends needs a phone each. Each ticket gets its own passkey, all named alike ("NutPub ticket · Longy · 11 Nov"). Tickets for friends (numbered passkeys, "ticket 2 of 3") come after 27 Nov. | — |
 | Lost tickets, passkeys | A passkey made with the ticket brings it back after the browser forgets it, or on a new phone, with no email or account. The browser's copy and the passkey are two copies: either gets you in until both are gone. | — |
-| Costs | Runs on Cloudflare's free plan; live video costs a few dollars a month. | The $15 Stream budget, pricing, break-even, Google's $300 trial |
+| Costs | Not shown for now (Rajesh 11 Nov). | All of it: the free plan, the $15 Stream budget, pricing, break-even, Google's $300 trial |
 | Your answers | Not shown | All of them |
 | Admin snags | Not shown | The bar link's admin key, the door link losing its key, dependency alerts, the stand-in icon |
 
