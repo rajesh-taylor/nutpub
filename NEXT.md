@@ -433,6 +433,13 @@ So paid watching pays for itself, and free is the only leak: tips can't be relie
 - **Most real gigs won't charge for the stream:** tips and comments open, for discovery and fans. So: the gig page embedded where fans are. Nostr: a live event (NIP-53, as zap.stream uses) so Nostr apps show the gig live. YouTube, Facebook, Instagram: their posts don't take outside players, so a link with a good preview card; or the stream sent there as well (Cloudflare Stream can forward a live input to other RTMP addresses: check the cost after 27 Nov).
 - **Fountain:** stream to the artist's Fountain account as well, as a way to work with Fountain; and offer them the whole gig's recording for 2 to 3 months so they don't pay to store it. Check first: does Fountain take a live stream in (RTMP or other), and what does keeping a recording that long cost us. After 27 Nov; a conversation with Fountain before any build.
 
+**Rajesh 11 Nov, reaching fans (logged, not built):**
+- **Fountain** does live streams, with deep Nostr ties: live feeds, comments and tips. So the way in is probably the open standards they already read (NIP-53, and Podcasting 2.0's live item and value tags in a feed): check what Fountain reads before talking to them.
+- **NIP-53:** yes, definitely. **Preview cards** for the usual social sites must look good (Open Graph, plus oEmbed so sites that embed can show the player).
+- **A screen for the room** (as zap.stream's widgets): top tippers, their sats and comments, on the TV at the gig or as a browser source in OBS. A page of its own, e.g. `/longy/screen`. A gig thing: worth doing.
+- **Stripe** brings the people who run from crypto; it's the network effect. Agreed.
+- **From PeerTube** (closest in spirit; payments and privacy weren't built in from the start): oEmbed and good embeds; unlisted gigs (link only); following an artist from Mastodon (ActivityPub) as well as Nostr; watched-word filters for mods; "run your own" (one-click deploy to Cloudflare, as the code is open). Not their peer-to-peer video: it shows viewers' IP addresses to each other.
+
 **Sessions, Wed 11 to Sat 14 Nov (agreed 11 Nov; two a day, Opus high, one page per design session):**
 | Day | A | B |
 |---|---|---|
