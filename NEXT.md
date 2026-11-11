@@ -439,11 +439,12 @@ So paid watching pays for itself, and free is the only leak: tips can't be relie
 - **A screen for the room** (as zap.stream's widgets): top tippers, their sats and comments, on the TV at the gig or as a browser source in OBS. A page of its own, e.g. `/longy/screen`. A gig thing: worth doing.
 - **Stripe** brings the people who run from crypto; it's the network effect. Agreed.
 - **From PeerTube** (closest in spirit; payments and privacy weren't built in from the start): oEmbed and good embeds; unlisted gigs (link only); following an artist from Mastodon (ActivityPub) as well as Nostr; watched-word filters for mods; "run your own" (one-click deploy to Cloudflare, as the code is open). Not their peer-to-peer video: it shows viewers' IP addresses to each other.
+- **Audio-only streams** (Rajesh 11 Nov): works today by streaming a still photo with the sound (OBS, or Larix with the camera covered). A real "Listen" mode (far less data on phones, podcast-like, suits Fountain) needs a check that Cloudflare Stream takes a live input with no video. After 27 Nov unless the check is quick.
 
 **Sessions, Wed 11 to Sat 14 Nov (agreed 11 Nov; two a day, Opus high, one page per design session):**
 | Day | A | B |
 |---|---|---|
-| Wed 11 | 16 · Google Wallet, updating cards, judges' own shows (plan only) | 17 · Closing the gig (recording 7 days, records deleted after 7 days), easy wins: the card's venue on its own line, one rate-limit rule, the door link as a QR |
+| Wed 11 | 16 · Google Wallet, updating cards, judges' own shows (plan only) | 17 · Closing the gig (recording 7 days, records deleted after 7 days), easy wins: the card's venue on its own line, one rate-limit rule, the door link as a QR, the room's tippers screen (`/longy/screen`, yes 11 Nov) |
 | Thu 12 | 18 · Design: the gig page on a phone (Chat · Tip · Wallet tabs, the ticket card, the wallet badge) | 19 · Design: Takings in plain words, a Stripe card, a smaller Next gig |
 | Fri 13 | 20 · Design: Plan gig (Ticket Price card, Scan at the door explained) and Show Time's step | 21 · Build: "How to set up a gig" page, "i" buttons, getting sats out |
 | Sat 14 | 22 · View-only sign-in for judges (and their own shows, on a yes) | 23 · A full run on both phones, then a fix list |
