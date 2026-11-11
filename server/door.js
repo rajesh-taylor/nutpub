@@ -48,7 +48,7 @@ export function mountDoor(route, admin, pass) {
   const doorman = async (c) => {
     const k = c.req.headers.get('X-Door') || '';
     if (/^[0-9a-f]{32}$/.test(k) && (await sha(k)) === (await kv.get('doorKey'))) return null;
-    return admin(c) && json({ error: 'not_door', detail: k ? 'This door link has been replaced: ask the artist for the new one.' : 'This page needs the door link from the artist.' }, 403);
+    return admin(c) && json({ error: 'not_door', detail: k ? 'This door scanner has been replaced: ask the artist for the new one.' : 'This phone isn’t the door scanner yet: ask the artist for its QR or link.' }, 403);
   };
   route('GET', '/api/admin/door-link', admin, async () => json({ made: !!(await kv.get('doorKey')) }));
   route('POST', '/api/admin/door-link', admin, async () => {
@@ -57,9 +57,9 @@ export function mountDoor(route, admin, pass) {
     return json({ key }); // the key leaves the server this once
   });
   // The scan: the ticket's QR opens /door.html#t=<code>.<time code> on the doorman's phone. The time code (RFC 6238,
-  // see totp.js) changes every 30 seconds on the ticket page, so a screenshot goes stale; a wallet card's QR has the
-  // code alone, taken only when the artist picked "Wallet cards too". Marked once, in one statement, so two scans
-  // can't both pass; that also stops a forwarded ticket getting a second person in.
+  // see totp.js) changes every 30 seconds on the ticket page, so a screenshot goes stale. A QR with the code alone (an
+  // old wallet card, from before 11 Nov) doesn't get in: wallet cards are reminders now, with no QR. Marked once, in
+  // one statement, so two scans can't both pass; that also stops a forwarded ticket getting a second person in.
   route('POST', '/api/door/scan', doorman, async (c) => {
     const show = await showOf(c);
     if (!(show.ticket.on && show.door.on)) return json({ result: 'off' });
@@ -71,7 +71,7 @@ export function mountDoor(route, admin, pass) {
     if (!t) return json({ result: 'unknown' });
     if (t.kind !== 'room') return json({ result: 'online' });
     if (t.checked_at) return json({ result: 'already', at: t.checked_at });
-    if (otp ? !(await totpOk(t.secret, otp)) : show.door.tickets === 'browser') return json({ result: otp ? 'stale' : 'card' });
+    if (!(await totpOk(t.secret, otp))) return json({ result: 'stale' });
     if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in' });
     const again = await one('SELECT checked_at FROM tickets WHERE code = ?', code);
     return json({ result: 'already', at: again?.checked_at });

@@ -1,5 +1,5 @@
-// The door's page (/door.html#k=<the door link's key>, or #t=<ticket code>.<time code> from a ticket's QR; a wallet
-// card's QR has the code alone): one scan, once.
+// The door's page (/door.html#k=<the door link's key>, or #t=<ticket code>.<time code> from a ticket's QR): one
+// scan, once.
 // The phone's own camera opens the QR's link in its default browser, where the key was saved when the door link was
 // first opened. The artist's own browser opens it too, with the artist's key.
 const $ = (id) => document.getElementById(id);
@@ -25,7 +25,6 @@ const WORDS = {
   online: ['Online ticket', 'For watching at home, not for the room.'],
   unknown: ['Not a ticket', 'Not for this gig.'],
   stale: ['Old QR', 'The ticket’s QR changes every 30 seconds. Ask them to open the ticket page, then scan again.'],
-  card: ['Ticket page only', 'This gig doesn’t take wallet cards. Ask them to open the ticket page, then scan its QR.'],
   off: ['Door check off', 'The artist hasn’t turned the door check on for this gig.'],
 };
 function show(state, big, small) {
@@ -35,7 +34,7 @@ function show(state, big, small) {
 }
 const count = async () => { const c = await api('GET', '/api/door/count'); $('inside').textContent = c.inside; $('sold').textContent = c.sold; return c; };
 
-async function scan(code, otp) {
+async function scan(code, otp = '') {
   try {
     const out = await api('POST', '/api/door/scan', { code, otp });
     const [big, small] = WORDS[out.result];

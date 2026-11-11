@@ -60,7 +60,7 @@ test('OpenSSL verifies a whole .pkpass (skipped without openssl)', async (t) => 
 
 const KNOWN = '27115182080de79cc6721c8a055031134f424c54fd8e40cbfa7d029ecc0d0936';
 
-test('the card: UK time with its offset, the door QR, nothing about the buyer', async () => {
+test('the card: UK time with its offset, no QR (a reminder), nothing about the buyer', async () => {
   const { configure } = await import('../server/config.js');
   configure({ PASS_TYPE: 'pass.com.thenutpub.ticket', PASS_TEAM: 'TEAM' });
   const { passJson } = await import('../server/wallet.js');
@@ -70,8 +70,8 @@ test('the card: UK time with its offset, the door QR, nothing about the buyer', 
   assert.equal(summer.expirationDate, '2026-07-05T06:00:00Z');
   const winter = passJson({ artist: 'Longy', date: '2026-11-20', streams: '19:30' }, code, 'https://x.test');
   assert.equal(winter.relevantDate, '2026-11-20T19:30:00+00:00');
-  assert.equal(winter.barcodes[0].message, `https://x.test/door.html#t=${code}`);
-  assert.equal(winter.barcodes[0].altText, undefined); // the name is in the card's top strip, not by the QR
+  assert.equal(winter.barcodes, undefined); // a reminder: no QR to copy (the ticket page's QR changes every 30 s)
+  assert.equal(winter.barcode, undefined);
   assert.equal(winter.logoText, 'The NutPub');
   assert.equal(winter.serialNumber, code);
   assert.equal(passJson({ artist: 'A' }, code, 'https://x.test').relevantDate, undefined); // no date: no reminder

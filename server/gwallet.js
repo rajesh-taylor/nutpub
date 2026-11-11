@@ -5,7 +5,7 @@
 // for new tickets (a link can't change a class Google already has; updating cards comes with the REST API later).
 import { SITE_URL, GWALLET_ISSUER, GWALLET_EMAIL, GWALLET_KEY } from './config.js';
 import { json } from './http.js';
-import { roomTicket, startOf, nextMorning } from './wallet.js';
+import { roomTicket, startOf, nextMorning, DOOR_NOTE } from './wallet.js';
 
 const text = (value) => ({ defaultValue: { language: 'en-GB', value } });
 const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -15,7 +15,6 @@ const hex = (bytes) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padS
 // The class (the gig) and the object (this ticket), as Google's eventTicket types.
 export async function gwalletCard(show, code, site, issuer) {
   const { when } = startOf(show);
-  const door = `${site}/door.html#t=${code}`;
   const page = show.page ? `${site}/${show.page}` : site;
   const artist = show.artist || 'The show';
   // "Name & address of venue" is one box: the name is up to the first comma.
@@ -30,12 +29,12 @@ export async function gwalletCard(show, code, site, issuer) {
   cls.id = `${issuer}.gig-${(show.page || 'show').replace(/[^\w-]/g, '')}-${version}`;
   const obj = {
     id: `${issuer}.t-${code}`, classId: cls.id, state: 'ACTIVE',
-    barcode: { type: 'QR_CODE', value: door },
+    // No barcode (11 Nov): a reminder; the way in is the ticket page's QR, new every 30 seconds.
     ...(show.date ? { validTimeInterval: { end: { date: nextMorning(show.date) } } } : {}), // greyed out the morning after
     textModulesData: [
       { id: 'ticket', header: 'Ticket', body: 'Room · one entry' },
       ...(show.description ? [{ id: 'notes', header: `From ${artist}`, body: show.description }] : []),
-      { id: 'door', header: 'At the door', body: 'The QR gets you in once. The gig page has your ticket too, if this card is lost.' },
+      { id: 'door', header: 'At the door', body: DOOR_NOTE },
     ],
     linksModuleData: { uris: [{ id: 'page', uri: page, description: 'The gig page' }] },
   };

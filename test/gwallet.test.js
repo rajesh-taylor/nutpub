@@ -9,7 +9,7 @@ const keyPem = readFileSync(new URL('./fixtures/pass-test-key.pem', import.meta.
 const code = 'b'.repeat(24);
 const show = { artist: 'Longy', venue: "Peggy Sue's Music Bar, 1 High Street, Bath", date: '2026-07-04', streams: '19:30', page: 'longy', description: 'Doors at 7' };
 
-test('the Google Wallet link: signed by our key, the door QR, the venue split into name and address', async () => {
+test('the Google Wallet link: signed by our key, no QR (a reminder), the venue split into name and address', async () => {
   const { gwalletCard, saveLink } = await import('../server/gwallet.js');
   const card = await gwalletCard(show, code, 'https://x.test', '3388000000000000000');
   const link = await saveLink(card, { email: 'signer@x.iam.gserviceaccount.com', keyPem, site: 'https://x.test' });
@@ -26,7 +26,7 @@ test('the Google Wallet link: signed by our key, the door QR, the venue split in
   assert.match(cls.id, /^3388000000000000000\.gig-longy-[0-9a-f]{16}$/);
   assert.equal(obj.classId, cls.id);
   assert.equal(obj.id, `3388000000000000000.t-${code}`);
-  assert.equal(obj.barcode.value, `https://x.test/door.html#t=${code}`);
+  assert.equal(obj.barcode, undefined); // a reminder: no QR to copy
   assert.equal(cls.venue.name.defaultValue.value, "Peggy Sue's Music Bar");
   assert.equal(cls.venue.address.defaultValue.value, '1 High Street, Bath');
   assert.equal(cls.dateTime.start, '2026-07-04T19:30:00+01:00');

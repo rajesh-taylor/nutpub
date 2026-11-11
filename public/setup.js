@@ -155,7 +155,20 @@ function read() {
 }
 
 // Show or hide the fields that belong to a choice; redraw the tip button preview.
+// The kind of night (Rajesh 11 Nov): Room only, Room + live stream, Live stream only. It's not saved itself: it sets
+// Room tickets and the stream's mode, which are.
+const nightOf = (s) => (s.ticket.on ? (s.stream.mode === 'off' ? 'room' : 'both') : s.stream.mode === 'off' ? '' : 'stream');
+let lastMode = 'free'; // the stream's way to pay, kept while a Room only night has it off
+function applyNight(kind) {
+  $('ticket-on').checked = kind !== 'stream';
+  const mode = kind === 'room' ? 'off' : show.stream.mode !== 'off' ? show.stream.mode : lastMode;
+  form.querySelector(`[data-path="stream.mode"][value="${mode}"]`).checked = true;
+}
 function refresh() {
+  const night = nightOf(show);
+  if (show.stream.mode !== 'off') lastMode = show.stream.mode;
+  for (const el of form.querySelectorAll('[name="night"]')) el.checked = el.value === night;
+  for (const el of form.querySelectorAll('[data-night]')) el.hidden = !el.dataset.night.split(' ').includes(night);
   for (const el of form.querySelectorAll('[data-when]')) {
     const [path, want] = el.dataset.when.split('=');
     const v = get(show, path);
@@ -219,6 +232,11 @@ function saved(res) {
   if (!artistReady) todo.push('open 3 · Takings once (it makes the key payments lock to; nothing can be sold until then)');
   status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
+  // The box under the page's title says the same, where the artist starts.
+  $('ready-box').classList.toggle('ok', !todo.length);
+  $('ready-head').textContent = todo.length ? 'Still to fill in' : 'Ready to go live';
+  const list = todo.join(', ');
+  $('ready-text').textContent = todo.length ? `${list[0].toUpperCase()}${list.slice(1)}.` : 'Everything is filled in.';
 }
 
 // ---- Prices: £ beside sats. Typing £ fills the sats from the rate (CoinGecko, kept 30 minutes on the server), unless
@@ -263,6 +281,7 @@ function dateWarning() {
 }
 form.addEventListener('input', (e) => {
   if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
+  if (e.target.name === 'night') applyNight(e.target.value);
   priceRow(e);
   read();
   dateWarning();
@@ -295,10 +314,10 @@ $('next-gig-go').onclick = async () => {
 async function templates(list) {
   list ??= await api('GET', '/api/admin/templates');
   // The word Template until there are two saved shows; then the word heads a drop-down, and choosing one loads it.
-  $('tpl-list').innerHTML = `<option value="">Template</option>${list.map((t) => `<option>${t.name.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</option>`).join('')}`;
+  $('tpl-list').innerHTML = `<option value="">Start from a saved gig</option>${list.map((t) => `<option>${t.name.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</option>`).join('')}`;
   $('tpl-list').hidden = list.length < 2;
-  $('tpl-word').hidden = list.length >= 2;
-  $('tpl-box').hidden = false;
+  $('tpl-word').hidden = true; // no word "Template" (Rajesh 11 Nov): the drop-down only, with two or more saved shows
+  $('tpl-box').hidden = list.length < 2;
   $('tpl-load').disabled = $('tpl-delete').disabled = !list.length;
 }
 $('tpl-list').onchange = () => { $('tpl-load').click(); $('tpl-list').value = ''; };
@@ -468,18 +487,31 @@ const DOOR_KEY = 'nutpub-door-link';
 function doorLink(made) {
   let k = null;
   try { k = localStorage.getItem(DOOR_KEY); } catch {}
-  $('door-link').value = k ? `${site}/door.html#k=${k}` : made ? 'Made on another browser: make a new one to see it here.' : 'No door link yet.';
-  $('copy-door').disabled = !k;
-  $('new-door').textContent = made ? 'New link' : 'Make the link';
+  $('door-link').value = k ? `${site}/door.html#k=${k}` : made ? 'Made on another browser: make a new one to see it here.' : 'No door scanner yet.';
+  $('copy-door').disabled = $('qr-door').disabled = !k;
+  if (!k || !$('door-link-qr').hidden) drawDoorQr(); // a new link redraws an open QR
+  $('new-door').textContent = made ? 'New one' : 'Make it';
 }
-$('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); status('Door link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
+// The door link as a QR, for the door phone's camera: drawn here, hidden until asked for (it carries the key).
+async function drawDoorQr(show = !$('door-link-qr').hidden) {
+  const link = $('copy-door').disabled ? '' : $('door-link').value;
+  $('door-link-qr').hidden = !(show && link);
+  $('qr-door').setAttribute('aria-expanded', String(show && !!link));
+  $('qr-door').textContent = show && link ? 'Hide QR' : 'Show QR';
+  if (show && link) {
+    const { qrSvg } = await import('/js/qr.js');
+    $('door-link-qr').src = `data:image/svg+xml,${encodeURIComponent(await qrSvg(link))}`;
+  }
+}
+$('qr-door').onclick = () => drawDoorQr($('door-link-qr').hidden);
+$('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); status('Door scanner link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
 $('new-door').onclick = async () => {
-  const made = $('new-door').textContent === 'New link';
-  if (made && !confirm('Make a new door link? The old one stops working at once.')) return;
+  const made = $('new-door').textContent === 'New one';
+  if (made && !confirm('Make a new door scanner? The old one stops working at once.')) return;
   const { key: k } = await api('POST', '/api/admin/door-link');
   try { localStorage.setItem(DOOR_KEY, k); } catch {}
   doorLink(true);
-  status('The door link is ready: copy it and send it to the door.', 'ok');
+  status('The door scanner is ready: press Show QR for the door phone, or copy the link.', 'ok');
 };
 
 // The pinned message: saved on its own as you type, like the rest of the page.

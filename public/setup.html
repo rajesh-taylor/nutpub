@@ -55,6 +55,7 @@
     .board .to-box .drop { position: absolute; top: 50%; right: 5px; transform: translateY(-50%); border: 0; font-size: 15px; padding: 5px 8px 3px; }
     .board .add-row { margin: 0 0 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
     .board .add-row .btn { min-height: 43px; font-size: 18px; padding: 8px 12px 6px; }
+    .board .add-row #add-split { grid-column: 1 / -1; } /* full width, to the Lightning address box's edge */
     .board .template { display: flex; }
     .board .template select { padding: 6px 10px; font: 16px/1.3 var(--body); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; }
     .board .slots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding-bottom: 14px; }
@@ -88,13 +89,27 @@
     .board .sats-box .lock:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: -2px; }
     .board .home-choices { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
     .board .home-choices .choice { margin-bottom: 0; align-items: center; min-height: 44px; }
-    .board .ticket-split { display: grid; grid-template-columns: 20.5em minmax(0, 1fr); margin-bottom: 10px; }
+    .board .ticket-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(18em, 1fr)); margin-bottom: 10px; } /* one kind: full width */
+    .board .step-head { margin: 0 0 10px; font: 400 18px/1.2 var(--poster); letter-spacing: .08em; color: var(--amber); }
+    .board .night-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); gap: 10px; margin: 0 0 22px; }
+    .board .night { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid rgb(239 227 200 / .18); border-radius: 8px; cursor: pointer; color: var(--cream); }
+    .board .night:has(input:checked) { border-color: var(--amber); background: rgb(217 149 58 / .08); }
+    .board .night input { accent-color: var(--amber); width: 18px; height: 18px; margin: 1px 0 0; flex: none; }
+    .board .night b { display: block; font-size: 16px; }
+    .board .night small { display: block; margin-top: 2px; font-size: 13px; color: var(--smoke); }
+    .board .door-step { display: grid; grid-template-columns: repeat(auto-fit, minmax(18em, 1fr)); gap: 0 24px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgb(239 227 200 / .14); }
+    .board .door-step[hidden], .board .ticket-split .half[hidden] { display: none; }
+    .board .door-link-url { width: 100%; } /* the link on a line of its own, so it can be read */
+    .board .door-qr-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; margin-top: 10px; }
+    .board .door-qr-row .door-link-qr { margin: 0; flex: none; }
+    .board .door-keep { flex: 1 1 12em; margin: 0; font-size: 13px; color: var(--smoke); }
+    .board .ticket-split .price-row { max-width: 30em; } /* Room only: the £ and sats stay together, not across the card */
     .board .ticket-split .half { min-width: 0; }
-    .board .ticket-split .half + .half { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
+    .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
     .board .half-head { margin: 0 0 10px; font: 400 15px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); }
     @media (max-width: 700px) {
       .board .ticket-split { grid-template-columns: 1fr; }
-      .board .ticket-split .half + .half { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
+      .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
     }
     /* Room tickets: a yes/no, so a switch (Square, Toast and YouTube Studio do the same); the row underneath shows when it's on. */
     .board .room-switch { align-items: center; gap: 14px; min-height: 44px; margin: 0 0 10px; }
@@ -118,6 +133,13 @@
     .board .tag.works { color: var(--deep); background: var(--amber); }
     .board .tag.design { color: var(--cream); border: 1px solid rgb(239 227 200 / .4); }
     .board .choice { display: flex !important; gap: 10px; align-items: flex-start; margin: 0 0 12px; font-size: 15px; color: var(--cream); cursor: pointer; }
+    .ready-box { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 8px 14px; margin: 10px 0 0; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .ready-box p { margin: 0; }
+    .ready-head { display: flex; align-items: center; gap: 10px; font: 400 20px/1.2 var(--poster); letter-spacing: .08em; color: var(--cream); white-space: nowrap; }
+    .ready-box .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--amber); flex: none; }
+    .ready-box.ok .dot { background: #1e7a3c; box-shadow: 0 0 0 4px rgb(30 122 60 / .25); } /* a solid dark green: ready */
+    .ready-text { font-size: 15px; color: var(--smoke); }
+    .board .choice[hidden] { display: none !important; } /* e.g. Scan at the door, while Room tickets is off */
     .board .choice input { accent-color: var(--amber); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
     .board .choice input.inline-sats { box-sizing: border-box; width: 3.6em; -moz-appearance: textfield; appearance: textfield; height: auto; margin: 0 4px; padding: 3px 6px; font: inherit; color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 3px; }
     .board .split { border: 1px dashed rgb(217 149 58 / .6); border-radius: 4px; padding: 12px 14px; margin: 6px 0 14px; font-size: 15px; }
@@ -165,6 +187,7 @@
     .board .mod-row .btn, .board .mod-add .btn { font-size: 16px; padding: 8px 12px 6px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
     .board .mod-add .field { flex: 1; margin: 0; }
+    .board .mod-add select { height: 44px; } /* the same height as the Name box beside it */
     @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly] { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
     .board .key-row input { margin-top: 0; flex: 1; }
     .board .key-row .btn { font-size: 16px; padding: 8px 12px 6px; }
@@ -215,8 +238,10 @@
       <div class="top">
         <div style="flex: 1 1 320px;">
           <h1>Plan your gig</h1>
-          <!-- The word Template; with two or more saved shows it's a drop-down that loads one. -->
-          <p class="template" id="tpl-box" hidden><span id="tpl-word">Template</span><select id="tpl-list" aria-label="Start from a template" hidden></select></p>
+          <!-- With two or more saved shows, a drop-down that loads one. -->
+          <p class="template" id="tpl-box" hidden><span id="tpl-word" hidden>Template</span><select id="tpl-list" aria-label="Start from a saved gig" hidden></select></p>
+          <!-- What's left before going live, as Show Time's stream box: a grey dot, then solid green when ready. -->
+          <div class="ready-box" id="ready-box" role="status"><p class="ready-head"><span class="dot" aria-hidden="true"></span><span id="ready-head">Checking…</span></p><p class="ready-text" id="ready-text"></p></div>
         </div>
       </div>
 
@@ -252,12 +277,18 @@
 
           <section class="panel wide">
             <h2>Ticket Price</h2>
+            <!-- Rajesh 11 Nov: in the order an artist decides. The kind of night sets Room tickets (ticket.on) and the
+                 stream's mode; the two inputs stay, hidden, so the saved show is the same as before. -->
+            <h3 class="step-head">What kind of night?</h3>
+            <div class="night-kinds" role="radiogroup" aria-label="What kind of night">
+              <label class="night"><input type="radio" name="night" value="room"><span><b>Room only</b><small>Tickets for the room, no live stream</small></span></label>
+              <label class="night"><input type="radio" name="night" value="both"><span><b>Room + live stream</b><small>Tickets for the room, and the stream for fans at home</small></span></label>
+              <label class="night"><input type="radio" name="night" value="stream"><span><b>Live stream only</b><small>No room tickets: the gig is online</small></span></label>
+            </div>
+            <label hidden><input type="checkbox" data-path="ticket.on" id="ticket-on" aria-label="Sell room tickets"></label>
             <div class="ticket-split">
-              <div class="half">
-                <div class="switch-pair">
-                  <label class="choice room-switch"><b>Room tickets</b><input type="checkbox" role="switch" data-path="ticket.on" aria-label="Sell room tickets"></label>
-                  <label class="choice room-switch" data-when="ticket.on"><b>Scan at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
-                </div>
+              <div class="half" data-night="room both">
+                <h3 class="half-head">Room ticket</h3>
                 <div class="price-row" data-price="ticket" data-when="ticket.on">
               <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
               <span class="about" aria-hidden="true">≈</span>
@@ -265,21 +296,9 @@
                 <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
                   <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
                 </div>
-                <p class="rate-line" id="rate-line"></p>
-                <div data-when="ticket.on">
-                  <div data-when="door.on">
-                    <p class="switch-note">Each room ticket gets a QR on the gig day; the door scans it once with a phone camera. Send this link to whoever is on the door: they open it once, in that phone's usual browser.</p>
-                    <span class="key-row"><input id="door-link" readonly aria-label="The door link"><button type="button" class="btn quiet" id="copy-door">Copy</button><button type="button" class="btn quiet" id="new-door">Make the link</button></span>
-                    <p class="switch-note" style="font-size: 13px; color: var(--smoke); margin-top: 6px;">A new link cancels the old one at once. The link is kept in this browser.</p>
-                    <div class="home-choices door-tickets">
-                      <label class="choice"><input type="radio" name="door-tickets" data-path="door.tickets" value="browser"> <span><b>Browser ticket only</b> · the ticket page's QR changes every 30 seconds, so a screenshot or a forwarded copy won't get in</span></label>
-                      <label class="choice"><input type="radio" name="door-tickets" data-path="door.tickets" value="cards"> <span><b>Wallet cards too</b> · Apple and Google Wallet cards keep one QR, which can be copied; only the first scan gets in</span></label>
-                    </div>
-                  </div>
-                </div>
               </div>
-              <div class="half">
-                <h3 class="half-head">Live stream</h3>
+              <div class="half" data-night="both stream">
+                <h3 class="half-head">Live stream: how fans at home pay</h3>
                 <div class="home-choices">
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Online ticket</b></span></label>
                 <div class="price-row online-row" data-price="online" data-when="stream.mode=ticket">
@@ -292,8 +311,22 @@
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="pay"> <span><b>Pay as you watch:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="stream.perMinute" aria-label="Sats a minute"> sats a minute</span></label>
             <label class="free-first" data-when="stream.mode=pay">First <input class="inline-sats" type="number" min="1" max="30" step="1" inputmode="numeric" data-path="stream.freeMinutes" aria-label="Minutes free at the start" placeholder="0"> minutes free, then they choose to pay</label>
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="free"> <span><b>Live Stream free + accept Comments and Tips</b></span></label>
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
+            <label class="choice" hidden><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
                 </div>
+              </div>
+            </div>
+            <p class="rate-line" id="rate-line"></p>
+            <div class="door-step" data-night="room both">
+              <div>
+                <h3 class="step-head">At the door</h3>
+                <label class="choice room-switch"><b>Scan at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
+                <p class="switch-note" data-when="door.on">Each room ticket shows a QR on the gig day, new every 30 seconds, so a screenshot won't get in.</p>
+              </div>
+              <div data-when="door.on">
+                    <p class="switch-note">Turn a mobile into a door ticket scanner. Point its camera at the QR code below, or copy and send the link.</p>
+                    <input id="door-link" class="door-link-url" readonly aria-label="The door scanner's link">
+                    <span class="key-row"><button type="button" class="btn quiet" id="qr-door" aria-expanded="false">Show QR</button><button type="button" class="btn quiet" id="copy-door">Copy link</button><button type="button" class="btn quiet" id="new-door">Make it</button></span>
+                    <div class="door-qr-row"><img id="door-link-qr" class="door-link-qr" alt="The door scanner's QR: point the door phone's camera at it" hidden><p class="switch-note door-keep">Keep it private. A new one stops the old one at once. Kept in this browser.</p></div>
               </div>
             </div>
           </section>

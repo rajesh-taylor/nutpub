@@ -914,3 +914,7 @@ body[data-as="room"] .chat > .say { order: 6; }
 .free-over { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; text-align: center; background: rgb(5 9 20 / .82); }
 .free-over p { margin: 0; display: grid; gap: 6px; font-size: 17px; color: var(--cream); }
 .free-over b { font: 400 30px/1.05 var(--poster); letter-spacing: .06em; }
+
+/* The door link's QR on Plan gig (session 17; look to design) */
+.door-link-qr { display: block; width: 200px; max-width: 100%; margin: 10px 0 0; border-radius: 8px; }
+.door-link-qr[hidden] { display: none; }

@@ -750,8 +750,8 @@ async function doorQr() {
   const want = `${door.code}.${step}`;
   qrDrawn = want;
   try {
-    const [{ default: QRCode }, otp] = await Promise.all([import('qrcode'), totp(door.secret, step)]);
-    const svg = await QRCode.toString(`${location.origin}/door.html#t=${door.code}.${otp}`, { type: 'svg', margin: 1, color: { dark: '#050914', light: '#efe3c8' } });
+    const [{ qrSvg }, otp] = await Promise.all([import('./qr.js'), totp(door.secret, step)]);
+    const svg = await qrSvg(`${location.origin}/door.html#t=${door.code}.${otp}`, { icons: true }); // a peanut, a mic and a beer
     if (qrDrawn === want) $('door-qr').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
   } catch (e) { if (qrDrawn === want) qrDrawn = ''; throw e; } // try again next second, not next step
 }
@@ -779,7 +779,7 @@ function render() {
   body.classList.toggle('confirmed', confirmed);
   $('save-ticket').hidden = !confirmed;
   if (confirmed) receipt();
-  walletLinks(room && doorCheck && show.door.tickets !== 'browser' && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
+  walletLinks(room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);

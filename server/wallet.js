@@ -22,9 +22,11 @@ export function startOf(show) {
   return { at, when: at ? `${show.date}T${hhmm}:00+0${offset}:00` : show.date ? `${show.date}T12:00:00+00:00` : null };
 }
 
+// What both wallets say about the door.
+export const DOOR_NOTE = 'Open the gig page on the phone you bought with and press Show at the door. Its QR changes every 30 seconds, so a screenshot won\u2019t get in. If the venue may have no signal, open it before you go in and keep it open.';
+
 export function passJson(show, code, site) {
   const { at, when } = startOf(show);
-  const door = `${site}/door.html#t=${code}`;
   const page = show.page ? `${site}/${show.page}` : site;
   const artist = show.artist || 'The show';
   return {
@@ -33,8 +35,8 @@ export function passJson(show, code, site) {
     description: `Ticket: ${artist}`,
     foregroundColor: 'rgb(239, 227, 200)', labelColor: 'rgb(217, 149, 58)', backgroundColor: 'rgb(5, 9, 20)',
     ...(when ? { relevantDate: when, expirationDate: nextMorning(show.date) } : {}),
-    barcodes: [{ format: 'PKBarcodeFormatQR', message: door, messageEncoding: 'iso-8859-1' }],
-    barcode: { format: 'PKBarcodeFormatQR', message: door, messageEncoding: 'iso-8859-1' }, // iOS 8 and older
+    // No QR (11 Nov): a card's QR can't change, so it could be copied. The card is the reminder; the way in is the
+    // ticket page's QR, new every 30 seconds.
     eventTicket: {
       primaryFields: [field('artist', 'ARTIST', artist)],
       secondaryFields: [
@@ -48,7 +50,7 @@ export function passJson(show, code, site) {
         ...(show.description ? [field('b-notes', `From ${artist}`, show.description)] : []),
         field('b-ticket', 'Ticket', 'Room · one entry'),
         field('b-page', 'The gig page', page),
-        field('b-door', 'At the door', 'The QR on the front gets you in once. The gig page has your ticket too, if this card is lost.'),
+        field('b-door', 'At the door', DOOR_NOTE),
       ],
     },
   };
@@ -66,7 +68,6 @@ export async function roomTicket(c) {
   if (!CODE.test(code)) return { refused: json({ error: 'bad_code' }, 400) };
   const show = await showOf(c);
   if (!(show.ticket.on && show.door.on)) return { refused: json({ error: 'off', detail: 'This gig has no door check, so no card.' }, 409) };
-  if (show.door.tickets === 'browser') return { refused: json({ error: 'browser_only', detail: 'This gig takes the ticket page only, no wallet cards.' }, 409) };
   if (await gigOver(await current(c))) return { refused: json({ error: 'over', detail: 'This gig is over.' }, 410) };
   if (!(await one("SELECT 1 AS x FROM tickets WHERE code = ? AND kind = 'room'", code))) return { refused: json({ error: 'unknown' }, 404) };
   return { show, code };
