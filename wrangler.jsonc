@@ -23,7 +23,10 @@
     "MINT_TEST": "1",
     // The wallet card (Apple Pass Type ID and team). Its key and certificate are secrets: PASS_KEY, PASS_CERT.
     "PASS_TYPE": "pass.com.thenutpub.ticket",
-    "PASS_TEAM": "H5NRV4JGDB"
+    "PASS_TEAM": "H5NRV4JGDB",
+    // Google Wallet: issuer (demo mode: only test accounts can save a card) and signer. Its key is the secret GWALLET_KEY.
+    "GWALLET_ISSUER": "3388000000023236957",
+    "GWALLET_EMAIL": "nutpub-signer@nutpub-wallet.iam.gserviceaccount.com"
   },
   // Keep only the Worker's own lines (errors, payments). No per-request record: that holds the visitor's IP and
   // headers (X-Admin, X-Pass) for 7 days.

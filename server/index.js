@@ -13,6 +13,7 @@ import { mountLive, useStream } from './live.js';
 import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
+import { mountGoogleWallet } from './gwallet.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -92,6 +93,7 @@ mountLive(route, admin, pass);
 mountRate(route);
 mountMods(route, admin);
 mountWallet(route);
+mountGoogleWallet(route);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

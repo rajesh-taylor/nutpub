@@ -6,6 +6,7 @@ import QRCode from 'qrcode';
 import { SITE_URL } from './config.js';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { cashuGate } from './gate.js';
+import { totpOk } from './totp.js';
 import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver } from './shows.js';
 import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
@@ -17,7 +18,7 @@ export const barKey = () => kv.get('barKey');
 
 const DRINK = 'SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked';
 export const hasTicket = async (pass) => !!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', pass));
-const ticketOf = (pass) => one('SELECT kind, sats, at, code, checked_at FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
+const ticketOf = (pass) => one('SELECT kind, sats, at, code, secret, checked_at FROM tickets WHERE pass = ?', pass); // kind: 'room' | 'home'
 const siteOf = (c) => SITE_URL || c.url.origin;
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
@@ -55,25 +56,29 @@ export function mountDoor(route, admin, pass) {
     await kv.set('doorKey', await sha(key));
     return json({ key }); // the key leaves the server this once
   });
-  // The scan: the ticket's QR opens /door.html#t=<code> on the doorman's phone. Marked once, in one statement, so two
-  // scans can't both pass; that also stops a forwarded ticket getting a second person in.
+  // The scan: the ticket's QR opens /door.html#t=<code>.<time code> on the doorman's phone. The time code (RFC 6238,
+  // see totp.js) changes every 30 seconds on the ticket page, so a screenshot goes stale; a wallet card's QR has the
+  // code alone, taken only when the artist picked "Wallet cards too". Marked once, in one statement, so two scans
+  // can't both pass; that also stops a forwarded ticket getting a second person in.
   route('POST', '/api/door/scan', doorman, async (c) => {
-    if (!(await doorOn(c))) return json({ result: 'off' });
-    const code = String((await body(c))?.code || '');
+    const show = await showOf(c);
+    if (!(show.ticket.on && show.door.on)) return json({ result: 'off' });
+    const b = await body(c);
+    const code = String(b?.code || '');
+    const otp = String(b?.otp || '');
     if (!CODE.test(code)) return json({ result: 'unknown' });
-    if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in' });
-    const t = await one('SELECT kind, checked_at FROM tickets WHERE code = ?', code);
+    const t = await one('SELECT kind, checked_at, secret FROM tickets WHERE code = ?', code);
     if (!t) return json({ result: 'unknown' });
-    return json(t.kind === 'room' ? { result: 'already', at: t.checked_at } : { result: 'online' });
+    if (t.kind !== 'room') return json({ result: 'online' });
+    if (t.checked_at) return json({ result: 'already', at: t.checked_at });
+    if (otp ? !(await totpOk(t.secret, otp)) : show.door.tickets === 'browser') return json({ result: otp ? 'stale' : 'card' });
+    if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in' });
+    const again = await one('SELECT checked_at FROM tickets WHERE code = ?', code);
+    return json({ result: 'already', at: again?.checked_at });
   });
   route('GET', '/api/door/count', doorman, async (c) => json({ on: await doorOn(c),
     ...(await one("SELECT COUNT(checked_at) AS inside, COUNT(*) AS sold FROM tickets WHERE kind = 'room'")) }));
-  // The ticket's door QR: the door page with this ticket's code. Only the ticket's own page is given the code.
-  route('GET', '/api/door/ticket-qr.svg', async (c) => {
-    const code = c.url.searchParams.get('code') || '';
-    if (!CODE.test(code)) return json({ error: 'bad_code' }, 400);
-    return svg(await QRCode.toString(`${siteOf(c)}/door.html#t=${code}`, { type: 'svg', margin: 1, color: { dark: '#050914', light: '#efe3c8' } }));
-  });
+  // The ticket's door QR is drawn on the phone itself (viewer.js), from its code and its time code.
 
   // ---- The stage (see stageNow): doors, open, on, closed. Show Time's three buttons move it on.
   const STAGES = ['doors', 'open', 'on', 'closed'];
@@ -123,7 +128,7 @@ export function mountDoor(route, admin, pass) {
       async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'online ticket' : 'privacy ticket'}`,
       { lockTo: artistKey, kind: 'ticket' }),
     async (c) => {
-      await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind, code) VALUES (?, ?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room', randomHex(12));
+      await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind, code, secret) VALUES (?, ?, ?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room', randomHex(12), randomHex(32));
       return json({ in: true });
     });
 
@@ -148,9 +153,11 @@ export function mountDoor(route, admin, pass) {
   const heldBy = async (id) => {
     const d = await one(`${DRINK} WHERE d.pass = ?`, id);
     const t = await ticketOf(id);
-    // code: the room ticket's door code, for its QR (the page shows it only when the door check is on).
+    // code and secret: the room ticket's door code and its time code's secret, for its QR (the page shows it only
+    // when the door check is on). Only this phone's own pass is given them.
+    const room = t?.kind === 'room';
     return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null,
-      code: t?.kind === 'room' ? t.code : null, checkedAt: t?.checked_at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
+      code: room ? t.code : null, secret: room ? t.secret : null, checkedAt: t?.checked_at ?? null, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
   route('GET', '/api/door/me', pass, async (c) => json({ ...(await heldBy(c.pass)), soldOut: await roomFull(c) }));
 

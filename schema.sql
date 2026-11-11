@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS tips (pass TEXT, sats INTEGER NOT NULL, at TEXT NOT N
 -- kind: 'room' (the room ticket) or 'home' (the Online ticket). Added 7 Nov: ALTER TABLE tickets ADD COLUMN kind TEXT NOT NULL DEFAULT 'room';
 -- code: the door's code for a room ticket (its QR), never the pass; checked_at: when the door scanned it. Added 10 Nov:
 -- ALTER TABLE tickets ADD COLUMN code TEXT; ALTER TABLE tickets ADD COLUMN checked_at TEXT; (scripts/door-migration.sql)
-CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room', code TEXT, checked_at TEXT);
+-- secret: the time code's secret (RFC 6238; the ticket page's QR changes every 30 s). Added 11 Nov: scripts/totp-migration.sql
+CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room', code TEXT, checked_at TEXT, secret TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS tickets_code ON tickets (code);
 CREATE TABLE IF NOT EXISTS drinks (id INTEGER PRIMARY KEY, pass TEXT UNIQUE NOT NULL, locked INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (

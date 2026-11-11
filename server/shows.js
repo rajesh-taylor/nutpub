@@ -43,7 +43,8 @@ export const blank = () => ({
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
   ticket: { on: false, price: null, fiat: null, locked: false }, // the room ticket in sats; fiat: £, the card price, which fills the sats unless locked
-  door: { on: false },                  // door check: each room ticket's QR is scanned once at the door (off by default)
+  door: { on: false, tickets: 'cards' }, // door check: each room ticket's QR is scanned once at the door (off by default);
+                                        // tickets: 'browser' (the ticket page's 30-second QR only) or 'cards' (wallet cards too)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
   goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
@@ -96,14 +97,14 @@ export function clean(input = {}) {
       amount: sats(input.goal?.amount),
       minutes: Math.min(Math.max(Math.floor(Number(input.goal?.minutes)) || b.goal.minutes, 1), 600),
     },
-    venue: text(input.venue, 60),
+    venue: text(input.venue, 120),
     capacity: (() => { const n = Math.floor(Number(input.capacity)); return input.capacity !== '' && input.capacity != null && n >= 1 && n <= 100_000 ? n : null; })(),
     date: /^\d{4}-\d{2}-\d{2}$/.test(input.date) ? input.date : '',
     streams: TIME.test(input.streams) ? input.streams : '',
     starts: TIME.test(input.starts) ? input.starts : '',
     lastOrders: TIME.test(input.lastOrders) ? input.lastOrders : '',
     ticket: { on: on(input.ticket?.on), price: sats(input.ticket?.price), fiat: pounds(input.ticket?.fiat), locked: on(input.ticket?.locked) },
-    door: { on: on(input.door?.on) },
+    door: { on: on(input.door?.on), tickets: input.door?.tickets === 'browser' ? 'browser' : 'cards' },
     // The first drink is off on every gig until after 27 Nov (decided 9 Nov): one kind of ticket for everyone. When it
     // comes back it should lock once a gig's first ticket sells, as the artist's name does.
     drink: { price: sats(input.drink?.price), mode: DRINK_LATER ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
@@ -124,6 +125,7 @@ export function clean(input = {}) {
 
   const problems = [];
   if (!show.artist) problems.push('artist');
+  if (!show.venue) problems.push('venue');
   if (!show.date) problems.push('date');
   else if (show.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })) problems.push('date.past');
   if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');

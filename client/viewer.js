@@ -3,6 +3,7 @@
 // stops at once. "Free, with tips" shows play without a 402. The tip button is a 402 of its own.
 import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
+import { totp, stepAt } from '../server/totp.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -739,6 +740,23 @@ whenLine();
 priceLine();
 readyLive();
 
+// The door's QR, drawn here from the ticket's code and its time code (RFC 6238, see totp.js), new every 30 seconds
+// on the server's clock (skew), with no signal needed once the page has the ticket. A screenshot goes stale.
+let qrDrawn = '';
+async function doorQr() {
+  if (!door.code || !door.secret || $('door-pass').hidden) return;
+  const step = stepAt(Date.now() + skew);
+  if (qrDrawn === `${door.code}.${step}`) return;
+  const want = `${door.code}.${step}`;
+  qrDrawn = want;
+  try {
+    const [{ default: QRCode }, otp] = await Promise.all([import('qrcode'), totp(door.secret, step)]);
+    const svg = await QRCode.toString(`${location.origin}/door.html#t=${door.code}.${otp}`, { type: 'svg', margin: 1, color: { dark: '#050914', light: '#efe3c8' } });
+    if (qrDrawn === want) $('door-qr').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  } catch (e) { if (qrDrawn === want) qrDrawn = ''; throw e; } // try again next second, not next step
+}
+setInterval(() => { if (!document.hidden) doorQr().catch(() => {}); }, 1000);
+
 let doorShown = false;
 function render() {
   const room = AS === 'room';
@@ -761,7 +779,7 @@ function render() {
   body.classList.toggle('confirmed', confirmed);
   $('save-ticket').hidden = !confirmed;
   if (confirmed) receipt();
-  walletLinks(room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
+  walletLinks(room && doorCheck && show.door.tickets !== 'browser' && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
@@ -813,7 +831,7 @@ function render() {
     $('door-show').hidden = inRoom;
     $('door-pass-title').textContent = inRoom ? 'You’re in' : 'Your ticket';
     $('door-pass-note').textContent = inRoom ? '· enjoy the night' : '';
-    if (!$('door-qr').src.includes(door.code)) $('door-qr').src = `/api/door/ticket-qr.svg?code=${door.code}`;
+    doorQr();
     // Scanned while the QR is open: it says so, then closes by itself.
     if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
       $('door-in').hidden = false; $('door-qr').hidden = true; $('door-small').textContent = 'Enjoy the night.';
@@ -1088,16 +1106,20 @@ else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
-// The room ticket in the phone's wallet (the door check on): Apple Wallet, or an open wallet on Android (Catima,
-// PassAndroid), which read the same file. The card carries the same door QR as the page.
+// The room ticket in the phone's wallet (the door check on): Apple Wallet on Apple devices, Google Wallet elsewhere
+// (Android, and Chrome on a computer, which saves it to the Google account). Not on Apple, the same .pkpass file as
+// Apple's for open-source wallets (Catima, PassAndroid): kept on the phone, no account. The card carries the page's door QR.
 const APPLE = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
 function walletLinks(code) {
   for (const id of ['save-wallet', 'door-wallet']) {
     const a = $(id);
+    const file = $(`${id}-file`);
     a.hidden = !code;
+    file.hidden = !code || APPLE;
     if (!code) continue;
-    a.href = `/api/door/ticket.pkpass?code=${code}`;
-    a.textContent = APPLE ? 'Add to Apple Wallet' : 'Add to wallet';
+    a.href = `/api/door/ticket.${APPLE ? 'pkpass' : 'gwallet'}?code=${code}`;
+    a.textContent = APPLE ? 'Add to Apple Wallet' : 'Add to Google Wallet';
+    file.href = `/api/door/ticket.pkpass?code=${code}`;
   }
 }
 // The card is the receipt: what it's for and what was paid. Paid amounts stay in sats, whatever the page reads in.

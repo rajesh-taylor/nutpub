@@ -238,7 +238,7 @@
             <h2>Event</h2>
             <div class="event-names">
               <label class="field" id="field-artist">Artist<input data-path="artist" maxlength="60"></label>
-              <label class="field">Show name<input data-path="title" maxlength="80" placeholder="Optional"></label>
+              <label class="field" id="field-venue">Name &amp; address of venue<input data-path="venue" maxlength="120" placeholder="e.g. The Bell, 1 High Street, Bath" autocomplete="off"></label>
               <label class="field" id="field-page">Page address <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
             </div>
             <div class="three">
@@ -271,6 +271,10 @@
                     <p class="switch-note">Each room ticket gets a QR on the gig day; the door scans it once with a phone camera. Send this link to whoever is on the door: they open it once, in that phone's usual browser.</p>
                     <span class="key-row"><input id="door-link" readonly aria-label="The door link"><button type="button" class="btn quiet" id="copy-door">Copy</button><button type="button" class="btn quiet" id="new-door">Make the link</button></span>
                     <p class="switch-note" style="font-size: 13px; color: var(--smoke); margin-top: 6px;">A new link cancels the old one at once. The link is kept in this browser.</p>
+                    <div class="home-choices door-tickets">
+                      <label class="choice"><input type="radio" name="door-tickets" data-path="door.tickets" value="browser"> <span><b>Browser ticket only</b> · the ticket page's QR changes every 30 seconds, so a screenshot or a forwarded copy won't get in</span></label>
+                      <label class="choice"><input type="radio" name="door-tickets" data-path="door.tickets" value="cards"> <span><b>Wallet cards too</b> · Apple and Google Wallet cards keep one QR, which can be copied; only the first scan gets in</span></label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -369,7 +373,7 @@
         <div hidden>
           <span id="tip-preview"></span>
           <!-- Off for the demo; they come back with a Venue/Hosts section. -->
-          <input data-path="venue"><input data-path="tip.label"><input type="number" data-path="tip.price">
+          <input data-path="tip.label"><input type="number" data-path="tip.price">
           <label id="drink-price"><input type="number" data-path="drink.price"></label>
           <input type="radio" name="drink" data-path="drink.mode" value="off"><input type="radio" name="drink" data-path="drink.mode" value="artist">
           <p id="split"></p><a id="takings-link"></a><a id="bar-link"></a><a id="doors-open"></a>

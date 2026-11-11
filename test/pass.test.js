@@ -71,7 +71,8 @@ test('the card: UK time with its offset, the door QR, nothing about the buyer', 
   const winter = passJson({ artist: 'Longy', date: '2026-11-20', streams: '19:30' }, code, 'https://x.test');
   assert.equal(winter.relevantDate, '2026-11-20T19:30:00+00:00');
   assert.equal(winter.barcodes[0].message, `https://x.test/door.html#t=${code}`);
-  assert.equal(winter.barcodes[0].altText, 'The NutPub');
+  assert.equal(winter.barcodes[0].altText, undefined); // the name is in the card's top strip, not by the QR
+  assert.equal(winter.logoText, 'The NutPub');
   assert.equal(winter.serialNumber, code);
   assert.equal(passJson({ artist: 'A' }, code, 'https://x.test').relevantDate, undefined); // no date: no reminder
 });

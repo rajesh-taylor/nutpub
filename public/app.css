@@ -881,6 +881,10 @@ body.wallet-card .show-line .status.shine, .status.shine { color: transparent; b
 .door-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .wallet-add { text-decoration: none; text-align: center; }
 .wallet-add[hidden] { display: none; }
+/* The .pkpass file for open-source wallets (Catima, PassAndroid): no Google or Apple account sees the card. */
+.wallet-file { flex-basis: 100%; font-size: 14px; color: var(--smoke); text-align: right; }
+.save-ticket .wallet-file { text-align: center; }
+.wallet-file[hidden] { display: none; }
 /* The ticket's QR, full screen (10 Nov, from the iPhone): who and when at the top, big; the QR in the middle; Close at the bottom. */
 .door-screen { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 14px; padding: max(28px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom)); background: var(--deep); text-align: center; }
 .door-screen[hidden] { display: none; }

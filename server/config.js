@@ -10,6 +10,10 @@ export let PASS_TYPE = '';
 export let PASS_TEAM = '';
 export let PASS_KEY = '';
 export let PASS_CERT = '';
+// Google Wallet: our issuer ID, the signer's email (both public) and its private key (a secret, PEM).
+export let GWALLET_ISSUER = '';
+export let GWALLET_EMAIL = '';
+export let GWALLET_KEY = '';
 
 const trim = (url) => String(url).replace(/\/+$/, '');
 export function configure(env) {
@@ -27,4 +31,7 @@ export function configure(env) {
   PASS_TEAM = env.PASS_TEAM || '';
   PASS_KEY = env.PASS_KEY || '';
   PASS_CERT = env.PASS_CERT || '';
+  GWALLET_ISSUER = env.GWALLET_ISSUER || '';
+  GWALLET_EMAIL = env.GWALLET_EMAIL || '';
+  GWALLET_KEY = env.GWALLET_KEY || '';
 }
