@@ -555,6 +555,15 @@ Then 16 to 17 Nov build what's left of the design.
 
 **Session 17's prompt:** used Wed 11 Nov.
 
+**Pub Menu v0.1, Rajesh 11 Nov late (decided; build in Thursday's free slot, before Nostr sign-in, Nutzaps, then NWC):** a pub menu in the site's own look (midnight, amber, cream; dotted leaders to the "price", which is the NUTs and NIPs each dish uses). Dishes so far:
+- **Fish 'N Nips** · Nostr: your handle in the chat, Nutzaps, the live gig listed on Nostr. *NIP-61, NIP-47, NIP-53*
+- **Passkey Pie** · The ticket you can't lose: no email, no account. *WebAuthn*
+- **Nutty Stardust** (proposed) · Pay by the minute in sat dust, leave when it gets bad. *NUT-24*
+- **Happy Hour:** 150,000 test sats free, every night.
+- **Allergens:** "Contains no email, name, address. May contain NUTs."
+- **GitGrub:** the recipe book on GitHub.
+No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86'd", no drinks. Costs not shown. Tips stay two buttons: Tip (anonymous, as now) and Nutzap (public, with your Nostr handle).
+
 **Session 18's prompt:** used Wed 11 Nov.
 
 **Next, session 19 (Opus, technical):**
