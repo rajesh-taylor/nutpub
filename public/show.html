@@ -57,6 +57,7 @@
       /* Widgets (12 Nov): pages for the venue's screens, each a button with a copy icon beside it; room for more on the row. */
     .widgets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 16px; text-align: left; }
     .widgets-head { margin: 0; font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--amber); }
+    .nz-say { font-size: 14px; color: var(--smoke); } /* Nutzaps (13 Nov); the look is for design */
     .widget-row { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; }
     .widget { display: inline-flex; align-items: stretch; gap: 4px; }
     .widget .copy { display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; background: none; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; color: var(--cream); cursor: pointer; }
@@ -83,6 +84,8 @@
         <p class="widget-row">
           <span class="widget"><a class="btn quiet" id="screen-open" target="_blank" rel="noopener" title="The room's screen for the venue's TV: the QR to tip, top tippers, chat, stretch goals">Chat &amp; Big Time Charlies</a><button type="button" class="copy" id="screen-copy" aria-label="Copy the link to Chat &amp; Big Time Charlies" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
         </p></div>
+      <div class="widgets nutzaps"><p class="widgets-head">Nutzaps</p>
+        <p class="widget-row"><button type="button" class="btn quiet" id="nz-on">Turn on Nutzaps</button> <span class="nz-say" id="nz-say">Fans signed in with Nostr can tip with their name on it, in public. Collected in Takings like any tip.</span></p></div>
       <div class="night-btns">
         <button type="button" class="big stream" id="stream-btn" data-stage="open">Start stream</button>
         <button type="button" class="big go" data-stage="on">Start show</button>

@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 -- Nostr sign-in for the chat (server/nostr.js): the phone's pass, its Nostr public key and profile name, for the night.
 CREATE TABLE IF NOT EXISTS nostr (pass TEXT PRIMARY KEY, pubkey TEXT NOT NULL, name TEXT, at TEXT NOT NULL);
+-- Nutzaps (server/nutzap.js, 13 Nov): which tip (locked) and chat message was a Nutzap, the fan's key and name, and the
+-- signed public note. Deleted with the night's records (closing.js). Added: scripts/nutzap-migration.sql
+CREATE TABLE IF NOT EXISTS nutzaps (locked INTEGER PRIMARY KEY, message INTEGER, pubkey TEXT NOT NULL, name TEXT, event TEXT NOT NULL, at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS nutzaps_message ON nutzaps (message);
 -- Moderators: a name and the SHA-256 of their link's key (the key itself is never kept).
 -- icon: the artist's pick; main: the one mod who may also change the pinned message. Both added 10 Nov (ALTER TABLE mods ADD COLUMN ...).
 CREATE TABLE IF NOT EXISTS mods (id INTEGER PRIMARY KEY, name TEXT NOT NULL, key_hash TEXT UNIQUE NOT NULL, created TEXT NOT NULL,

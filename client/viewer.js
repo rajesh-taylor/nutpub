@@ -5,7 +5,7 @@ import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 import { totp, stepAt } from '../server/totp.js';
 import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
-import { extension, signIn, signOut, whoAmI } from './nostr.js';
+import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -89,7 +89,7 @@ const inFiat = () => !!rate && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
-const [health, { show, photo: showPhoto, photos: showPhotos = {} }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -157,7 +157,6 @@ const meter = () => {
   $('spent').textContent = inFiat() ? fiat(given) : T.spent(given);
   $('spent-box').hidden = free && !given;
   $('free-note').hidden = !free;
-  $('free-line').textContent = `Tip ${show.artist || 'the artist'} for hosting the live show`;
 };
 // A tip went through: the server says this browser's new total.
 const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { tippedHere = j.total; meter(); } }).catch(() => {});
@@ -175,6 +174,7 @@ const wallet = {
   topupDone: (id) => walletReady.then((w) => w.topupDone(id)),
   on: (event, fn) => { walletReady.then((w) => w.on(event, fn)); },
   get lastFee() { return realWallet?.lastFee || 0; },
+  get lastProofs() { return realWallet?.lastProofs || []; },
 };
 const balance = async () => {
   const have = await wallet.balance();
@@ -578,6 +578,58 @@ async function tip(button) {
   balance();
 }
 $('tip').onclick = () => tip($('tip'));
+
+// ---- A Nutzap (NIP-61, server/nutzap.js): a tip with your Nostr name, in public. Only for a fan signed in with Nostr,
+// once the artist has turned Nutzaps on. The wallet locks the sats to the artist (the same 402 as a tip), the fan's
+// extension or signer app signs a public note carrying those coins, and the NutPub checks both. If the note isn't
+// signed (the app said no, or never answered), the sats are already the artist's: they go as a plain tip instead.
+// Under the comment box (Rajesh 12 Nov): up to three one-tap amounts, ⚡ 21 · ⚡ 210 · ⚡ 2,100 sats; the comment box's
+// words go with it. Only signed in with Nostr, once the artist has turned Nutzaps on.
+const NUTZAPS = [21, 210, 2100];
+let nostrMe = null;
+function nutzapButton() {
+  const row = $('nutzaps');
+  row.hidden = !(nostrMe && zapTo && !MOD);
+  if (row.hidden) return;
+  $('nutzap-btns').replaceChildren(...NUTZAPS.slice(0, 3).map((n) => Object.assign(document.createElement('button'), {
+    type: 'button', className: 'btn nutzap', textContent: `⚡ ${n.toLocaleString('en-GB')}`,
+    title: `Nutzap ${sats(n)}: a tip with your Nostr name on it, in public`, onclick: (e) => nutzap(e.currentTarget, n) })));
+}
+async function nutzap(b, n) {
+  if (b.disabled) return;
+  unlockAudio();
+  for (const x of $('nutzap-btns').children) x.disabled = true;
+  const url = `/api/nutzap/${n}`;
+  const text = $('say-text').value.trim();
+  try {
+    const s = await signer();
+    if (!s) throw new Error('Sign in with Nostr again first.');
+    const ask = await fetch(url, { method: 'POST', headers: { 'X-Pass': pass } });
+    if (ask.status !== 402) { say(await refusal(ask)); return; }
+    const token = await wallet.pay(ask.headers.get('X-Cashu'));
+    const proofs = wallet.lastProofs.map(({ amount, id, secret, C, dleq }) => ({ amount: Number(amount), id, secret, C, ...(dleq ? { dleq } : {}) }));
+    let event = null;
+    say('Sign the Nutzap in your Nostr app…', true);
+    try {
+      event = await sign(s, { kind: 9321, created_at: Math.floor(Date.now() / 1000), content: text,
+        tags: [...proofs.map((p) => ['proof', JSON.stringify(p)]), ['u', health.mint.url], ['p', zapTo.pubkey], ['alt', `A Nutzap for ${show.artist || 'the artist'} at The NutPub`]] });
+    } catch {}
+    if (!event) { // not signed: the sats are locked to the artist already, so they go as a plain tip
+      const res = await fetch(`/api/tip/${n}`, { headers: { 'X-Pass': pass, 'X-Cashu': token, ...said() } });
+      if (res.ok) { sent(); tipped(res); }
+      say(res.ok ? 'Not signed, so it went as a plain tip, without your name.' : await refusal(res), res.ok);
+      return;
+    }
+    const res = await fetch(url, { method: 'POST', headers: { 'X-Pass': pass, 'X-Cashu': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ event }) });
+    if (res.ok) {
+      sent(); tipped(res);
+      publish(event, zapTo.relays).catch(() => {}); // in public, where any Nostr app can see it
+      say(`Nutzapped ${reads(n)}: in the chat with your name.`, true);
+    } else say(await refusal(res));
+  } catch (e) {
+    say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
+  } finally { for (const x of $('nutzap-btns').children) x.disabled = false; balance(); }
+}
 $('ov-tip').onclick = () => tip($('ov-tip'));
 
 // ---- Tip sats, your amount: type it, then "Tip n sats" pays exactly that (its own 402).
@@ -705,6 +757,7 @@ function words() {
   $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${reads(show.tip.price || 0)}`;
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
   $('say-tip').textContent = `Send with ${reads(show.tip.price || 0)}`;
+  nutzapButton();
 }
 words();
 let shownAt = null;
@@ -1131,6 +1184,7 @@ function chat(r) {
       if (m.icon) li.append(Object.assign(document.createElement('span'), { className: `mod-icon${m.icon === '₿' ? ' btc' : ''}`, textContent: m.icon }), ' ');
       li.append(Object.assign(document.createElement('span'), { className: 'mod-tag', textContent: 'Mod' }), ' ');
     }
+    if (m.nutzap) li.append(Object.assign(document.createElement('span'), { className: 'nutzap-tag', textContent: 'Nutzap', title: 'A tip with their Nostr name, in public' }), ' ');
     if (m.sats) { // the name first, then what they tipped, in gold
       li.className = 'tipped';
       const amt = document.createElement('b');
@@ -1293,30 +1347,64 @@ $('say').onsubmit = async (e) => {
 };
 
 // ---- Nostr sign-in for the chat, a purple button in the Live chat header for every fan (not mods: they have their own
-// names). With a Nostr extension (NIP-07) it signs straight in, and their Nostr name replaces "guest 3f2a" from their
-// next message on. Without one, it says what's needed; signer apps on phones (NIP-46) come later.
+// names). With a Nostr extension (NIP-07) it signs straight in. Without one (phones, mostly), Nostr Connect (NIP-46):
+// a QR for the signer app on a computer, a button that opens it on a phone. Their Nostr name replaces "guest 3f2a"
+// from their next message on.
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+let waiting = null; // a Nostr Connect waiting for the fan's app
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 function nostrLine(me) {
   const line = $('nostr-in');
   line.hidden = !!MOD;
-  const btn = (text, onclick, className = 'linkish') => Object.assign(document.createElement('button'), { type: 'button', className, textContent: text, onclick });
+  line.classList.remove('connecting');
+  nostrMe = me?.name ? me : null;
+  nutzapButton();
+  const btn = (text, onclick, className = 'linkish') => el('button', { type: 'button', className, textContent: text, onclick });
   if (me?.name) {
-    line.replaceChildren('as ', Object.assign(document.createElement('b'), { textContent: me.name, title: me.npub || '' }), ' · ',
+    line.replaceChildren('as ', el('b', { textContent: me.name, title: me.npub || '' }), ' · ',
       btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
     return;
   }
   const b = btn('Nostr Sign In', async () => {
-    if (!window.nostr) {
-      line.replaceChildren(Object.assign(document.createElement('span'), { className: 'nostr-note',
-        textContent: 'Needs a Nostr extension (Alby or nos2x on a computer). Phones: coming soon. ' }), btn('OK', () => nostrLine({})));
-      return;
-    }
     b.disabled = true;
+    if (!window.nostr) { await connectPanel().catch((e) => { say(e?.message || 'Nostr Connect didn’t start.'); nostrLine({}); }); return; }
     try { nostrLine(await signIn(pass)); } catch (e) { say(e?.message || 'Nostr sign-in cancelled.'); b.disabled = false; }
   }, 'nostr-btn');
   line.replaceChildren(b);
 }
+// Nostr Connect, waiting for the fan's signer app. Words for fans: no "NIP", no "bunker".
+async function connectPanel() {
+  const line = $('nostr-in');
+  const c = await connect(pass, { onAuth: (url) => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); } });
+  waiting = c;
+  const btn = (text, onclick, className = 'linkish') => el('button', { type: 'button', className, textContent: text, onclick });
+  const status = el('span', { className: 'nostr-wait', textContent: 'Waiting for your signer app…' });
+  const copy = btn('Copy link', async () => { try { await navigator.clipboard.writeText(c.uri); copy.textContent = 'Copied'; } catch { say('Couldn’t copy.'); } });
+  const cancel = btn('Cancel', () => { c.cancel(); waiting = null; nostrLine({}); });
+  const open = el('a', { className: 'nostr-btn', href: c.uri, textContent: 'Open my signer app' });
+  // Rajesh 12 Nov: a phone's own camera reads the QR but can't use it ("no usable data"), so say where to scan it.
+  const parts = [el('span', { className: 'nostr-note', textContent: TOUCH
+    ? 'Opens your Nostr signer app (such as Amber) to say yes. Your secret key stays in the app.'
+    : 'Open your Nostr signer app (such as Amber or nsec.app) and scan this from inside it, not with the phone’s camera. Your secret key stays in the app.' })];
+  if (!TOUCH) {
+    const { qrSvg } = await import('./qr.js');
+    parts.push(el('span', { className: 'nostr-qr', innerHTML: await qrSvg(c.uri) }));
+  } else parts.push(open, el('span', { className: 'nostr-wait', textContent: 'Nothing opened? This phone needs a Nostr signer app first, or use Copy link and paste it into one.' }));
+  parts.push(el('span', { className: 'nostr-row' }, status, ' ', copy, ' · ', cancel));
+  line.classList.add('connecting');
+  line.replaceChildren(...parts);
+  try {
+    const me = await c.done;
+    if (waiting === c) nostrLine(me);
+  } catch (e) {
+    if (waiting !== c) return; // cancelled
+    say(e?.message?.includes('closed') ? 'Nostr Connect stopped waiting: try again.' : e?.message || 'Nostr sign-in didn’t work.');
+    nostrLine({});
+  } finally { if (waiting === c) waiting = null; }
+}
 nostrLine({});
-extension().then(async (n) => { if (n) nostrLine(await whoAmI(pass)); });
+if (connected()) whoAmI(pass).then(nostrLine);
+else extension().then(async (n) => { if (n) nostrLine(await whoAmI(pass)); });
 
 // ---- One request, as often as the server says (every 2 s on the night, once a minute before it; not at all from a
 // hidden tab): the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)

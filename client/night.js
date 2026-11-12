@@ -79,7 +79,8 @@ async function refresh() {
 
   $('l-tickets').textContent = `Tickets · ${n(count('ticket'))}`;
   $('v-tickets').textContent = n(all('ticket'));
-  $('l-tips').textContent = `Tips and messages · ${n(count('tip'))}`;
+  const zaps = takings.nutzaps?.count || 0; // Nutzaps are tips with the fan's Nostr name, collected the same way
+  $('l-tips').textContent = `Tips and messages · ${n(count('tip'))}${zaps ? ` (${n(zaps)} Nutzap${zaps === 1 ? '' : 's'})` : ''}`;
   $('v-tips').textContent = n(all('tip'));
   $('l-home').textContent = `Watching at home · ${n(count('piece'))} payments`;
   $('v-home').textContent = n(all('piece'));

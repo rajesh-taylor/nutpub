@@ -198,7 +198,7 @@ export function mountDoor(route, admin, pass) {
   });
   const chatSince = async (c, after) => {
     const [rows, tipped, gone, show, slow, pin] = await Promise.all([
-      all('SELECT id, pass, sats, text, mod, mod_icon, nostr FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
+      all('SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id WHERE m.id > ? AND m.deleted = 0 ORDER BY m.id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
@@ -208,7 +208,7 @@ export function mountDoor(route, admin, pass) {
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
       messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
-        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}) })),
+        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}) })),
       slow, pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };

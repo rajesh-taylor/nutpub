@@ -9,8 +9,10 @@ import { cashuGate } from './gate.js';
 import { showOf, piecePrice } from './shows.js';
 import { artistKey } from './takings.js';
 import { hasTicket, addMessage, tipMessage, noGuestLinks } from './door.js';
-import { modOf } from './mods.js';
-import { json, randomHex, now } from './http.js';
+import { modOf, hasLink } from './mods.js';
+import { nostrOf, handle } from './nostr.js';
+import { nutzapInfo, checkNutzap, tokenProofs, recordNutzap, WHY } from './nutzap.js';
+import { json, body, randomHex, now } from './http.js';
 
 const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
@@ -110,5 +112,35 @@ export function mountSet(route) {
     },
     cashuGate((c) => c.amount, (c) => `A tip of ${c.amount} sats`, { lockTo: artistKey, kind: 'tip' }),
     thanks);
+
+  // A Nutzap (NIP-61, server/nutzap.js): a tip of n sats with the fan's signed public note. First POST, no payment: the
+  // 402. Then the payment (X-Cashu) with the note (the body): the note checked against the payment, then the gate.
+  route('POST', /^\/api\/nutzap\/(?<sats>[^/]+)$/, pass,
+    async (c) => {
+      const n = Number(c.params.sats);
+      if (!Number.isInteger(n) || n > 1_000_000) return json({ error: 'bad_amount' }, 400);
+      if (n < MIN_TIP) return json({ error: 'too_small', detail: `${MIN_TIP} sats or more` }, 400);
+      c.amount = n;
+      c.fan = await nostrOf(c.pass);
+      if (!c.fan) return json({ error: 'not_signed_in', detail: 'Sign in with Nostr first: a Nutzap carries your name.' }, 403);
+      c.zapTo = await nutzapInfo(await artistKey());
+      if (!c.zapTo) return json({ error: 'not_ready', detail: 'This artist hasn’t turned Nutzaps on yet.' }, 409);
+      const token = c.req.headers.get('X-Cashu')?.trim();
+      if (!token) return null; // the 402
+      c.zap = (await body(c))?.event;
+      let proofs;
+      try { proofs = await tokenProofs(token); } catch (e) { return json({ error: 'bad_token', detail: e.message }, 400); }
+      const why = await checkNutzap(c.zap, { proofs, fan: c.fan.pubkey, artist: c.zapTo.pubkey });
+      if (why) return json({ error: why, detail: WHY[why] }, 400);
+      if (hasLink(c.zap.content) && !(await modOf(c))) return json({ error: 'no_links', detail: 'Links are for the moderators.' }, 400);
+      return null;
+    },
+    cashuGate((c) => c.amount, (c) => `A Nutzap of ${c.amount} sats`, { lockTo: artistKey, kind: 'tip' }),
+    async (c) => {
+      await run('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)', c.pass, c.paid, now());
+      const id = await addMessage(c.pass, c.zap.content, c.paid);
+      await recordNutzap(c.lockedId, id, c.zap, handle(c.fan));
+      return json({ tipped: c.paid, total: await tipped(c.pass) });
+    });
   return pass;
 }

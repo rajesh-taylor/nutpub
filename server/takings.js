@@ -74,6 +74,7 @@ export function mountTakings(route, admin) {
     }
     const stream = await one('SELECT COALESCE(SUM(sats), 0) AS s, COUNT(*) AS n FROM paid');
     const tips = await one('SELECT COALESCE(SUM(sats), 0) AS s, COUNT(*) AS n FROM tips');
+    const zaps = await one('SELECT COALESCE(SUM(l.sats), 0) AS s, COUNT(*) AS n FROM nutzaps z JOIN locked l ON l.id = z.locked WHERE l.at >= ?', await kv.get('nightStart', ''));
     // Tickets sold so far (New night cancels them), the artist's part only: a first drink is the bar's.
     const sold = Object.fromEntries((await all('SELECT kind, COUNT(*) AS n, COALESCE(SUM(sats), 0) AS sats FROM tickets GROUP BY kind')).map((r) => [r.kind, { count: r.n, sats: r.sats }]));
     return json({
@@ -82,6 +83,7 @@ export function mountTakings(route, admin) {
       before: 0, // the server's own purse, before Sat 10 Oct: emptied on 29 Oct
       stream: { sats: stream.s, pieces: stream.n },
       tips: { sats: tips.s, count: tips.n },
+      nutzaps: { sats: zaps.s, count: zaps.n }, // of the tips, those that came as Nutzaps
     });
   });
 }

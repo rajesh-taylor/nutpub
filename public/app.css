@@ -272,6 +272,12 @@ body[data-as="home"] .chat-top .pin { order: 2; }
 .nostr-in .nostr-btn:focus-visible { outline: 2px solid #b98cff; outline-offset: 2px; }
 .nostr-in .nostr-note { white-space: normal; color: var(--cream); }
 body.immersive .nostr-in, body[data-as="room"][data-stage="doors"] .nostr-in { display: none; }
+/* Nostr Connect (13 Nov): waiting for the fan's signer app, across the chat's width. Look: for design. */
+.chat-top .nostr-in.connecting, body[data-as="home"] .chat-top .nostr-in.connecting { order: 4; flex: 1 0 100%; margin: 4px 0 8px; white-space: normal; overflow: visible; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.nostr-in .nostr-qr { display: block; width: 200px; max-width: 100%; }
+.nostr-in .nostr-qr svg { display: block; width: 100%; height: auto; border-radius: 4px; }
+.nostr-in a.nostr-btn { display: inline-block; text-decoration: none; padding: 10px 14px 8px; }
+.nostr-in .nostr-wait { color: var(--smoke); }
 .feed li.mod a { color: #a9d0ff; text-decoration: underline; }
 .feed .del { float: right; margin: -2px -4px 0 8px; padding: 0 6px; border: 0; background: none; color: var(--smoke); font-size: 18px; line-height: 1; cursor: pointer; }
 .feed .del:hover { color: var(--cream); }
@@ -283,6 +289,15 @@ body.immersive .nostr-in, body[data-as="room"][data-stage="doors"] .nostr-in { d
 .mod-bar small:empty { display: none; }
 .slow-note { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 .feed .mod-tag { font: 400 11px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--deep); background: #7db9ff; border-radius: 3px; padding: 3px 5px 2px; vertical-align: 1px; }
+/* Nutzaps (13 Nov): the tag after a Nutzapper's name, and the button beside Tip, in Nostr's purple. Look: for design. */
+.feed .nutzap-tag { font: 400 11px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: #fff; background: #8e30eb; border-radius: 3px; padding: 3px 5px 2px; vertical-align: 1px; }
+.btn.nutzap { background: #8e30eb; border-color: #8e30eb; color: #fff; }
+.nutzaps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 8px 0 0; }
+.nutzaps small { font-size: 13px; color: var(--smoke); }
+.nutzap-btns { display: flex; gap: 8px; margin-left: auto; }
+.nutzaps .btn.nutzap { padding: 6px 12px 4px; font-size: 15px; }
+body.immersive .nutzaps, body[data-as="room"][data-stage="doors"] .nutzaps { display: none; }
+.btn.nutzap:hover { filter: brightness(1.12); }
 .feed .mod-icon { font-size: 15px; }
 .feed .mod-icon.btc, .mod-bar .btc { color: var(--amber); font-weight: 700; }
 /* The pinned message: two lines at most, its links in amber. */

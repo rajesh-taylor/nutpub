@@ -119,6 +119,7 @@
         <span class="say-tools"><button type="button" class="coin btc" id="say-btc" aria-label="Tip in bitcoin" aria-expanded="false">₿</button><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send the comment">➤</button></span>
           <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
+      <p class="nutzaps" id="nutzaps" hidden><small>Nutzap: tip with your Nostr name</small><span class="nutzap-btns" id="nutzap-btns"></span></p>
     </section>
 
     <p class="status" id="status" role="status"></p>
@@ -145,7 +146,7 @@
         </div>
         <p class="purse-meter" id="meter">
           <span class="stat" id="spent-box"><small id="spent-label">You've supported the artist tonight</small><b id="spent"></b></span>
-          <span class="stat free-note" id="free-note" hidden><small>Live stream free</small><span id="free-line"></span></span>
+          <span class="stat free-note" id="free-note" hidden><small>Free live stream</small></span>
           <span class="stat" id="price-box"><small>Price</small><b id="price"></b><small class="fine">plus a small mint fee</small></span>
           <label id="budget-box" class="stat budget" hidden><small>Your limit</small><span>Up to <input id="budget" type="number" min="0" inputmode="numeric" aria-label="Your limit in sats"> sats tonight</span></label>
         </p>

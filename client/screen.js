@@ -17,6 +17,7 @@ function draw(fresh, top) {
     const li = document.createElement('li');
     if (fresh.has(m.id)) li.className = 'new';
     li.append(cell(m.nostr ? 'who nostr' : 'who', m.who));
+    if (m.nutzap) li.append(cell('zap', 'Nutzap'));
     if (m.sats) li.append(cell('sats', sats(m.sats)));
     if (m.text) li.append(cell('words', m.text));
     return li;
@@ -86,7 +87,7 @@ async function tick() {
   const fresh = new Set();
   for (const m of now.messages || []) {
     after = Math.max(after, m.id);
-    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, sats: m.sats, text: m.text }); fresh.add(m.id); }
+    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text }); fresh.add(m.id); }
   }
   const gone = new Set(now.deleted || []);
   for (let i = feed.length - 1; i >= 0; i -= 1) if (gone.has(feed[i].id)) feed.splice(i, 1);

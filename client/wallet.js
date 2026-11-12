@@ -96,6 +96,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
         this.lastFee = num(prepared.fee);
         const { token } = await coco.ops.send.execute(prepared);
         await settle(coco, prepared.id);
+        this.lastProofs = token.proofs; // with full keyset ids and DLEQ proofs: a Nutzap's note carries these (NIP-61)
         return coco.wallet.encodeToken(token);
       }
       const req = await coco.paymentRequests.parse(creq);

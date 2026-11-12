@@ -10,7 +10,7 @@ export const KEEP_DAYS = 7;
 const DAY = 86_400_000;
 
 // The night's records, all at once (the gig ended 7 days ago).
-const NIGHT = ['tickets', 'passkeys', 'nostr', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
+const NIGHT = ['tickets', 'passkeys', 'nostr', 'nutzaps', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
 
 export async function closeNights(at = Date.now()) {
   const cutoff = new Date(at - KEEP_DAYS * DAY).toISOString();

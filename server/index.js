@@ -16,6 +16,7 @@ import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
 import { mountPasskeys } from './passkey.js';
 import { mountNostr } from './nostr.js';
+import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { closeNights } from './closing.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
@@ -75,7 +76,7 @@ const attempt = (fn) => async (c) => {
 route('GET', '/api/show', async (c) => {
   const now = await current(c);
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar });
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -102,6 +103,7 @@ mountWallet(route);
 mountGoogleWallet(route);
 mountPasskeys(route, pass);
 mountNostr(route, pass);
+mountNutzaps(route, admin, artistKey);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {
