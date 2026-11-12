@@ -257,6 +257,16 @@ body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-st
    The colours are for the colour session. */
 .feed li.mod { background: rgb(90 169 255 / .14); }
 .feed li.mod .from { color: #7db9ff; }
+/* Nostr sign-in (12 Nov): a signed-in fan's name in Nostr's purple, so it reads apart from guests and mods. Look: for design. */
+.feed .from.nostr { color: #b98cff; }
+.nostr-in { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
+/* In the Live chat header (Rajesh 12 Nov), at the right, beside the title. */
+body[data-as="home"] .chat-top { flex-wrap: wrap; row-gap: 6px; }
+body[data-as="home"] .chat-top .nostr-in { order: 3; margin: 0 0 0 auto; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+body[data-as="home"] .chat-top .pin { order: 2; }
+.nostr-in b { color: #b98cff; font-weight: 600; }
+.nostr-in .linkish { margin-left: 0; font-size: 13px; }
+body.immersive .nostr-in, body[data-as="room"][data-stage="doors"] .nostr-in { display: none; }
 .feed li.mod a { color: #a9d0ff; text-decoration: underline; }
 .feed .del { float: right; margin: -2px -4px 0 8px; padding: 0 6px; border: 0; background: none; color: var(--smoke); font-size: 18px; line-height: 1; cursor: pointer; }
 .feed .del:hover { color: var(--cream); }
@@ -946,3 +956,8 @@ body .door-line .door-where { margin: 0; font-size: 15px; line-height: 1.4; text
 body.ticket-steps #keep-btn, body.ticket-steps #door-show { box-sizing: border-box; height: 56px; padding: 0 12px; font-size: 22px; line-height: 56px; white-space: nowrap; }
 /* Under the door QR: the artist's address, in the gold of The NutPub above it. */
 .door-small.door-url { font: 400 20px/1.2 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+
+/* The ₿ in the NutPub's name, in bitcoin orange, wherever the name is a wordmark (screen readers still read "NutPub"). */
+.nb { color: #f7931a; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.test-banner .nb { color: #050914; } /* on the amber strip, orange would vanish: the strip's own dark */

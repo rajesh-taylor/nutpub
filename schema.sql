@@ -34,8 +34,11 @@ CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, pass TEXT, sats INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL,
   deleted INTEGER NOT NULL DEFAULT 0,
   mod TEXT,                        -- a moderator's name; null for a guest. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod TEXT;
-  mod_icon TEXT                    -- their icon then. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod_icon TEXT;
+  mod_icon TEXT,                   -- their icon then. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod_icon TEXT;
+  nostr TEXT                       -- a guest's Nostr name then, if signed in. Added 12 Nov: scripts/nostr-migration.sql
 );
+-- Nostr sign-in for the chat (server/nostr.js): the phone's pass, its Nostr public key and profile name, for the night.
+CREATE TABLE IF NOT EXISTS nostr (pass TEXT PRIMARY KEY, pubkey TEXT NOT NULL, name TEXT, at TEXT NOT NULL);
 -- Moderators: a name and the SHA-256 of their link's key (the key itself is never kept).
 -- icon: the artist's pick; main: the one mod who may also change the pinned message. Both added 10 Nov (ALTER TABLE mods ADD COLUMN ...).
 CREATE TABLE IF NOT EXISTS mods (id INTEGER PRIMARY KEY, name TEXT NOT NULL, key_hash TEXT UNIQUE NOT NULL, created TEXT NOT NULL,

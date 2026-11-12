@@ -15,6 +15,7 @@ import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
 import { mountPasskeys } from './passkey.js';
+import { mountNostr } from './nostr.js';
 import { closeNights } from './closing.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
@@ -31,7 +32,7 @@ const page = (file) => async (c) => {
   let html = await res.text();
   html = html.replace(/(["'])(\/(?:app\.css|(?:js\/)?[a-z-]+\.js))\1/g, `$1$2?v=${VERSION}$1`);
   // The gig page's strip carries the name too (its masthead has only the artist and the date).
-  const strip = file === 'index.html' ? '<b>The NutPub</b> · Test mint · no real value' : 'Test mint · no real value';
+  const strip = file === 'index.html' ? '<b>The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></b> · Test mint · no real value' : 'Test mint · no real value';
   if (MINT_TEST) html = html.replace(/<body[^>]*>/, `$&\n  <div class="test-banner" role="note" data-t="test.banner">${strip}</div>`
     // Inside the setup page's frames the page already says so: only the phone keeps its own.
     + '<script>if (top !== self && !/^\\/[a-z0-9-]+$/.test(location.pathname)) document.currentScript.previousElementSibling.remove();</script>');
@@ -44,6 +45,7 @@ route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
 route('GET', '/setup', page('setup.html'));
+route('GET', '/menu', page('menu.html')); // Pub Menu: what each part of the night is made of, for judges and the curious
 route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
 route('GET', '/takings', page('night-takings.html'));
@@ -99,6 +101,7 @@ mountMods(route, admin);
 mountWallet(route);
 mountGoogleWallet(route);
 mountPasskeys(route, pass);
+mountNostr(route, pass);
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

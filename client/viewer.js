@@ -5,6 +5,7 @@ import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 import { totp, stepAt } from '../server/totp.js';
 import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
+import { extension, signIn, signOut, whoAmI } from './nostr.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -1122,7 +1123,7 @@ function chat(r) {
     const li = document.createElement('li');
     li.dataset.id = m.id;
     const who = document.createElement('span');
-    who.className = 'from';
+    who.className = m.nostr ? 'from nostr' : 'from';
     who.textContent = m.who;
     li.append(who, ' ');
     if (m.mod) { // the name first, then the artist's icon for them and the Mod tag
@@ -1289,6 +1290,25 @@ $('say').onsubmit = async (e) => {
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
+
+// ---- Nostr sign-in for the chat (NIP-07), only in a browser with a Nostr extension: the fan's Nostr name in place
+// of "guest 3f2a", from their next message on. Not for mods: they have their own names.
+function nostrLine(me) {
+  const line = $('nostr-in');
+  line.hidden = !!MOD;
+  const btn = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', className: 'linkish', textContent: text, onclick });
+  if (me?.name) {
+    line.replaceChildren('as ', Object.assign(document.createElement('b'), { textContent: me.name, title: me.npub || '' }), ' · ',
+      btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
+  } else {
+    const b = btn('Sign in with Nostr', async () => {
+      b.disabled = true;
+      try { nostrLine(await signIn(pass)); } catch (e) { say(e?.message || 'Nostr sign-in cancelled.'); b.disabled = false; }
+    });
+    line.replaceChildren(b);
+  }
+}
+extension().then(async (n) => { if (n) nostrLine(await whoAmI(pass)); });
 
 // ---- One request, as often as the server says (every 2 s on the night, once a minute before it; not at all from a
 // hidden tab): the stage, this phone's drink, the chat. (Polling: Cloudflare holds back live streams of events.)

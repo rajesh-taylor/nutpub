@@ -12,6 +12,15 @@ $('page').hidden = false;
 const info = await fetch('/api/show').then((r) => r.json());
 $('home').src = `${info.path}?as=home`;
 $('phone').src = info.path;
+// The room's tippers screen: the venue opens it on their TV before doors.
+const screenLink = `${location.origin}${info.path}/screen`;
+$('screen-open').href = screenLink;
+$('screen-copy').addEventListener('click', async () => {
+  const b = $('screen-copy');
+  const icon = b.innerHTML;
+  try { await navigator.clipboard.writeText(screenLink); b.textContent = '✓'; b.style.color = 'var(--amber)'; } catch { prompt('The room screen\u2019s link:', screenLink); }
+  setTimeout(() => { b.innerHTML = icon; b.style.color = ''; }, 2000);
+});
 const streamed = info.show.stream.mode !== 'off';
 $('stream-btn').hidden = !streamed;
 $('signal').hidden = !streamed;

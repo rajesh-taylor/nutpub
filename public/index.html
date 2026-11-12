@@ -71,7 +71,7 @@
       <video id="vid-a" muted playsinline preload="auto"></video>
       <video id="vid-b" muted playsinline preload="auto"></video>
       <p class="doors-sign" id="doors-sign" hidden>Doors · chat open</p>
-      <p class="ov-mark" aria-hidden="true">The NutPub</p>
+      <p class="ov-mark" aria-hidden="true">The NutPu<span class="nb">₿</span></p>
       <span class="live-badge" id="live-badge" hidden>Live</span>
       <div class="countdown" id="countdown" role="timer" hidden>
         <p class="cd-label" id="cd-label">Live in</p>
@@ -109,7 +109,7 @@
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
-      <div class="chat-top"><p class="chat-head">Live chat</p><p class="pin" id="pin" hidden><span aria-hidden="true">📌</span> <span id="pin-text"></span></p></div>
+      <div class="chat-top"><p class="chat-head">Live chat</p><p class="nostr-in" id="nostr-in" hidden></p><p class="pin" id="pin" hidden><span aria-hidden="true">📌</span> <span id="pin-text"></span></p></div>
       <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><button type="button" class="btn quiet" id="pin-btn" hidden>Pin a message</button><small id="mod-say"></small></div>
       <p class="slow-note" id="slow-note" hidden>Slow mode: one message every 30 seconds.</p>
       <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><span class="goal-more-row" id="goal-more-row" hidden><button type="button" class="coin btc goal-more" id="goal-more">Tip in ₿itcoin</button><button type="button" class="goal-card" id="goal-card" title="Card tips through Stripe: not wired up yet">Tip with Card</button></span></div>
@@ -166,7 +166,7 @@
     </div>
   </section>
   <div class="door-screen" id="door-screen" role="dialog" aria-modal="true" aria-label="Your ticket, for the door" hidden>
-    <div class="door-top"><p class="door-mark">The NutPub</p><p class="door-artist" id="door-artist"></p><p class="door-when" id="door-when"></p></div>
+    <div class="door-top"><p class="door-mark">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p><p class="door-artist" id="door-artist"></p><p class="door-when" id="door-when"></p></div>
     <div class="door-mid">
       <img id="door-qr" alt="Your ticket's QR code, for the door">
       <p class="door-in" id="door-in" hidden>You’re in</p>

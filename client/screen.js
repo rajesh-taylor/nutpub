@@ -1,24 +1,31 @@
-// The room's tippers screen (/longy/screen): for the venue's big screen. Each tip as it comes in, by handle and sats,
-// newest on top; never the words (a big screen in a pub is no place for them). The gig page's one request, /api/tick,
-// at the pace it asks for; a tip a moderator deletes goes from here too.
+// The room's tippers screen (/longy/screen): for the venue's big screen. Tonight's top three tippers (the server adds
+// them up, ?top=1), then the chat as it comes in: handle · sats · words, newest on top. The gig page's one request,
+// /api/tick, at the pace it asks for; a message a moderator deletes goes from here too. Comments off: tips only, no words.
 const $ = (id) => document.getElementById(id);
 const SHOWN = 6;
 let after = 0;
 let updated = '';
 let every = 2;
-const tips = [];
+const feed = [];
 
 const sats = (n) => `${n.toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
+const cell = (cls, text) => Object.assign(document.createElement('span'), { className: cls, textContent: text });
 
-function draw(fresh) {
-  const list = $('tips');
-  list.replaceChildren(...tips.slice(0, SHOWN).map((t) => {
+function draw(fresh, top) {
+  $('feed-box').hidden = !feed.length;
+  $('feed').replaceChildren(...feed.slice(0, SHOWN).map((m) => {
     const li = document.createElement('li');
-    li.dataset.id = t.id;
-    if (fresh.has(t.id)) li.className = 'new';
-    const who = document.createElement('span'); who.className = 'who'; who.textContent = t.who;
-    const amt = document.createElement('span'); amt.className = 'sats'; amt.textContent = sats(t.sats);
-    li.append(who, amt);
+    if (fresh.has(m.id)) li.className = 'new';
+    li.append(cell(m.nostr ? 'who nostr' : 'who', m.who));
+    if (m.sats) li.append(cell('sats', sats(m.sats)));
+    if (m.text) li.append(cell('words', m.text));
+    return li;
+  }));
+  if (!top) return;
+  $('top-box').hidden = !top.length;
+  $('top').replaceChildren(...top.map((t, i) => {
+    const li = document.createElement('li');
+    li.append(cell('n', `${i + 1}`), cell(t.nostr ? 'who nostr' : 'who', t.who), cell('sats', sats(t.sats)));
     return li;
   }));
 }
@@ -64,7 +71,7 @@ function goals(tipped, all, thanks) {
 }
 
 async function tick() {
-  const res = await fetch(`/api/tick?after=${after}&shown=${encodeURIComponent(updated)}`, { cache: 'no-store' });
+  const res = await fetch(`/api/tick?top=1&after=${after}&shown=${encodeURIComponent(updated)}`, { cache: 'no-store' });
   if (!res.ok) return;
   const now = await res.json();
   every = now.every || every;
@@ -79,12 +86,12 @@ async function tick() {
   const fresh = new Set();
   for (const m of now.messages || []) {
     after = Math.max(after, m.id);
-    if (m.sats > 0) { tips.unshift({ id: m.id, who: m.who, sats: m.sats }); fresh.add(m.id); }
+    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, sats: m.sats, text: m.text }); fresh.add(m.id); }
   }
   const gone = new Set(now.deleted || []);
-  for (let i = tips.length - 1; i >= 0; i -= 1) if (gone.has(tips[i].id)) tips.splice(i, 1);
-  tips.length = Math.min(tips.length, 50);
-  draw(fresh);
+  for (let i = feed.length - 1; i >= 0; i -= 1) if (gone.has(feed[i].id)) feed.splice(i, 1);
+  feed.length = Math.min(feed.length, 50);
+  draw(fresh, now.top);
   goals(now.tipped || 0, now.goals, now.thanks);
 }
 

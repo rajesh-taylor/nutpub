@@ -12,6 +12,7 @@ import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
 import { modOf, hasLink, slowMode, pinned, SLOW, NORMAL } from './mods.js';
+import { nostrOf, handle } from './nostr.js';
 
 const COMPRESSED = /^0[23][0-9a-f]{64}$/;
 export const barKey = () => kv.get('barKey');
@@ -26,7 +27,8 @@ const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' '
 export async function addMessage(pass, text, sats = 0, mod = null) {
   const t = clip(text);
   if (!t && !sats) return null;
-  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon) VALUES (?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null)).meta.last_row_id;
+  const nostr = mod ? null : handle(await nostrOf(pass)); // signed in with Nostr: their name goes with the message
+  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr) VALUES (?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.
 export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(await modOf(c))
@@ -196,7 +198,7 @@ export function mountDoor(route, admin, pass) {
   });
   const chatSince = async (c, after) => {
     const [rows, tipped, gone, show, slow, pin] = await Promise.all([
-      all('SELECT id, pass, sats, text, mod, mod_icon FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
+      all('SELECT id, pass, sats, text, mod, mod_icon, nostr FROM messages WHERE id > ? AND deleted = 0 ORDER BY id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
@@ -206,22 +208,29 @@ export function mountDoor(route, admin, pass) {
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
       messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
-        who: m.mod || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}) })),
+        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}) })),
       slow, pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };
+
+  // The room's tippers screen (?top=1): tonight's three biggest tippers, by their tips' total. Tonight's chat is the
+  // chat not yet cleared (New night clears it), and a tip a mod deleted doesn't count.
+  const topTippers = async () => (await all(`SELECT MAX(mod) AS mod, MAX(nostr) AS nostr, MIN(pass) AS pass, SUM(sats) AS sats FROM messages
+    WHERE sats > 0 AND deleted = 0 GROUP BY COALESCE(mod, pass) ORDER BY sats DESC LIMIT 3`))
+    .map((r) => ({ who: r.mod || r.nostr || `guest ${String(r.pass || '').slice(0, 4)}`, sats: r.sats, ...(!r.mod && r.nostr ? { nostr: true } : {}) }));
 
   // The gig page's one request (every 2 s or once a minute: `every`, see pollEvery): the stage, the live light, the chat since `after`, the show if it has
   // changed since `shown`, and with `door=1` this phone's drink. One request, to keep the free plan's daily limit.
   route('GET', '/api/tick', async (c) => {
     const q = c.url.searchParams;
     const { show, updated } = await current(c);
-    const [stage, stageAt, live, chat, door] = await Promise.all([
+    const [stage, stageAt, live, chat, door, top] = await Promise.all([
       stageNow(show), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
+      q.get('top') ? topTippers() : null,
     ]);
-    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}) });
+    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

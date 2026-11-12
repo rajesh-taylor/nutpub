@@ -10,7 +10,7 @@ export const KEEP_DAYS = 7;
 const DAY = 86_400_000;
 
 // The night's records, all at once (the gig ended 7 days ago).
-const NIGHT = ['tickets', 'passkeys', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
+const NIGHT = ['tickets', 'passkeys', 'nostr', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
 
 export async function closeNights(at = Date.now()) {
   const cutoff = new Date(at - KEEP_DAYS * DAY).toISOString();
@@ -29,7 +29,12 @@ export async function closeNights(at = Date.now()) {
       (SELECT COUNT(*) FROM tickets WHERE checked_at IS NOT NULL) AS inside,
       (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE at >= ?) AS sats, (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'tip' AND at >= ?) AS tips`,
       await kv.get('nightStart', ''), await kv.get('nightStart', ''));
-    await kv.set('gigs', [...(await kv.get('gigs', [])), { date: show.date, page: show.page, ended, tickets: { room: totals.room, home: totals.home, inside: totals.inside }, sats: totals.sats, tips: totals.tips }]);
+    // Stream's minutes for budgeting: how long tonight's recordings run (Stream bills storage by the minute).
+    const since = await kv.get('nightStart', '');
+    const recorded = await recordings().then((vs) => vs.filter((v) => !since || v.created >= since)
+      .reduce((m, v) => m + Math.max(0, v.duration || 0) / 60, 0)).catch(() => null);
+    await kv.set('gigs', [...(await kv.get('gigs', [])), { date: show.date, page: show.page, ended, tickets: { room: totals.room, home: totals.home, inside: totals.inside },
+      sats: totals.sats, tips: totals.tips, recordedMinutes: recorded === null ? null : Math.round(recorded) }]);
     await batch([...NIGHT.map((t) => sql(`DELETE FROM ${t}`)), sql('DELETE FROM locked WHERE collected_at IS NOT NULL')]);
     await kv.set('clearedFor', ended); // once per gig
     done.push('night');
