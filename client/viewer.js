@@ -583,16 +583,17 @@ $('tip').onclick = () => tip($('tip'));
 // once the artist has turned Nutzaps on. The wallet locks the sats to the artist (the same 402 as a tip), the fan's
 // extension or signer app signs a public note carrying those coins, and the NutPub checks both. If the note isn't
 // signed (the app said no, or never answered), the sats are already the artist's: they go as a plain tip instead.
-// Under the comment box (Rajesh 12 Nov): up to three one-tap amounts, ⚡ 21 · ⚡ 210 · ⚡ 2,100 sats; the comment box's
+// Under the comment box (Rajesh 12 Nov): up to three one-tap amounts, the artist's from Plan gig (⚡ 21 · ⚡ 210 · ⚡ 2,100
+// by default), each with its emoji; the comment box's
 // words go with it. Only signed in with Nostr, once the artist has turned Nutzaps on.
-const NUTZAPS = [21, 210, 2100];
+const NUTZAPS = () => (show.nutzaps || [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '⚡' }, { sats: 2100, emoji: '⚡' }]).filter((z) => z.sats >= 21).slice(0, 3);
 let nostrMe = null;
 function nutzapButton() {
   const row = $('nutzaps');
-  row.hidden = !(nostrMe && zapTo && !MOD);
+  row.hidden = !(nostrMe && zapTo && !MOD && NUTZAPS().length);
   if (row.hidden) return;
-  $('nutzap-btns').replaceChildren(...NUTZAPS.slice(0, 3).map((n) => Object.assign(document.createElement('button'), {
-    type: 'button', className: 'btn nutzap', textContent: `⚡ ${n.toLocaleString('en-GB')}`,
+  $('nutzap-btns').replaceChildren(...NUTZAPS().map(({ sats: n, emoji }) => Object.assign(document.createElement('button'), {
+    type: 'button', className: 'btn nutzap', textContent: `${emoji} ${n.toLocaleString('en-GB')}`,
     title: `Nutzap ${sats(n)}: a tip with your Nostr name on it, in public`, onclick: (e) => nutzap(e.currentTarget, n) })));
 }
 async function nutzap(b, n) {
@@ -1361,7 +1362,7 @@ function nostrLine(me) {
   nutzapButton();
   const btn = (text, onclick, className = 'linkish') => el('button', { type: 'button', className, textContent: text, onclick });
   if (me?.name) {
-    line.replaceChildren('as ', el('b', { textContent: me.name, title: me.npub || '' }), ' · ',
+    line.replaceChildren(el('b', { textContent: me.name, title: me.npub || '' }), ' · ',
       btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
     return;
   }

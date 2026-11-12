@@ -16,6 +16,9 @@ if (location.hash) history.replaceState(null, '', location.pathname);
 
 const $ = (id) => document.getElementById(id);
 const form = $('form');
+// The Nutzap buttons' emoji (the server's list, server/shows.js NUTZAP_EMOJI), filled before the fields are read.
+const NUTZAP_EMOJI = ['⚡', '🥜', '🍺', '🎸', '🎤', '🔥', '❤️', '🙌'];
+for (const sel of form.querySelectorAll('.nz-emoji')) sel.innerHTML = NUTZAP_EMOJI.map((e) => `<option>${e}</option>`).join('');
 const fields = [...form.querySelectorAll('[data-path]')];
 let show = null;
 let dirty = false;
@@ -47,7 +50,7 @@ function fill(s) {
     const v = get(show, el.dataset.path);
     if (el.type === 'checkbox') el.checked = !!v;
     else if (el.type === 'radio') el.checked = el.value === v;
-    else if (el.tagName !== 'SELECT') el.value = v ?? '';
+    else if (el.tagName !== 'SELECT' || el.classList.contains('nz-emoji')) el.value = v ?? '';
   }
   $('langs').innerHTML = Object.entries(LANGS).map(([code, name]) =>
     `<label class="choice inline"><input type="checkbox" data-lang="${code}"${show.languages.includes(code) ? ' checked' : ''}> ${name}</label>`).join('');

@@ -69,6 +69,7 @@
     .board .slot small { font-size: 11px; }
     .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
     @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(3, minmax(0, 2fr) minmax(0, 1fr)); } }
+    @media (min-width: 901px) { .board .wide .nutzap-row { grid-template-columns: repeat(3, minmax(0, 1fr) minmax(0, 2fr)); } }
     .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
     .board .price-row { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: flex-start; }
     .board .price-row > .field { flex: none; }
@@ -131,6 +132,7 @@
     .board .switch-pair .room-switch { display: inline-flex; width: auto; flex: none; }
     .board .switch-pair .room-switch[hidden] { display: none; }
     .board .goal-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; }
+    .board .nutzap-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 0 12px; } /* Nutzap buttons (13 Nov) */
     .board .tag { display: inline-block; font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 4px 7px 3px; border-radius: 3px; vertical-align: middle; }
     .board .tag.works { color: var(--deep); background: var(--amber); }
     .board .tag.design { color: var(--cream); border: 1px solid rgb(239 227 200 / .4); }
@@ -230,7 +232,7 @@
     <a class="btn quiet head-back" href="/">← Back</a>
     <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
     <nav class="tabs" aria-label="The night">
-      <a class="on" href="/setup" aria-current="page">1 · Plan gig</a>
+      <a class="on" href="/setup" aria-current="page">1 · Plan your gig</a>
       <a href="/show">2 · Show Time</a>
       <a href="/takings">3 · Takings</a>
     </nav>
@@ -239,7 +241,6 @@
     <main>
       <div class="top">
         <div style="flex: 1 1 320px;">
-          <h1>Plan your gig</h1>
           <!-- With two or more saved shows, a drop-down that loads one. -->
           <p class="template" id="tpl-box" hidden><span id="tpl-word" hidden>Template</span><select id="tpl-list" aria-label="Start from a saved gig" hidden></select></p>
           <!-- What's left before going live, as Show Time's stream box: a grey dot, then solid green when ready. -->
@@ -365,6 +366,19 @@
             <label class="field">Thank-you message, shown once the last goal is met<input data-path="goalsThanks" maxlength="140" placeholder="e.g. You did it! The new song is coming up next."></label>
             <div class="goal-track"><i id="goal-bar"></i></div>
             <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
+          </section>
+
+          <section class="panel wide">
+            <h2>Nutzap buttons</h2>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">One-tap tips under the chat, for fans signed in with Nostr: public, with their name. Up to three. Leave an amount empty for fewer.</p>
+            <div class="nutzap-row">
+              <label class="field">Emoji<select data-path="nutzaps.0.emoji" class="nz-emoji"></select></label>
+              <label class="field">Sats<input type="number" min="21" step="1" inputmode="numeric" data-path="nutzaps.0.sats" placeholder="21"></label>
+              <label class="field">Emoji<select data-path="nutzaps.1.emoji" class="nz-emoji"></select></label>
+              <label class="field">Sats<input type="number" min="21" step="1" inputmode="numeric" data-path="nutzaps.1.sats" placeholder="210"></label>
+              <label class="field">Emoji<select data-path="nutzaps.2.emoji" class="nz-emoji"></select></label>
+              <label class="field">Sats<input type="number" min="21" step="1" inputmode="numeric" data-path="nutzaps.2.sats" placeholder="2100"></label>
+            </div>
           </section>
 
           <section class="panel wide">

@@ -262,8 +262,9 @@ body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-st
 .nostr-in { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 /* In the Live chat header (Rajesh 12 Nov), at the right, beside the title. */
 body[data-as="home"] .chat-top { flex-wrap: wrap; row-gap: 6px; }
-body[data-as="home"] .chat-top .nostr-in { order: 3; margin: 0 0 0 auto; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-body[data-as="home"] .chat-top .pin { order: 2; }
+body[data-as="home"] .chat-top .nostr-in { order: 2; margin: 0 0 0 auto; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* The pin under the title row, across the chat's whole width (Rajesh 12 Nov): fewer lines for the same words. */
+body[data-as="home"] .chat-top .pin { order: 3; flex: 1 0 100%; }
 .nostr-in b { color: #b98cff; font-weight: 600; }
 .nostr-in .linkish { margin-left: 0; font-size: 13px; }
 /* The sign-in button: boxed, in Nostr's purple (Rajesh 12 Nov). */
@@ -519,7 +520,7 @@ body.viewer.at-door .door { margin-bottom: 0; }
 /* At home: "Live chat" and, to its right, the pinned message (10 Nov). */
 body[data-as="home"] .chat-top { display: flex; align-items: center; gap: 12px; margin: -12px -12px 8px; padding: 10px 14px; border-bottom: 1px solid rgb(239 227 200 / .14); min-height: 26px; }
 body[data-as="home"] .chat-head { display: block; flex: none; margin: 0; font: 400 22px/1 var(--poster); letter-spacing: .12em; }
-body[data-as="home"] .pin { margin: 0 0 0 auto; max-width: 72%; }
+body[data-as="home"] .pin { margin: 0; max-width: none; box-sizing: border-box; }
 body[data-as="home"] #whole:not([hidden]) { display: inline-block; }
 body[data-as="home"] .say { flex-wrap: wrap; }
 body[data-as="home"] .say input { flex: 1 1 100%; }

@@ -117,6 +117,7 @@ async function refresh() {
   $('artist-held').textContent = `Collected into this browser: ${sats(await artist.balance())}`;
   $('bar-held').textContent = `Collected into this browser: ${sats(await bar.balance())}`;
   await keyLine('artist-key', artist, locked.pubkey, name, '/api/admin/artist-key');
+  import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, locked.pubkey)).catch(() => {}); // Nutzaps always on
   await keyLine('bar-key', bar, info.barKey, 'The bar', '/api/admin/bar-key');
 }
 

@@ -24,6 +24,7 @@ export const publicShow = (show) => {
   return open;
 };
 
+export const NUTZAP_EMOJI = ['⚡', '🥜', '🍺', '🎸', '🎤', '🔥', '❤️', '🙌'];
 export const blank = () => ({
   title: '',                            // optional: the artist may leave it blank
   description: '',                      // optional: a line or two under the title
@@ -46,6 +47,7 @@ export const blank = () => ({
   door: { on: false },                  // door check: the ticket page's QR (new every 30 s) is scanned once at the door (off by default)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }, { label: '', at: null }], // up to 3 stretch goals, fed by tips
+  nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '⚡' }, { sats: 2100, emoji: '⚡' }], // up to 3 one-tap Nutzaps under the comment box; no amount: no button
   goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
   live: { server: '', key: '', playback: '' }, // OBS: where to stream, its key (host only), the link it plays at
   wallet: { on: true },                 // the wallet in the browser, with Take sats home
@@ -109,6 +111,8 @@ export function clean(input = {}) {
     drink: { price: sats(input.drink?.price), mode: DRINK_LATER ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1, 2].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
+    // Shows saved before 13 Nov have none: the three defaults. 21 sats or more each (as a tip), an emoji from the list.
+    nutzaps: Array.isArray(input.nutzaps) ? [0, 1, 2].map((i) => { const n = sats(input.nutzaps[i]?.sats); return { sats: n >= 21 ? n : null, emoji: NUTZAP_EMOJI.includes(input.nutzaps[i]?.emoji) ? input.nutzaps[i].emoji : '⚡' }; }) : b.nutzaps,
     live: {
       server: /^rtmps?:\/\/\S+$|^srt:\/\/\S+$/i.test(text(input.live?.server, 300)) ? text(input.live?.server, 300) : '',
       key: text(input.live?.key, 300),
