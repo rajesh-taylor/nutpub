@@ -18,8 +18,8 @@
 - **Gone after 7 days.** The night's recording, tickets, passkeys, chat and tips are deleted 7 days after the gig; the fans' Cheers screen and the artist's Show Time say so. Sats the artist hasn't collected stay until they take them. One line of totals per gig is kept (tickets, sats, tips), nothing about anyone.
 - **The room's tippers screen** (`/longy/screen`, linked from Show Time): for the venue's TV. A big QR, "Scan to tip Longy", tonight's top three tippers, the chat as it comes in (handle · sats · words; a mod's delete takes it off), and the stretch goals along the bottom.
 - **Pub Menu** ([thenutpub.com/menu](https://thenutpub.com/menu), from the peanut menu on the home page): what each part of the night is made of, the NUTs and NIPs as the prices, with Coco and cashu-ts behind the bar.
-- **Your Nostr name in the chat.** **Sign in with Nostr**, the purple button at the top of Live chat, works with a Nostr browser extension (Alby, nos2x; phones later) and puts your Nostr name in place of "guest 3f2a", in the chat and on the tippers screen. No account or password: the extension signs one note for thenutpub.com, and the name comes from your own signed Nostr profile, both checked by the NutPub, so nobody can borrow a name. Kept for the night only.
-- **Widgets on Show Time:** links for the venue's screens, starting with **Chat & Bit Time Charlies** (the tippers screen), each with a copy button.
+- **Your Nostr name in the chat.** **Nostr Sign In**, the purple button at the top of Live chat, works with a Nostr browser extension (Alby, nos2x; phones later) and puts your Nostr name in place of "guest 3f2a", in the chat and on the tippers screen. No account or password: the extension signs one note for thenutpub.com, and the name comes from your own signed Nostr profile, both checked by the NutPub, so nobody can borrow a name. Kept for the night only.
+- **Widgets on Show Time:** links for the venue's screens, starting with **Chat & Big Time Charlies** (the tippers screen), each with a copy button.
 - **One gig at a time per artist.** A night's records are deleted 7 days after it, or sooner when the artist starts their next gig.
 
 ## The 402 on live video
@@ -77,6 +77,7 @@ Card payments (Stripe; the £ prices are shown, the card buttons do nothing), pa
 
 Open while NutNovember runs (to 27 Nov 2026):
 
+- **Nostr Connect** (NIP-46): Nostr Sign In on phones, through a signer app (Amber, Primal, nsec.app), no extension needed.
 - **Nutzaps** (NIP-61): a second tip button beside Tip, a public tip under your Nostr name. Nostr Wallet Connect (paying from your own Lightning wallet) comes after 27 Nov, with a real mint. (Pub Menu, Nostr sign-in, closing the gig, the tippers screen, passkey tickets and the 30-second door QR are done.)
 - **Tickets the NutPub can't link to their buyer:** a ticket signed blind (NUT-00), so the door's check can't be tied to who paid.
 - Each judge with their own numbered show (`/judge-1` to `/judge-20`), no names asked.

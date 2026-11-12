@@ -35,8 +35,24 @@
     .happy { margin: 30px 0 0; padding: 16px 18px; text-align: center; border: 1px dashed rgb(217 149 58 / .6); border-radius: 4px; }
     .happy h2 { margin: 0 0 4px; font: 400 30px/1 var(--poster); letter-spacing: .12em; color: var(--amber); }
     .happy p { margin: 0; font: italic 18px/1.4 Georgia, "Times New Roman", serif; }
-    .allergens { margin: 26px 0 0; text-align: center; font-size: 14px; line-height: 1.5; color: var(--smoke); }
-    .allergens b { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: var(--cream); margin-right: 6px; }
+    /* A two-page leaflet on a wider screen (Rajesh 12 Nov): Tonight on the left page, Behind the bar on the right, a
+       fold between them, so it reads without scrolling. One column on a phone. The Tab and Allergens sit at the foot. */
+    .page { min-width: 0; }
+    @media (min-width: 860px) {
+      body.menu main { max-width: 1120px; padding: 12px 0; }
+      .board-card { margin-bottom: 12px; }
+      .leaf { display: grid; grid-template-columns: 1fr 1fr; }
+      .leaf .page:first-child { padding-right: 40px; }
+      .leaf .page + .page { padding-left: 40px; border-left: 1px dashed rgb(217 149 58 / .35); }
+      .menu .est { margin-bottom: 22px; }
+      .page .dishes:last-child { margin-bottom: 0; }
+    }
+    .notes { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 32px; margin: 26px 0 0; padding-top: 16px; border-top: 1px solid rgb(217 149 58 / .25); }
+    .notes p { margin: 0; }
+    @media (max-width: 859px) { .notes { flex-direction: column; align-items: center; text-align: center; } }
+    .allergens, .tab-note { font-size: 14px; line-height: 1.5; color: var(--smoke); }
+    .tab-note .nut { font: 400 15px/1 var(--poster); letter-spacing: .06em; color: var(--amber); margin-right: 6px; }
+    .allergens b, .tab-note b { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: var(--cream); margin-right: 6px; }
     .menu .back { display: block; text-align: center; margin: 0 0 12px; font-size: 15px; color: var(--amber); }
   </style>
 </head>
@@ -47,6 +63,8 @@
       <h1>Pub Menu</h1>
       <p class="est">What's cooking tonight · v0.1</p>
 
+      <div class="leaf">
+      <section class="page" aria-label="Tonight">
       <p class="rule">Tonight</p>
       <ul class="dishes">
         <li class="dish">
@@ -59,7 +77,7 @@
         </li>
         <li class="dish">
           <div class="line"><span class="name">Nutty Stardust<svg class="bolt" viewBox="0 0 14 20" role="img" aria-label="lightning bolt"><path d="M9 0 L1 11 H6 L4 20 L13 8 H8 Z"/></svg></span><span class="dots" aria-hidden="true"></span><span class="price">NUT-24</span></div>
-          <p class="what">Pay by the minute in sat dust, leave when it gets bad.</p>
+          <p class="what">Pay by the minute in sat dust.</p>
         </li>
         <li class="dish">
           <div class="line"><span class="name">Fresh Mint Sauce</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-04</span></div>
@@ -69,12 +87,10 @@
           <div class="line"><span class="name">Lock, Stock &amp; Barrel</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-10 · NUT-11</span></div>
           <p class="what">Every payment locked to its owner.</p>
         </li>
-        <li class="dish">
-          <div class="line"><span class="name">The Tab</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-18</span></div>
-          <p class="what">The amount, the mint and the lock.</p>
-        </li>
       </ul>
+      </section>
 
+      <section class="page" aria-label="Behind the bar">
       <p class="rule">Behind the bar</p>
       <ul class="dishes">
         <li class="dish">
@@ -96,7 +112,13 @@
         <p>150,000 test sats free, every night.</p>
       </div>
 
-      <p class="allergens"><b>Allergens</b>Contains no email, name, address. May contain NUTs.</p>
+      </section>
+      </div>
+
+      <div class="notes">
+        <p class="tab-note"><b>The Tab</b><span class="nut">NUT-18</span>The amount, the mint and the lock.</p>
+        <p class="allergens"><b>Allergens</b>Contains no email, name, address. May contain NUTs.</p>
+      </div>
     </div>
     <a class="back" href="/">Back to the NutPub</a>
   </main>

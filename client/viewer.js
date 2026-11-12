@@ -1304,7 +1304,7 @@ function nostrLine(me) {
       btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
     return;
   }
-  const b = btn('Sign in with Nostr', async () => {
+  const b = btn('Nostr Sign In', async () => {
     if (!window.nostr) {
       line.replaceChildren(Object.assign(document.createElement('span'), { className: 'nostr-note',
         textContent: 'Needs a Nostr extension (Alby or nos2x on a computer). Phones: coming soon. ' }), btn('OK', () => nostrLine({})));
