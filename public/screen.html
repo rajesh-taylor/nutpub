@@ -7,12 +7,12 @@
   <title>Tips · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
-    /* The venue's big screen, read from across the room. The home page's sign (with its shimmer and the orange ₿) above
-       the artist; the QR on the left, the tips on the right, the stretch goals along the bottom third as on the gig
-       page. Text near-white (250), no gold backdrops: plain for contrast. A phone held upright: one above the other. */
+    /* The venue's big screen, read from across the room. The home page's sign at the home page's size; the QR on the
+       left, as big as the room needs ("Scan to tip Longy"); the top three tippers and the chat on the right; the
+       stretch goals along the bottom, as on the gig page. Text near-white (250), no gold backdrops. Smallest use: a tablet. */
     body.screen-page { --white: rgb(250 250 250); background: var(--midnight); padding: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
-    .screen-top { position: relative; padding: 2.5vh 5vw 0; text-align: center; }
-    .screen-sign { position: relative; width: clamp(150px, 16vw, 320px); margin: 0 auto; line-height: 0; }
+    .screen-top { position: relative; padding: 2vh 5vw 0; text-align: center; }
+    .screen-sign { position: relative; width: min(972px, 60vw, 92vh); margin: 0 auto; line-height: 0; }
     .screen-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
     .screen-sign .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
     .screen-sign .board .btc { fill: #f7931a; }
@@ -20,44 +20,51 @@
       mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: sign-shine 9.55s linear infinite; }
     .screen-sign .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
     @keyframes sign-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 42.41% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 42.42%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
-    .screen-top h1 { margin: 2.5vh 0 0; font: 400 clamp(44px, min(7.5vw, 12vh), 150px)/.9 var(--poster); letter-spacing: .04em; color: var(--amber); }
     .screen-full { position: absolute; top: 2vh; right: 2vw; }
-    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 5vw; align-items: start; padding: 4vh 6vw 2vh; }
-    .screen-left { display: flex; flex-direction: column; align-items: center; gap: 1.5vh; }
-    .screen-qr { width: min(100%, 30vh); aspect-ratio: 1; background: var(--cream); border-radius: 1.2vh; padding: 1.4vh; }
+    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 900px); gap: 5vw; align-items: start; justify-content: center; padding: 5vh 6vw 1vh; }
+    .screen-left { display: flex; flex-direction: column; align-items: center; gap: 1.2vh; }
+    .screen-qr { width: min(38vw, 36vh); aspect-ratio: 1; background: var(--cream); border-radius: 1.2vh; padding: 1.2vh; }
     .screen-qr img { width: 100%; height: 100%; display: block; }
-    .screen-scan { margin: 0; text-align: center; font: 400 clamp(22px, 2.6vw, 56px)/1.1 var(--poster); letter-spacing: .08em; color: var(--white); }
-    .screen-scan b { display: block; font: 600 clamp(14px, 1.3vw, 28px)/1.3 var(--body); letter-spacing: 0; color: var(--smoke); }
-    .screen-tips { list-style: none; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; }
-    .screen-tips li { display: flex; justify-content: space-between; align-items: baseline; gap: 4vw; padding: 1.4vh 0;
-      border-bottom: 1px solid rgb(239 227 200 / .1); font: 400 clamp(26px, 3.4vw, 80px)/1 var(--poster); letter-spacing: .04em; }
-    .screen-tips li:first-child { font-size: clamp(32px, 4.4vw, 100px); }
-    .screen-tips li:nth-child(n+4) { opacity: .55; }
-    .screen-tips .who { display: block; border: 0; border-radius: 0; color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .screen-tips .sats { color: var(--amber); flex: none; }
-    .screen-tips li.new { animation: in .8s ease-out; }
+    .screen-scan { margin: 0; text-align: center; font: 400 clamp(26px, min(3.2vw, 5.4vh), 72px)/1.05 var(--poster); letter-spacing: .06em; color: var(--white); }
+    .screen-scan span { color: var(--amber); }
+    .screen-scan b { display: block; font: 600 clamp(14px, 1.3vw, 28px)/1.4 var(--body); letter-spacing: 0; color: var(--smoke); }
+    .screen-right { min-width: 0; width: min(100%, 900px); display: flex; flex-direction: column; gap: 2.4vh; }
+    .screen-right h2 { margin: 0 0 .6vh; font: 400 clamp(16px, 1.6vw, 36px)/1 var(--poster); letter-spacing: .16em; color: var(--smoke); }
+    .screen-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+    .screen-list li { display: flex; align-items: baseline; gap: 1.6vw; padding: 1vh 0; border-bottom: 1px solid rgb(239 227 200 / .1); min-width: 0; }
+    .screen-list .who { display: block; border: 0; border-radius: 0; flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--white); }
+    .screen-list .sats { flex: none; color: var(--amber); }
+    .screen-list .words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(250 250 250 / .8); font-family: var(--body); letter-spacing: 0; }
+    .screen-top3 li { font: 400 clamp(26px, min(3vw, 5vh), 72px)/1 var(--poster); letter-spacing: .04em; }
+    .screen-top3 li .n { flex: none; width: 1.4em; color: var(--amber); }
+    .screen-top3 li .sats { margin-left: auto; }
+    .screen-feed li { font: 400 clamp(18px, min(1.9vw, 3.2vh), 46px)/1.15 var(--poster); letter-spacing: .04em; }
+    .screen-feed li .words { font-size: .8em; }
+    .screen-feed li:nth-child(n+5) { opacity: .55; }
+    .screen-feed li.new { animation: in .8s ease-out; }
     @keyframes in { from { transform: translateY(-30%); } }
-    /* The stretch goals: the gig page's track, wide. Mics at each goal, amber once met; the label under each. */
-    .screen-goals { flex: none; height: 30vh; padding: 2vh 8vw max(7vh, calc(env(safe-area-inset-bottom) + 20px)); border-top: 1px solid rgb(239 227 200 / .08); display: flex; flex-direction: column; justify-content: center; gap: 3vh; }
+    /* The stretch goals: the gig page's track, wide. A mic above each goal, no circle: cream, amber once met. */
+    .screen-goals { flex: none; height: 24vh; padding: 1vh 8vw max(5vh, calc(env(safe-area-inset-bottom) + 20px)); border-top: 1px solid rgb(239 227 200 / .08); display: flex; flex-direction: column; justify-content: center; gap: 2vh; }
     .screen-goals .head { display: flex; justify-content: space-between; align-items: baseline; font: 400 clamp(18px, 2vw, 44px)/1 var(--poster); letter-spacing: .14em; color: var(--white); }
     .screen-goals .head b { font-weight: 400; color: var(--amber); letter-spacing: .06em; }
-    .screen-goals .track { position: relative; height: clamp(10px, 1.6vh, 26px); margin: 0 clamp(20px, 2.2vw, 46px); border-radius: 99px; background: #000; box-shadow: inset 0 0 0 1px rgb(239 227 200 / .18); }
+    .screen-goals .track { position: relative; height: clamp(10px, 1.6vh, 26px); margin: clamp(30px, 5vh, 60px) clamp(20px, 2.2vw, 46px) 0; border-radius: 99px; background: #000; box-shadow: inset 0 0 0 1px rgb(239 227 200 / .18); }
     .screen-goals .bar { position: relative; display: block; height: 100%; width: 0; border-radius: 99px; background: var(--amber); transition: width .8s; }
     .screen-goals .bar::after { content: ""; position: absolute; right: -3px; top: -40%; bottom: -40%; width: 6px; border-radius: 3px; background: var(--cream); box-shadow: 0 0 8px rgb(5 9 20 / .8); }
-    .screen-goals .mic { position: absolute; top: 50%; width: clamp(36px, 4.4vw, 92px); aspect-ratio: 1; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%;
-      background: #000; box-shadow: 0 0 0 2px rgb(239 227 200 / .4); color: var(--cream); z-index: 1; }
-    .screen-goals .mic svg { width: 60%; height: 60%; fill: currentColor; }
-    .screen-goals .mic.met { background: var(--amber); color: #000; box-shadow: none; }
-    .screen-goals .mic span { position: absolute; top: calc(100% + 1.4vh); white-space: nowrap; font: 400 clamp(16px, 1.7vw, 38px)/1.1 var(--poster); letter-spacing: .06em; color: var(--white); text-align: center; }
-    .screen-goals .mic:last-child span { right: 0; text-align: right; }
+    .screen-goals .mic { position: absolute; bottom: calc(100% + .6vh); width: clamp(26px, 3vw, 64px); aspect-ratio: 1; transform: translateX(-50%); color: var(--cream); }
+    .screen-goals .mic svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+    .screen-goals .mic.met { color: var(--amber); }
+    .screen-goals .mic::after { content: ""; position: absolute; left: 50%; top: calc(100% + .6vh); height: clamp(10px, 1.6vh, 26px); width: 2px; margin-left: -1px; background: rgb(239 227 200 / .7); }
+    .screen-goals .mic span { position: absolute; left: 50%; top: calc(100% + 3.4vh); transform: translateX(-50%); white-space: nowrap; font: 400 clamp(16px, 1.7vw, 38px)/1.1 var(--poster); letter-spacing: .06em; color: var(--white); }
+    .screen-goals .mic:last-child span { left: auto; right: 50%; transform: none; text-align: right; }
     .screen-goals .mic.met span { color: var(--amber); }
     .screen-goals .list { display: none; margin: 0; font: 400 18px/1.4 var(--poster); letter-spacing: .06em; color: var(--white); }
     .screen-goals .list .met { color: var(--amber); }
     .screen-goals .thanks { margin: 0; text-align: center; font: 400 clamp(26px, 3.4vw, 76px)/1.1 var(--poster); letter-spacing: .04em; color: var(--amber); }
-    @media (prefers-reduced-motion: reduce) { .screen-sign .shine { display: none; } .screen-tips li.new { animation: none; } }
-    @media (orientation: portrait) { body.screen-page { height: auto; min-height: 100dvh; overflow: visible; } .screen-main { grid-template-columns: minmax(0, 1fr); overflow: visible; }
-      .screen-goals { height: auto; } .screen-goals .mic span { display: none; } .screen-goals .list { display: block; } .screen-qr { width: min(60vw, 30vh); }
-      .screen-full { position: static; margin-top: 2vh; } .screen-goals { min-height: 0; padding-bottom: max(8vh, calc(env(safe-area-inset-bottom) + 40px)); } }
+    @media (prefers-reduced-motion: reduce) { .screen-sign .shine { display: none; } .screen-feed li.new { animation: none; } }
+    @media (orientation: portrait) { body.screen-page { height: auto; min-height: 100dvh; overflow: visible; } .screen-sign { width: min(92vw, 640px); }
+      .screen-main { grid-template-columns: minmax(0, 1fr); overflow: visible; gap: 4vh; padding-top: 3vh; } .screen-qr { width: min(70vw, 42vh); }
+      .screen-full { position: static; margin-top: 2vh; } .screen-goals { height: auto; padding-top: 3vh; padding-bottom: max(8vh, calc(env(safe-area-inset-bottom) + 40px)); }
+      .screen-goals .mic span { display: none; } .screen-goals .list { display: block; } }
   </style>
 </head>
 <body class="screen-page">
@@ -76,15 +83,17 @@
       <svg class="board" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6" filter="url(#worn-sign)">THENUTPU<tspan class="btc">₿</tspan></text></svg>
       <svg class="shine" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6">THENUTPU</text></svg>
     </div>
-    <h1 id="artist"></h1>
     <button type="button" class="btn quiet screen-full" id="full" hidden>Full screen</button>
   </header>
   <div class="screen-main">
     <div class="screen-left">
       <div class="screen-qr"><img id="qr" src="/api/show/qr.svg" alt="QR code to the gig page"></div>
-      <p class="screen-scan">Scan to tip<b id="where"></b></p>
+      <p class="screen-scan">Scan to tip <span id="artist"></span><b id="where"></b></p>
     </div>
-    <ol class="screen-tips" id="tips" aria-live="polite"></ol>
+    <div class="screen-right">
+      <section id="top-box" hidden><h2>Top tippers</h2><ol class="screen-list screen-top3" id="top"></ol></section>
+      <section id="feed-box" hidden><h2>Latest</h2><ol class="screen-list screen-feed" id="feed" aria-live="polite"></ol></section>
+    </div>
   </div>
   <section class="screen-goals" id="goals" hidden>
     <div class="head"><span>Stretch goals</span><b id="goal-sum"></b></div>
