@@ -620,7 +620,7 @@ No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86
 - **"Big Time Charlies"** (Rajesh's typo fixed; was "Bit"). The Nostr button reads **Nostr Sign In**.
 - **Nostr Connect (NIP-46): yes, 100% (Rajesh).** Build next, before Nutzaps, so phones can sign in.
 - **Chef's Special: not the replay** (it costs per minute watched). Something else, to decide later.
-- **Other sign-ins, Rajesh asked (Facebook, X, Signal):** discussed, nothing decided. Facebook and X would tell Meta and X who joined which gig, against "No apps. No tracking."; both need developer accounts and app review (Meta's business check; X's API has paid tiers: check at the source). Signal has no sign-in for websites (a Signal group link for fans could still go on the gig page). A fit for everyone else: **a chat name of your own**, chosen on the gig page and kept with the ticket's passkey, no account. To decide.
+- **Other sign-ins (Rajesh 12 Nov, decided):** no Facebook, no X, no Signal groups (they'd tell others who joined which gig; Signal has no website sign-in). Later idea, not now: fans choose their own chat name when they sign in (kept with the ticket's passkey, no account). Review when the next best time comes.
 
 **The free slot's prompt:** used Thu 12 Nov.
 
