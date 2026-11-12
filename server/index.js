@@ -15,6 +15,7 @@ import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
 import { mountPasskeys } from './passkey.js';
+import { closeNights } from './closing.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -104,6 +105,7 @@ async function showPage(c) {
   const { path } = await current(c);
   if (c.url.pathname === path) return page('index.html')(c);
   if (c.url.pathname === `${path}/poster`) return page('poster.html')(c);
+  if (c.url.pathname === `${path}/screen`) return page('screen.html')(c); // the room's tippers screen, for the venue
   return null;
 }
 
@@ -111,6 +113,11 @@ const notFound = (c) => (c.url.pathname.startsWith('/api/') ? json({ error: 'not
   : new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }));
 
 export default {
+  // Once a day (wrangler.jsonc, triggers): the night's records and recordings, 7 days after the gig (closing.js).
+  async scheduled(event, env, ctx) {
+    configure(env); useDb(env.DB); useStream(env);
+    ctx.waitUntil(closeNights(event.scheduledTime).catch((e) => console.log(`closing: ${String(e.stack || e).slice(0, 300)}`)));
+  },
   async fetch(req, env) {
     configure(env);
     useDb(env.DB);
@@ -127,7 +134,7 @@ export default {
         if (typeof r.path === 'string' ? r.path !== url.pathname : !(c.params = url.pathname.match(r.path)?.groups ?? (r.path.test(url.pathname) ? {} : null))) continue;
         return await r.run(c);
       }
-      if (method === 'GET' && /^\/[a-z0-9-]+(\/poster)?$/.test(url.pathname)) {
+      if (method === 'GET' && /^\/[a-z0-9-]+(\/poster|\/screen)?$/.test(url.pathname)) {
         const res = await showPage(c);
         if (res) return res;
       }

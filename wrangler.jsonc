@@ -14,6 +14,8 @@
     // The pages get the TEST banner from the Worker; the set's files go only to a pass that may play them.
     "run_worker_first": ["/", "/*.html", "/set-media/*"]
   },
+  // Once a day at 04:00 UTC: closing.js deletes the night's records and recordings 7 days after the gig.
+  "triggers": { "crons": ["0 4 * * *"] },
   "d1_databases": [{ "binding": "DB", "database_name": "nutpub", "database_id": "68813683-cdd0-45c5-80e4-565c19f5ded5" }],
   "kv_namespaces": [{ "binding": "PHOTOS", "id": "d3599301789e4a6b916b2a8c365e8880" }],
   "vars": {

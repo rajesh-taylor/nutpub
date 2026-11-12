@@ -15,6 +15,8 @@
 - **Plan gig by kind of night** (room only, room + live stream, live stream only), with a "Still to fill in" box that turns green when the gig is ready.
 - **Wallet cards, built and held back.** Apple and Google Wallet cards work, but a card that looks like a ticket and can't open the door would confuse people (Apple doesn't let us change a card's code). They come back when they can be a real way in.
 - **Nothing about the buyer.** No name, email or address is asked for or kept: the NutPub holds the ticket and its passkey's public key, nothing about the person. Next: blind-signed tickets, so not even the NutPub can link who paid to who came in.
+- **Gone after 7 days.** The night's recording, tickets, passkeys, chat and tips are deleted 7 days after the gig; the fans' Cheers screen and the artist's Show Time say so. Sats the artist hasn't collected stay until they take them. One line of totals per gig is kept (tickets, sats, tips), nothing about anyone.
+- **The room's tippers screen** (`/longy/screen`): a page for the venue's big screen, each tip as it comes in, by handle and sats, never the words.
 
 ## The 402 on live video
 
@@ -70,7 +72,7 @@ Card payments (Stripe; the £ prices are shown, the card buttons do nothing), pa
 
 Open while NutNovember runs (to 27 Nov 2026):
 
-- **Closing the gig:** the recording kept 7 days, records deleted after 7 days; the room's tippers screen. (Passkeys for tickets and the 30-second door QR are done.)
+- **Pub Menu v0.1** for judges, then Nostr sign-in, Nutzaps and Nostr Wallet Connect. (Closing the gig, the tippers screen, passkey tickets and the 30-second door QR are done.)
 - **Tickets the NutPub can't link to their buyer:** a ticket signed blind (NUT-00), so the door's check can't be tied to who paid.
 - Each judge with their own numbered show (`/judge-1` to `/judge-20`), no names asked.
 - Judges read Longy's filled-in pages, view only, and join as a guest with test sats; passkey sign-in with a backup for the artist's key.
@@ -114,6 +116,8 @@ npm run deploy                                          # build and publish
 npm run setup                                           # opens the host's private setup link
 SITE=https://thenutpub.com npm run check                # a phone's night from the command line
 ```
+
+Closing the gig (`server/closing.js`, `test/closing.test.js`): a daily cron on the Worker (04:00 UTC, free plan) deletes each recording 7 days after it was made (Stream's own `deleteRecordingAfterDays` can't go below 30, kept as a backstop), and the night's records 7 days after End night, or after the gig's date if End night wasn't pressed. Uncollected payments (`locked`, sealed to the artist's key) are never deleted.
 
 Passkeys (`server/passkey.js`, `client/passkey.js`) are checked on the Worker with WebCrypto only (ES256, Ed25519, RS256); challenges are signed, not stored, and only used ones are written down. `npm test` covers every wrong check and a frozen known answer. The passkey's user handle is 32 random bytes made on the phone and never sent: the seed for the blind-signed ticket to come.
 

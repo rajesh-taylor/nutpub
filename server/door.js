@@ -93,6 +93,9 @@ export function mountDoor(route, admin, pass) {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);
     await kv.set('stageAt', now()); // pages ask every 2 s for the next half hour: a rehearsal feels live
+    // End night starts the 7 days the night's records are kept (closing.js); opening it again stops the clock.
+    if (stage === 'closed') { if (!(await kv.get('endedAt'))) await kv.set('endedAt', now()); }
+    else await run("DELETE FROM kv WHERE key = 'endedAt'");
     return json({ stage: await kv.set('stage', stage) });
   });
 

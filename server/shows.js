@@ -149,7 +149,7 @@ export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' |
 
 // A finished gig clears itself when the artist gives the next one a date: tickets, chat and stage. Payments stay to collect.
 export async function clearGig() {
-  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM passkeys'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom')"), sql('UPDATE messages SET deleted = 1')]);
+  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM passkeys'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom', 'endedAt')"), sql('UPDATE messages SET deleted = 1')]);
   const at = now();
   await kv.set('nightStart', at); // Takings counts this gig from here
   await kv.set('stage', 'doors');

@@ -357,7 +357,7 @@ body.counting .big-play, body.counting .live-badge { display: none; }
 .closing-card { max-width: 30em; padding: 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; border-radius: 10px;
   background: rgb(5 9 20 / .78); border: 1px solid rgb(239 227 200 / .14); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .closing-card p { margin: 0; color: var(--cream); }
-.closing-card:has(#change:empty) { display: none; }
+.closing-card #change:empty { display: none; } /* the 7-day line always shows; the sats line only with sats left */
 .zero { font: 400 24px/1 var(--poster); letter-spacing: .12em; margin: 0; padding: 8px 14px 6px; border: 1px solid var(--cream); border-radius: 3px; background: rgb(5 9 20 / .6); }
 
 /* ---- The bar: its drinks, and the pint (from the hackathon's Pint Signal). */

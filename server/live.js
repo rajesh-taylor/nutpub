@@ -1,11 +1,12 @@
 // Live video through Cloudflare Stream: one live input per artist, made through the Stream API. The account and its
 // API token (Stream: Edit) are Worker secrets, STREAM_ACCOUNT and STREAM_TOKEN: nothing about them is in the repo.
-// The artist streams to it from Larix or OBS; Stream records each broadcast and deletes it after 30 days.
+// The artist streams to it from Larix or OBS; Stream records each broadcast. closing.js deletes each recording 7 days
+// after it was made (Stream's own setting can't go below 30 days, kept as a backstop).
 import QRCode from 'qrcode';
 import { kv } from './db.js';
 import { MINT_TEST } from './config.js';
 import { current, showOf, saveShow, stageNow } from './shows.js';
-import { one, run } from './db.js';
+import { one, all, run } from './db.js';
 import { cashuGate } from './gate.js';
 import { artistKey } from './takings.js';
 import { hasTicket } from './door.js';
@@ -47,6 +48,15 @@ export async function liveInput(page) {
   console.log(`live input made for /${page}`);
   return input;
 }
+
+// The artist's recordings (one a broadcast), and deleting one: closing.js deletes each 7 days after it was made.
+export async function recordings() {
+  const uids = (await all("SELECT value FROM kv WHERE key LIKE 'live:%'")).map((r) => JSON.parse(r.value));
+  const out = [];
+  for (const uid of uids.filter(Boolean)) out.push(...(await stream('GET', `/live_inputs/${uid}/videos`)));
+  return out;
+}
+export const deleteRecording = (uid) => stream('DELETE', `/${uid}`);
 
 // Is the artist streaming right now? Stream's word on the input, asked at most every 10 s per Worker: every phone
 // polls the stage every 2 s, and that mustn't become a Stream API call each time.

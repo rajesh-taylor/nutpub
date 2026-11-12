@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Tips · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* The venue's big screen: read from across the room. Midnight, amber, cream; sizes follow the screen's width. */
+    body.screen-page { background: var(--midnight); padding: 0; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .screen-top { padding: 4vh 5vw 2vh; }
+    .screen-top h1 { margin: 0; font: 400 clamp(40px, 7vw, 140px)/.9 var(--poster); letter-spacing: .03em; color: var(--cream); }
+    .screen-top h1 span { color: var(--amber); }
+    .screen-where { margin: 1.2vh 0 0; font-size: clamp(16px, 1.8vw, 34px); color: var(--smoke); }
+    .screen-tips { list-style: none; margin: 0; padding: 0 5vw; flex: 1; display: flex; flex-direction: column; gap: 1.6vh; }
+    .screen-tips li { display: flex; justify-content: space-between; align-items: baseline; gap: 4vw; padding: 1.6vh 2vw;
+      border-radius: 1vw; background: rgb(255 255 255 / .04); font: 400 clamp(28px, 4.2vw, 90px)/1 var(--poster); letter-spacing: .04em; }
+    .screen-tips li:first-child { background: rgb(217 149 58 / .16); font-size: clamp(36px, 5.6vw, 120px); }
+    .screen-tips li:nth-child(n+4) { opacity: .6; }
+    .screen-tips .who { color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .screen-tips .sats { color: var(--amber); flex: none; }
+    .screen-tips li.new { animation: in .8s ease-out; }
+    @keyframes in { from { transform: translateY(-30%); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .screen-tips li.new { animation: none; } }
+    .screen-empty { margin: 8vh 5vw; font-size: clamp(20px, 2.6vw, 50px); color: var(--smoke); }
+    .screen-full { position: fixed; right: 16px; bottom: 16px; }
+  </style>
+</head>
+<body class="screen-page">
+  <header class="screen-top">
+    <h1>Tips for <span id="artist"></span></h1>
+    <p class="screen-where">Tip from your phone: <b id="where"></b></p>
+  </header>
+  <ol class="screen-tips" id="tips" aria-live="polite"></ol>
+  <p class="screen-empty" id="empty">Tips show here as they come in.</p>
+  <button type="button" class="btn quiet screen-full" id="full">Full screen</button>
+  <script type="module" src="/js/screen.js"></script>
+</body>
+</html>
