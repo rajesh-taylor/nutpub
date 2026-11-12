@@ -21,7 +21,46 @@ function draw(fresh) {
     li.append(who, amt);
     return li;
   }));
-  $('empty').hidden = tips.length > 0;
+}
+
+// The stretch goals, fed by tonight's tips: the gig page's track (viewer.js goal()), wide. One track from 0 to the
+// last goal, a mic at each, amber once met, the goal's name and amount under it; the artist's thanks once all are met.
+const short = (n) => (n < 1000 ? String(n) : n < 1e6 ? `${+(n / 1000).toFixed(n < 1e4 ? 1 : 0)}k` : `${+(n / 1e6).toFixed(1)}M`);
+const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>';
+let goalsKey = '';
+function goals(tipped, all, thanks) {
+  const key = JSON.stringify([tipped, all, thanks]);
+  if (key === goalsKey) return;
+  goalsKey = key;
+  const list = [...(all || [])].sort((a, b) => a.at - b.at).slice(0, 3);
+  const top = list[list.length - 1];
+  $('goals').hidden = !top;
+  if (!top) return;
+  const next = list.find((g) => tipped < g.at) || top;
+  const allMet = tipped >= top.at;
+  const done = allMet && !!thanks;
+  $('goal-sum').textContent = allMet ? `${short(tipped)} sats · all met` : `${short(tipped)} / ${short(next.at)} sats`;
+  $('thanks').hidden = !done;
+  $('thanks').textContent = done ? thanks : '';
+  $('track').hidden = done;
+  $('bar').style.width = `${Math.min(100, (tipped / top.at) * 100)}%`;
+  $('track').querySelectorAll('.mic').forEach((m) => m.remove());
+  for (const g of list) {
+    const mic = document.createElement('div');
+    mic.className = `mic${tipped >= g.at ? ' met' : ''}`;
+    mic.style.left = `${(g.at / top.at) * 100}%`;
+    mic.innerHTML = MIC; // our own fixed icon, never the artist's text
+    const label = document.createElement('span');
+    label.textContent = `${tipped >= g.at ? '✓ ' : ''}${g.label} · ${short(g.at)}`;
+    mic.append(label);
+    $('track').append(mic);
+  }
+  // A phone held upright has no room under the mics: the same goals on one line under the track.
+  $('goal-list').hidden = done;
+  $('goal-list').replaceChildren(...list.flatMap((g, i) => {
+    const el = Object.assign(document.createElement('span'), { className: tipped >= g.at ? 'met' : '', textContent: `${tipped >= g.at ? '✓ ' : ''}${g.label} ${short(g.at)}` });
+    return i ? [' · ', el] : [el];
+  }));
 }
 
 async function tick() {
@@ -35,6 +74,7 @@ async function tick() {
     $('artist').textContent = name;
     document.title = `Tips · ${name}`;
     $('where').textContent = `${location.host}${location.pathname.replace(/\/screen$/, '')}`;
+    $('qr').src = `/api/show/qr.svg?u=${encodeURIComponent(updated)}`;
   }
   const fresh = new Set();
   for (const m of now.messages || []) {
@@ -45,6 +85,7 @@ async function tick() {
   for (let i = tips.length - 1; i >= 0; i -= 1) if (gone.has(tips[i].id)) tips.splice(i, 1);
   tips.length = Math.min(tips.length, 50);
   draw(fresh);
+  goals(now.tipped || 0, now.goals, now.thanks);
 }
 
 async function loop() {
@@ -53,9 +94,11 @@ async function loop() {
 }
 loop();
 
-// The screen stays on, and goes full screen with a tap (the button then hides).
+// The screen stays on, and goes full screen with a tap (the button then hides). An iPhone's Safari can't put a page
+// full screen, so the button shows only where it works.
+$('full').hidden = !document.fullscreenEnabled;
 const awake = async () => { try { await navigator.wakeLock?.request('screen'); } catch { /* not allowed: fine */ } };
 awake();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) awake(); }); // the lock goes when the tab hides
 $('full').addEventListener('click', () => { document.documentElement.requestFullscreen?.().catch(() => {}); awake(); });
-document.addEventListener('fullscreenchange', () => { $('full').hidden = !!document.fullscreenElement; });
+document.addEventListener('fullscreenchange', () => { $('full').hidden = !!document.fullscreenElement || !document.fullscreenEnabled; });

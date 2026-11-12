@@ -2,39 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <title>Tips · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
-    /* The venue's big screen: read from across the room. Midnight, amber, cream; sizes follow the screen's width. */
-    body.screen-page { background: var(--midnight); padding: 0; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-    .screen-top { padding: 4vh 5vw 2vh; }
-    .screen-top h1 { margin: 0; font: 400 clamp(40px, 7vw, 140px)/.9 var(--poster); letter-spacing: .03em; color: var(--cream); }
-    .screen-top h1 span { color: var(--amber); }
-    .screen-where { margin: 1.2vh 0 0; font-size: clamp(16px, 1.8vw, 34px); color: var(--smoke); }
-    .screen-tips { list-style: none; margin: 0; padding: 0 5vw; flex: 1; display: flex; flex-direction: column; gap: 1.6vh; }
-    .screen-tips li { display: flex; justify-content: space-between; align-items: baseline; gap: 4vw; padding: 1.6vh 2vw;
-      border-radius: 1vw; background: rgb(255 255 255 / .04); font: 400 clamp(28px, 4.2vw, 90px)/1 var(--poster); letter-spacing: .04em; }
-    .screen-tips li:first-child { background: rgb(217 149 58 / .16); font-size: clamp(36px, 5.6vw, 120px); }
-    .screen-tips li:nth-child(n+4) { opacity: .6; }
-    .screen-tips .who { color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* The venue's big screen, read from across the room. The home page's sign (with its shimmer and the orange ₿) above
+       the artist; the QR on the left, the tips on the right, the stretch goals along the bottom third as on the gig
+       page. Text near-white (250), no gold backdrops: plain for contrast. A phone held upright: one above the other. */
+    body.screen-page { --white: rgb(250 250 250); background: var(--midnight); padding: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
+    .screen-top { position: relative; padding: 2.5vh 5vw 0; text-align: center; }
+    .screen-sign { position: relative; width: clamp(150px, 16vw, 320px); margin: 0 auto; line-height: 0; }
+    .screen-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .screen-sign .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
+    .screen-sign .board .btc { fill: #f7931a; }
+    .screen-sign .shine { position: absolute; inset: 0; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat;
+      mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: sign-shine 9.55s linear infinite; }
+    .screen-sign .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
+    @keyframes sign-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 42.41% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 42.42%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
+    .screen-top h1 { margin: 2.5vh 0 0; font: 400 clamp(44px, min(7.5vw, 12vh), 150px)/.9 var(--poster); letter-spacing: .04em; color: var(--amber); }
+    .screen-full { position: absolute; top: 2vh; right: 2vw; }
+    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 5vw; align-items: start; padding: 4vh 6vw 2vh; }
+    .screen-left { display: flex; flex-direction: column; align-items: center; gap: 1.5vh; }
+    .screen-qr { width: min(100%, 30vh); aspect-ratio: 1; background: var(--cream); border-radius: 1.2vh; padding: 1.4vh; }
+    .screen-qr img { width: 100%; height: 100%; display: block; }
+    .screen-scan { margin: 0; text-align: center; font: 400 clamp(22px, 2.6vw, 56px)/1.1 var(--poster); letter-spacing: .08em; color: var(--white); }
+    .screen-scan b { display: block; font: 600 clamp(14px, 1.3vw, 28px)/1.3 var(--body); letter-spacing: 0; color: var(--smoke); }
+    .screen-tips { list-style: none; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; }
+    .screen-tips li { display: flex; justify-content: space-between; align-items: baseline; gap: 4vw; padding: 1.4vh 0;
+      border-bottom: 1px solid rgb(239 227 200 / .1); font: 400 clamp(26px, 3.4vw, 80px)/1 var(--poster); letter-spacing: .04em; }
+    .screen-tips li:first-child { font-size: clamp(32px, 4.4vw, 100px); }
+    .screen-tips li:nth-child(n+4) { opacity: .55; }
+    .screen-tips .who { display: block; border: 0; border-radius: 0; color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .screen-tips .sats { color: var(--amber); flex: none; }
     .screen-tips li.new { animation: in .8s ease-out; }
-    @keyframes in { from { transform: translateY(-30%); opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { .screen-tips li.new { animation: none; } }
-    .screen-empty { margin: 8vh 5vw; font-size: clamp(20px, 2.6vw, 50px); color: var(--smoke); }
-    .screen-full { position: fixed; right: 16px; bottom: 16px; }
+    @keyframes in { from { transform: translateY(-30%); } }
+    /* The stretch goals: the gig page's track, wide. Mics at each goal, amber once met; the label under each. */
+    .screen-goals { flex: none; height: 30vh; padding: 2vh 8vw max(7vh, calc(env(safe-area-inset-bottom) + 20px)); border-top: 1px solid rgb(239 227 200 / .08); display: flex; flex-direction: column; justify-content: center; gap: 3vh; }
+    .screen-goals .head { display: flex; justify-content: space-between; align-items: baseline; font: 400 clamp(18px, 2vw, 44px)/1 var(--poster); letter-spacing: .14em; color: var(--white); }
+    .screen-goals .head b { font-weight: 400; color: var(--amber); letter-spacing: .06em; }
+    .screen-goals .track { position: relative; height: clamp(10px, 1.6vh, 26px); margin: 0 clamp(20px, 2.2vw, 46px); border-radius: 99px; background: #000; box-shadow: inset 0 0 0 1px rgb(239 227 200 / .18); }
+    .screen-goals .bar { position: relative; display: block; height: 100%; width: 0; border-radius: 99px; background: var(--amber); transition: width .8s; }
+    .screen-goals .bar::after { content: ""; position: absolute; right: -3px; top: -40%; bottom: -40%; width: 6px; border-radius: 3px; background: var(--cream); box-shadow: 0 0 8px rgb(5 9 20 / .8); }
+    .screen-goals .mic { position: absolute; top: 50%; width: clamp(36px, 4.4vw, 92px); aspect-ratio: 1; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%;
+      background: #000; box-shadow: 0 0 0 2px rgb(239 227 200 / .4); color: var(--cream); z-index: 1; }
+    .screen-goals .mic svg { width: 60%; height: 60%; fill: currentColor; }
+    .screen-goals .mic.met { background: var(--amber); color: #000; box-shadow: none; }
+    .screen-goals .mic span { position: absolute; top: calc(100% + 1.4vh); white-space: nowrap; font: 400 clamp(16px, 1.7vw, 38px)/1.1 var(--poster); letter-spacing: .06em; color: var(--white); text-align: center; }
+    .screen-goals .mic:last-child span { right: 0; text-align: right; }
+    .screen-goals .mic.met span { color: var(--amber); }
+    .screen-goals .list { display: none; margin: 0; font: 400 18px/1.4 var(--poster); letter-spacing: .06em; color: var(--white); }
+    .screen-goals .list .met { color: var(--amber); }
+    .screen-goals .thanks { margin: 0; text-align: center; font: 400 clamp(26px, 3.4vw, 76px)/1.1 var(--poster); letter-spacing: .04em; color: var(--amber); }
+    @media (prefers-reduced-motion: reduce) { .screen-sign .shine { display: none; } .screen-tips li.new { animation: none; } }
+    @media (orientation: portrait) { body.screen-page { height: auto; min-height: 100dvh; overflow: visible; } .screen-main { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+      .screen-goals { height: auto; } .screen-goals .mic span { display: none; } .screen-goals .list { display: block; } .screen-qr { width: min(60vw, 30vh); }
+      .screen-full { position: static; margin-top: 2vh; } .screen-goals { min-height: 0; padding-bottom: max(8vh, calc(env(safe-area-inset-bottom) + 40px)); } }
   </style>
 </head>
 <body class="screen-page">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="gold" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#ffe6a6"/><stop offset="0.45" stop-color="#e8a845"/><stop offset="1" stop-color="#9a5e1a"/></linearGradient>
+      <filter id="worn-sign" filterUnits="userSpaceOnUse" x="-20" y="-20" width="840" height="240">
+        <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 9 -1.5" result="m"/>
+        <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      </filter>
+    </defs>
+  </svg>
   <header class="screen-top">
-    <h1>Tips for <span id="artist"></span></h1>
-    <p class="screen-where">Tip from your phone: <b id="where"></b></p>
+    <div class="screen-sign" role="img" aria-label="The NutPub">
+      <svg class="board" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6" filter="url(#worn-sign)">THENUTPU<tspan class="btc">₿</tspan></text></svg>
+      <svg class="shine" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6">THENUTPU</text></svg>
+    </div>
+    <h1 id="artist"></h1>
+    <button type="button" class="btn quiet screen-full" id="full" hidden>Full screen</button>
   </header>
-  <ol class="screen-tips" id="tips" aria-live="polite"></ol>
-  <p class="screen-empty" id="empty">Tips show here as they come in.</p>
-  <button type="button" class="btn quiet screen-full" id="full">Full screen</button>
+  <div class="screen-main">
+    <div class="screen-left">
+      <div class="screen-qr"><img id="qr" src="/api/show/qr.svg" alt="QR code to the gig page"></div>
+      <p class="screen-scan">Scan to tip<b id="where"></b></p>
+    </div>
+    <ol class="screen-tips" id="tips" aria-live="polite"></ol>
+  </div>
+  <section class="screen-goals" id="goals" hidden>
+    <div class="head"><span>Stretch goals</span><b id="goal-sum"></b></div>
+    <div class="track" id="track"><i class="bar" id="bar"></i></div>
+    <p class="list" id="goal-list"></p>
+    <p class="thanks" id="thanks" hidden></p>
+  </section>
   <script type="module" src="/js/screen.js"></script>
 </body>
 </html>
