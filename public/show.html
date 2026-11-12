@@ -55,8 +55,8 @@
     .preview-box video { width: 100%; height: 100%; object-fit: contain; display: block; }
     .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
       /* Widgets (12 Nov): pages for the venue's screens, each a button with a copy icon beside it; room for more on the row. */
-    .widgets { margin: 0 0 16px; text-align: left; }
-    .widgets-head { margin: 0 0 8px; font: 400 18px/1.2 var(--poster); letter-spacing: .1em; }
+    .widgets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 16px; text-align: left; }
+    .widgets-head { margin: 0; font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--amber); }
     .widget-row { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; }
     .widget { display: inline-flex; align-items: stretch; gap: 4px; }
     .widget .copy { display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; background: none; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; color: var(--cream); cursor: pointer; }

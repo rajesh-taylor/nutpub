@@ -22,7 +22,7 @@
     .menu .est { margin: 6px 0 28px; text-align: center; font: italic 17px/1.3 Georgia, "Times New Roman", serif; color: var(--smoke); }
     .rule { display: flex; align-items: center; gap: 12px; margin: 0 0 22px; font: 400 17px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
     .rule::before, .rule::after { content: ""; flex: 1; height: 1px; background: rgb(217 149 58 / .4); }
-    .dishes { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 22px; }
+    .dishes { list-style: none; margin: 0 0 30px; padding: 0; display: grid; gap: 22px; }
     /* A price too long for the line drops under it, still on the right, the dots running out to the edge. */
     .dish .line { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
     .dish .name { font: 700 clamp(20px, 5vw, 24px)/1.2 Georgia, "Times New Roman", serif; color: var(--cream); }
@@ -60,6 +60,30 @@
         <li class="dish">
           <div class="line"><span class="name">Nutty Stardust<svg class="bolt" viewBox="0 0 14 20" role="img" aria-label="lightning bolt"><path d="M9 0 L1 11 H6 L4 20 L13 8 H8 Z"/></svg></span><span class="dots" aria-hidden="true"></span><span class="price">NUT-24</span></div>
           <p class="what">Pay by the minute in sat dust, leave when it gets bad.</p>
+        </li>
+        <li class="dish">
+          <div class="line"><span class="name">Fresh Mint Sauce</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-04</span></div>
+          <p class="what">Test sats, freshly minted.</p>
+        </li>
+        <li class="dish">
+          <div class="line"><span class="name">Lock, Stock &amp; Barrel</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-10 · NUT-11</span></div>
+          <p class="what">Every payment locked to its owner.</p>
+        </li>
+        <li class="dish">
+          <div class="line"><span class="name">The Tab</span><span class="dots" aria-hidden="true"></span><span class="price">NUT-18</span></div>
+          <p class="what">The amount, the mint and the lock.</p>
+        </li>
+      </ul>
+
+      <p class="rule">Behind the bar</p>
+      <ul class="dishes">
+        <li class="dish">
+          <div class="line"><span class="name">Hot Coco</span><span class="dots" aria-hidden="true"></span><a class="price" href="https://github.com/cashubtc/coco" target="_blank" rel="noreferrer noopener">Coco</a></div>
+          <p class="what">The wallet in your browser, no app.</p>
+        </li>
+        <li class="dish">
+          <div class="line"><span class="name">Cashu-Tea</span><span class="dots" aria-hidden="true"></span><a class="price" href="https://github.com/cashubtc/cashu-ts" target="_blank" rel="noreferrer noopener">cashu-ts</a></div>
+          <p class="what">Payments, locks and checks.</p>
         </li>
         <li class="dish">
           <div class="line"><span class="name">GitGrub</span><span class="dots" aria-hidden="true"></span><a class="price" href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub</a></div>

@@ -1091,6 +1091,7 @@ function modBar(slow) {
   $('slow-note').hidden = !slow || !!MOD;
   $('mod-bar').hidden = !MOD;
   if (!MOD) return;
+  $('nostr-in').hidden = true; // mods have their own names
   $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
   $('pin-btn').hidden = !MOD.main;
   $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}`;
@@ -1291,23 +1292,30 @@ $('say').onsubmit = async (e) => {
   if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
 
-// ---- Nostr sign-in for the chat (NIP-07), only in a browser with a Nostr extension: the fan's Nostr name in place
-// of "guest 3f2a", from their next message on. Not for mods: they have their own names.
+// ---- Nostr sign-in for the chat, a purple button in the Live chat header for every fan (not mods: they have their own
+// names). With a Nostr extension (NIP-07) it signs straight in, and their Nostr name replaces "guest 3f2a" from their
+// next message on. Without one, it says what's needed; signer apps on phones (NIP-46) come later.
 function nostrLine(me) {
   const line = $('nostr-in');
   line.hidden = !!MOD;
-  const btn = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', className: 'linkish', textContent: text, onclick });
+  const btn = (text, onclick, className = 'linkish') => Object.assign(document.createElement('button'), { type: 'button', className, textContent: text, onclick });
   if (me?.name) {
     line.replaceChildren('as ', Object.assign(document.createElement('b'), { textContent: me.name, title: me.npub || '' }), ' · ',
       btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
-  } else {
-    const b = btn('Sign in with Nostr', async () => {
-      b.disabled = true;
-      try { nostrLine(await signIn(pass)); } catch (e) { say(e?.message || 'Nostr sign-in cancelled.'); b.disabled = false; }
-    });
-    line.replaceChildren(b);
+    return;
   }
+  const b = btn('Sign in with Nostr', async () => {
+    if (!window.nostr) {
+      line.replaceChildren(Object.assign(document.createElement('span'), { className: 'nostr-note',
+        textContent: 'Needs a Nostr extension (Alby or nos2x on a computer). Phones: coming soon. ' }), btn('OK', () => nostrLine({})));
+      return;
+    }
+    b.disabled = true;
+    try { nostrLine(await signIn(pass)); } catch (e) { say(e?.message || 'Nostr sign-in cancelled.'); b.disabled = false; }
+  }, 'nostr-btn');
+  line.replaceChildren(b);
 }
+nostrLine({});
 extension().then(async (n) => { if (n) nostrLine(await whoAmI(pass)); });
 
 // ---- One request, as often as the server says (every 2 s on the night, once a minute before it; not at all from a

@@ -266,6 +266,11 @@ body[data-as="home"] .chat-top .nostr-in { order: 3; margin: 0 0 0 auto; white-s
 body[data-as="home"] .chat-top .pin { order: 2; }
 .nostr-in b { color: #b98cff; font-weight: 600; }
 .nostr-in .linkish { margin-left: 0; font-size: 13px; }
+/* The sign-in button: boxed, in Nostr's purple (Rajesh 12 Nov). */
+.nostr-in .nostr-btn { padding: 6px 10px 4px; border: 0; border-radius: 4px; background: #8e30eb; color: #fff; font: 400 15px/1 var(--poster); letter-spacing: .08em; cursor: pointer; }
+.nostr-in .nostr-btn:hover { filter: brightness(1.12); }
+.nostr-in .nostr-btn:focus-visible { outline: 2px solid #b98cff; outline-offset: 2px; }
+.nostr-in .nostr-note { white-space: normal; color: var(--cream); }
 body.immersive .nostr-in, body[data-as="room"][data-stage="doors"] .nostr-in { display: none; }
 .feed li.mod a { color: #a9d0ff; text-decoration: underline; }
 .feed .del { float: right; margin: -2px -4px 0 8px; padding: 0 6px; border: 0; background: none; color: var(--smoke); font-size: 18px; line-height: 1; cursor: pointer; }
@@ -756,9 +761,13 @@ body.wallet-card .show-line .status:empty { display: none; }
    at each goal on the track, gold once it's met. */
 body.wallet-card .stat small:not(.fine), body.wallet-card .goal .goal-head { font: 400 15px/1 var(--poster); letter-spacing: .16em; color: var(--cream); }
 body.wallet-card .goal .goal-list { font-family: var(--poster); letter-spacing: .08em; text-transform: uppercase; }
-.goal .notch.mic { top: 50%; bottom: auto; width: 26px; height: 26px; margin: 0; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%; background: #000; box-shadow: 0 0 0 1px rgb(239 227 200 / .4); color: var(--cream); z-index: 1; }
-.goal .notch.mic svg { width: 16px; height: 16px; fill: currentColor; }
-.goal .notch.mic.met { background: var(--amber); color: #000; box-shadow: none; }
+/* A mic above each goal with a short stem down to the track, no circle (as on the tippers screen, 12 Nov): cream, amber once met. */
+.goal .notch.mic { top: auto; bottom: calc(100% + 4px); width: 22px; height: 22px; margin: 0; transform: translateX(-50%); display: block; background: none; border-radius: 0; box-shadow: none; color: var(--cream); z-index: 1; }
+.goal .notch.mic svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+.goal .notch.mic::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: rgb(239 227 200 / .7); }
+.goal .notch.mic.met { background: none; color: var(--amber); }
+.goal .notch.mic.met::after { background: var(--amber); }
+.goal i.track:has(.mic), body.wallet-card .goal i.track:has(.mic) { margin-top: 34px; }
 body.wallet-card .goal i.track { margin-right: 13px; margin-left: 2px; }
 body.wallet-card .goal i.track { margin-top: 12px; margin-bottom: 12px; }
 /* What you've given reads as large as the goal's figures. */
