@@ -558,11 +558,15 @@ Then 16 to 17 Nov build what's left of the design.
 **Pub Menu v0.1, Rajesh 11 Nov late (decided; build in Thursday's free slot, before Nostr sign-in, Nutzaps, then NWC):** a pub menu in the site's own look (midnight, amber, cream; dotted leaders to the "price", which is the NUTs and NIPs each dish uses). Dishes so far:
 - **Fish 'N Nips** · Nostr: your handle in the chat, Nutzaps, the live gig listed on Nostr. *NIP-61, NIP-47, NIP-53*
 - **Passkey Pie** · The ticket you can't lose: no email, no account. *WebAuthn*
-- **Nutty Stardust** (proposed) · Pay by the minute in sat dust, leave when it gets bad. *NUT-24*
+- **Nutty Stardust ⚡** (Ziggy's lightning bolt) · Pay by the minute in sat dust, leave when it gets bad. *NUT-24*
 - **Happy Hour:** 150,000 test sats free, every night.
 - **Allergens:** "Contains no email, name, address. May contain NUTs."
 - **GitGrub:** the recipe book on GitHub.
 No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86'd", no drinks. Costs not shown. Tips stay two buttons: Tip (anonymous, as now) and Nutzap (public, with your Nostr handle).
+
+**After 27 Nov, Rajesh 12 Nov (logged, nothing built):**
+- **Pub Menu without the NUT puns, and no laurels on the home page:** most people know nothing about Cashu's NUTs; a gig splash image instead.
+- **An MCP server for the NutPub (ideas):** (1) gig search for AI assistants ("a live gig in Bristol on Friday under £10"), from the privacy-first /events listing, public data only; (2) agents paying the 402 for a stream or a ticket with a Cashu wallet (NUT-24 is already machine-payable; the fan still saves the passkey on their phone); (3) booking enquiries: venues' free dates and artists, a deposit to hold a date (with Refueler Pass). Start with (1).
 
 **Session 18's prompt:** used Wed 11 Nov.
 
