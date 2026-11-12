@@ -658,8 +658,8 @@ No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86
 
 **Ideas, Rajesh 12 Nov late (logged, after 27 Nov unless said):**
 - **Bundles with local businesses:** a venue lists itself for hire and adds a bar deal; an artist adds a drink, or a meal at a nearby restaurant, to the ticket price (like London's dinner-and-theatre deals). Each business's share is locked to its own key with a refund at a set time, as the first drink already is: no one holds anyone's money. A venue listing could become a Refueler MCP on refueler.io (like toothache.fyi's), and the bar's Pour page a step towards the Refueler merchant terminal (the Darwin strip).
-- **The first free drink** is built and working (two locked payments, the bar's QR and Pour, the refund at last orders) and stays off until after 27 Nov, never the default.
-- **NUT-26** (payment requests as short bech32m QR codes, built on NUT-18, optional): one QR that a Lightning wallet or a Cashu wallet can pay, for the room's screen, the poster or a bar's terminal. Check which wallets read it first.
+- **The first free drink** is built and working (two locked payments, the bar's QR and Pour, the refund at last orders). **Rajesh decides by Sun 22 Nov** whether it comes back on before 27 Nov; never the default.
+- **NUT-26 on the room's screen (Rajesh wants it):** one short QR (bech32m, built on NUT-18, optional) that a Cashu wallet or a Lightning wallet can pay, to tip from the room without opening the page. Must work on the test mint and on real mints. Accept **several mints, not one provider**, for redundancy. Check which wallets read it first. **Claude's pick if three extra Opus sessions come free before 27 Nov.**
 - **Blind signatures beyond the door:** a ticket you can pass to a friend; attendance proved without saying who (votes on the encore, reviews from real ticket holders); drink, merch and loyalty vouchers; season passes.
 
 **Next, session 21 (Opus, design), as planned 11 Nov:**
