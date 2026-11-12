@@ -978,7 +978,7 @@ body.ticket-steps #door-show { width: 100%; }
 body .door-line .door-where { margin: 0; font-size: 15px; line-height: 1.4; text-align: center; color: var(--cream); }
 .door-where[hidden] { display: none; }
 /* Both ticket steps' buttons: one line, the same size (12 Nov). */
-body.ticket-steps #keep-btn, body.ticket-steps #door-show { box-sizing: border-box; height: 56px; padding: 0 12px; font-size: 22px; line-height: 56px; white-space: nowrap; }
+body.ticket-steps #door-show { box-sizing: border-box; height: 56px; padding: 0 12px; font-size: 22px; line-height: 56px; white-space: nowrap; }
 /* Under the door QR: the artist's address, in the gold of The NutPub above it. */
 .door-small.door-url { font: 400 20px/1.2 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
 
@@ -986,3 +986,40 @@ body.ticket-steps #keep-btn, body.ticket-steps #door-show { box-sizing: border-b
 .nb { color: #f7931a; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .test-banner .nb { color: #050914; } /* on the amber strip, orange would vanish: the strip's own dark */
+
+/* ---- The ticket, bought ahead and on the night (13 Nov design): the photo fills the top; under it who, when and
+   where, then one button. The page's own heading steps aside. */
+body.ticket-head .masthead, body.ticket-head #when { display: none; }
+body[data-as="room"].confirmed .welcome { display: flex; flex-direction: column; flex: 1 1 auto; height: auto; min-height: 0; margin: 0 -16px; }
+body[data-as="room"].confirmed .welcome img { position: static; flex: 1 1 0; height: auto; min-height: 220px; }
+body[data-as="room"].confirmed .welcome figcaption { display: none; }
+.welcome .save-ticket { position: static; transform: none; width: auto; padding: 20px 24px 6px; background: none; border: 0; border-radius: 0; }
+.save-ticket { gap: 0; }
+.st-kicker { margin: 0; font: 400 15px/1 var(--poster); letter-spacing: .1em; color: var(--amber); }
+.save-ticket .st-artist, .st-head .st-artist { margin: 8px 0 0; font: 400 52px/1 var(--poster); letter-spacing: .06em; color: var(--cream); overflow-wrap: anywhere; }
+.st-when { margin: 8px 0 0; font: 400 19px/1.2 var(--poster); letter-spacing: .08em; color: var(--smoke); }
+.save-ticket .keep { margin: 22px 0 0; }
+#keep-btn { box-sizing: border-box; width: 100%; padding: 14px 16px 12px; font-size: 26px; line-height: 1.1; white-space: normal; }
+.keep .hint { color: var(--smoke); font-size: 14px; }
+.st-list { display: flex; flex-direction: column; gap: 14px; margin: 22px 0 0; padding: 16px; list-style: none; text-align: left; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--midnight); }
+.st-list[hidden], .st-list li[hidden] { display: none; }
+.st-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 1.4; color: var(--cream); }
+.st-list svg { flex: none; width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: var(--smoke); stroke-width: 2; }
+.st-list svg.ok { stroke: var(--amber); stroke-width: 2.4; }
+.st-list b { font-weight: 600; color: var(--amber); }
+.save-ticket > .btn, .save-ticket > .wallet-add, .save-ticket > .wallet-file { margin-top: 14px; }
+/* On the night: the same head over Show at the door. */
+.door-line .st-head { display: none; }
+body.ticket-steps .door-line .st-head { display: block; margin: 0 0 14px; text-align: center; }
+body.ticket-steps .door-line { margin-top: 20px; }
+body .door-line .door-where { color: var(--smoke); font-size: 14px; }
+/* The door QR: the whole ticket in the middle of the screen, Close at the bottom; a bar empties with the 30 seconds. */
+.door-screen .door-top { margin-top: auto; }
+.door-screen #door-close { margin-top: auto; }
+.door-bar { display: block; width: min(80vw, 56vh, 380px); height: 4px; border-radius: 2px; background: #1c2740; overflow: hidden; }
+.door-bar[hidden], .door-note[hidden] { display: none; }
+.door-bar i { display: block; height: 100%; background: var(--amber); }
+.door-note { max-width: 300px; font-size: 14px; line-height: 1.4; color: var(--smoke); }
+.door-line .st-head p { text-align: center; }
+.door-line .st-head .st-kicker { color: var(--amber); font-size: 17px; }
+.door-line .st-head .st-when { font-size: 19px; }

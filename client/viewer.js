@@ -828,7 +828,12 @@ async function doorQr() {
     if (qrDrawn === want) $('door-qr').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
   } catch (e) { if (qrDrawn === want) qrDrawn = ''; throw e; } // try again next second, not next step
 }
-setInterval(() => { if (!document.hidden) doorQr().catch(() => {}); }, 1000);
+// Under the QR: a bar that empties as its 30 seconds run out, on the server's clock.
+function doorBar() {
+  const left = 1 - (((Date.now() + skew) / 1000) % 30) / 30;
+  $('door-bar-fill').style.width = `${Math.round(left * 100)}%`;
+}
+setInterval(() => { if (!document.hidden) { doorQr().catch(() => {}); if (!$('door-screen').hidden) doorBar(); } }, 1000);
 
 let doorShown = false;
 function render() {
@@ -907,6 +912,11 @@ function render() {
     if (confirmed) { if ($('keep').nextElementSibling !== $('save-link')) $('save-link').before($('keep')); }
     else { const spot = room ? $('door-pass') : $('money'); if ($('keep').previousElementSibling !== spot) spot.after($('keep')); }
   }
+  if (confirmed) {
+    $('st-kicker').textContent = keepOn ? 'Paid · your ticket' : 'You’ve got your ticket';
+    $('st-list').hidden = keepFirst;
+    $('st-saved').hidden = !door.passkey;
+  }
   $('save-link').classList.toggle('primary', !keepOn);
   $('save-link').hidden = keepFirst || PASSKEYS; // the passkey is the safe copy; the link stays for phones without one
   if (findOn || keepOn) warm();
@@ -919,7 +929,14 @@ function render() {
   body.classList.toggle('ticket-steps', keepFirst || (passOn && !door.checkedAt));
   // Under Show at the door: where this page lives, so it's easy to find again on the night.
   $('door-where').hidden = !(passOn && !door.checkedAt);
-  $('door-where').textContent = `Your ticket lives at ${location.host}${location.pathname}`;
+  $('door-where').textContent = 'Open before you go in for door staff.';
+  // Photo first, then who and where, then the button (13 Nov design): the page's own heading steps aside.
+  body.classList.toggle('ticket-head', room && (confirmed || (passOn && !door.checkedAt)));
+  if (passOn) {
+    $('door-kicker').textContent = [show.date === ukNow().slice(0, 10) ? 'Tonight' : shortDay(show.date && `${show.date}T12:00:00Z`), show.streams && `starts ${show.streams}`].filter(Boolean).join(' · ');
+    $('door-artist-big').textContent = show.artist || '';
+    $('door-venue').textContent = venueName();
+  }
   if (passOn) {
     const inRoom = !!door.checkedAt;
     $('door-show').hidden = inRoom;
@@ -928,7 +945,7 @@ function render() {
     doorQr();
     // Scanned while the QR is open: it says so, then closes by itself.
     if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
-      $('door-in').hidden = false; $('door-qr').hidden = true; $('door-small').textContent = 'Enjoy the night.'; $('door-small').classList.remove('door-url');
+      $('door-in').hidden = false; $('door-qr').hidden = true; $('door-bar').hidden = $('door-note').hidden = true; $('door-small').textContent = 'Enjoy the night.'; $('door-small').classList.remove('door-url');
       setTimeout(() => { $('door-screen').hidden = true; }, 3000);
     }
   }
@@ -955,8 +972,8 @@ $('door-show').onclick = async () => {
     } catch (e) { return say(e.message); }
   }
   $('door-artist').textContent = show.artist || '';
-  $('door-when').textContent = [shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
-  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-small').textContent = `${location.host}${location.pathname}`; $('door-small').classList.add('door-url'); // the artist's own address
+  $('door-when').textContent = [show.date === ukNow().slice(0, 10) ? 'Tonight' : shortDay(show.date && `${show.date}T12:00:00Z`), venueName()].filter(Boolean).join(' · ');
+  $('door-in').hidden = true; $('door-qr').hidden = false; $('door-bar').hidden = $('door-note').hidden = false; doorBar(); $('door-small').textContent = `${location.host}${location.pathname}`; $('door-small').classList.add('door-url'); // the artist's own address
   $('door-screen').hidden = false;
   $('door-close').focus();
 };
@@ -1251,9 +1268,15 @@ function walletLinks(code) {
   }
 }
 // The card is the receipt: what it's for and what was paid. Paid amounts stay in sats, whatever the page reads in.
+// The venue's name: setup asks for the name and address ("The Bell, 1 High Street, Bath"); the ticket shows the name.
+const venueName = () => String(show.venue || '').split(',')[0].trim();
 function receipt() {
-  const lines = [gigLine(), `${door.ticketKind === 'home' ? 'Online ticket' : 'Room ticket'} · ${sats(door.ticketSats)}`, door.ticketAt ? `Paid ${shortDay(door.ticketAt)}` : ''].filter(Boolean);
-  $('receipt').replaceChildren(...lines.flatMap((l, i) => (i ? [document.createElement('br'), l] : [l])));
+  const day = shortDay(show.date && `${show.date}T12:00:00Z`);
+  $('st-artist').textContent = show.artist || '';
+  $('st-when').textContent = [day, show.streams && `starts ${show.streams}`, venueName()].filter(Boolean).join(' · ');
+  const room = door.ticketKind !== 'home';
+  $('st-next').textContent = room && show.door?.on ? `Your door QR appears here on ${day.replace(/ /g, '\u00a0')}` : `The show plays here on ${day.replace(/ /g, '\u00a0')}`;
+  $('st-where').textContent = `${location.host}${location.pathname}`;
 }
 $('save-link').onclick = async () => {
   const url = ticketLink();

@@ -33,13 +33,21 @@
     <!-- In the room, before the set: welcome, the free drink. -->
     <section class="inside" id="inside" hidden>
       <div class="save-ticket" id="save-ticket" hidden>
-        <h2>You've got your ticket</h2>
-        <p class="receipt" id="receipt"></p>
+        <!-- Under the photo (13 Nov design): who, when and where, then one thing to do. -->
+        <p class="st-kicker" id="st-kicker">You've got your ticket</p>
+        <h2 class="st-artist" id="st-artist"></h2>
+        <p class="st-when" id="st-when"></p>
         <!-- Keep it with a passkey: shown straight after paying, until it's done. Moved beside the ticket on the gig day. -->
         <div class="keep" id="keep" hidden>
-          <button type="button" class="btn primary" id="keep-btn">Press to save ticket now</button>
-          <p class="hint" id="keep-note">Safely secured in case web browser is cleared.</p>
+          <button type="button" class="btn primary" id="keep-btn">Save ticket to your phone's passwords</button>
+          <p class="hint" id="keep-note">Your ticket lives in this web browser. Save it to your phone's passwords for safe keeping.</p>
         </div>
+        <!-- Saved: what happens next, in three lines. -->
+        <ul class="st-list" id="st-list" hidden>
+          <li id="st-saved"><svg viewBox="0 0 24 24" aria-hidden="true" class="ok"><path d="M4 12l5 5L20 6"/></svg><span>Saved to Passwords</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 2v4M15 2v4"/></svg><span id="st-next"></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></svg><span>Bookmark <b id="st-where"></b> on this phone to come back on the day of the show</span></li>
+        </ul>
         <button type="button" class="btn primary" id="save-link">Save this link</button>
         <a class="btn wallet-add" id="save-wallet" hidden>Add to Apple Wallet</a>
         <a class="wallet-file" id="save-wallet-file" hidden>Open-source wallet, no account</a>
@@ -51,8 +59,9 @@
       <!-- On the gig day, with Scan at the door on: one slim line; the QR opens full screen. Scanned once: "You're in". -->
       <div class="door-line" id="door-pass" hidden>
         <p><b id="door-pass-title">Your ticket</b> <span id="door-pass-note"></span></p>
+        <div class="st-head" id="door-head"><p class="st-kicker" id="door-kicker"></p><h2 class="st-artist" id="door-artist-big"></h2><p class="st-when" id="door-venue"></p></div>
         <span class="door-btns">
-          <button type="button" class="btn primary" id="door-show">Show at door on the night</button>
+          <button type="button" class="btn primary" id="door-show">Show at the door</button>
           <a class="btn wallet-add" id="door-wallet" hidden>Add to Apple Wallet</a>
           <a class="wallet-file" id="door-wallet-file" hidden>Open-source wallet, no account</a>
         </span>
@@ -171,6 +180,8 @@
     <div class="door-mid">
       <img id="door-qr" alt="Your ticket's QR code, for the door">
       <p class="door-in" id="door-in" hidden>You’re in</p>
+      <span class="door-bar" id="door-bar" aria-hidden="true"><i id="door-bar-fill"></i></span>
+      <p class="door-note" id="door-note">This QR code for door entry updates every 30 seconds. Do not screenshot it.</p>
       <p class="door-small" id="door-small">Show this at the door.</p>
     </div>
     <button type="button" class="btn quiet" id="door-close">Close</button>
