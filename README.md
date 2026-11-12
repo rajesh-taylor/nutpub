@@ -18,7 +18,8 @@
 - **Gone after 7 days.** The night's recording, tickets, passkeys, chat and tips are deleted 7 days after the gig; the fans' Cheers screen and the artist's Show Time say so. Sats the artist hasn't collected stay until they take them. One line of totals per gig is kept (tickets, sats, tips), nothing about anyone.
 - **The room's tippers screen** (`/longy/screen`, linked from Show Time): for the venue's TV. A big QR, "Scan to tip Longy", tonight's top three tippers, the chat as it comes in (handle · sats · words; a mod's delete takes it off), and the stretch goals along the bottom.
 - **Pub Menu** ([thenutpub.com/menu](https://thenutpub.com/menu), from the peanut menu on the home page): what each part of the night is made of, the NUTs and NIPs as the prices, with Coco and cashu-ts behind the bar.
-- **Your Nostr name in the chat.** **Nostr Sign In**, the purple button at the top of Live chat, works with a Nostr browser extension (Alby, nos2x; phones later) and puts your Nostr name in place of "guest 3f2a", in the chat and on the tippers screen. No account or password: the extension signs one note for thenutpub.com, and the name comes from your own signed Nostr profile, both checked by the NutPub, so nobody can borrow a name. Kept for the night only.
+- **Your Nostr name in the chat.** **Nostr Sign In**, the purple button at the top of Live chat, puts your Nostr name in place of "guest 3f2a", in the chat and on the tippers screen. With a Nostr browser extension (Alby, nos2x) it signs straight in; without one, a QR on a computer or **Open my signer app** on a phone (Amber, nsec.app): scan it from inside the app, not the phone's camera. Your secret key never leaves the extension or app. No account or password: it signs one note for thenutpub.com, and the name comes from your own signed Nostr profile, both checked by the NutPub, so nobody can borrow a name. Kept for the night only.
+- **Nutzaps:** once signed in with Nostr, up to three one-tap buttons under the comment box (⚡ 21 · ⚡ 210 · ⚡ 2,100 sats by default; the artist sets the amounts and emoji on Plan gig). Paid from your browser wallet, locked to the artist like any tip, and signed as a public note with your Nostr name: in the chat and on the tippers screen with a purple Nutzap tag, posted on Nostr, counted in Takings and collected there. Tip stays anonymous; a Nutzap is public. Always on: the artist's pages send their "Nutzap me here" note by themselves.
 - **Widgets on Show Time:** links for the venue's screens, starting with **Chat & Big Time Charlies** (the tippers screen), each with a copy button.
 - **One gig at a time per artist.** A night's records are deleted 7 days after it, or sooner when the artist starts their next gig.
 
@@ -65,20 +66,20 @@ Every payment is locked to the key of whoever it's for (NUT-11 P2PK). The server
 | 18 | Payment requests: the amount, the mint and the lock |
 | 24 | HTTP 402: the ticket, every minute of the live stream, every 10 seconds of the recorded set, every tip |
 | NIP-07 · NIP-98 | Nostr sign-in for the chat: the browser extension signs one note for this site |
-| NIP-61 (next) | Nutzaps: the same locked tip, published on Nostr |
+| NIP-46 · NIP-44 | Nostr Connect: a phone's signer app signs instead, every message between them encrypted (nostr-tools, the audited NIP-44; the spec's own test answers in `test/nip44.test.js`) |
+| NIP-61 | Nutzaps: the same locked tip, signed as a public note with your Nostr name |
 
 Built on [Coco](https://github.com/cashubtc/coco) (the wallet in the browser) and [cashu-ts](https://github.com/cashubtc/cashu-ts) (payment requests, locks and checks).
 
 ## Not wired up yet
 
-Card payments (Stripe; the £ prices are shown, the card buttons do nothing), payouts of Show Splits (they are saved, **not paid out**), Nutzaps, Nostr sign-in on phones (extensions only for now), and Send to Lightning (off on the test mint).
+Card payments (Stripe; the £ prices are shown, the card buttons do nothing), payouts of Show Splits (they are saved, **not paid out**), a Nutzap of your own amount, and Send to Lightning (off on the test mint).
 
 ## Being worked on
 
 Open while NutNovember runs (to 27 Nov 2026):
 
-- **Nostr Connect** (NIP-46): Nostr Sign In on phones, through a signer app (Amber, Primal, nsec.app), no extension needed.
-- **Nutzaps** (NIP-61): a second tip button beside Tip, a public tip under your Nostr name. Nostr Wallet Connect (paying from your own Lightning wallet) comes after 27 Nov, with a real mint. (Pub Menu, Nostr sign-in, closing the gig, the tippers screen, passkey tickets and the 30-second door QR are done.)
+- **The design of the gig page on a phone:** a calmer chat under the player, the ticket box before the night, the Nutzap row's look. Nostr Wallet Connect (paying from your own Lightning wallet) comes after 27 Nov, with a real mint. (Nostr Connect, Nutzaps, Pub Menu, Nostr sign-in, closing the gig, the tippers screen, passkey tickets and the 30-second door QR are done.)
 - **Tickets the NutPub can't link to their buyer:** a ticket signed blind (NUT-00), so the door's check can't be tied to who paid.
 - Each judge with their own numbered show (`/judge-1` to `/judge-20`), no names asked.
 - Judges read Longy's filled-in pages, view only, and join as a guest with test sats; passkey sign-in with a backup for the artist's key.
