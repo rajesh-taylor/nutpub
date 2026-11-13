@@ -189,6 +189,9 @@
     .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
     .board-head .tabs a:hover { color: var(--cream); }
     .board-head .head-new { font-size: 16px; padding: 7px 12px 5px; }
+    #larix:not([hidden]) { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 28px; } /* the Larix steps beside the QR on a laptop (Rajesh 13 Nov) */
+    .larix-how { flex: 1 1 300px; min-width: 0; }
+    .larix-how p:first-child { margin-top: 0; }
     .board .paid-wide { margin-top: 16px; }
     .board .wallet-box { margin: 0 0 16px; border-color: rgb(217 149 58 / .35); }
     .board .panel h2 { display: flex; align-items: center; gap: 10px; }
@@ -350,8 +353,8 @@
                   <label class="choice room-switch"><b>Scan tickets at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
                   <p class="switch-note door-off" data-when="door.on=false">Off: nobody scans. Fans' ticket pages go straight to the show.</p>
                   <ol class="door-how" data-when="door.on">
-                    <li><span class="num" aria-hidden="true">1</span><span>On the gig day, each fan's ticket shows a QR code that <b>changes every 30 seconds</b>. A screenshot won't get in.</span></li>
-                    <li><span class="num" aria-hidden="true">2</span><span>Whoever's on the door opens the <b>door scanner</b> on their phone: they scan its QR below, or you send them the link.</span></li>
+                    <li><span class="num" aria-hidden="true">1</span><span>Each room ticket shows a QR on the gig day. It <b>updates every 30 seconds</b>, so screenshots can't get in.</span></li>
+                    <li><span class="num" aria-hidden="true">2</span><span>To turn a mobile into a <b>door ticket scanner</b>, point its camera at the QR code below, or send it the link.</span></li>
                     <li><span class="num" aria-hidden="true">3</span><span>They point it at each ticket. <b>Green: in.</b> Each ticket gets in once.</span></li>
                   </ol>
                   <div class="door-phone" data-when="door.on">
@@ -415,9 +418,11 @@
             <p><button type="button" class="btn primary" id="make-stream">Make my stream</button></p>
             <div id="larix" hidden>
               <div id="larix-qr" style="width: 220px; max-width: 100%;"></div>
+              <div class="larix-how">
               <p style="font-size: 15px;">On the phone itself? <a id="larix-link" href="#">Open in Larix</a></p>
               <p style="font-size: 15px;">In Larix, under Settings → Connections, only <b>NutPub</b> should be ticked: Larix streams to every ticked connection.</p>
               <p style="font-size: 15px;"><b>For the full wide picture,</b> set Orientation to Landscape in Larix's settings before you start. Most people who pay will watch on a laptop. Turning the phone during the stream only leaves black bars.</p>
+              </div>
             </div>
             <p style="margin: 14px 0 8px; font-size: 15px; color: var(--smoke);">Streaming from a laptop: put these in OBS (Settings → Stream → Custom).</p>
             <div class="two">

@@ -68,6 +68,8 @@
     .widget { display: inline-flex; align-items: stretch; gap: 4px; }
     .widget .copy { display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; background: none; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; color: var(--cream); cursor: pointer; }
     .widget .copy:hover { color: var(--amber); border-color: var(--amber); }
+    .widget .w-icon { display: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    @media (max-width: 1000px) { .widget .w-icon { display: block; } .widget .w-name { display: none; } .widget > a.btn { display: inline-flex; align-items: center; justify-content: center; width: 52px; padding: 0; } } /* an icon on phones and small tablets (Rajesh 13 Nov) */
     .widget .copy svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   </style>
 </head>
@@ -88,7 +90,7 @@
     <main>
       <div class="widgets"><p class="widgets-head">Widgets</p>
         <p class="widget-row">
-          <span class="widget"><a class="btn quiet" id="screen-open" target="_blank" rel="noopener" title="The room's screen for the venue's TV: the QR to tip, top tippers, chat, stretch goals">Chat &amp; Big Time Charlies</a><button type="button" class="copy" id="screen-copy" aria-label="Copy the link to Chat &amp; Big Time Charlies" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
+          <span class="widget"><a class="btn quiet" id="screen-open" target="_blank" rel="noopener" aria-label="Chat &amp; Big Time Charlies" title="Chat &amp; Big Time Charlies: the room's screen for the venue's TV, with the QR to tip, top tippers, chat and stretch goals"><svg class="w-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 10.5h8M8 13h5"/></svg><span class="w-name">Chat &amp; Big Time Charlies</span></a><button type="button" class="copy" id="screen-copy" aria-label="Copy the link to Chat &amp; Big Time Charlies" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
         </p></div>
       <div class="night-btns">
         <button type="button" class="big stream" id="stream-btn" data-stage="open">Start stream</button>
