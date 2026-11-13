@@ -141,6 +141,12 @@
     .board .tag.works { color: var(--deep); background: var(--amber); }
     .board .tag.design { color: var(--cream); border: 1px solid rgb(239 227 200 / .4); }
     .board .choice { display: flex !important; gap: 10px; align-items: flex-start; margin: 0 0 12px; font-size: 15px; color: var(--cream); cursor: pointer; }
+    .phone-in { margin: 10px 0 0; }
+    .phone-in .btn { font-size: 16px; padding: 7px 12px 5px; }
+    .phone-in-panel { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin: 10px 0 0; padding: 14px; border: 1px solid rgb(217 149 58 / .5); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .phone-in-panel img { flex: none; width: 180px; height: 180px; border-radius: 4px; background: var(--cream); }
+    .phone-in-panel > div { flex: 1 1 240px; }
+    .phone-in-panel p { margin: 0 0 10px; }
     .ready-box { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 8px 14px; margin: 10px 0 0; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
     .ready-box p { margin: 0; }
     .ready-head { display: flex; align-items: center; gap: 10px; font: 400 20px/1.2 var(--poster); letter-spacing: .08em; color: var(--cream); white-space: nowrap; }
@@ -249,11 +255,21 @@
           <p class="template" id="tpl-box" hidden><span id="tpl-word" hidden>Template</span><select id="tpl-list" aria-label="Start from a saved gig" hidden></select></p>
           <!-- What's left before going live, as Show Time's stream box: a grey dot, then solid green when ready. -->
           <div class="ready-box" id="ready-box" role="status"><p class="ready-head"><span class="dot" aria-hidden="true"></span><span id="ready-head">Checking…</span></p><p class="ready-text" id="ready-text"></p></div>
+          <!-- Sign in on your phone (13 Nov): a QR with a one-time code, so the phone runs Show Time without the setup link. -->
+          <p class="phone-in" id="phone-in-row" hidden><button type="button" class="btn quiet" id="phone-in-btn">Sign in on your phone</button></p>
+          <div class="phone-in-panel" id="phone-in" hidden>
+            <img id="phone-in-qr" alt="QR code: sign in on your phone" width="180" height="180">
+            <div>
+              <p><b>Scan with your phone's camera.</b> It signs this gig in on your phone, so you can run Show Time from it.</p>
+              <p class="hint" id="phone-in-note">Works once, for 5 minutes. Don't show it to anyone: whoever scans it can run your gig.</p>
+              <p><button type="button" class="btn quiet" id="phone-in-close">Done</button></p>
+            </div>
+          </div>
         </div>
       </div>
 
       <form class="locked signin" id="locked" hidden>
-        <p>Sign in with your private setup link (it came with your gig). This browser remembers it.</p>
+        <p>Sign in with your private setup link (it came with your gig), or scan "Sign in on your phone" on Plan gig where you’re already signed in. This browser remembers it.</p>
         <input id="signin-link" placeholder="https://thenutpub.com/setup.html#k=…" aria-label="Your private setup link" autocomplete="off">
         <p><button class="btn primary">Sign in</button></p>
         <p class="hint" id="signin-note"></p>

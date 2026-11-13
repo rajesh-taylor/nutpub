@@ -23,6 +23,8 @@
     "MINT_URL": "https://testnut.cashu.space",
     "SITE_URL": "https://thenutpub.com",
     "MINT_TEST": "1",
+    // The NutPub's share, in percent: one number to change when our costs (Cloudflare's prices) change.
+    "FEE_PERCENT": "5",
     // The wallet card (Apple Pass Type ID and team). Its key and certificate are secrets: PASS_KEY, PASS_CERT.
     "PASS_TYPE": "pass.com.thenutpub.ticket",
     "PASS_TEAM": "H5NRV4JGDB",

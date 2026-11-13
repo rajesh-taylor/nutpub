@@ -15,6 +15,7 @@ import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
 import { mountPasskeys } from './passkey.js';
+import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { closeNights } from './closing.js';
@@ -86,6 +87,7 @@ route('GET', '/api/show/qr.svg', async (c) => {
 });
 route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
 route('POST', '/api/admin/next-gig', admin, attempt(() => nextGig()));
+mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
 route('POST', '/api/admin/templates', admin, attempt(async (c) => { const b = await body(c); return saveTemplate(b?.name, b?.show); }));
 route('POST', '/api/admin/templates/load', admin, attempt(async (c) => loadTemplate((await body(c))?.name)));

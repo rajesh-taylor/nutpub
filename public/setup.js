@@ -7,12 +7,21 @@ const PROBLEMS = {
 };
 
 // The admin key comes after the # (so it never reaches a server log), then is kept on this computer only.
-let key = new URLSearchParams(location.hash.slice(1)).get('k');
+const hashArgs = new URLSearchParams(location.hash.slice(1));
+let key = hashArgs.get('k');
+// Sign in on your phone: the QR's one-time code (#h=), traded once for the key.
+const handoff = hashArgs.get('h');
+if (location.hash) history.replaceState(null, '', location.pathname);
+if (!key && handoff) {
+  try {
+    const r = await fetch('/api/handoff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: handoff }) });
+    if (r.ok) key = (await r.json()).key;
+  } catch {}
+}
 try {
   if (key) localStorage.setItem('nutpub-admin', key);
   else key = localStorage.getItem('nutpub-admin');
 } catch {}
-if (location.hash) history.replaceState(null, '', location.pathname);
 
 const $ = (id) => document.getElementById(id);
 const form = $('form');
@@ -568,6 +577,7 @@ try {
   else document.querySelector('.board-head')?.remove(); // inside the old demo page, which has its own tabs
   goalPreview();
   setInterval(goalPreview, 5000);
+  $('phone-in-row').hidden = false;
   drawMods().catch(() => {});
   api('GET', '/api/admin/door-link').then((d) => doorLink(d.made)).catch(() => {});
 } catch (err) {
@@ -582,4 +592,26 @@ $('locked').onsubmit = (e) => {
   const k = new URLSearchParams(v.split('#')[1] || '').get('k') || v;
   try { localStorage.setItem('nutpub-admin', k); } catch {}
   location.reload();
+};
+
+// ---- Sign in on your phone: a QR with a one-time code, made on tap and gone after 5 minutes or Done.
+let phoneInTimer = null;
+$('phone-in-btn').onclick = async () => {
+  $('phone-in-btn').disabled = true;
+  try {
+    const { code, ms } = await api('POST', '/api/admin/handoff');
+    const { qrSvg } = await import('/js/qr.js');
+    $('phone-in-qr').src = `data:image/svg+xml,${encodeURIComponent(await qrSvg(`${location.origin}/setup#h=${code}`))}`;
+    $('phone-in').hidden = false;
+    $('phone-in-row').hidden = true;
+    clearTimeout(phoneInTimer);
+    phoneInTimer = setTimeout(() => $('phone-in-close').onclick(), ms);
+  } catch (e) { alert(`Couldn\u2019t make the QR: ${e.message}`); }
+  $('phone-in-btn').disabled = false;
+};
+$('phone-in-close').onclick = () => {
+  clearTimeout(phoneInTimer);
+  $('phone-in').hidden = true;
+  $('phone-in-qr').removeAttribute('src');
+  $('phone-in-row').hidden = false;
 };

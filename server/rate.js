@@ -1,12 +1,12 @@
-// What a bitcoin costs in £ and $: CoinGecko's free price API (or mempool.space's), asked at most every 30 minutes, the answer kept in D1.
+// What a bitcoin costs in £, $ and €: CoinGecko's free price API (or mempool.space's), asked at most every 30 minutes, the answer kept in D1.
 // CoinGecko down or refusing: the last answer we had, however old (and the page is told it's old). Never had one:
 // a fixed rough figure, said plainly, so setup still works.
 import { kv } from './db.js';
 import { json } from './http.js';
 
 const FRESH_FOR = 30 * 60 * 1000; // 30 min: bitcoin seldom moves 0.5% in that time, and fewer asks means fewer refusals
-const URL_ = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=gbp,usd';
-export const FALLBACK = { gbp: 57_000, usd: 76_000, at: null, source: 'fixed' }; // rough, 2 Nov 2026
+const URL_ = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=gbp,usd,eur';
+export const FALLBACK = { gbp: 57_000, usd: 76_000, eur: 65_000, at: null, source: 'fixed' }; // rough, 2 Nov 2026
 
 let asking = null; // one question to CoinGecko at a time per Worker
 let failedAt = 0;  // after a refusal, wait a minute before asking again
@@ -14,8 +14,8 @@ let failedAt = 0;  // after a refusal, wait a minute before asking again
 // Two free sources, no key: CoinGecko first (as agreed), then mempool.space, which answers when CoinGecko turns away
 // Cloudflare's shared addresses (it does: 429).
 const SOURCES = [
-  ['coingecko', URL_, (d) => [d?.bitcoin?.gbp, d?.bitcoin?.usd]],
-  ['mempool.space', 'https://mempool.space/api/v1/prices', (d) => [d?.GBP, d?.USD]],
+  ['coingecko', URL_, (d) => [d?.bitcoin?.gbp, d?.bitcoin?.usd, d?.bitcoin?.eur]],
+  ['mempool.space', 'https://mempool.space/api/v1/prices', (d) => [d?.GBP, d?.USD, d?.EUR]],
 ];
 async function ask() {
   const errors = [];
@@ -23,9 +23,9 @@ async function ask() {
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'thenutpub.com (rate, every 30 min)' }, signal: AbortSignal.timeout(4000), cf: { cacheTtl: 1800 } });
       if (!res.ok) throw new Error(`${res.status}`);
-      const [gbp, usd] = read(await res.json()).map(Number);
+      const [gbp, usd, eur] = read(await res.json()).map(Number);
       if (!(gbp > 1000 && usd > 1000)) throw new Error('no price');
-      const rate = { gbp, usd, at: Date.now(), source };
+      const rate = { gbp, usd, ...(eur > 1000 ? { eur } : {}), at: Date.now(), source }; // € only for display (Takings, 13 Nov)
       await kv.set('rate', rate);
       return rate;
     } catch (e) { errors.push(`${source} ${String(e.message || e)}`); }

@@ -81,11 +81,11 @@ const say = (text, shine = false) => {
 };
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 // ₿ / £ / $: what the page's figures read in, remembered in this browser. Only the reading changes: every payment is in sats.
-const SYMBOL = { gbp: '£', usd: '$' };
+const SYMBOL = { gbp: '£', usd: '$', eur: '€' }; // € for display and tips (13 Nov); sats are what's paid
 let rate = null; // from /api/rate; none, and the page stays in sats
 let unit = 'btc';
 try { unit = localStorage.getItem('nutpub-unit') || 'btc'; } catch {}
-const inFiat = () => !!rate && !!SYMBOL[unit];
+const inFiat = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
@@ -914,7 +914,9 @@ function render() {
   }
   if (confirmed) {
     $('st-kicker').textContent = keepOn ? 'Paid · your ticket' : 'You’ve got your ticket';
-    $('st-list').hidden = keepFirst;
+    $('st-list').hidden = keepOn; // not saved yet (a cancel too): the one button, never a list that looks finished
+    $('keep-note').textContent = keepTried ? 'Not saved yet · try again. Your ticket lives in this web browser until you do.'
+      : 'Your ticket lives in this web browser. Save it to your phone’s passwords for safe keeping.';
     $('st-saved').hidden = !door.passkey;
   }
   $('save-link').classList.toggle('primary', !keepOn);
@@ -1290,14 +1292,14 @@ $('save-link').onclick = async () => {
 const unitBox = Object.assign(document.createElement('span'), { className: 'unit', id: 'unit' });
 unitBox.setAttribute('role', 'group');
 unitBox.setAttribute('aria-label', 'Show amounts in');
-unitBox.innerHTML = '<span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span>';
+unitBox.innerHTML = '<span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Euros</small><button type="button" data-unit="eur" aria-label="Euros">€</button></span><span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span>';
 $('wallet-link').append(unitBox);
 let ownMode = 'btc';
 function drawUnit() {
   const mode = inFiat() ? unit : 'btc';
   for (const b of unitBox.querySelectorAll('button')) {
     b.setAttribute('aria-pressed', b.dataset.unit === mode);
-    if (b.dataset.unit !== 'btc') b.disabled = !rate; // no real rate: sats only
+    if (b.dataset.unit !== 'btc') b.disabled = !rate?.[b.dataset.unit]; // no real rate: sats only
   }
   const label = document.querySelector('#balance + span'); // "test sats", beside a figure that's now in £
   if (label) label.hidden = WALLET_CARD || mode !== 'btc';
@@ -1319,7 +1321,7 @@ function drawUnit() {
     while (satsFrom(pence / 100, rate[mode]) < MIN_TIP) pence++;
     box.removeAttribute('max');
     Object.assign(box, { min: pence / 100, step: 0.01, inputMode: 'decimal', placeholder: `${SYMBOL[mode]}${(pence / 100).toFixed(2)} or more` });
-    box.setAttribute('aria-label', `Tip amount in ${mode === 'gbp' ? 'pounds' : 'dollars'}`);
+    box.setAttribute('aria-label', `Tip amount in ${{ gbp: 'pounds', usd: 'dollars', eur: 'euros' }[mode]}`);
   }
   box.oninput();
 }
@@ -1410,12 +1412,14 @@ async function connectPanel() {
   const parts = [el('span', { className: 'nostr-note', textContent: TOUCH
     ? 'Opens your Nostr signer app (such as Amber) to say yes. Your secret key stays in the app.'
     : 'Open your Nostr signer app (such as Amber or nsec.app) and scan this from inside it, not with the phone’s camera. Your secret key stays in the app.' })];
-  if (!TOUCH) {
+  const row = el('span', { className: 'nostr-row' }, status, ' ', copy, ' · ', cancel);
+  if (!TOUCH) { // a computer: the QR, then the words and the waiting line beside it (Rajesh 13 Nov), not under it
     const { qrSvg } = await import('./qr.js');
-    parts.push(el('span', { className: 'nostr-qr', innerHTML: await qrSvg(c.uri) }));
-  } else parts.push(open, el('span', { className: 'nostr-wait', textContent: 'Nothing opened? This phone needs a Nostr signer app first, or use Copy link and paste it into one.' }));
-  parts.push(el('span', { className: 'nostr-row' }, status, ' ', copy, ' · ', cancel));
+    parts.unshift(el('span', { className: 'nostr-qr', innerHTML: await qrSvg(c.uri) }));
+    parts.splice(1, 1, el('span', { className: 'nostr-side' }, parts[1], row));
+  } else parts.push(open, el('span', { className: 'nostr-wait', textContent: 'Nothing opened? This phone needs a Nostr signer app first, or use Copy link and paste it into one.' }), row);
   line.classList.add('connecting');
+  line.classList.toggle('side', !TOUCH);
   line.replaceChildren(...parts);
   try {
     const me = await c.done;

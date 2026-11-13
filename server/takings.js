@@ -6,6 +6,7 @@ import { one, all, run, kv } from './db.js';
 import { keysetIds, proofStates } from './gate.js';
 import { showOf, lastOrdersAt } from './shows.js';
 import { json, body, now } from './http.js';
+import { FEE_PERCENT } from './config.js';
 
 export const artistKey = () => kv.get('artistKey');
 const COMPRESSED = /^0[23][0-9a-f]{64}$/; // a 33-byte compressed secp256k1 public key, in hex
@@ -84,6 +85,7 @@ export function mountTakings(route, admin) {
       stream: { sats: stream.s, pieces: stream.n },
       tips: { sats: tips.s, count: tips.n },
       nutzaps: { sats: zaps.s, count: zaps.n }, // of the tips, those that came as Nutzaps
+      feePercent: FEE_PERCENT, // shown as its own line; not taken yet (needs each payment split)
     });
   });
 }

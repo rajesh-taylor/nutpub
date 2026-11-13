@@ -4,6 +4,8 @@ export let SITE_URL = null;
 export let MINT_TEST = true;
 export let ADMIN_KEY = '';
 export let VERSION = '0';
+// The NutPub's share of what fans pay, in percent (wrangler.jsonc FEE_PERCENT). Shown on Takings; not taken yet.
+export let FEE_PERCENT = 5;
 export let ASSETS;
 // The wallet card: our Apple Pass Type ID, the team it belongs to, and its key and certificate (secrets, PEM).
 export let PASS_TYPE = '';
@@ -26,6 +28,7 @@ export function configure(env) {
   MINT_TEST = env.MINT_TEST !== '0';
   ADMIN_KEY = env.ADMIN_KEY || '';
   VERSION = env.VERSION || '0';
+  FEE_PERCENT = Number.isFinite(Number(env.FEE_PERCENT)) && env.FEE_PERCENT !== '' ? Math.min(Math.max(Number(env.FEE_PERCENT), 0), 50) : 5;
   ASSETS = env.ASSETS;
   PASS_TYPE = env.PASS_TYPE || '';
   PASS_TEAM = env.PASS_TEAM || '';
