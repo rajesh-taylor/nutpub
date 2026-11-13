@@ -315,12 +315,7 @@ form.addEventListener('submit', async (e) => {
   } catch (err) { status(`Not saved: ${err.message}`, 'bad'); }
 });
 addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
-// Next gig: one tap, instead of changing the date to clear the finished one.
-$('next-gig-go').onclick = async () => {
-  $('next-gig-go').disabled = true;
-  try { await api('POST', '/api/admin/next-gig'); dirty = false; location.reload(); }
-  catch (err) { status(`Not done: ${err.message}`, 'bad'); $('next-gig-go').disabled = false; }
-};
+// Next gig moved to Takings as Finish gig (13 Nov): the money first, then the next gig.
 
 // ---- Templates
 async function templates(list) {

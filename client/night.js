@@ -132,6 +132,9 @@ async function refresh() {
     drinks: drinkSum, drinksN: toArtist.length + unpouredLate.length, drinkOn, came,
     fee: Math.round((came * (takings.feePercent ?? 5)) / 100), feePercent: takings.feePercent ?? 5,
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
+    // Anything still to move, wherever it's locked (another browser too); drinks locked to the bar are the bar's.
+    left: locked.waiting.filter((p) => p.kind !== 'drink' || p.pubkey === pubkey).reduce((t, p) => t + p.sats, 0),
+    over: !!takings.over, homeN: count('piece'),
   };
   paint();
 
@@ -179,6 +182,27 @@ function paint() {
   $('t-drinks').classList.toggle('later', !s.drinkOn);
   $('v-drinks').textContent = s.drinkOn ? fig(s.drinks) : '—';
   $('s-drinks').textContent = s.drinkOn ? `${n(s.drinksN)} not poured by last orders` : 'With the first drink';
+  // Step 2: everything moved (or nothing came in and the night is over): the same page says so in place.
+  const k = kept();
+  const allMoved = !k && s.came > 0 && !s.left && !s.held;
+  const done = allMoved || (!k && !s.came && !s.left && !s.held && s.over);
+  $('in-wallet').hidden = !allMoved;
+  if (done) $('key-warn').hidden = true; // nothing left behind in another browser: no warning
+  $('btc-done').hidden = !done;
+  $('btc-done-word').textContent = allMoved ? 'In your wallet' : 'Nothing came in';
+  $('came').hidden = done;
+  $('tiles').hidden = done;
+  $('move-row').hidden = done;
+  $('done-counts').hidden = !allMoved;
+  $('done-counts').textContent = [s.ticketsN && `${n(s.ticketsN)} ticket${s.ticketsN === 1 ? '' : 's'}`, s.tipsN && `${n(s.tipsN)} tip${s.tipsN === 1 ? '' : 's'}`,
+    s.home && 'watching from home', s.drinksN && `${n(s.drinksN)} unpoured drink${s.drinksN === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  const last = lastMoved();
+  $('done-moved').hidden = !allMoved;
+  $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
+  $('finish').hidden = !done;
+  $('finish-go').hidden = !s.over;
+  $('finish-note').textContent = s.over ? 'Plan gig opens for the next one, same settings.' : 'Finish gig comes once the night’s over: End night on Show Time.';
+  if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held;
   $('move').disabled = !toMove;
   if (!toMove && !$('artist-status').dataset.busy) $('artist-status').textContent = s.came ? 'Nothing waiting to move.' : '';
@@ -269,6 +293,8 @@ async function pour(id) {
 // ---- The code: kept in this browser (it's the money once it has left the wallet) until the mint says another wallet
 // took it. The page asks every few seconds while it's open, then says so and lets it go: nothing to press.
 const KEPT = 'nutpub-sent-artist-token';
+const MOVED = 'nutpub-moved-artist'; // the last code that landed: "Moved 121,937 sats · the mint kept 43"
+function lastMoved() { try { return JSON.parse(localStorage.getItem(MOVED) || 'null'); } catch { return null; } }
 function keepToken(token, amount, fee) {
   try { localStorage.setItem(KEPT, JSON.stringify({ token, amount, fee })); } catch {}
   showKept();
@@ -297,7 +323,7 @@ function showKept() {
     try {
       if (!(await artist.landed(k.token))) return;
       clearInterval(watching);
-      try { localStorage.removeItem(KEPT); } catch {}
+      try { localStorage.removeItem(KEPT); localStorage.setItem(MOVED, JSON.stringify({ amount: k.amount, fee: k.fee })); } catch {}
       $('moved-wait').lastElementChild.textContent = 'In your wallet.';
       setTimeout(() => { showKept(); refresh().catch(() => {}); }, 2500);
     } catch {}
@@ -322,7 +348,79 @@ $('bar-home').onclick = async () => {
     $('bar-status').textContent = `${sats(out.amount)} as one token: copied.`;
   } catch (e) { $('bar-status').textContent = e.message; }
 };
+// ---- Finish gig (was Next gig on Plan gig): keeps the gig's one-line totals, clears it, same settings.
+$('finish-go').onclick = async () => {
+  $('finish-go').disabled = true;
+  try {
+    await api('POST', '/api/admin/next-gig');
+    try { localStorage.removeItem(MOVED); } catch {}
+    await Promise.all([refresh(), pastGigs()]);
+    $('artist-status').replaceChildren('Finished. ', Object.assign(document.createElement('a'), { href: '/setup', textContent: 'Plan gig' }), ' is ready for the next one.');
+  } catch (e) { $('artist-status').textContent = `Not done: ${e.message}`; }
+  finally { $('finish-go').disabled = false; }
+};
+
+// ---- Past gigs: one line each, with Receipt (printed: the phone's own Save as PDF) and Delete (asks first).
+const gigWhen = (g) => [shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ');
+async function pastGigs() {
+  const gigs = await api('GET', '/api/admin/gigs');
+  $('past').hidden = !gigs.length;
+  $('past-list').replaceChildren(...gigs.map((g) => {
+    const row = document.createElement('div');
+    row.className = 'past-row';
+    const p = document.createElement('p');
+    p.append(gigWhen(g), document.createElement('br'), Object.assign(document.createElement('span'), { textContent: sats(g.sats) }));
+    const acts = document.createElement('span');
+    acts.className = 'acts';
+    const rec = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Receipt' });
+    rec.onclick = () => receipt(g);
+    const del = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet del', textContent: 'Delete' });
+    del.onclick = () => askDelete(g);
+    acts.append(rec, del);
+    row.append(p, acts);
+    return row;
+  }));
+}
+function receipt(g) {
+  const row = (what, v, cls) => {
+    const tr = document.createElement('tr');
+    if (cls) tr.className = cls;
+    tr.append(Object.assign(document.createElement('td'), { textContent: what }), Object.assign(document.createElement('td'), { textContent: v }));
+    return tr;
+  };
+  const t = g.tickets || {};
+  const fee = Math.round(((g.sats || 0) * (g.feePercent ?? 5)) / 100);
+  $('r-gig').textContent = [g.artist, shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ');
+  $('r-rows').replaceChildren(
+    row(`Tickets · ${n(t.room || 0)} in the room${t.home ? `, ${n(t.home)} online` : ''}`, t.sats == null ? '' : sats(t.sats)),
+    row(`Tips${g.tipsN ? ` · ${n(g.tipsN)}` : ''}`, sats(g.tips || 0)),
+    ...(g.home == null ? [] : [row('Watching from home', sats(g.home))]),
+    ...(g.drinks ? [row('Drinks not poured', sats(g.drinks))] : []),
+    row('Total', sats(g.sats), 'total'),
+    row(`The NutPub's ${g.feePercent ?? 5}% · not taken on the test mint`, `(${sats(fee)})`),
+  );
+  $('r-note').textContent = `Paid in bitcoin, each payment locked to the artist's own key. Printed ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} from thenutpub.com.`;
+  print();
+}
+let deleting = null;
+function askDelete(g) {
+  deleting = g;
+  $('del-h').textContent = `Delete ${shortDay(g.date) || 'this gig'}?`;
+  $('del-what').textContent = [g.venue || g.page, sats(g.sats)].filter(Boolean).join(' · ');
+  $('del-sheet').showModal();
+}
+$('del-keep').onclick = () => $('del-sheet').close();
+$('del-receipt').onclick = () => deleting && receipt(deleting);
+$('del-go').onclick = async () => {
+  if (!deleting) return;
+  try { await api('POST', '/api/admin/gigs/delete', { id: deleting.id }); } catch {}
+  $('del-sheet').close();
+  deleting = null;
+  pastGigs().catch(() => {});
+};
+
 showKept();
 
 await refresh();
+pastGigs().catch(() => {});
 setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 60_000); // each refresh is 4 requests

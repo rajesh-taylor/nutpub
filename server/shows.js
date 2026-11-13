@@ -1,6 +1,7 @@
 // The show: what the account holder (artist or venue) sets on /setup before going live. One current show,
 // plus named templates to start the next one from. Both live in D1.
 import { one, all, run, sql, batch, kv } from './db.js';
+import { keepGigLine } from './closing.js';
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
@@ -151,8 +152,10 @@ export async function currentShow() {
 // The gig has been: the host ended the night, or its date has gone.
 export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' || settled.problems.includes('date.past');
 
-// A finished gig clears itself when the artist gives the next one a date: tickets, chat and stage. Payments stay to collect.
+// A finished gig clears itself when the artist gives the next one a date, or presses Finish gig on Takings: tickets,
+// chat and stage. Its one-line totals are kept first (Past gigs). Payments stay to collect.
 export async function clearGig() {
+  await keepGigLine((await kv.get('endedAt')) || undefined);
   await batch([sql('DELETE FROM tickets'), sql('DELETE FROM passkeys'), sql('DELETE FROM nostr'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom', 'endedAt')"), sql('UPDATE messages SET deleted = 1')]);
   const at = now();
   await kv.set('nightStart', at); // Takings counts this gig from here
@@ -160,7 +163,7 @@ export async function clearGig() {
   await kv.set('stageAt', at);
 }
 
-// Next gig (Plan gig, once a gig is over): one tap clears it, as a new date would, and keeps every setting. A date
+// Finish gig (Takings, once a gig is over; it was Next gig on Plan gig): one tap clears it, as a new date would, and keeps every setting. A date
 // that has gone becomes today, so the page is ready to use at once. Refused while a gig is still on: it would cancel
 // tickets people hold.
 export async function nextGig() {

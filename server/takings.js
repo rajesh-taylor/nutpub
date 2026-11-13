@@ -4,7 +4,7 @@
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { one, all, run, kv } from './db.js';
 import { keysetIds, proofStates } from './gate.js';
-import { showOf, lastOrdersAt } from './shows.js';
+import { showOf, lastOrdersAt, gigOver, current } from './shows.js';
 import { json, body, now } from './http.js';
 import { FEE_PERCENT } from './config.js';
 
@@ -64,7 +64,7 @@ export function mountTakings(route, admin) {
   });
 
   // The night's takings by kind, since the last New night.
-  route('GET', '/api/admin/takings', admin, async () => {
+  route('GET', '/api/admin/takings', admin, async (c) => {
     const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
     const rows = await all(`SELECT kind, collected_at IS NOT NULL AS collected, COALESCE(SUM(sats), 0) AS sats, COUNT(*) AS n
                             FROM locked WHERE at >= ? GROUP BY kind, collected`, await kv.get('nightStart', ''));
@@ -86,6 +86,20 @@ export function mountTakings(route, admin) {
       tips: { sats: tips.s, count: tips.n },
       nutzaps: { sats: zaps.s, count: zaps.n }, // of the tips, those that came as Nutzaps
       feePercent: FEE_PERCENT, // shown as its own line; not taken yet (needs each payment split)
+      over: await gigOver(await current(c)), // Finish gig shows once the gig is over
     });
+  });
+
+  // Past gigs: the one-line totals kept by Finish gig (or 7 days on), newest first. `id` is the gig's start.
+  route('GET', '/api/admin/gigs', admin, async () => json((await kv.get('gigs', [])).map((g) => ({ id: g.start || g.ended, ...g })).reverse()));
+
+  // Delete one, after the page has asked. Only the line goes: the money was never in it.
+  route('POST', '/api/admin/gigs/delete', admin, async (c) => {
+    const id = String((await body(c))?.id || '');
+    const gigs = await kv.get('gigs', []);
+    const left = gigs.filter((g) => (g.start || g.ended) !== id);
+    if (left.length === gigs.length) return json({ error: 'not_found' }, 404);
+    await kv.set('gigs', left);
+    return json({ deleted: id });
   });
 }

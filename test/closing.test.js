@@ -6,6 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { configure } from '../server/config.js';
 import { useDb, kv, run, one } from '../server/db.js';
 import { closeNights } from '../server/closing.js';
+import { nextGig } from '../server/shows.js';
 
 beforeEach(() => {
   const db = new DatabaseSync(':memory:');
@@ -52,7 +53,7 @@ test('kept for 7 days after the night ends, then deleted; uncollected sats stay'
   const [gig] = await kv.get('gigs');
   await closeNights(T0 + 9 * DAY);
   assert.equal((await kv.get('gigs')).length, 1); // once per gig
-  assert.deepEqual({ room: gig.tickets.room, sats: gig.sats, tips: gig.tips }, { room: 1, sats: 121, tips: 21 });
+  assert.deepEqual({ room: gig.tickets.room, sats: gig.sats, tips: gig.tips, start: gig.start }, { room: 1, sats: 121, tips: 21, start: '2026-11-01T00:00:00.000Z' });
 });
 
 test('a gig whose date has gone gets its 7 days from the first clean-up', async () => {
@@ -72,4 +73,23 @@ test('an earlier night’s chat and tips go 7 days on; tonight’s stay', async 
   await closeNights(T0);
   assert.equal((await one('SELECT text FROM messages')).text, 'see you tonight');
   assert.equal(await count('tips'), 0);
+});
+
+test('Finish gig keeps the one-line totals first, once, then clears the gig', async () => {
+  await night();
+  await nextGig();
+  const gigs = await kv.get('gigs');
+  assert.equal(gigs.length, 1);
+  assert.deepEqual({ sats: gigs[0].sats, tickets: gigs[0].tickets.sats, tips: gigs[0].tips, tipsN: gigs[0].tipsN }, { sats: 121, tickets: 100, tips: 21, tipsN: 1 });
+  assert.equal(await count('tickets'), 0);
+  assert.notEqual(await kv.get('nightStart'), '2026-11-01T00:00:00.000Z');
+  assert.equal((await one("SELECT COUNT(*) AS n FROM locked WHERE collected_at IS NULL")).n, 1); // the money stays
+  await closeNights(T0 + 30 * DAY);
+  assert.equal((await kv.get('gigs')).length, 1); // nothing new: the next gig hasn't happened
+});
+
+test('a gig where nothing happened leaves no line', async () => {
+  await kv.set('stage', 'closed');
+  await nextGig();
+  assert.equal(await kv.get('gigs'), null);
 });
