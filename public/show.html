@@ -40,6 +40,13 @@
     .big.go { background: #1f9d55; }
     .big.end { background: #7a4fd0; }
     .big:disabled { opacity: .25; cursor: default; }
+    /* Option 3 (14 Nov): the buttons say where you are. Done: outlined with a tick. Now: lit. Next: as before. */
+    .big.done:disabled { opacity: 1; background: none; border: 1px solid rgb(217 149 58 / .5); color: var(--amber); }
+    .big.now:disabled { opacity: 1; box-shadow: 0 0 0 4px rgb(255 255 255 / .18); }
+    .big.go.now { box-shadow: 0 0 0 4px rgb(31 157 85 / .35); }
+    .big.end.now { box-shadow: 0 0 0 4px rgb(122 79 208 / .4); }
+    .times { margin: -2px 0 12px; font-size: 16px; line-height: 1.45; color: var(--smoke); }
+    .times b { color: var(--cream); font-weight: 600; }
     .after { margin: 0 0 18px; font-size: 18px; color: var(--cream); }
     .after a { color: var(--amber); }
     @media (max-width: 700px) { .night-btns { gap: 10px; } .big { font-size: 19px; min-height: 50px; padding: 6px 4px; } } /* shorter (Rajesh 13 Nov): one line each on a small phone */
@@ -88,6 +95,7 @@
         <button type="button" class="big go" data-stage="on">Start show</button>
         <button type="button" class="big end" data-stage="closed">End night</button>
       </div>
+      <p class="times" id="times" role="status" hidden></p>
       <div class="signal" id="signal">
         <div class="preview-box" id="preview-box" hidden><video id="preview" muted playsinline controls></video></div>
         <div>

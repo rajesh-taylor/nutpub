@@ -36,10 +36,46 @@ let now = { stage: 'doors' };
 async function stage(next) {
   if (next) await api('POST', '/api/admin/stage', { stage: next });
   now = await fetch('/api/stage').then((r) => r.json());
-  for (const b of buttons) b.disabled = b.dataset.stage !== NEXT[now.stage];
+  steps();
   $('after').hidden = now.stage !== 'closed';
   document.body.dataset.stage = now.stage;
   signal();
+}
+
+// Option 3 (14 Nov): the buttons say where you are, and one line under them says since when. Done steps get a tick,
+// the step you're on is lit, the next one is the only one to press. The stream's own clock comes first: it's when
+// the stream first reached us (Stream records from then).
+const ORDER = ['doors', 'open', 'on', 'closed'];
+const LABEL = { open: ['Start stream', 'Stream on', 'Stream on'], on: ['Start show', 'The show is on', 'Show on'], closed: ['End night', 'Night over', 'Night over'] };
+const SHORT = { open: ['Start stream', 'Streaming', 'Stream'], on: ['Start show', 'Show on', 'Show'], closed: ['End night', 'Ended', 'Ended'] }; // one line each on a phone
+const phone = matchMedia('(max-width: 700px)');
+phone.onchange = () => steps();
+const TICK = '\u2713 ';
+const hhmm = (iso) => new Date(iso).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
+const lasted = (iso) => { const m = Math.max(0, Math.floor((now.now - Date.parse(iso)) / 60_000)); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; };
+function steps() {
+  const at = ORDER.indexOf(now.stage);
+  for (const b of buttons) {
+    const i = ORDER.indexOf(b.dataset.stage);
+    const [next, current, past] = (phone.matches ? SHORT : LABEL)[b.dataset.stage];
+    const isNow = i === at && now.stage !== 'doors';
+    b.disabled = b.dataset.stage !== NEXT[now.stage];
+    b.classList.toggle('now', isNow);
+    b.classList.toggle('done', i < at || (isNow && now.stage === 'closed'));
+    b.textContent = i < at || (isNow && now.stage === 'closed') ? TICK + past : isNow ? current : next;
+  }
+  const t = now.times || {};
+  const open = t.open || (now.stage !== 'doors' && now.opensAt ? new Date(now.opensAt * 1000).toISOString() : null);
+  const parts = [];
+  if (now.stage === 'on' && t.on) parts.push(['b', `The show is on, since ${hhmm(t.on)}`]);
+  if (now.stage === 'closed' && t.closed) parts.push(['b', `Night over at ${hhmm(t.closed)}`]);
+  if (open && now.stage !== 'doors') parts.push([now.stage === 'open' ? 'b' : '', `stream on since ${hhmm(open)}`]);
+  if (now.reachedAt && now.live) parts.push(['', `streaming for ${lasted(now.reachedAt)} (since ${hhmm(now.reachedAt)})`]);
+  $('times').hidden = !parts.length;
+  $('times').replaceChildren(...parts.flatMap(([tag, text], i) => {
+    const out = i ? text : text.charAt(0).toUpperCase() + text.slice(1);
+    return [...(i ? [' · '] : []), tag ? Object.assign(document.createElement('b'), { textContent: out }) : out];
+  }));
 }
 
 // What the artist needs to know before going out: is the stream reaching us, and can viewers see it yet.

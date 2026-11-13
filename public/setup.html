@@ -102,15 +102,23 @@
     .board .night input { accent-color: var(--amber); width: 18px; height: 18px; margin: 1px 0 0; flex: none; }
     .board .night b { display: block; font-size: 16px; }
     .board .night small { display: block; margin-top: 2px; font-size: 13px; color: var(--smoke); }
-    .board .door-step { display: grid; grid-template-columns: repeat(auto-fit, minmax(18em, 1fr)); gap: 0 24px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgb(239 227 200 / .14); }
+    .board .door-step { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgb(239 227 200 / .14); }
     .board .door-step[hidden], .board .ticket-split .half[hidden] { display: none; }
+    .board .door-step .room-switch { justify-content: space-between; } /* the words left, the switch at the card's edge */
+    .board .door-step .room-switch b { font-size: 16px; }
+    .board .door-how { margin: 4px 0 16px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .board .door-how li { display: flex; gap: 10px; font-size: 15px; line-height: 1.45; color: var(--cream); }
+    .board .door-how .num { flex: none; width: 24px; height: 24px; border-radius: 12px; border: 1px solid var(--amber); color: var(--amber); display: grid; place-items: center; font: 400 16px/1 var(--poster); }
+    .board .door-off { color: var(--smoke); font-size: 14px; }
+    .board .door-phone { padding-left: 34px; } /* under step 2's words */
+    @media (max-width: 700px) { .board .door-phone { padding-left: 0; } .board .door-step .key-row { gap: 6px; flex-wrap: nowrap; } .board .door-step .key-row .btn { flex: 1 1 0; min-width: 0; padding: 10px 6px 8px; white-space: nowrap; } }
     .board .door-link-url { width: 100%; } /* the link on a line of its own, so it can be read */
     .board .door-step .key-row { gap: 16px; margin-top: 10px; } /* Show QR, Copy link, New one: room between them */
     .board .door-step .key-row .btn { padding: 10px 18px 8px; }
     .board .door-qr-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 12px; } /* the note halfway down the QR */
     .board .door-qr-row .door-link-qr { margin: 0; flex: none; }
     .board .door-keep { flex: 1 1 12em; margin: 0; font-size: 13px; color: var(--smoke); }
-    .board .ticket-split .price-row { max-width: 30em; } /* Room only: the £ and sats stay together, not across the card */
+    .board .ticket-split .price-row { max-width: 30em; } .board .ticket-split .half > .step-head { font-size: 22px; color: var(--cream); } /* Room only: the £ and sats stay together, not across the card */
     .board .ticket-split .half { min-width: 0; }
     .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
     .board .half-head { margin: 0 0 10px; font: 400 15px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); }
@@ -308,20 +316,11 @@
               <label class="night"><input type="radio" name="night" value="stream"><span><b>Live stream only</b><small>No room tickets: the gig is online</small></span></label>
             </div>
             <label hidden><input type="checkbox" data-path="ticket.on" id="ticket-on" aria-label="Sell room tickets"></label>
-            <h3 class="step-head">Ticket pricing</h3>
+            <!-- Plan gig A (14 Nov): fans at home on the left, the room and its door on the right, the door in plain steps. -->
             <div class="ticket-split">
-              <div class="half" data-night="room both">
-                <h3 class="half-head">Room ticket</h3>
-                <div class="price-row" data-price="ticket" data-when="ticket.on">
-              <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
-              <span class="about" aria-hidden="true">≈</span>
-              <div class="field sats-field"><label for="ticket-sats">Bitcoin price in Sats</label>
-                <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
-                  <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
-                </div>
-              </div>
               <div class="half" data-night="both stream">
-                <h3 class="half-head">Live stream: how fans at home pay</h3>
+                <h3 class="step-head">Fans at home</h3>
+                <p class="half-head">How they pay for the live stream</p>
                 <div class="home-choices">
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Online ticket</b></span></label>
                 <div class="price-row online-row" data-price="online" data-when="stream.mode=ticket">
@@ -337,21 +336,33 @@
             <label class="choice" hidden><input type="radio" name="home" data-path="stream.mode" value="off"> <span><b>No live stream</b></span></label>
                 </div>
               </div>
-            </div>
-            <p class="rate-line" id="rate-line"></p>
-            <div class="door-step" data-night="room both">
-              <div>
-                <h3 class="step-head">Door entry</h3>
-                <label class="choice room-switch"><b>Scan at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
-                <p class="switch-note" data-when="door.on">Each room ticket shows a QR on the gig day, new every 30 seconds, so a screenshot won't get in.</p>
-              </div>
-              <div data-when="door.on">
-                    <p class="switch-note">Turn a mobile into a door ticket scanner. Point its camera at the QR code below, or copy and send the link.</p>
+              <div class="half" data-night="room both">
+                <h3 class="step-head">In the room</h3>
+                <p class="half-head">Room ticket</p>
+                <div class="price-row" data-price="ticket" data-when="ticket.on">
+              <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
+              <span class="about" aria-hidden="true">≈</span>
+              <div class="field sats-field"><label for="ticket-sats">Bitcoin price in Sats</label>
+                <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
+                  <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="ticket.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
+                </div>
+                <div class="door-step">
+                  <label class="choice room-switch"><b>Scan tickets at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
+                  <p class="switch-note door-off" data-when="door.on=false">Off: nobody scans. Fans' ticket pages go straight to the show.</p>
+                  <ol class="door-how" data-when="door.on">
+                    <li><span class="num" aria-hidden="true">1</span><span>On the gig day, each fan's ticket shows a QR code that <b>changes every 30 seconds</b>. A screenshot won't get in.</span></li>
+                    <li><span class="num" aria-hidden="true">2</span><span>Whoever's on the door opens the <b>door scanner</b> on their phone: they scan its QR below, or you send them the link.</span></li>
+                    <li><span class="num" aria-hidden="true">3</span><span>They point it at each ticket. <b>Green: in.</b> Each ticket gets in once.</span></li>
+                  </ol>
+                  <div class="door-phone" data-when="door.on">
                     <input id="door-link" class="door-link-url" readonly aria-label="The door scanner's link">
                     <span class="key-row"><button type="button" class="btn quiet" id="qr-door" aria-expanded="false">Show QR</button><button type="button" class="btn quiet" id="copy-door">Copy link</button><button type="button" class="btn quiet" id="new-door">Make it</button></span>
                     <div class="door-qr-row"><img id="door-link-qr" class="door-link-qr" alt="The door scanner's QR: point the door phone's camera at it" hidden><p class="switch-note door-keep">Keep private. A new QR code stops the old one immediately.</p></div>
+                  </div>
+                </div>
               </div>
             </div>
+            <p class="rate-line" id="rate-line"></p>
           </section>
 
           <section class="panel wide">

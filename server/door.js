@@ -88,13 +88,20 @@ export function mountDoor(route, admin, pass) {
   // clock, so every countdown ends at the same moment whatever the phone's own clock says.
   route('GET', '/api/stage', async (c) => {
     const show = await showOf(c);
-    const [stage, live] = await Promise.all([stageNow(show), liveNow(show.page)]);
-    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now() });
+    const [stage, live, times, reached] = await Promise.all([stageNow(show), liveNow(show.page), kv.get('stageTimes', {}), kv.get('reachedAt')]);
+    // When the artist's stream first reached us this gig (Stream records, and bills, from then): Show Time's clock.
+    const reachedAt = reached ?? (live ? await kv.set('reachedAt', now()) : null);
+    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), times, reachedAt });
   });
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);
     await kv.set('stageAt', now()); // pages ask every 2 s for the next half hour: a rehearsal feels live
+    // Show Time's step line: when each step began ("The show is on, since 19:05"). Going back drops the later ones.
+    const times = await kv.get('stageTimes', {});
+    for (const later of STAGES.slice(STAGES.indexOf(stage))) delete times[later];
+    if (stage !== 'doors') times[stage] = now();
+    await kv.set('stageTimes', times);
     // End night starts the 7 days the night's records are kept (closing.js); opening it again stops the clock.
     if (stage === 'closed') { if (!(await kv.get('endedAt'))) await kv.set('endedAt', now()); }
     else await run("DELETE FROM kv WHERE key = 'endedAt'");
