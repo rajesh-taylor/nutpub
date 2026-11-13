@@ -56,10 +56,18 @@
     .waiting-line i { width: 9px; height: 9px; border-radius: 5px; background: var(--amber); flex: none; }
     .status { min-height: 1.4em; margin: 0; font-size: 14px; }
     .card-box { opacity: .8; min-height: 420px; }
-    .card-box img { height: 30px; display: block; }
+    .card-box img { height: 38px; display: block; }
     .stripe-room { margin: auto 0 0; padding: 18px; border: 1px dashed rgb(239 227 200 / .2); border-radius: 6px; font-size: 13px; color: var(--smoke); text-align: center; }
-    .key-warn { margin: 0; padding: 12px; border: 1px solid rgb(217 149 58 / .5); border-radius: 6px; font-size: 14px; }
-    .key-warn button { margin-top: 8px; }
+    .key-warn { margin: 0; padding: 14px; border: 1px solid rgb(217 149 58 / .5); border-radius: 6px; font-size: 14px; text-align: center; }
+    .key-warn button { display: block; margin: 10px auto 0; }
+    /* Use this browser from now on: asks first, as a sheet (Rajesh 13 Nov), the safe choice the big button. */
+    dialog.sheet { width: min(100% - 32px, 520px); margin: auto auto 0; padding: 12px 18px 28px; border: 0; border-top: 1px solid rgb(217 149 58 / .45); border-radius: 14px 14px 0 0; background: #0b1426; color: var(--cream); }
+    @media (min-width: 700px) { dialog.sheet { margin: auto; border: 1px solid rgb(217 149 58 / .45); border-radius: 12px; } }
+    dialog.sheet::backdrop { background: rgb(5 9 20 / .75); }
+    dialog.sheet h2 { margin: 8px 0 10px; font: 400 28px/1.05 var(--poster); letter-spacing: .08em; }
+    dialog.sheet p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; }
+    dialog.sheet .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 54px; font-size: 21px; margin-top: 12px; }
+    dialog.sheet .last { margin-top: 22px; color: var(--smoke); }
     @media (max-width: 1000px) {
       .page { grid-template-columns: minmax(0, 1fr); padding: 14px 16px 32px; gap: 14px; }
       .board-head { padding: 14px 16px 0; }
@@ -78,7 +86,7 @@
       .tile .s { font-size: 11px; }
       .move { width: 100%; height: 50px; font-size: 20px; padding: 0; }
       .card-box { min-height: 240px; }
-      .card-box img { height: 26px; }
+      .card-box img { height: 34px; }
     }
   </style>
 </head>
@@ -154,7 +162,7 @@
         <h2 id="card-h">Card · soon</h2>
         <img src="/badges/powered-by-stripe.svg" alt="Powered by Stripe">
       </div>
-      <p class="note" style="font-size: 14px;">Stripe pays card money straight into your bank. We never hold it.</p>
+      <p class="note" style="font-size: 14px; margin-top: 4px;">Stripe pays card money straight into your bank. We never hold it.</p>
       <p class="stripe-room">Kept free for Stripe: card sales, payouts, Connect.</p>
     </section>
 
@@ -195,6 +203,13 @@
     </div>
 
   </div>
+  <dialog class="sheet" id="key-sheet" aria-labelledby="key-sheet-h">
+    <h2 id="key-sheet-h">Use this browser from now on?</h2>
+    <p>New payments will lock to this browser instead.</p>
+    <p class="muted" style="font-size: 14px;">Money already locked to the other browser stays there: only that browser can move it. If you lose that browser before moving it, that money is gone.</p>
+    <button type="button" class="btn primary" id="key-keep"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Keep the other browser</button>
+    <button type="button" class="btn quiet last" id="key-switch">Use this browser</button>
+  </dialog>
   <script type="module" src="/js/night.js"></script>
 </body>
 </html>

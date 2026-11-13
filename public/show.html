@@ -35,14 +35,14 @@
     .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
     .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
     .night-btns { display: flex; justify-content: space-between; gap: 32px; margin: 0 0 12px; }
-    .big { flex: 0 1 340px; min-height: 64px; border: 0; border-radius: 10px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: #fff; cursor: pointer; }
+    .big { flex: 0 1 340px; min-height: 52px; border: 0; border-radius: 10px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: #fff; cursor: pointer; }
     .big.stream { background: var(--amber); color: var(--deep); }
     .big.go { background: #1f9d55; }
     .big.end { background: #7a4fd0; }
     .big:disabled { opacity: .25; cursor: default; }
     .after { margin: 0 0 18px; font-size: 18px; color: var(--cream); }
     .after a { color: var(--amber); }
-    @media (max-width: 700px) { .night-btns { gap: 12px; } .big { font-size: 24px; min-height: 80px; padding: 6px; } }
+    @media (max-width: 700px) { .night-btns { gap: 10px; } .big { font-size: 19px; min-height: 50px; padding: 6px 4px; } } /* shorter (Rajesh 13 Nov): one line each on a small phone */
     /* Is the stream reaching us: the dot is grey until it is, then green. The preview is the real picture. */
     .signal { display: flex; align-items: center; gap: 16px; padding: 8px 14px; margin: 0 0 12px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
     .signal p { margin: 0; }

@@ -1292,7 +1292,7 @@ $('save-link').onclick = async () => {
 const unitBox = Object.assign(document.createElement('span'), { className: 'unit', id: 'unit' });
 unitBox.setAttribute('role', 'group');
 unitBox.setAttribute('aria-label', 'Show amounts in');
-unitBox.innerHTML = '<span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Euros</small><button type="button" data-unit="eur" aria-label="Euros">€</button></span><span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span>';
+unitBox.innerHTML = '<span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span><span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Euros</small><button type="button" data-unit="eur" aria-label="Euros">€</button></span>';
 $('wallet-link').append(unitBox);
 let ownMode = 'btc';
 function drawUnit() {

@@ -72,7 +72,7 @@
     .board .slot.full label span { display: none; }
     .board .slot small { font-size: 11px; }
     .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
-    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(3, minmax(0, 2fr) minmax(0, 1fr)); } }
+    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(2, minmax(0, 2fr) minmax(0, 1fr)); } }
     @media (min-width: 901px) { .board .wide .nutzap-row { grid-template-columns: repeat(3, minmax(0, 1fr) minmax(0, 2fr)); } }
     .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
     .board .price-row { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: flex-start; }
@@ -201,7 +201,7 @@
     .board .mod-row .btn, .board .mod-add .btn { font-size: 16px; padding: 8px 12px 6px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
     .board .mod-add .field { flex: 1; margin: 0; }
-    .board .mod-add select { height: 44px; } /* the same height as the Name box beside it */
+    .board .mod-add select, .board .mod-add .btn { height: 44px; } /* the same height as the Name box beside it */
     @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly] { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
     .board .key-row input { margin-top: 0; flex: 1; }
     .board .key-row .btn { font-size: 16px; padding: 8px 12px 6px; }
@@ -380,8 +380,6 @@
               <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"></label>
               <label class="field">Goal<input data-path="goals.1.label" maxlength="60"></label>
               <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
-              <label class="field">Goal<input data-path="goals.2.label" maxlength="60"></label>
-              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.2.at"></label>
             </div>
             <label class="field">Thank-you message, shown once the last goal is met<input data-path="goalsThanks" maxlength="140" placeholder="e.g. You did it! The new song is coming up next."></label>
             <div class="goal-track"><i id="goal-bar"></i></div>

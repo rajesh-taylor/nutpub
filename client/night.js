@@ -47,16 +47,18 @@ async function artistKeyHere(pubkey) {
     b.type = 'button';
     b.className = 'btn quiet';
     b.textContent = 'Use this browser from now on';
-    b.onclick = async () => {
-      if (!confirm('Money already locked to the other browser can only be moved from there. Use this browser for new payments?')) return;
-      const { publicKeyHex } = await artist.coco.keyring.generateKeyPair();
-      await api('PUT', '/api/admin/artist-key', { pubkey: publicKeyHex });
-      await refresh();
-    };
+    b.onclick = () => $('key-sheet').showModal(); // asks first, as a sheet: what stays behind is said plainly
     $('key-warn').append(b);
   }
   return pubkey;
 }
+$('key-keep').onclick = () => $('key-sheet').close();
+$('key-switch').onclick = async () => {
+  $('key-sheet').close();
+  const { publicKeyHex } = await artist.coco.keyring.generateKeyPair();
+  await api('PUT', '/api/admin/artist-key', { pubkey: publicKeyHex });
+  await refresh();
+};
 async function keyLine(id, wallet, pubkey, who, path) { // the bar's card (hidden until the first drink returns)
   const here = await holds(wallet, pubkey);
   $(id).replaceChildren(here ? `This browser holds ${who}'s key.` : `${who}'s key is on another browser.`);
