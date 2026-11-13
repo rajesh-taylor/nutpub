@@ -24,7 +24,7 @@
     "@noble/curves": "2.4.0",
     "@scure/base": "2.4.0",
     "esbuild": "0.28.2",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "hls.js": "1.6.19",
     "nostr-tools": "2.25.4",
     "qrcode": "1.5.4"
