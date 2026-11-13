@@ -88,8 +88,8 @@ Open while NutNovember runs (to 27 Nov 2026):
 
 - **The gig page on a phone (designed 12 Nov, built 16–17 Nov):** four tabs under the player (Chat · Tip · Ticket · Wallet), a calm chat like YouTube's on a phone, a quick tip from the ₿ in the comment box, and a pint-glass Menu. The ticket screens are done. Nostr Wallet Connect (paying from your own Lightning wallet) comes after 27 Nov, with a real mint. (Nostr Connect, Nutzaps, Pub Menu, Nostr sign-in, closing the gig, the tippers screen, passkey tickets and the 30-second door QR are done.)
 - **Tickets the NutPub can't link to their buyer:** a ticket signed blind (NUT-00), so the door's check can't be tied to who paid.
-- Each judge with their own numbered show (`/judge-1` to `/judge-20`), no names asked.
-- Judges read Longy's filled-in pages, view only, and join as a guest with test sats; passkey sign-in with a backup for the artist's key.
+- **The front door (designed 13 Nov, built 14–15 Nov):** one button on the home page, **Put on a gig** ("Test sats only. Have a go."), sealed with a passkey, gives anyone a stage of their own (its own storage, on Cloudflare's free plan). A welcome screen, then two practice gigs (stream only; in the room and streamed, with the door QR and a free first drink), a test fan to buy a ticket and tip, and Longy's real night at Peggy Sue's to look at but not change. Crew passes (mod, door, bar) to open on a second phone, and a guided ending: move the sats to Cashu.me, receipt, Finish gig, Start over. Judges come in the same way as any artist; practice stages delete themselves after 7 days. After 27 Nov the same button is artist sign-up.
+- A backup for the artist's Takings key, sealed with the passkey.
 - A guide for fans to move leftover sats into their own wallet.
 - Saving a second show as a template; more than one gig planned at a time (one gig at a time for now).
 - **Artist sign-in with a passkey**, synced by the phone's password manager, so a new phone or laptop just works and there's no link to keep; then a sealed backup of the Takings key.
