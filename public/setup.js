@@ -201,6 +201,7 @@ function refresh() {
   const artist = show.ticket?.price || 0;
   // The drink's price stays in sight; it only counts (and can only be typed) when the free drink is on.
   $('drink-price').querySelector('input').disabled = show.drink?.mode !== 'artist';
+  $('drink-on').checked = show.drink?.mode === 'artist';
   $('split').textContent = !artist ? '' : drink
     ? `Ticket: ${n(artist + drink)} sats. ${n(artist)} locked to ${show.artist || 'the artist'}’s key, ${n(drink)} locked to the bar’s for the first drink. Not poured by ${show.lastOrders || 'last orders'}? It goes to ${show.artist || 'the artist'}.`
     : `Ticket: ${n(artist)} sats, locked to ${show.artist || 'the artist'}’s key.`;
@@ -294,6 +295,7 @@ function dateWarning() {
 form.addEventListener('input', (e) => {
   if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
   if (e.target.name === 'night') applyNight(e.target.value);
+  if (e.target.id === 'drink-on') for (const r of form.querySelectorAll('[name="drink"]')) r.checked = r.value === (e.target.checked ? 'artist' : 'off');
   priceRow(e);
   read();
   dateWarning();

@@ -9,6 +9,9 @@ import { blank, clean, currentShow, clearGig } from './shows.js';
 import { usePhotos } from './photo.js';
 import { getRate } from './rate.js';
 import { satsFrom } from './money.js';
+import { seedMods } from './mods.js';
+import { addMessage } from './door.js';
+import { randomHex } from './http.js';
 
 const ukDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
 const ukTime = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
@@ -25,6 +28,10 @@ const GIGS = {
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
       languages: ['en', 'de', 'es', 'fr', 'pt'],
     },
+    // Rajesh 14 Nov: a pinned message per gig, Aaron of Essex as Longy's mod, and his question 5 s into the clip.
+    pin: 'Say hello in the chat. Tip with a comment: type, put sats in the box on the right, press Enter.',
+    mods: [{ name: 'Aaron of Essex', icon: '🎤' }],
+    cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' }],
   },
   frankie: {
     photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },
@@ -32,13 +39,21 @@ const GIGS = {
       artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea',
       description: 'The Devils Train, filmed at The Fickle Pickle. Russ Strutter, bass · Levent Basharan, lead guitar solo · Emma Jane Beaumont, backing vocals. Find Frankie on Fountain: frankieperoni@fountain.fm',
       set: 'frankie-1',
-      ticket: { on: true, price: null, fiat: 30, locked: false },
+      // £30 at the door, the first drink in it (Rajesh 14 Nov): £25 to Frankie, £5 locked to the bar's key until last
+      // orders, then Frankie's if it's not poured. Its sats from today's rate, as the ticket's.
+      ticket: { on: true, price: null, fiat: 25, locked: false },
+      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
       tip: { label: 'Tip Frankie', price: 2100 },
     },
+    pin: '60 sats a minute: pay as you watch, stop any time. Venue ticket? Your first drink is on Frankie.',
+    // A guest's line half a minute in: a quiet nod to the btc++ Berlin talk on federated mints.
+    cues: [{ after: 30, text: 'Federated Cashu mints could go a long way in helping decentralised music...' }],
   },
-  // Session 26 fills this in with hints; Frankie's second song is the artist's own show.
-  yours: { photos: { tall1: '/img/yours-tall.jpg', wide1: '/img/yours-wide.jpg' }, show: { set: 'frankie-2' } },
+  // The artist's own show to Frankie's second song: the venue ticket, the door, the first drink and both ways of
+  // watching are on, the prices, names and stretch goal theirs to fill in (Plan gig lists what's missing).
+  yours: { photos: { tall1: '/img/yours-tall.jpg', wide1: '/img/yours-wide.jpg' },
+    show: { set: 'frankie-2', ticket: { on: true }, door: { on: true }, drinks: true, drink: { mode: 'artist', price: null }, stream: { mode: 'pay', perMinute: null } } },
 };
 export const STEPS = ['longy', 'frankie', 'yours'];
 
@@ -50,12 +65,37 @@ async function open(step, env) {
   // The examples' prices are in pounds: their sats come from today's rate when the gig opens.
   const { gbp } = await getRate();
   for (const p of [gig.ticket, gig.online]) if (p && p.fiat && !p.locked) p.price = satsFrom(p.fiat, gbp);
-  const { show } = clean({ ...blank(), ...gig, date: ukDay(), streams: ukTime() });
+  if (gig.drinkFiat) gig.drink.price = satsFrom(gig.drinkFiat, gbp);
+  // Last orders (an unpoured drink goes to the artist then): three hours from now, by midnight at the latest.
+  const lastOrders = gig.drinks && !gig.lastOrders ? lastOrdersIn(3) : gig.lastOrders;
+  const { show } = clean({ ...blank(), ...gig, date: ukDay(), streams: ukTime(), ...(lastOrders ? { lastOrders } : {}) });
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), new Date().toISOString());
   await usePhotos(env, GIGS[step].photos);
+  // The gig's chat: its pinned message and named mods, and the lines that come in by themselves as the set plays.
+  if (!kept) { await kv.set('pin', GIGS[step].pin || ''); await seedMods(GIGS[step].mods); }
+  await kv.set('cues', GIGS[step].cues || []);
+  await kv.set('cued', []);
   const list = await kv.get('setlist', { done: [] });
   await kv.set('setlist', { ...list, at: step, done: list.done || [] });
+}
+
+const lastOrdersIn = (hours) => {
+  const [h, m] = ukTime().split(':').map(Number);
+  const at = Math.min(h * 60 + m + hours * 60, 23 * 60 + 59);
+  return `${String(Math.floor(at / 60)).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`;
+};
+
+// A line of the example gig's chat (cues, above), posted once when a viewer's set reaches its second: the fan's page
+// asks (POST /api/cue). Only the second it's due at goes to the page; the words come from here. Nothing with comments off.
+export const cueTimes = async () => (await kv.get('cues', [])).map((c) => c.after);
+export async function cue(n) {
+  const c = (await kv.get('cues', []))[n];
+  const done = await kv.get('cued', []);
+  if (!c || done.includes(n) || !(await currentShow()).show.comments) return false;
+  await kv.set('cued', [...done, n]);
+  await addMessage(randomHex(16), c.text, 0, c.mod || null); // a pass of its own: in the chat as a mod, or as 'guest 3f9a'
+  return true;
 }
 
 // The stage's setlist: { at, done }. A stage made before the setlist (14 Nov) gets it on first look. An example left

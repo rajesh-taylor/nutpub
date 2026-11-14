@@ -77,6 +77,15 @@ export function mountDoor(route, admin, pass) {
     const again = await one('SELECT checked_at FROM tickets WHERE code = ?', code);
     return json({ result: 'already', at: again?.checked_at });
   });
+  // Let in by hand (Rajesh 14 Nov: "I don't have my phone on me"): the artist, on Show Time, lets a venue ticket in
+  // without a scan. The list is the room's tickets in the order bought; the same once-only mark as a scan.
+  route('GET', '/api/admin/door', admin, async () => json(await all("SELECT code, checked_at FROM tickets WHERE kind = 'room' AND code IS NOT NULL ORDER BY at")));
+  route('POST', '/api/admin/door/let-in', admin, async (c) => {
+    const code = String((await body(c))?.code || '');
+    if (!CODE.test(code)) return json({ result: 'unknown' }, 400);
+    if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in' });
+    return json({ result: (await one('SELECT 1 AS x FROM tickets WHERE code = ?', code)) ? 'already' : 'unknown' });
+  });
   route('GET', '/api/door/count', doorman, async (c) => json({ on: await doorOn(c),
     ...(await one("SELECT COUNT(checked_at) AS inside, COUNT(*) AS sold FROM tickets WHERE kind = 'room'")) }));
   // The ticket's door QR is drawn on the phone itself (viewer.js), from its code and its time code.

@@ -22,7 +22,7 @@
     .nut-menu summary:focus-visible { outline: 2px solid var(--amber); border-radius: 4px; }
     .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 8px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: grid; gap: 8px; font-size: 16px; white-space: nowrap; }
     .nut-menu a { color: var(--amber); }
-    .judge h1 { margin: 0; padding-right: 56px; font: 400 clamp(44px, 7vw, 64px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
+    .judge h1 { margin: 0; padding-right: 56px; font: 400 clamp(42px, 7vw, 62px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
     .lines { display: grid; gap: 8px; }
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
     .lines b { color: var(--cream); font-weight: 400; }
@@ -117,7 +117,7 @@
           <p class="kicker">3</p>
           <h2 class="who">Your gig</h2>
           <p class="where">Frankie’s second song, your way</p>
-          <dl><dt>Venue</dt><dd>Set prices, door ticketing, paid drink</dd><dt>Online</dt><dd>By the minute or one price</dd></dl>
+          <dl><dt>Venue</dt><dd>Set price, door ticketing solution, first free drink</dd><dt>Online</dt><dd>By the minute or one price</dd></dl>
           <p class="does">Set it up yourself, with a stretch goal. Then, as a fan: get let in at the door and get your drink at the bar.</p>
           <div class="btns"></div>
           <p class="small-print">The ticket's door QR changes every 30 seconds (TOTP), so a screenshot won't get in. The bar spends the drink at the mint; the fan's phone sees it go (NUT-07).</p>
@@ -137,6 +137,9 @@
 
     async function start(gig, card) {
       for (const b of card.querySelectorAll('button')) b.disabled = true;
+      const pressed = card.querySelector('button.go:not(.out)') || card.querySelector('button.go');
+      const label = pressed.textContent;
+      pressed.textContent = 'Setting up the stage…'; // a few seconds: the gig's photos are copied onto it
       card.querySelector('.said')?.remove();
       try {
         const r = await fetch('/api/stages/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gig }) });
@@ -147,6 +150,7 @@
       } catch (e) {
         card.querySelector('.btns').after(el('p', { className: 'said', role: 'status', textContent: e.message }));
         for (const b of card.querySelectorAll('button')) b.disabled = false;
+        pressed.textContent = label;
       }
     }
 

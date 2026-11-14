@@ -89,7 +89,7 @@ const inFiat = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
-const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false, cues = [] }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -163,6 +163,9 @@ const meter = () => {
   $('spent').textContent = inFiat() ? fiat(given) : T.spent(given);
   $('spent-box').hidden = free && !given;
   $('free-note').hidden = !free;
+  // A judge's practice gig with the first drink (Frankie's, Your gig): once they've paid to watch at home, the venue
+  // ticket is the next thing to try (Rajesh 14 Nov).
+  $('try-venue').hidden = !(judge && AS === 'home' && show.ticket.on && show.drinks && given > 0);
 };
 // A tip went through: the server says this browser's new total.
 const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { tippedHere = j.total; meter(); } }).catch(() => {});
@@ -468,9 +471,21 @@ async function play() {
     sources.push(src);
     src.onended = () => (sources = sources.filter((s) => s !== src));
     picture(next, startAt, mine);
+    cueAt(next, startAt);
     next += 1;
     startAt += PIECE;
   }
+}
+
+// An example gig's chat line (Aaron of Essex 5 s into Longy's clip, a guest on Frankie's): due in this piece, asked
+// for at its second. The server posts each once, for everyone (setlist.js cue()).
+function cueAt(n, startAt) {
+  cues.forEach((after, i) => {
+    if (Math.floor(after / PIECE) !== n) return;
+    setTimeout(() => {
+      if (playing) fetch('/api/cue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n: i }) }).catch(() => {});
+    }, Math.max(0, (startAt + (after % PIECE) - ctx.currentTime) * 1000));
+  });
 }
 
 // The picture for a paid piece, started when its sound starts.

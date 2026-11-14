@@ -1,4 +1,5 @@
-// Page 2's bar strip: the drinks bought at the door, each with Pour. The bar's key lives in this browser's 'nutpub-bar'
+// Show Time's door and bar strips (Let in by hand, 14 Nov): the venue tickets not yet in, each with Let in by hand,
+// and the drinks bought at the door, each with Pour by hand. The bar's key lives in this browser's 'nutpub-bar'
 // wallet (the bar's own page made it). Pouring spends the drink at the mint; the attendee's phone sees it spent and
 // shows the pint (NUT-07). A second pour finds it spent: "Already poured, mate".
 import { openWallet } from './wallet.js';
@@ -46,7 +47,7 @@ async function refresh() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = d.poured ? 'btn quiet' : 'btn';
-    b.textContent = d.collected_by === 'artist' ? `Drink ${d.id} · went to the artist` : d.poured ? `Drink ${d.id} · pour again` : `Pour drink ${d.id}`;
+    b.textContent = d.collected_by === 'artist' ? `Drink ${d.id} · went to the artist` : d.poured ? `Drink ${d.id} · pour again` : `Pour by hand · drink ${d.id}`;
     b.disabled = d.collected_by === 'artist';
     b.onclick = () => pour(d.id);
     return b;
@@ -54,5 +55,25 @@ async function refresh() {
   $('bar-strip').hidden = !drinks.length;
 }
 
-await refresh();
-setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30_000);
+// The door: each venue ticket bought, in order. Let in by hand marks it in, as a scan does; the fan's page moves on.
+async function letIn(code, n) {
+  try {
+    const { result } = await api('POST', '/api/admin/door/let-in', { code });
+    $('door-say').textContent = result === 'in' ? `Ticket ${n} let in. Watch the phone.` : `Ticket ${n} is already in.`;
+  } catch (e) { $('door-say').textContent = e.message; }
+  doorList().catch(() => {});
+}
+async function doorList() {
+  const show = await fetch('/api/show').then((r) => r.json()).then((s) => s.show);
+  const list = show.ticket.on && show.door.on ? await api('GET', '/api/admin/door') : [];
+  $('door-tickets').replaceChildren(...list.map((t, i) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: t.checked_at ? 'btn quiet' : 'btn',
+      textContent: t.checked_at ? `Ticket ${i + 1} · in` : `Let in by hand · ticket ${i + 1}`, disabled: !!t.checked_at });
+    b.onclick = () => letIn(t.code, i + 1);
+    return b;
+  }));
+  $('door-strip').hidden = !list.length;
+}
+
+await Promise.all([refresh(), doorList()]);
+setInterval(() => { if (!document.hidden) { refresh().catch(() => {}); doorList().catch(() => {}); } }, 10_000);

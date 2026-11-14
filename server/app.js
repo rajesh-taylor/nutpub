@@ -20,7 +20,7 @@ import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor } from './stages.js';
-import { setlist, finished, again } from './setlist.js';
+import { setlist, finished, again, cue, cueTimes } from './setlist.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -83,7 +83,7 @@ route('GET', '/api/show', async (c) => {
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
   // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
   const judge = !!(stageDb().id && (await kv.get('setlist', null))?.only);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge });
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes() });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -100,6 +100,8 @@ route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
   if (!list) throw new Error('That gig isn\u2019t on this stage\u2019s setlist.');
   return { setlist: list, path: (await current(c)).path };
 }));
+// An example gig's chat line, due now in a viewer's set (setlist.js): posted once, whoever asks first.
+route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((await body(c))?.n)) })));
 route('GET', '/api/admin/setlist', admin, attempt(async (c) => ({ setlist: await setlist(c.env), path: (await current(c)).path })));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));

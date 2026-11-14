@@ -9,7 +9,7 @@
 ## What it does
 
 - **For the artist:** three pages. **Plan gig** sets up the night weeks ahead: venue tickets, Watch online or pay by the minute, prices, door scanner, moderators and poster. **Show Time** runs the night with three buttons: Start stream, Start show, End night. **Takings** shows what came in, with The NutPub's 5% on its own line, and moves it to the artist's own Cashu wallet with one tap.
-- **For the fan:** pay in sats, then save the ticket as a passkey in the phone's password manager. **Find my ticket** brings it back on a new phone. At the door, the QR changes every 30 seconds, so a screenshot won't get in.
+- **For the fan:** pay in sats, then save the ticket as a passkey in the phone's password manager. **Find my ticket** brings it back on a new phone. (On judges' stages there are no passkeys: the ticket stays in the browser.) At the door, the QR changes every 30 seconds, so a screenshot won't get in.
 - **The 402 on live video:** the stream only plays with a short-lived signed token. Each minute the browser wallet pays an HTTP 402 (NUT-24) for the next token. If the fan stops paying, the picture stops. The artist can make the first minutes free.
 - **Chat and tips:** a tip goes in the comment box: type your words, put sats in the box's own field, press Enter, and both arrive together. Over the video, the chat shows only the newest few lines (the artist picks 3, 5 or 10). With Nostr sign-in (a browser extension or a phone signer app), your name appears in the chat and you get one-tap Nutzaps. There's also a tippers screen for the venue's TV.
 - **Nothing about the buyer:** no name, email or address. Everything from the night is deleted after 7 days, except one line of totals.
@@ -32,21 +32,21 @@ Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.
 
 ## Judge for yourself
 
-One button on the home page (**Judge for yourself**, under "Put on a gig") gives anyone a stage of their own, at its own address (`<id>.thenutpub.com`) with its own database, sealed with a passkey: no email, no account. **Back to your stage** finds it again on any device the passkey syncs to. Judges come in the same way as any artist. Longy's real night stays at thenutpub.com/longy.
+**Judge for yourself** on the home page opens three gig posters, best on a laptop with two tabs: the artist in one, the fan in the other. Have your phone ready for the door and the bar; with no phone, Show Time has **Let in by hand** and **Pour by hand**. Test sats only.
 
-Each new stage opens on a setlist, best on a laptop with two tabs: the artist in one, the fan in the other.
+Each poster makes a stage of its own, at its own address (`<id>.thenutpub.com`) with its own database, holding just that gig. No passkeys and no account: this browser remembers the stage, so the poster then says **Open again** or **Start fresh**. Longy's real night stays at thenutpub.com/longy.
 
-1. **Longy** (filled in): a £30 venue ticket and Watch online for £5. As the fan, press Play to buy Watch online, then comment and tip.
-2. **Frankie Peroni** (filled in): a £30 venue ticket and the stream at 60 sats a minute, his song The Devils Train from The Fickle Pickle. Watch a minute, then tip in the comments.
-3. **Your gig**: your own prices and stretch goal (coming next).
+1. **Longy** (start here): a £30 venue ticket and Watch online for £5. Watch online, say hello in the chat (Aaron of Essex, his moderator, asks where everyone's watching from), then tip with a comment.
+2. **Frankie Peroni**: a £30 venue ticket with the first drink in it, and the stream at 60 sats a minute, The Devils Train from The Fickle Pickle. Watch online first (play, stop, come back, tip), then **Now try the venue ticket**: buy it and get the drink poured at the bar. A drink not poured by last orders goes to Frankie.
+3. **Your gig**: Frankie's second song with your own prices, door ticketing, a first drink and a stretch goal. Plan gig lists what's left to fill in.
 
-Every artist page has a **Fan's page ↗** button that opens the fan's side in a new tab. Each gig ends the same way: **End night** on Show Time, then **Takings**, **Move to Cashu.me** (it asks to add the test mint once: say yes), then **Finish gig**, which ticks it off. **↻ Repeat gig** on the setlist does a finished gig again. Fans move their own leftover sats to Cashu.me from their wallet page the same way.
+Under the hood, for Cashu developers: the video comes in 10-second pieces, and each piece answers HTTP 402 (NUT-24) until the browser pays for it in ecash locked to the artist's key (NUT-11). The server checks each payment and can't spend it. The drink is locked to the bar's key until last orders, then falls back to the artist (a NUT-11 locktime); the mint enforces it, and the fan's phone sees it spent (NUT-07). The door QR changes every 30 seconds (TOTP).
 
-**Coming next:** three gig cards straight from Judge for yourself, each its own stage with its prices up front, and no passkeys for judges. The clips play through the site's own player, paid 10 seconds at a time: nothing to install. Practice sets and streams stop after 20 minutes.
+Every gig ends the same way: **End night** on Show Time, then **Takings**, **Move to Cashu.me** (it asks to add the test mint once: say yes), then **Finish gig**. Fans move their own leftover sats to Cashu.me from their wallet page the same way. The clips play through the site's own player: nothing to install. Practice sets and streams stop after 20 minutes. Up to 50 stages at once until Sat 21 Nov, then 15.
 
 ## Coming before 27 Nov
 
-- Three gig cards for judges, a stage each, no passkeys; your own gig with the door QR, a first drink and a stretch goal; a receipt at the end.
+- A receipt at the end of each gig; stages that close themselves after 7 days.
 - Tickets the NutPub can't link to their buyer (blind-signed).
 - A calmer gig page on phones.
 

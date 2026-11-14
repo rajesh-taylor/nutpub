@@ -375,6 +375,13 @@
                 </div>
               </div>
             </div>
+            <!-- The first drink, on judges' practice gigs only until after 27 Nov (show.drinks; server/shows.js). -->
+            <div class="door-step drink-step" data-when="drinks">
+              <label class="choice room-switch"><b>First drink free with the ticket</b><input type="checkbox" role="switch" id="drink-on" aria-label="First drink free with the ticket"></label>
+              <input type="radio" name="drink" data-path="drink.mode" value="off" hidden><input type="radio" name="drink" data-path="drink.mode" value="artist" hidden>
+              <label class="field" id="drink-price" data-when="drink.mode=artist">Drink, in sats, added to the ticket<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
+              <p class="switch-note" id="split"></p>
+            </div>
             <p class="rate-line" id="rate-line"></p>
           </section>
 
@@ -468,9 +475,7 @@
           <span id="tip-preview"></span>
           <!-- Off for the demo; they come back with a Venue/Hosts section. -->
           <input data-path="tip.label"><input type="number" data-path="tip.price">
-          <label id="drink-price"><input type="number" data-path="drink.price"></label>
-          <input type="radio" name="drink" data-path="drink.mode" value="off"><input type="radio" name="drink" data-path="drink.mode" value="artist">
-          <p id="split"></p><a id="takings-link"></a><a id="bar-link"></a><a id="doors-open"></a>
+          <a id="takings-link"></a><a id="bar-link"></a><a id="doors-open"></a>
           <div id="langs"></div><select data-path="language" id="language"></select>
           <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on">
           <button type="button" id="tpl-load"></button><button type="button" id="tpl-delete"></button>

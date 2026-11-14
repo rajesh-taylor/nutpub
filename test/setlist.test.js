@@ -121,3 +121,30 @@ test('a judge’s stage (/judge) holds one gig: Finish gig ticks it off and open
     assert.deepEqual(await setlist(env), { at: 'frankie', done: ['frankie'], only: true });
   });
 });
+
+test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his question posted once', async () => {
+  await withStage(st, async () => {
+    const { cue } = await import('../server/setlist.js');
+    const { one, all } = await import('../server/db.js');
+    await setlist(env, 'longy');
+    assert.match(await kv.get('pin'), /Tip with a comment/);
+    assert.deepEqual((await all('SELECT name, icon FROM mods')).map((m) => m.name), ['Aaron of Essex']);
+    assert.equal(await cue(0), true);
+    assert.equal(await cue(0), false); // once, whoever asks first
+    const m = await one('SELECT text, mod FROM messages');
+    assert.equal(m.mod, 'Aaron of Essex');
+    assert.match(m.text, /watching from tonight/);
+  });
+});
+
+test('Frankie’s practice gig: £30 at the door with the first drink in it, last orders set', async () => {
+  await withStage(st, async () => {
+    await setlist(env, 'frankie');
+    const { show, problems } = await currentShow();
+    assert.deepEqual(problems, []);
+    assert.equal(show.drinks, true);
+    assert.equal(show.drink.mode, 'artist');
+    assert.ok(show.drink.price > 0 && show.ticket.price > show.drink.price);
+    assert.match(show.lastOrders, /^\d\d:\d\d$/);
+  });
+});

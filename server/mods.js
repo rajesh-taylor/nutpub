@@ -39,6 +39,14 @@ async function oneMain() {
   await run('UPDATE mods SET main = 1 WHERE id = (SELECT MIN(id) FROM mods)');
 }
 
+// An example gig's moderators (setlist.js: Aaron of Essex on Longy's gig): named on Plan gig and in the chat, with no
+// link. Their key_hash is 'seed:…', never a SHA-256, so no link can ever match one; the artist may delete them.
+export async function seedMods(list = []) {
+  await run("DELETE FROM mods WHERE key_hash LIKE 'seed:%'");
+  for (const m of list) await run('INSERT INTO mods (name, key_hash, created, icon) VALUES (?, ?, ?, ?)', m.name, `seed:${randomHex(16)}`, now(), iconOf(m.icon));
+  await oneMain();
+}
+
 export function mountMods(route, admin) {
   const mod = async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'This mod link has been cancelled.' }, 403));
 
