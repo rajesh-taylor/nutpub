@@ -60,3 +60,9 @@ CREATE TABLE IF NOT EXISTS passkeys (id TEXT PRIMARY KEY, pass TEXT NOT NULL, pu
   count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
 CREATE INDEX IF NOT EXISTS passkeys_pass ON passkeys (pass);
 CREATE TABLE IF NOT EXISTS challenges (value TEXT PRIMARY KEY, at INTEGER NOT NULL);
+-- The front door (server/stages.js, 14 Nov), on Longy's D1 only: the list of artists' stages (each a Durable Object of
+-- its own at <id>.thenutpub.com) and the passkey that opens each, its public key only. Added: scripts/stages-migration.sql
+CREATE TABLE IF NOT EXISTS stages (id TEXT PRIMARY KEY, created TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS stage_keys (id TEXT PRIMARY KEY, stage TEXT NOT NULL, pubkey TEXT NOT NULL, alg INTEGER NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
+CREATE INDEX IF NOT EXISTS stage_keys_stage ON stage_keys (stage);

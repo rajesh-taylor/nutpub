@@ -8,7 +8,7 @@
 // the blind-signed ticket to come, so Find my ticket can restore that one from the mint without us linking buyer to door.
 //
 // Signatures are checked with WebCrypto only: ES256 (P-256, most phones), Ed25519, RS256 (Windows Hello).
-import { one, run, kv } from './db.js';
+import { one, run, kv, stageDb } from './db.js';
 import { json, body, now, randomHex } from './http.js';
 
 const utf8 = new TextEncoder();
@@ -109,14 +109,17 @@ export async function checkGet(r, stored, want) {
 const CHALLENGE_MS = 5 * 60 * 1000;
 // `wrangler dev` hands the Worker the live site's address (http://thenutpub.com), so plain http means development:
 // there a page on localhost may make and check passkeys for localhost (they can't open a live ticket's passkey).
-const site = (c) => ({ origin: `https://${c.url.host}`, rpId: c.url.hostname, dev: c.url.protocol === 'http:' });
-let hmacKey = null;
+export const site = (c) => ({ origin: `https://${c.url.host}`, rpId: c.url.hostname, dev: c.url.protocol === 'http:' });
+const hmacKeys = new Map(); // one per stage: each keeps its own in its kv
 async function challengeKey() {
-  if (hmacKey) return hmacKey;
+  const id = stageDb()?.id ?? '';
+  if (hmacKeys.has(id)) return hmacKeys.get(id);
   let hex = await kv.get('passkeyChallengeKey');
   if (!hex) { await run("INSERT OR IGNORE INTO kv (key, value) VALUES ('passkeyChallengeKey', ?)", JSON.stringify(randomHex(32))); hex = await kv.get('passkeyChallengeKey'); }
   const raw = Uint8Array.from(hex.match(/../g), (b) => parseInt(b, 16));
-  return (hmacKey = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']));
+  const key = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  hmacKeys.set(id, key);
+  return key;
 }
 const tag = async (bytes) => new Uint8Array(await crypto.subtle.sign('HMAC', await challengeKey(), bytes)).slice(0, 16);
 export async function makeChallenge(ms = Date.now()) {
@@ -135,7 +138,7 @@ export async function challengeOk(value, ms = Date.now()) {
   let d = 0; for (let i = 0; i < 16; i++) d |= want[i] ^ b[24 + i];
   return d === 0;
 }
-const spend = async (value) => {
+export const spend = async (value) => {
   await run('DELETE FROM challenges WHERE at < ?', Date.now() - CHALLENGE_MS);
   return (await run('INSERT OR IGNORE INTO challenges (value, at) VALUES (?, ?)', value, Date.now())).meta.changes === 1;
 };

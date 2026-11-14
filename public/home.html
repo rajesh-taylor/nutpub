@@ -74,6 +74,26 @@
     .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 8px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: grid; gap: 8px; font-size: 16px; white-space: nowrap; }
     .nut-menu a { color: var(--amber); }
     .nut-menu .later { opacity: .65; }
+    /* Home 2 ("Gig Page Phone Options"): the open-stage flyer, taped up. Put on a gig: a stage of your own. */
+    .two .band { align-items: center; text-align: center; }
+    .flyer { position: relative; width: min(300px, 100%); margin-top: 6px; transform: rotate(-2deg); background: #efe3c8; color: #1a1408; border-radius: 2px;
+      padding: 22px 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; box-shadow: 0 10px 28px rgb(0 0 0 / .5); }
+    .flyer .tape { position: absolute; top: -12px; width: 76px; height: 24px; background: rgb(239 227 200 / .35); }
+    .flyer p { color: inherit; }
+    .flyer .kicker { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: #7a4a12; }
+    .flyer .bill { font: 400 58px/.9 var(--poster); letter-spacing: .04em; }
+    .flyer .bill span { color: #c4521a; }
+    .flyer .put-on { display: block; width: 100%; margin-top: 4px; padding: 14px 0 11px; border: 0; border-radius: 4px; background: #1a1408; color: #efe3c8;
+      font: 400 24px/1 var(--poster); letter-spacing: .08em; cursor: pointer; }
+    .flyer .put-on:focus-visible { outline: 2px solid #c4521a; outline-offset: 3px; }
+    .flyer .put-on:disabled { opacity: .5; cursor: default; }
+    .two .flyer .go-on { font-size: 15px; font-weight: 600; }
+    .two .flyer .small-print { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgb(26 20 8 / .4); width: 100%; font-size: 12px; line-height: 1.4; color: #4a3a1c; }
+    .two .been { margin-top: 22px; font-size: 14px; color: var(--smoke); }
+    .link { padding: 0; border: 0; background: none; font: inherit; color: #e8a845; text-decoration: underline; cursor: pointer; }
+    .link:disabled { opacity: .5; cursor: default; }
+    .two .door-said { font-size: 15px; color: var(--cream); max-width: 300px; }
+    @media (max-width: 760px) { .lineup { display: none; } .home .wordmark { max-width: 300px; margin-top: 24px; } .home .tag { font-size: 13px; letter-spacing: .14em; margin-bottom: 24px; } }
     .home .foot { margin: 32px 0 8px; }
     .home .foot a { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
     .home .foot a:hover { color: var(--amber); opacity: 1; }
@@ -153,7 +173,20 @@
     <p class="tag">Pay by the minute. Leave when it gets bad.</p>
     <section class="wins" aria-label="Who it's for">
       <div class="two">
-        <div class="band"><h2>Artists</h2><p class="line">Get paid on the night.</p><a class="btn primary" href="/setup">Sign in as Longy</a></div>
+        <div class="band"><h2>Artists</h2>
+          <section class="flyer" aria-label="Put on a gig">
+            <span class="tape" style="left: 20px; transform: rotate(-8deg);" aria-hidden="true"></span>
+            <span class="tape" style="right: 20px; transform: rotate(7deg);" aria-hidden="true"></span>
+            <p class="kicker">Open stage · tonight</p>
+            <p class="bill">Headlining:<br><span>you</span></p>
+            <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1a1408" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M8.5 21h7"/></svg>
+            <button type="button" id="put-on" class="put-on">Put on a gig</button>
+            <p class="go-on">Test sats only. Have a go.</p>
+            <p class="small-print">Doors: whenever you like · Entry: free · Sats: pretend · Applause: real</p>
+          </section>
+          <p class="been">Been before? <button type="button" id="come-back" class="link">Back to your stage</button></p>
+          <p id="door-said" class="door-said" role="status" hidden></p>
+        </div>
         <div class="fans"><h2>The Punters</h2><p class="line">Buy tickets and live stream access</p><p class="line">No apps. No tracking.</p><a class="btn primary" href="/longy">Try it with test sats</a></div>
         <div class="biz"><h2>Small Businesses</h2><p class="line">Collab with Artists.</p><p class="line">Integrated ticketing</p><span class="btn soon">Coming soon</span></div>
       </div>
@@ -182,5 +215,6 @@
     </section>
     <footer class="foot"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></footer>
   </main>
+  <script type="module" src="/js/front-door.js"></script>
 </body>
 </html>

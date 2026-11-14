@@ -1,11 +1,15 @@
-// The NutPub on Cloudflare's free plan: one Worker, its state in D1, the background photo in KV, the site's files
-// as assets. Deploy: npm run deploy. Local: npm start (wrangler dev, with a local copy of D1 and KV).
+// The NutPub on Cloudflare's free plan: one Worker; Longy's stage in D1, every other artist's stage a SQLite Durable
+// Object of its own (<id>.thenutpub.com); the photos in KV, the site's files as assets. Deploy: npm run deploy. Local:
+// npm start (wrangler dev, with local copies of D1, KV and the stages).
 {
   "name": "thenutpub",
   "main": "server/index.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [{ "pattern": "thenutpub.com/*", "zone_name": "thenutpub.com" }],
+  // The stages need a proxied wildcard DNS record (* → 100::, orange cloud) in the zone for *.thenutpub.com.
+  "routes": [{ "pattern": "thenutpub.com/*", "zone_name": "thenutpub.com" }, { "pattern": "*.thenutpub.com/*", "zone_name": "thenutpub.com" }],
+  // schema.sql goes into the Worker as text: each new stage runs it once (server/stage.js).
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -14,9 +18,12 @@
     // The pages get the TEST banner from the Worker; the set's files go only to a pass that may play them.
     "run_worker_first": ["/", "/*.html", "/set-media/*"]
   },
-  // Once a day at 04:00 UTC: closing.js deletes the night's records and recordings 7 days after the gig.
+  // Once a day at 04:00 UTC: closing.js deletes each stage's night records and recordings 7 days after its gig.
   "triggers": { "crons": ["0 4 * * *"] },
   "d1_databases": [{ "binding": "DB", "database_name": "nutpub", "database_id": "68813683-cdd0-45c5-80e4-565c19f5ded5" }],
+  // One SQLite Durable Object per artist's stage (server/stage.js): on the Workers Free plan.
+  "durable_objects": { "bindings": [{ "name": "STAGES", "class_name": "Stage" }] },
+  "migrations": [{ "tag": "v1-stages", "new_sqlite_classes": ["Stage"] }],
   "kv_namespaces": [{ "binding": "PHOTOS", "id": "d3599301789e4a6b916b2a8c365e8880" }],
   "vars": {
     // A public test mint run by the Cashu developers: fake Lightning, no real value. Never a real mint.

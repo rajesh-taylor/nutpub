@@ -3,7 +3,8 @@
 // to Google, which adds the card. Same door QR, artist, venue and date as the Apple card; nothing about who bought it.
 // One card design (a "class") per version of the gig's details: an id from their hash, so a change makes a new one
 // for new tickets (a link can't change a class Google already has; updating cards comes with the REST API later).
-import { SITE_URL, GWALLET_ISSUER, GWALLET_EMAIL, GWALLET_KEY } from './config.js';
+import { siteUrl } from './db.js';
+import { GWALLET_ISSUER, GWALLET_EMAIL, GWALLET_KEY } from './config.js';
 import { json } from './http.js';
 import { roomTicket, startOf, nextMorning, DOOR_NOTE } from './wallet.js';
 
@@ -65,7 +66,7 @@ export function mountGoogleWallet(route) {
     if (!GWALLET_ISSUER || !GWALLET_EMAIL || !GWALLET_KEY) return json({ error: 'no_wallet', detail: 'Google Wallet is not set up on this server.' }, 503);
     const { show, code, refused } = await roomTicket(c);
     if (refused) return refused;
-    const site = SITE_URL || c.url.origin;
+    const site = siteUrl(c);
     const link = await saveLink(await gwalletCard(show, code, site, GWALLET_ISSUER), { email: GWALLET_EMAIL, keyPem: GWALLET_KEY, site });
     return new Response(null, { status: 302, headers: { Location: link, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
   });

@@ -3,8 +3,7 @@
 // drink to the bar's key with a locktime at last orders and a refund to the artist's key (NUT-11), so an unpoured
 // drink becomes the artist's and the mint, not this server, enforces it. Nothing here holds a sat.
 import QRCode from 'qrcode';
-import { SITE_URL } from './config.js';
-import { one, all, run, sql, batch, kv } from './db.js';
+import { one, all, run, sql, batch, kv, siteUrl } from './db.js';
 import { cashuGate } from './gate.js';
 import { totpOk } from './totp.js';
 import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver } from './shows.js';
@@ -20,7 +19,7 @@ export const barKey = () => kv.get('barKey');
 const DRINK = 'SELECT d.id, l.id AS locked, l.token, l.sats, l.pubkey, l.collected_at, l.collected_by FROM drinks d JOIN locked l ON l.id = d.locked';
 export const hasTicket = async (pass) => !!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', pass));
 const ticketOf = (pass) => one('SELECT kind, sats, at, code, secret, checked_at, (SELECT COUNT(*) FROM passkeys p WHERE p.pass = t.pass) AS keys FROM tickets t WHERE pass = ?', pass); // kind: 'room' | 'home'
-const siteOf = (c) => SITE_URL || c.url.origin;
+const siteOf = (c) => siteUrl(c);
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
 const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 140);

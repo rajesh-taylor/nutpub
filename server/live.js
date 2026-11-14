@@ -3,7 +3,7 @@
 // The artist streams to it from Larix or OBS; Stream records each broadcast. closing.js deletes each recording 7 days
 // after it was made (Stream's own setting can't go below 30 days, kept as a backstop).
 import QRCode from 'qrcode';
-import { kv } from './db.js';
+import { kv, stageDb } from './db.js';
 import { MINT_TEST } from './config.js';
 import { current, showOf, saveShow, stageNow } from './shows.js';
 import { one, all, run } from './db.js';
@@ -40,7 +40,7 @@ export async function liveInput(page) {
     try { return await stream('GET', `/live_inputs/${uid}`); } catch (e) { if (e.status !== 404) throw e; }
   }
   const input = await stream('POST', '/live_inputs', {
-    meta: { name: `nutpub-${page}` },
+    meta: { name: `nutpub-${stageDb()?.id ? `${stageDb().id}-` : ''}${page}` },
     recording: { mode: 'automatic', requireSignedURLs: true }, // the plain link is refused: only a token plays it
     deleteRecordingAfterDays: 30,
   });
@@ -61,10 +61,11 @@ export const deleteRecording = (uid) => stream('DELETE', `/${uid}`);
 // Is the artist streaming right now? Stream's word on the input, asked at most every 10 s per Worker: every phone
 // polls the stage every 2 s, and that mustn't become a Stream API call each time.
 const ON_AIR = ['connected', 'reconnected'];
-let onAir = { page: '', live: false, at: 0 };
+const onAir = new Map(); // per stage: { live, at }
 export async function liveNow(page) {
   if (!page || !ACCOUNT || !TOKEN) return false;
-  if (onAir.page === page && Date.now() - onAir.at < 10_000) return onAir.live;
+  const seen = onAir.get(`${stageDb()?.id ?? ''}/${page}`);
+  if (seen && Date.now() - seen.at < 10_000) return seen.live;
   let live = false;
   try {
     const uid = await kv.get(`live:${page}`);
@@ -75,7 +76,7 @@ export async function liveNow(page) {
   } catch (e) {
     console.log(`live status: ${String(e.message || e).slice(0, 120)}`);
   }
-  onAir = { page, live, at: Date.now() };
+  onAir.set(`${stageDb()?.id ?? ''}/${page}`, { live, at: Date.now() });
   return live;
 }
 

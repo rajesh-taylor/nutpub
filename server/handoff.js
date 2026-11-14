@@ -1,8 +1,7 @@
 // Sign in on your phone: Plan gig, signed in on a computer, shows a QR that signs a phone in once. The QR carries a
 // one-time code, not the setup key: it works once, for 5 minutes, so a photo of the screen later opens nothing.
 // The phone trades the code for the key (kept in that browser, as the private setup link would be).
-import { ADMIN_KEY } from './config.js';
-import { kv, one } from './db.js';
+import { kv, one, adminKey } from './db.js';
 import { json, body, randomHex } from './http.js';
 
 export const HANDOFF_MS = 5 * 60 * 1000;
@@ -22,7 +21,7 @@ export async function takeHandoff(code, at = Date.now()) {
   if ((await sha(code)) !== saved.hash) return null;
   // Spent in one statement, so two phones scanning at once can't both get in.
   const gone = await one("DELETE FROM kv WHERE key = 'handoff' AND value = ? RETURNING key", JSON.stringify(saved));
-  return gone && at <= saved.until ? ADMIN_KEY : null;
+  return gone && at <= saved.until ? adminKey() : null;
 }
 
 export function mountHandoff(route, admin) {

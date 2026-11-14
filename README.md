@@ -30,9 +30,13 @@ Every payment is locked to the key of the person it's for (NUT-11 P2PK). The ser
 
 Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts).
 
+## Put on a gig
+
+One button on the home page gives anyone a stage of their own, at its own address (`<id>.thenutpub.com`) with its own database, sealed with a passkey: no email, no account. **Back to your stage** finds it again on any device the passkey syncs to. Judges come in the same way as any artist. Longy's real night stays at thenutpub.com/longy.
+
 ## Coming before 27 Nov
 
-- **Put on a gig:** one button on the home page gives anyone a stage of their own, with two practice gigs, crew passes and a guided move to Cashu.me. Judges come in the same way as any artist.
+- Two practice gigs ready on each stage, a test fan, crew passes and a guided move to Cashu.me.
 - Tickets the NutPub can't link to their buyer (blind-signed).
 - A calmer gig page on phones.
 
@@ -44,7 +48,7 @@ Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.
 
 ## Run it
 
-It runs on a Cloudflare Worker with D1, on the free plan. Live video uses Cloudflare Stream, which is paid. The NutPub never runs a mint.
+It runs on a Cloudflare Worker on the free plan: Longy's stage in D1, every other stage in a SQLite Durable Object of its own, reached through a proxied wildcard DNS record (`*`). Live video uses Cloudflare Stream, which is paid. The NutPub never runs a mint.
 
 ```bash
 npm install

@@ -1,8 +1,8 @@
 // The ticket's passkey, on the phone (WebAuthn; the checks are in server/passkey.js). No email, no account: the
 // phone's password manager keeps it. Its user handle is 32 random bytes made here once per ticket, the ticket's seed, never sent to
 // the NutPub: kept for the blind-signed ticket to come, which will be made from it and restored with it.
-const b64u = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const unb64u = (text) => { const s = text.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - (s.length % 4)) % 4)), (ch) => ch.charCodeAt(0)); };
+export const b64u = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export const unb64u = (text) => { const s = text.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - (s.length % 4)) % 4)), (ch) => ch.charCodeAt(0)); };
 
 export const passkeysWork = () => typeof PublicKeyCredential === 'function' && !!navigator.credentials?.create
   && typeof AuthenticatorAttestationResponse?.prototype?.getPublicKey === 'function';
@@ -14,15 +14,15 @@ async function fetchChallenge() {
   return { value: r.challenge, until: Date.now() + (r.ms || 300000) - 30000 };
 }
 export function warm() { if (!ready || ready.until < Date.now()) ready = fetchChallenge().catch(() => null); return ready; }
-async function take() {
+export async function take() {
   let c = await warm();
   if (!c || c.until < Date.now()) { ready = null; c = await warm(); }
   ready = null;
   if (!c) throw new Error('No connection: try again in a moment.');
   return c.value;
 }
-const said = async (res) => { if (res.ok) return res.json(); const e = await res.json().catch(() => ({})); throw new Error(e.detail && e.error !== 'passkey' ? e.detail : 'That didn’t work: try again.'); };
-const cancelled = (e) => e?.name === 'NotAllowedError' || e?.name === 'AbortError';
+export const said = async (res) => { if (res.ok) return res.json(); const e = await res.json().catch(() => ({})); throw new Error(e.detail && e.error !== 'passkey' ? e.detail : 'That didn’t work: try again.'); };
+export const cancelled = (e) => e?.name === 'NotAllowedError' || e?.name === 'AbortError';
 
 // The ticket's user handle: made once per ticket and kept in this browser, so a second save (a retry after the
 // server missed the first, say) replaces the phone's entry instead of adding a second one beside it.

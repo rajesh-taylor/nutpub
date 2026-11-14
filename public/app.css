@@ -1032,3 +1032,10 @@ body .door-line .door-where { color: var(--smoke); font-size: 14px; }
 .door-line .st-head p { text-align: center; }
 .door-line .st-head .st-kicker { color: var(--amber); font-size: 17px; }
 .door-line .st-head .st-when { font-size: 19px; }
+
+/* The curved pub sign (as on the home page), at its one size on every page but the home page and the venue's screen.
+   The page carries the sign's gold (#gold) and wear (#worn-sign) in its own <defs>. */
+.pub-sign { margin: 16px auto 0; width: min(210px, 56%); line-height: 0; }
+.pub-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pub-sign text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
+.pub-sign .btc { fill: #f7931a; }

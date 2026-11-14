@@ -1,7 +1,7 @@
 // The background photo: one picture the account holder uploads on the setup page, shown dimmed behind the player.
 // Kept in Workers KV (never in git; the repo is public). None uploaded: the viewer page uses the Berlin picks in
 // public/img/, or plain midnight if those aren't there either.
-import { kv } from './db.js';
+import { kv, stageDb } from './db.js';
 import { json, now } from './http.js';
 
 const MAX = 5 * 1024 * 1024; // 5 MB: plenty for a phone photo, small enough for a phone to load
@@ -23,7 +23,8 @@ const current = (slot = 'tall1') => kv.get(named(slot), null);
 export const photoUrl = async () => urlOf('tall1', await current());
 export const photoUrls = async () => Object.fromEntries(await Promise.all(SLOTS.map(async (s) => [s, urlOf(s, await current(s))])));
 
-export function mountPhoto(route, admin, store) {
+export function mountPhoto(route, admin, photos) {
+  const store = () => ({ get: (k, t) => photos().get(stageDb().prefix + k, t), put: (k, v) => photos().put(stageDb().prefix + k, v), delete: (k) => photos().delete(stageDb().prefix + k) });
   const serve = async (slot) => {
     const p = await current(slot);
     const bytes = p && (await store().get(named(slot), 'arrayBuffer'));

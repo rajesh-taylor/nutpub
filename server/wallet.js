@@ -1,7 +1,8 @@
 // The room ticket as a wallet card (.pkpass): Apple Wallet, and open wallets on Android (Catima, PassAndroid) read
 // the same file. Made on the spot from the ticket's door code; nothing is kept. The card holds the door QR (the
 // same link as the page's), the artist, venue and date: no name, no email, nothing about who bought it.
-import { SITE_URL, PASS_KEY, PASS_CERT, PASS_TEAM, PASS_TYPE } from './config.js';
+import { siteUrl } from './db.js';
+import { PASS_KEY, PASS_CERT, PASS_TEAM, PASS_TYPE } from './config.js';
 import { one } from './db.js';
 import { json } from './http.js';
 import { showOf, opensAt, gigOver, current } from './shows.js';
@@ -80,7 +81,7 @@ export function mountWallet(route) {
     if (!PASS_KEY || !PASS_CERT) return json({ error: 'no_wallet', detail: 'Wallet cards are not set up on this server.' }, 503);
     const { show, code, refused } = await roomTicket(c);
     if (refused) return refused;
-    const file = await makePkpass({ 'pass.json': passJson(show, code, SITE_URL || c.url.origin), ...IMAGES }, { keyPem: PASS_KEY, certPem: PASS_CERT });
+    const file = await makePkpass({ 'pass.json': passJson(show, code, siteUrl(c)), ...IMAGES }, { keyPem: PASS_KEY, certPem: PASS_CERT });
     return new Response(file, { headers: { 'Content-Type': 'application/vnd.apple.pkpass',
       'Content-Disposition': 'attachment; filename="ticket.pkpass"', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
   });
