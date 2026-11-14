@@ -1103,3 +1103,23 @@ body.wallet-card .purse-actions { flex-wrap: wrap; }
 body.wallet-card .bottom > .keep { margin: 12px 0 0; }
 /* The fan's page, from every artist page's header. */
 .board-head .head-fan { margin-left: auto; font-size: 18px; padding: 9px 16px 7px; white-space: nowrap; }
+
+/* The free drink on its own (Rajesh 14 Nov): the gig's name in the masthead, the QR big, its one line, Back to the show.
+   No photo, no description, no pinned message, no tips: at the bar you're showing your phone. */
+body.drink-focus .welcome, body.drink-focus #door-pass, body.drink-focus .bottom, body.drink-focus #chat, body.drink-focus #player { display: none !important; }
+body.drink-focus .inside { justify-content: center; }
+body.drink-focus .drink { max-width: 420px; margin: 24px auto 0; padding: 24px 20px; gap: 16px; }
+body.drink-focus .drink img { width: min(260px, 70vw); height: min(260px, 70vw); }
+body.drink-focus .drink .card-title { font-size: 30px; }
+body.drink-focus #drink-back { margin: 4px 0 0; }
+@media (min-width: 900px) {
+  /* Watching at home on a laptop (Rajesh 14 Nov): the player fills its column up to the chat, no dead space beside it.
+     The page no longer squeezes into one screen's height, so on a short laptop the wallet card is a small scroll away;
+     the chat stays the screen's height, beside the player. */
+  body.wallet-card main { height: auto; min-height: calc(100dvh - 30px); grid-template-rows: auto auto auto; align-content: start; }
+  body.wallet-card:not(.full) .player { width: 100%; height: auto; }
+  body.wallet-card .chat { position: sticky; top: 16px; height: calc(100dvh - 62px); align-self: start; }
+}
+/* In the room, the gig's credits sit under the photo, never over a face (Rajesh 14 Nov). */
+body[data-as="room"] .welcome { flex-direction: column; }
+body[data-as="room"] .welcome figcaption { position: static; padding: 10px 4px 0; background: none; color: var(--smoke); font-size: 14px; }

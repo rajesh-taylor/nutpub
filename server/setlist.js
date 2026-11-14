@@ -31,7 +31,9 @@ const GIGS = {
     // Rajesh 14 Nov: a pinned message per gig, Aaron of Essex as Longy's mod, and his question 5 s into the clip.
     pin: 'Say hello in the chat. Tip with a comment: type, put sats in the box on the right, press Enter.',
     mods: [{ name: 'Aaron of Essex', icon: '🎤' }],
-    cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' }],
+    cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' },
+      // The answers, one at a time over the next ten seconds, each from a different guest (Rajesh 14 Nov).
+      { after: 8, text: 'London' }, { after: 10.5, text: 'Texas' }, { after: 13, text: 'Berlin' }, { after: 15.5, text: 'Well that\u2019s private...' }],
   },
   frankie: {
     photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },

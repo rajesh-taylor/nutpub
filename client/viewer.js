@@ -883,6 +883,9 @@ function doorBar() {
 setInterval(() => { if (!document.hidden) { doorQr().catch(() => {}); if (!$('door-screen').hidden) doorBar(); } }, 1000);
 
 let doorShown = false;
+// The free drink on its own (Rajesh 14 Nov): it opens by itself once the ticket's in (after the door, if the door scans),
+// until Back to the show; Your free drink by the tips brings it back. Poured: "Enjoy your pint", then back.
+let drinkAside = false;
 function render() {
   const room = AS === 'room';
   const ticket = !!door.ticket;
@@ -893,11 +896,16 @@ function render() {
   // The door check: late, after Start show, the QR comes first, then the set.
   const doorCheck = !!(show.ticket.on && show.door?.on);
   const atDoor = room && ticket && door.ticketKind === 'room' && doorCheck && !door.checkedAt && stage === 'on';
-  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on' && !atDoor);
+  const drinkHeld = room && ticket && !closed && !TICKET_VIEW && !!door.drink && !!s.drink && (!doorCheck || !!door.checkedAt);
+  const drinkFocus = drinkHeld && !drinkAside;
+  body.classList.toggle('drink-focus', drinkFocus);
+  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on' && !atDoor && !drinkFocus);
   $('closing').hidden = !closed;
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
   $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
-  $('inside').hidden = closed || !room || !ticket || (stage !== 'doors' && !atDoor);
+  $('inside').hidden = closed || !room || !ticket || (stage !== 'doors' && !atDoor && !drinkFocus);
+  $('drink-back').hidden = !drinkFocus;
+  $('drink-open').hidden = !drinkHeld || drinkFocus || !!door.drink?.poured;
   // Bought ahead of the night: the page is only the confirmation (the photo, the receipt, the link). The tips, goals,
   // chat and wallet come on the gig day, or as soon as the stream or the show is on.
   const confirmed = ticket && !closed && !TICKET_VIEW && top === self && stage === 'doors' && !liveOn && show.date !== ukNow().slice(0, 10);
@@ -1003,7 +1011,7 @@ function render() {
   }
 
   // The free drink: a QR with its number only. The bar's page finds the locked token and pours it.
-  $('drink').hidden = !door.drink || !s.drink; // the drink is off until after 27 Nov: a drink bought before stays out of sight
+  $('drink').hidden = !door.drink || !s.drink || (drinkHeld && drinkAside); // set aside: Your free drink by the tips brings it back
   if (door.drink) {
     $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
     $('drink-title').textContent = door.drink.poured ? 'Enjoy your pint, cheers!' : 'Get your free drink';
@@ -1011,6 +1019,9 @@ function render() {
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
 }
+
+$('drink-back').onclick = () => { drinkAside = true; render(); scrollTo(0, 0); };
+$('drink-open').onclick = () => { drinkAside = false; render(); scrollTo(0, 0); };
 
 // The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
 $('door-show').onclick = async () => {
