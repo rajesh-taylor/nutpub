@@ -15,10 +15,14 @@ try { const from = new URL(document.referrer); if (from.origin === location.orig
 
 // Watching at home and in the room are two wallets: the page that sent us here says which (?as=home).
 const wallet = await openWallet(health.mint.url, new URLSearchParams(location.search).get('as') === 'home' ? 'nutpub-home' : 'nutpub');
-const show = async () => { $('balance').textContent = await wallet.balance(); };
+const show = async () => {
+  const n = await wallet.balance();
+  $('balance').textContent = n;
+  $('cashu-me').disabled = !n && !$('token').value; // nothing here, and no note out waiting to be moved
+};
 await show();
 wallet.on('proofs:saved', show);
-$('home').hidden = $('receive').hidden = $('where-note').hidden = false;
+$('home').hidden = $('receive').hidden = $('where-note').hidden = $('move').hidden = false;
 $('receive').addEventListener('click', () => {
   $('paste').hidden = !$('paste').hidden;
   if (!$('paste').hidden) { $('takeout').hidden = true; $('paste-token').focus(); }
@@ -40,6 +44,7 @@ $('paste-go').addEventListener('click', async () => {
     $('paste-token').value = '';
     $('paste').hidden = true;
     $('takeout').hidden = true; // a note taken out earlier may be the one just pasted back: spent now
+    $('token').value = '';
     await show();
     say(`+${(await wallet.balance()) - before} sats added to your wallet.`);
   } catch (e) {
@@ -48,20 +53,42 @@ $('paste-go').addEventListener('click', async () => {
   $('paste-go').disabled = false;
 });
 
+// The whole wallet as one note (a note already out, not yet moved, is used again: the wallet is empty by then).
+async function note() {
+  if ($('token').value) return $('token').value;
+  const out = await wallet.takeHome();
+  if (!out) return null;
+  $('token').value = out.token;
+  $('takeout').hidden = false;
+  $('paste').hidden = true;
+  await show();
+  return out.token;
+}
 $('home').addEventListener('click', async () => {
   try {
-    const out = await wallet.takeHome();
-    if (!out) return say('Nothing in your wallet to take home.');
-    $('token').value = out.token;
-    $('takeout').hidden = false;
-    $('paste').hidden = true;
-    await show();
-    say(`${out.amount} sats as one note. Copy it into any Cashu wallet.`);
+    if (!(await note())) say('Nothing in your wallet to take home.'); else say('');
   } catch (e) {
     say(`Couldn’t take them home: ${e.message}`);
   }
 });
+// Move to Cashu.me (Rajesh 14 Nov: the fan's wallet page as Takings). The tab opens on the tap (a phone blocks one opened
+// later), then goes to Cashu.me with the note after the #, so it never reaches Cashu.me's server.
+$('cashu-me').addEventListener('click', async () => {
+  const tab = window.open('', '_blank');
+  try {
+    const token = await note();
+    if (!token) { tab?.close(); return say('Nothing in your wallet to move.'); }
+    const url = `https://wallet.cashu.me/#token=${token}`;
+    if (tab) { tab.opener = null; tab.location.href = url; } else location.href = url;
+    say('');
+  } catch (e) {
+    tab?.close();
+    say(`Couldn’t move them: ${e.message}`);
+  }
+});
+// Copy: the note to the clipboard; the box shows it too, for copying by hand.
 $('copy').addEventListener('click', async () => {
+  $('token').hidden = false;
   try { await navigator.clipboard.writeText($('token').value); say('Copied.'); }
   catch { $('token').select(); say('Select and copy the note above.'); }
 });

@@ -358,9 +358,14 @@ $('finish-go').onclick = async () => {
     try { localStorage.removeItem(MOVED); } catch {}
     await Promise.all([refresh(), pastGigs()]);
     // On a stage the gig ticks off the setlist, and the next one is ready there.
-    $('artist-status').replaceChildren(...(out?.setlist
-      ? ['Ticked off. ', Object.assign(document.createElement('a'), { href: '/', textContent: 'Your setlist' }), ' has the next one.']
-      : ['Finished. ', Object.assign(document.createElement('a'), { href: '/setup', textContent: 'Plan gig' }), ' is ready for the next one.']));
+    // Rajesh 14 Nov: "Done. Open 1 · Plan your gig: Frankie Peroni's gig is waiting."
+    const link = (href, textContent) => Object.assign(document.createElement('a'), { href, textContent });
+    const list = out?.setlist;
+    const next = list && !list.done.includes(list.at) && { longy: 'Longy\u2019s gig', frankie: 'Frankie Peroni\u2019s gig', yours: 'your gig' }[list.at];
+    $('artist-status').replaceChildren(...(next
+      ? ['Done. Open ', link('/setup', '1 · Plan your gig'), `: ${next[0].toUpperCase()}${next.slice(1)} is waiting.`]
+      : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']
+      : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.']));
   } catch (e) { $('artist-status').textContent = `Not done: ${e.message}`; }
   finally { $('finish-go').disabled = false; }
 };

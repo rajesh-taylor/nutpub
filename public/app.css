@@ -1091,3 +1091,15 @@ body[data-as="room"] .bottom .money .btn { min-height: 46px; font-size: 16px; }
   body[data-as="room"] .bottom .money .btn { font-size: 14px; padding: 7px 9px 5px; white-space: normal; }
   body[data-as="room"] .bottom #card-tip { max-width: 92px; }
 }
+/* Move my sats: a full-width gold button on the Cheers card (Rajesh 14 Nov). */
+.closing-card .take-home { align-self: stretch; padding: 14px 12px 12px; font-size: 22px; text-align: center; }
+/* The fan's wallet page: Move to Cashu.me, gold, at the top as on Takings. */
+body.wallet .move { margin: 8px auto 16px; max-width: 420px; }
+body.wallet .move-go { display: block; width: 100%; padding: 14px 12px 12px; font-size: 22px; }
+body.wallet .move-note { margin: 8px 0 0; font-size: 14px; color: var(--smoke); }
+body.wallet #takeout .move-note { display: flex; align-items: center; justify-content: center; gap: 10px; }
+/* At home, the wallet card's buttons wrap under Watch online instead of squeezing beside it. */
+body.wallet-card .purse-actions { flex-wrap: wrap; }
+body.wallet-card .bottom > .keep { margin: 12px 0 0; }
+/* The fan's page, from every artist page's header. */
+.board-head .head-fan { margin-left: auto; font-size: 18px; padding: 9px 16px 7px; white-space: nowrap; }

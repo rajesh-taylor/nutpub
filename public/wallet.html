@@ -12,6 +12,11 @@
     <h1 class="wordmark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></h1>
     <p class="tag">Wallet</p>
     <p class="big"><span id="balance">…</span> <small>sats</small></p>
+    <!-- Move to Cashu.me (as on Takings): the whole wallet as one note, handed over after the # (never sent to a server). -->
+    <div class="move" id="move" hidden>
+      <button type="button" class="btn primary move-go" id="cashu-me">Move to Cashu.me</button>
+      <p class="move-note">Cashu.me asks to add the test mint: say yes.</p>
+    </div>
     <p class="buttons"><a class="btn" href="/" id="back">← Back to set</a><button class="btn" id="home" hidden>Take sats home</button><button class="btn" id="receive" hidden>Receive ecash</button></p>
     <!-- Receive ecash: a note from any Cashu wallet (Minibits, cashu.me), into this one. Same mint only. -->
     <div class="paste" id="paste" hidden>
@@ -19,8 +24,8 @@
       <button type="button" class="btn primary" id="paste-go">Add to wallet</button>
     </div>
     <div id="takeout" hidden>
-      <textarea id="token" rows="4" readonly aria-label="Your ecash note"></textarea>
-      <p><button class="btn" id="copy">Copy</button></p>
+      <p class="move-note">Or copy it into any Cashu wallet. <button type="button" class="btn" id="copy">Copy</button></p>
+      <textarea id="token" rows="4" readonly aria-label="Your ecash note" hidden></textarea>
     </div>
     <p class="status" id="status" role="status"></p>
     <ul class="notes" id="where-note" hidden>

@@ -6,6 +6,8 @@
 import { kv, run, one, stageDb } from './db.js';
 import { blank, clean, currentShow, clearGig } from './shows.js';
 import { usePhotos } from './photo.js';
+import { getRate } from './rate.js';
+import { satsFrom } from './money.js';
 
 const ukDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
 const ukTime = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
@@ -15,9 +17,9 @@ const GIGS = {
     photos: { tall1: '/img/longy-tall.jpg', wide2: '/img/longy-wide.jpg' },
     show: {
       artist: 'Longy', page: 'longy', venue: 'Peggy Sue’s Music Bar', capacity: 100,
-      ticket: { on: true, price: 26869, fiat: 15, locked: false },
+      ticket: { on: true, price: null, fiat: 30, locked: false }, // £30 for every venue ticket (Rajesh 15 Nov); sats from today's rate
       stream: { mode: 'ticket', perMinute: null, freeMinutes: null }, // his clip is under a minute: a flat fee, never by the minute
-      online: { price: 8997, fiat: 5, locked: false },
+      online: { price: null, fiat: 5, locked: false },
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
       languages: ['en', 'de', 'es', 'fr', 'pt'],
@@ -29,7 +31,7 @@ const GIGS = {
       artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea',
       description: 'The Devils Train, filmed at The Fickle Pickle. Russ Strutter, bass · Levent Basharan, lead guitar solo · Emma Jane Beaumont, backing vocals. Find Frankie on Fountain: frankieperoni@fountain.fm',
       set: 'frankie-1',
-      ticket: { on: true, price: 17912, fiat: 10, locked: false },
+      ticket: { on: true, price: null, fiat: 30, locked: false },
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
       tip: { label: 'Tip Frankie', price: 2100 },
     },
@@ -43,7 +45,11 @@ export const STEPS = ['longy', 'frankie', 'yours'];
 // Your gig comes back as the artist left it (kept aside while an example is done again).
 async function open(step, env) {
   const kept = step === 'yours' ? await kv.get('yourGig', null) : null;
-  const { show } = clean({ ...blank(), ...(kept || GIGS[step].show), date: ukDay(), streams: ukTime() });
+  const gig = structuredClone(kept || GIGS[step].show);
+  // The examples' prices are in pounds: their sats come from today's rate when the gig opens.
+  const { gbp } = await getRate();
+  for (const p of [gig.ticket, gig.online]) if (p && p.fiat && !p.locked) p.price = satsFrom(p.fiat, gbp);
+  const { show } = clean({ ...blank(), ...gig, date: ukDay(), streams: ukTime() });
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), new Date().toISOString());
   await usePhotos(env, GIGS[step].photos);

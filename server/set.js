@@ -79,7 +79,9 @@ export function mountSet(route) {
   route('GET', /^\/api\/set\/audio\/(?<n>\d+)$/, pass, piece,
     async (c) => {
       if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
-      if (!(await showOf(c)).stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
+      const { stream } = await showOf(c);
+      if (stream.mode === 'ticket') return json({ error: 'ticket_needed', detail: 'Buy Watch online first: one price for the whole show.' }, 403);
+      if (!stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
     },
     cashuGate(async (c) => piecePrice(await showOf(c)), async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds`,

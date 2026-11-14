@@ -372,10 +372,27 @@ async function renew(mine, first) {
 // The free minutes are up and this viewer hasn't said yes to paying: the picture stops under one question.
 function freeOver() {
   stop(' ');
+  $('free-over').dataset.for = 'free';
+  $('free-over').querySelector('b').textContent = 'The free part is over';
   $('free-over-price').textContent = T.perMinute(show.stream.perMinute);
+  $('keep-watching').textContent = 'Keep watching';
   $('free-over').hidden = false;
 }
-$('keep-watching').onclick = () => { agreed = true; $('free-over').hidden = true; playLive(); };
+// A Watch online gig, no ticket yet (Rajesh 15 Nov: Play did nothing, then "No price a minute set yet"): Play asks for
+// the ticket on the picture itself, one tap to buy, and the set starts once it's paid.
+const needsTicket = () => AS === 'home' && online && !door.ticket && !MOD;
+function askTicket() {
+  $('free-over').dataset.for = 'ticket';
+  $('free-over').querySelector('b').textContent = `Watch ${show.artist || 'the show'} online`;
+  $('free-over-price').textContent = 'One price for the whole show';
+  $('keep-watching').textContent = `Watch online · ${reads(show.online?.price || 0)}`;
+  $('free-over').hidden = false;
+}
+$('keep-watching').onclick = () => {
+  $('free-over').hidden = true;
+  if ($('free-over').dataset.for === 'ticket') return $('whole').onclick();
+  agreed = true; playLive();
+};
 
 async function playLive() {
   if (freeLeft() <= 0) agreed = true; // Play with the free part over (or none) is a yes, as before free minutes
@@ -509,7 +526,7 @@ function stop(why) {
   say(why || (free ? '' : wasLive && pays() ? T.paused : T.stopped));
 }
 
-const toggle = () => (playing ? stop() : play());
+const toggle = () => (playing ? stop() : needsTicket() ? askTicket() : play());
 $('play').onclick = toggle;
 $('big-play').onclick = toggle;
 
@@ -924,7 +941,8 @@ function render() {
   $('keep').hidden = !keepOn;
   if (keepOn) {
     if (confirmed) { if ($('keep').nextElementSibling !== $('save-link')) $('save-link').before($('keep')); }
-    else { const spot = room ? $('door-pass') : $('money'); if ($('keep').previousElementSibling !== spot) spot.after($('keep')); }
+    else if (room) { if ($('keep').previousElementSibling !== $('door-pass')) $('door-pass').after($('keep')); }
+    else { const purse = document.querySelector('.purse'); if ($('keep').nextElementSibling !== purse) purse.before($('keep')); } // at home: above the wallet, in sight
   }
   if (confirmed) {
     $('st-kicker').textContent = keepOn ? 'Paid · your ticket' : 'You’ve got your ticket';
@@ -942,7 +960,9 @@ function render() {
   const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.code && !keepFirst;
   $('door-pass').hidden = !passOn;
   // One thing at a time until they're in: save the passkey, then Show at the door. Goals, tips and chat come after.
-  body.classList.toggle('ticket-steps', keepFirst || (passOn && !door.checkedAt));
+  // In the room only: at home the show is on the screen, so the chat and the wallet stay (Rajesh 15 Nov: a Watch online
+  // ticket left the page blank under the video, the Save button hidden with the rest).
+  body.classList.toggle('ticket-steps', room && (keepFirst || (passOn && !door.checkedAt)));
   // Under Show at the door: where this page lives, so it's easy to find again on the night.
   $('door-where').hidden = !(passOn && !door.checkedAt);
   $('door-where').textContent = 'Open before you go in for door staff.';
