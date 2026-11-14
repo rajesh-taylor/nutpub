@@ -154,20 +154,25 @@
       }
     }
 
-    const stages = read();
-    for (const card of document.querySelectorAll('[data-gig]')) {
-      const gig = card.dataset.gig;
-      const id = stages[gig];
-      const btns = card.querySelector('.btns');
-      btns.style.cssText = 'display: grid; gap: 8px;';
-      if (id && /^[a-z][a-z0-9]{5}$/.test(id)) {
-        btns.append(el('p', { className: 'again', textContent: 'Your stage from earlier' }),
-          el('a', { className: 'go', href: `${location.protocol}//${id}.${location.host}/`, textContent: 'Open again' }),
-          el('button', { type: 'button', className: 'go out', textContent: 'Start fresh', onclick: () => start(gig, card) }));
-      } else {
-        btns.append(el('button', { type: 'button', className: 'go', textContent: START[gig], onclick: () => start(gig, card) }));
+    // Drawn from what this browser remembers, every time the page shows: the browser's Back button brings it back from
+    // its cache as it was left ("Setting up the stage…", the buttons off), so it's drawn again then (Rajesh 14 Nov).
+    function draw() {
+      const stages = read();
+      for (const card of document.querySelectorAll('[data-gig]')) {
+        const gig = card.dataset.gig;
+        const id = stages[gig];
+        const btns = card.querySelector('.btns');
+        card.querySelector('.said')?.remove();
+        btns.style.cssText = 'display: grid; gap: 8px;';
+        btns.replaceChildren(...(id && /^[a-z][a-z0-9]{5}$/.test(id)
+          ? [el('p', { className: 'again', textContent: 'Your stage from earlier' }),
+            el('a', { className: 'go', href: `${location.protocol}//${id}.${location.host}/`, textContent: 'Open again' }),
+            el('button', { type: 'button', className: 'go out', textContent: 'Start fresh', onclick: () => start(gig, card) })]
+          : [el('button', { type: 'button', className: 'go', textContent: START[gig], onclick: () => start(gig, card) })]));
       }
     }
+    draw();
+    addEventListener('pageshow', (e) => { if (e.persisted) draw(); });
   </script>
 </body>
 </html>

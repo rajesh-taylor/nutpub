@@ -51,8 +51,10 @@
     .out p { color: var(--smoke); }
     .out a { color: #e8a845; }
     /* A judge's stage (/judge): one gig, no setlist. The way back to the three cards, small, under the buttons. */
-    .stage .one-how { margin: 18px 0 0; font-size: 16px; line-height: 1.5; color: var(--cream); }
-    .stage .back-cards { margin: 18px 0 0; font-size: 15px; }
+    /* Two short lines, each with room, then the buttons; the way back well below them (Rajesh 14 Nov). */
+    .stage .one-how { list-style: none; margin: 22px 0 36px; padding: 0; display: grid; gap: 14px; text-align: left; font-size: 17px; line-height: 1.45; color: var(--cream); }
+    .stage .one-how b { display: block; font: 400 19px/1.1 var(--poster); letter-spacing: .1em; color: #e8a845; margin-bottom: 2px; }
+    .stage .back-cards { margin: 40px 0 0; font-size: 16px; }
     .stage .back-cards a { color: #e8a845; }
   </style>
 </head>
@@ -85,7 +87,7 @@
     </p>
     <div id="mine" hidden>
       <h1 id="ready">Your stage is ready</h1>
-      <p class="one-how" id="one-how" hidden></p>
+      <ul class="one-how" id="one-how" hidden></ul>
       <div class="board" id="board">
         <section class="setlist" aria-label="Your setlist">
           <span class="gaffa" style="top: -10px; left: -18px; transform: rotate(-24deg);" aria-hidden="true"></span>
@@ -134,13 +136,17 @@
     const list = r?.setlist;
     // One gig (a card on /judge, 14 Nov): no setlist, no Repeat gig; what to do, the two buttons, the way back.
     if (list?.only) {
+      // [title, artist, the fan's line, the artist's line]: short, one each.
       const one = {
-        longy: ['Longy\u2019s gig is ready', 'Longy', 'As the fan: watch online, say hello, then tip with a comment. As Longy: End night on Show Time, then Takings: move the sats to Cashu.me.'],
-        frankie: ['Frankie\u2019s gig is ready', 'Frankie', 'As the fan: watch online first (play, stop, come back, tip), then buy the venue ticket and get your free drink. As Frankie: End night on Show Time, then Takings: move the sats to Cashu.me.'],
-        yours: ['Your gig', null, 'Plan it first: your prices, the door, a drink, a stretch goal. Then open it as a fan, get in at the door and get your drink. It ends at Takings: move the sats to Cashu.me.'],
+        longy: ['Longy\u2019s gig is ready', 'Longy', 'Watch online, say hello, tip with a comment.', 'End night on Show Time, then move the sats on Takings.'],
+        frankie: ['Frankie\u2019s gig is ready', 'Frankie', 'Watch online first, then buy the venue ticket and get your free drink.', 'End night on Show Time, then move the sats on Takings.'],
+        yours: ['Your gig', null, 'Get let in at the door, then get your drink at the bar.', 'Plan it first: prices, the door, a drink, a stretch goal.'],
       }[list.at];
       document.getElementById('ready').textContent = one[0];
-      Object.assign(document.getElementById('one-how'), { textContent: one[2], hidden: false });
+      const how = document.getElementById('one-how');
+      const line = (head, text) => { const li = document.createElement('li'); li.append(Object.assign(document.createElement('b'), { textContent: head }), text); return li; };
+      how.replaceChildren(...(one[1] ? [line('As the fan', one[2]), line(`As ${one[1]}`, one[3])] : [line('First, as the artist', one[3]), line('Then, as the fan', one[2])]));
+      how.hidden = false;
       document.getElementById('board').hidden = document.getElementById('how').hidden = true;
       document.getElementById('back-cards').hidden = false;
       document.getElementById('go').textContent = one[1] ? `Open ${one[1]}\u2019s gig as ${one[1]}` : 'Plan your gig';
