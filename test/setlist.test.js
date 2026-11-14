@@ -111,3 +111,13 @@ test('a crossed-off gig opens again; Your gig keeps its settings; finishing it s
     assert.equal(await again('nobody', env), null);
   });
 });
+
+test('a judge’s stage (/judge) holds one gig: Finish gig ticks it off and opens nothing else', async () => {
+  await withStage(st, async () => {
+    assert.deepEqual(await setlist(env, 'frankie'), { at: 'frankie', done: [], only: true });
+    assert.equal((await currentShow()).show.artist, 'Frankie Peroni');
+    assert.deepEqual(await finish(), { at: 'frankie', done: ['frankie'], only: true });
+    assert.equal(await again('longy', env), null); // no Repeat gig on a one-gig stage
+    assert.deepEqual(await setlist(env), { at: 'frankie', done: ['frankie'], only: true });
+  });
+});

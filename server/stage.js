@@ -40,16 +40,16 @@ export class Stage extends DurableObject {
   }
   ready() { configure(this.env); useStream(this.env); return this.open(); }
 
-  // Made once, by Put on a gig: the tables, the stage's id and its setup key (the artist's, as Longy's ADMIN_KEY is).
-  // Gives back a one-time code that signs the artist in on their new stage.
-  async setup(id) {
+  // Made once, by Put on a gig or a gig card on /judge (only: that one gig): the tables, the stage's id and its setup
+  // key (the artist's, as Longy's ADMIN_KEY is). Gives back a one-time code that signs the artist in on their new stage.
+  async setup(id, only = null) {
     configure(this.env);
     const { sql } = this.ctx.storage;
     sql.exec(schema);
     sql.exec('INSERT OR IGNORE INTO kv (key, value) VALUES (?, ?)', SELF, JSON.stringify({ id, adminKey: randomHex(32), made: new Date().toISOString() }));
     this.db = null;
     const db = this.ready();
-    await withStage(db, () => setlist(this.env)); // Longy's and Frankie's gigs, this stage's own copies
+    await withStage(db, () => setlist(this.env, only)); // the example gigs (or the one), this stage's own copies
     return this.handoff();
   }
   // Back to your stage: a fresh one-time code (5 minutes, once), traded on the stage's page for the setup key.

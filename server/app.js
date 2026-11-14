@@ -50,6 +50,7 @@ route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
 route('GET', '/setup', page('setup.html'));
+route('GET', '/judge', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('judge.html')(c))); // Judge for yourself: the three gig cards (thenutpub.com only)
 route('GET', '/menu', page('menu.html')); // Pub Menu: what each part of the night is made of, for judges and the curious
 route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
@@ -80,7 +81,9 @@ const attempt = (fn) => async (c) => {
 route('GET', '/api/show', async (c) => {
   const now = await current(c);
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist) });
+  // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
+  const judge = !!(stageDb().id && (await kv.get('setlist', null))?.only);
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {

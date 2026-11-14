@@ -89,7 +89,7 @@ const inFiat = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
-const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -815,8 +815,9 @@ function withSecret(d) {
   return d;
 }
 const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).then(withSecret).catch(() => ({}));
-// Passkeys (passkey.js): on the page itself, not in the setup page's frames.
-const PASSKEYS = passkeysWork() && top === self && !TICKET_VIEW;
+// Passkeys (passkey.js): on the page itself, not in the setup page's frames. None on a judge's stage (/judge, 14 Nov):
+// no Save ticket, no Find my ticket; the ticket lives in this browser, with its link to keep.
+const PASSKEYS = passkeysWork() && top === self && !TICKET_VIEW && !judge;
 // The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
 let keepTried = false;
 // Wallet cards are held back from fans before 27 Nov (12 Nov): a card can't get anyone in (Apple won't let us change

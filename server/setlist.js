@@ -3,6 +3,7 @@
 // stream at 60 sats a minute, his first song from The Fickle Pickle. 3. Your gig. One gig at a time is the stage's
 // current show; Finish gig on Takings ticks it off and opens the next. They're examples: nothing is sold until the
 // artist, as a fan in another tab, buys it. Longy's own stage (thenutpub.com) has no setlist.
+// A stage made by a gig card on /judge (Rajesh 14 Nov) holds one gig only: { at, done, only: true }, no next gig.
 import { kv, run, one, stageDb } from './db.js';
 import { blank, clean, currentShow, clearGig } from './shows.js';
 import { usePhotos } from './photo.js';
@@ -37,7 +38,7 @@ const GIGS = {
     },
   },
   // Session 26 fills this in with hints; Frankie's second song is the artist's own show.
-  yours: { photos: {}, show: { set: 'frankie-2' } },
+  yours: { photos: { tall1: '/img/yours-tall.jpg', wide1: '/img/yours-wide.jpg' }, show: { set: 'frankie-2' } },
 };
 export const STEPS = ['longy', 'frankie', 'yours'];
 
@@ -53,15 +54,21 @@ async function open(step, env) {
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), new Date().toISOString());
   await usePhotos(env, GIGS[step].photos);
-  await kv.set('setlist', { at: step, done: (await kv.get('setlist', { done: [] })).done });
+  const list = await kv.get('setlist', { done: [] });
+  await kv.set('setlist', { ...list, at: step, done: list.done || [] });
 }
 
 // The stage's setlist: { at, done }. A stage made before the setlist (14 Nov) gets it on first look. An example left
 // untouched past its day (nothing sold) is put back on today, so it's ready whenever the artist comes back.
-export async function setlist(env) {
+// only: the one gig a stage made on /judge holds (on its first look only).
+export async function setlist(env, only = null) {
   if (!stageDb()?.id) return null;
   let list = await kv.get('setlist', null);
-  if (!list) { await open('longy', env); return kv.get('setlist'); }
+  if (!list) {
+    if (STEPS.includes(only)) await kv.set('setlist', { at: only, done: [], only: true });
+    await open(only || 'longy', env);
+    return kv.get('setlist');
+  }
   if (list.at !== 'yours' && !list.done.includes(list.at)) {
     const { problems } = await currentShow();
     const since = await kv.get('nightStart', '');
@@ -76,7 +83,8 @@ export async function finished(env) {
   const list = await kv.get('setlist', null);
   if (!stageDb()?.id || !list) return null;
   const done = list.done.includes(list.at) ? list.done : [...list.done, list.at];
-  await kv.set('setlist', { at: list.at, done });
+  await kv.set('setlist', { ...list, done });
+  if (list.only) return kv.get('setlist'); // one gig: done, and back to /judge
   const next = STEPS.find((s) => !done.includes(s)); // the first not done yet (after a gig done again, it skips ahead)
   if (next) await open(next, env);
   return kv.get('setlist');
@@ -87,10 +95,10 @@ export async function finished(env) {
 // settings are kept aside for when it comes back. The gig opens fresh and loses its tick until it's finished again.
 export async function again(step, env) {
   const list = await kv.get('setlist', null);
-  if (!stageDb()?.id || !list || !STEPS.includes(step)) return null;
+  if (!stageDb()?.id || !list || list.only || !STEPS.includes(step)) return null;
   if (list.at === 'yours') await kv.set('yourGig', (await currentShow()).show);
   await clearGig();
-  await kv.set('setlist', { at: list.at, done: list.done.filter((s) => s !== step) });
+  await kv.set('setlist', { ...list, done: list.done.filter((s) => s !== step) });
   await open(step, env);
   return kv.get('setlist');
 }

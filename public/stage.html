@@ -50,6 +50,10 @@
     .out { margin: auto 0; }
     .out p { color: var(--smoke); }
     .out a { color: #e8a845; }
+    /* A judge's stage (/judge): one gig, no setlist. The way back to the three cards, small, under the buttons. */
+    .stage .one-how { margin: 18px 0 0; font-size: 16px; line-height: 1.5; color: var(--cream); }
+    .stage .back-cards { margin: 18px 0 0; font-size: 15px; }
+    .stage .back-cards a { color: #e8a845; }
   </style>
 </head>
 <body class="stage">
@@ -80,8 +84,9 @@
       </svg>
     </p>
     <div id="mine" hidden>
-      <h1>Your stage is ready</h1>
-      <div class="board">
+      <h1 id="ready">Your stage is ready</h1>
+      <p class="one-how" id="one-how" hidden></p>
+      <div class="board" id="board">
         <section class="setlist" aria-label="Your setlist">
           <span class="gaffa" style="top: -10px; left: -18px; transform: rotate(-24deg);" aria-hidden="true"></span>
           <span class="gaffa" style="top: -10px; right: -18px; transform: rotate(22deg);" aria-hidden="true"></span>
@@ -95,10 +100,11 @@
       <a class="go" id="go" href="/setup">Plan gig</a>
       <a class="go fan" id="fan" href="/" target="_blank" rel="noopener">Open the gig as a fan in a 2nd tab</a>
       <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Takings: Move, then Finish gig.</p>
+      <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the three gigs</a></p>
     </div>
     <div id="theirs" class="out" hidden>
       <h1>An artist's stage</h1>
-      <p>This stage belongs to an artist. Is it yours?</p>
+      <p id="theirs-text">This stage belongs to an artist. Is it yours?</p>
       <p><a id="back" href="/">Back to your stage</a></p>
     </div>
   </main>
@@ -107,6 +113,7 @@
     // one-time code (#h=), traded once here for the stage's setup key, which this browser keeps (as Plan gig does).
     const front = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`; // thenutpub.com
     document.getElementById('back').href = `${front}/#back`;
+    for (const a of document.querySelectorAll('.to-cards')) a.href = `${front}/judge`;
     const code = new URLSearchParams(location.hash.slice(1)).get('h');
     let key = null;
     try { key = localStorage.getItem('nutpub-admin'); } catch {}
@@ -118,9 +125,28 @@
     }
     const r = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
+    // A judge's stage opened in another browser: its key is in the browser that made it. No passkey to find it with.
+    if (!r && (await fetch('/api/show').then((x) => x.json()).catch(() => ({}))).judge) {
+      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the three gigs.';
+      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The three gigs' });
+    }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
     const list = r?.setlist;
-    if (list) {
+    // One gig (a card on /judge, 14 Nov): no setlist, no Repeat gig; what to do, the two buttons, the way back.
+    if (list?.only) {
+      const one = {
+        longy: ['Longy\u2019s gig is ready', 'Longy', 'As the fan: watch online, say hello, then tip with a comment. As Longy: End night on Show Time, then Takings: move the sats to Cashu.me.'],
+        frankie: ['Frankie\u2019s gig is ready', 'Frankie', 'As the fan: watch online first (play, stop, come back, tip), then buy the venue ticket and get your free drink. As Frankie: End night on Show Time, then Takings: move the sats to Cashu.me.'],
+        yours: ['Your gig', null, 'Plan it first: your prices, the door, a drink, a stretch goal. Then open it as a fan, get in at the door and get your drink. It ends at Takings: move the sats to Cashu.me.'],
+      }[list.at];
+      document.getElementById('ready').textContent = one[0];
+      Object.assign(document.getElementById('one-how'), { textContent: one[2], hidden: false });
+      document.getElementById('board').hidden = document.getElementById('how').hidden = true;
+      document.getElementById('back-cards').hidden = false;
+      document.getElementById('go').textContent = one[1] ? `Open ${one[1]}\u2019s gig as ${one[1]}` : 'Plan your gig';
+      Object.assign(document.getElementById('fan'), { href: r.path, textContent: one[1] ? `Open ${one[1]}\u2019s gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab' });
+      import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
+    } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
         li.classList.toggle('done', list.done.includes(li.dataset.step));
         li.classList.toggle('now', li.dataset.step === list.at && !list.done.includes(list.at));

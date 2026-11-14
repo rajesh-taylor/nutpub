@@ -27,7 +27,9 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
-const onSetlist = await api('GET', '/api/admin/setlist').then((r) => !!r.setlist).catch(() => false); // a stage's example gigs (setlist.js)
+const onSetlist = await api('GET', '/api/admin/setlist').then((r) => r.setlist || false).catch(() => false); // a stage's example gigs (setlist.js); .only: a judge's one-gig stage
+// The three gig cards, on thenutpub.com (a stage's address without its first part).
+const judgePage = `${location.protocol}//${location.host.split('.').slice(1).join('.')}/judge`;
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
 const bar = await openWallet(health.mint.url, 'nutpub-bar');
 
@@ -202,7 +204,7 @@ function paint() {
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
   $('finish').hidden = !done;
   $('finish-go').hidden = !s.over;
-  $('finish-note').textContent = s.over ? (onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
+  $('finish-note').textContent = s.over ? (onSetlist?.only ? 'Then back to the three gigs.' : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held;
   $('move').disabled = !toMove;
@@ -362,7 +364,9 @@ $('finish-go').onclick = async () => {
     const link = (href, textContent) => Object.assign(document.createElement('a'), { href, textContent });
     const list = out?.setlist;
     const next = list && !list.done.includes(list.at) && { longy: 'Longy\u2019s gig', frankie: 'Frankie Peroni\u2019s gig', yours: 'your gig' }[list.at];
-    $('artist-status').replaceChildren(...(next
+    $('artist-status').replaceChildren(...(list?.only
+      ? ['Done. ', link(judgePage, 'Back to the three gigs'), '.']
+      : next
       ? ['Done. Open ', link('/setup', '1 · Plan your gig'), `: ${next[0].toUpperCase()}${next.slice(1)} is waiting.`]
       : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']
       : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.']));

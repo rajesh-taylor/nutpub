@@ -8,8 +8,13 @@ import { one, run, sql, batch, stageDb } from './db.js';
 import { json, body, now } from './http.js';
 import { checkCreate, checkGet, challengeOk, spend, site } from './passkey.js';
 
-// While the stages run on the test mint (and the free plan), at most this many at once.
-export const MAX_STAGES = 30;
+// While the stages run on the test mint (and the free plan), at most this many at once: 50 to Sat 21 Nov, while every
+// judge makes one per gig card (Rajesh 14 Nov), then 15.
+export const maxStages = (at = Date.now()) => (at < Date.parse('2026-11-22T00:00:00Z') ? 50 : 15);
+const full = async () => (await one('SELECT COUNT(*) AS n FROM stages')).n >= maxStages();
+const FULL = () => json({ error: 'full', detail: 'Every stage is taken for now: try again tomorrow.' }, 409);
+// Judge for yourself (/judge): the three gig cards, each a stage of its own holding just that gig (setlist.js).
+export const JUDGE_GIGS = ['longy', 'frankie', 'yours'];
 
 // <id>.thenutpub.com (or <id>.localhost in development): a stage's id is a letter, then five letters or digits with at
 // least one digit, so www and other words are never a stage.
@@ -46,9 +51,7 @@ export function mountStageDoor(route) {
     if (!(await challengeOk(b?.challenge))) return old();
     let k;
     try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
-    if ((await one('SELECT COUNT(*) AS n FROM stages')).n >= MAX_STAGES) {
-      return json({ error: 'full', detail: 'Every stage is taken for now: try again tomorrow.' }, 409);
-    }
+    if (await full()) return FULL();
     if (!(await spend(b.challenge))) return old();
     let id = newStageId();
     while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
@@ -58,6 +61,21 @@ export function mountStageDoor(route) {
         k.id, id, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, at)]);
     const code = await stageStub(c.env, id).setup(id);
     console.log(`stage made: ${id}`);
+    return json({ stage: id, url: stageLink(c, id, code) });
+  });
+
+  // A gig card on /judge: a stage with just that gig, and no passkey (Rajesh 14 Nov: every stage passkey had the same
+  // name, so judges couldn't tell theirs apart). The stage's page keeps its setup key in this browser, as after Put on
+  // a gig, and /judge remembers the stage's address: Open again goes straight back.
+  route('POST', '/api/stages/judge', front, async (c) => {
+    const gig = String((await body(c))?.gig || '');
+    if (!JUDGE_GIGS.includes(gig)) return json({ error: 'no_gig' }, 400);
+    if (await full()) return FULL();
+    let id = newStageId();
+    while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
+    await run('INSERT INTO stages (id, created) VALUES (?, ?)', id, now());
+    const code = await stageStub(c.env, id).setup(id, gig);
+    console.log(`judge stage made: ${id} (${gig})`);
     return json({ stage: id, url: stageLink(c, id, code) });
   });
 
