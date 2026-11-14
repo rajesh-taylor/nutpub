@@ -4,7 +4,7 @@
 // The pieces ship with the site's files under /set-media/, which the Worker serves only through these routes.
 // Every 402 is locked to the artist's key (server/gate.js); the takings are in server/takings.js.
 import { ASSETS } from './config.js';
-import { one, run } from './db.js';
+import { one, run, stageDb } from './db.js';
 import { cashuGate } from './gate.js';
 import { showOf, piecePrice } from './shows.js';
 import { artistKey } from './takings.js';
@@ -17,14 +17,21 @@ import { json, body, randomHex, now } from './http.js';
 const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
 
-let segments = null;
+// Each gig plays its own clip (show.set): '' is the default set (Longy's clip), a name is one under /set-media/sets/.
+const SETS = /^[a-z0-9-]{1,40}$/;
+const folder = async (c) => { const name = (await showOf(c)).set; return SETS.test(name) ? `/set-media/sets/${name}` : '/set-media'; };
+const segments = new Map();
 const pieces = async (c) => {
-  if (segments == null) {
-    const res = await ASSETS.fetch(new URL('/set-media/set.json', c.url));
-    segments = res.ok ? (await res.json()).segments : 0;
+  const dir = await folder(c);
+  if (!segments.has(dir)) {
+    const res = await ASSETS.fetch(new URL(`${dir}/set.json`, c.url));
+    segments.set(dir, res.ok ? (await res.json()).segments : 0);
   }
-  return segments;
+  return segments.get(dir);
 };
+// Practice stages (every <id>.thenutpub.com): a set stops after 20 minutes for each viewer, so a tab left playing
+// doesn't eat the free plan's requests. Longy's stays as it was.
+export const PRACTICE_PIECES = 120;
 const free = async (c) => (await showOf(c)).stream.mode === 'free';
 const hasPaid = async (pass, piece) => !!(await one('SELECT 1 AS x FROM paid WHERE pass = ? AND piece = ?', pass, piece));
 const tipped = async (pass) => (await one('SELECT COALESCE(SUM(sats), 0) AS sats FROM tips WHERE pass = ?', pass)).sats;
@@ -45,12 +52,13 @@ export function mountSet(route) {
   const piece = async (c) => {
     const n = Number(c.params.n);
     if (!Number.isInteger(n) || n < 0 || n > MAX_PIECE) return json({ error: 'bad_piece' }, 400);
+    if (stageDb()?.id && n >= PRACTICE_PIECES) return json({ error: 'practice_over', detail: 'Practice sets stop after 20 minutes.' }, 410);
     if (!(await pieces(c))) return json({ error: 'no_set', detail: 'Run scripts/cut-set.sh first.' }, 404);
     c.piece = n;
     return null;
   };
   const send = async (c, kind) => {
-    const file = `/set-media/${kind}/seg-${String(c.piece % (await pieces(c))).padStart(3, '0')}.${kind === 'audio' ? 'wav' : 'mp4'}`;
+    const file = `${await folder(c)}/${kind}/seg-${String(c.piece % (await pieces(c))).padStart(3, '0')}.${kind === 'audio' ? 'wav' : 'mp4'}`;
     const res = await ASSETS.fetch(new URL(file, c.url));
     if (!res.ok) return json({ error: 'no_set' }, 404);
     return new Response(res.body, { headers: { 'Content-Type': res.headers.get('Content-Type'), 'Cache-Control': 'no-store' } });

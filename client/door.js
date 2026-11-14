@@ -20,9 +20,9 @@ async function api(method, path, body) {
   return data;
 }
 const WORDS = {
-  in: ['In', 'Room ticket. Let them through.'],
+  in: ['In', 'Venue ticket. Let them through.'],
   already: ['Already in', ''],
-  online: ['Online ticket', 'For watching at home, not for the room.'],
+  online: ['Watch online', 'For watching online, not for the venue.'],
   unknown: ['Not a ticket', 'Not for this gig.'],
   stale: ['Old QR', 'The ticket’s QR changes every 30 seconds. Ask them to open the ticket page, then scan again.'],
   off: ['Door check off', 'The artist hasn’t turned the door check on for this gig.'],

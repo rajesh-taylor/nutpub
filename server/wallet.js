@@ -1,4 +1,4 @@
-// The room ticket as a wallet card (.pkpass): Apple Wallet, and open wallets on Android (Catima, PassAndroid) read
+// The venue ticket as a wallet card (.pkpass): Apple Wallet, and open wallets on Android (Catima, PassAndroid) read
 // the same file. Made on the spot from the ticket's door code; nothing is kept. The card holds the door QR (the
 // same link as the page's), the artist, venue and date: no name, no email, nothing about who bought it.
 import { siteUrl } from './db.js';
@@ -63,7 +63,7 @@ export const nextMorning = (date) => {
   return d.toISOString().replace('.000', '');
 };
 
-// The checks both wallets make: a room ticket's own door code, the door check on, the gig not over.
+// The checks both wallets make: a venue ticket's own door code, the door check on, the gig not over.
 export async function roomTicket(c) {
   const code = c.url.searchParams.get('code') || '';
   if (!CODE.test(code)) return { refused: json({ error: 'bad_code' }, 400) };
@@ -76,7 +76,7 @@ export async function roomTicket(c) {
 
 export function mountWallet(route) {
   // GET /api/door/ticket.pkpass?code=<door code>: the code is the ticket's own (the page has it); without the door
-  // check on, or for an online ticket, there is no card, as there is no QR.
+  // check on, or for a Watch online ticket, there is no card, as there is no QR.
   route('GET', '/api/door/ticket.pkpass', async (c) => {
     if (!PASS_KEY || !PASS_CERT) return json({ error: 'no_wallet', detail: 'Wallet cards are not set up on this server.' }, 503);
     const { show, code, refused } = await roomTicket(c);

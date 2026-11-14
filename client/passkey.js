@@ -57,7 +57,7 @@ export async function makePasskey(pass, name) {
 }
 
 // The passkey check: Find my ticket (any of this site's passkeys), or the door QR's secret. Gives back the ticket's
-// pass, its kind ('room' | 'home'), and for a room ticket its door code and secret. Null if the fan closed the sheet.
+// pass, its kind ('room' | 'home'), and for a venue ticket its door code and secret. Null if the fan closed the sheet.
 export async function checkPasskey() {
   const challenge = await take();
   let cred;

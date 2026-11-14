@@ -23,6 +23,24 @@ const current = (slot = 'tall1') => kv.get(named(slot), null);
 export const photoUrl = async () => urlOf('tall1', await current());
 export const photoUrls = async () => Object.fromEntries(await Promise.all(SLOTS.map(async (s) => [s, urlOf(s, await current(s))])));
 
+// The setlist's example gigs (setlist.js): their photos are site files (/img/, never in git), copied into this stage's.
+// A slot with no file goes back to the default.
+export async function usePhotos(env, files) {
+  for (const slot of SLOTS) {
+    const name = stageDb().prefix + named(slot);
+    const res = files[slot] ? await env.ASSETS.fetch(new URL(files[slot], 'https://assets.invalid')) : null;
+    const buf = res?.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+    const kind = buf && kinds.find((k) => k.is(buf));
+    if (kind) {
+      await env.PHOTOS.put(name, buf);
+      await kv.set(named(slot), { type: kind.type, at: now() });
+    } else if (await current(slot)) {
+      await env.PHOTOS.delete(name);
+      await kv.set(named(slot), null);
+    }
+  }
+}
+
 export function mountPhoto(route, admin, photos) {
   const store = () => ({ get: (k, t) => photos().get(stageDb().prefix + k, t), put: (k, v) => photos().put(stageDb().prefix + k, v), delete: (k) => photos().delete(stageDb().prefix + k) });
   const serve = async (slot) => {

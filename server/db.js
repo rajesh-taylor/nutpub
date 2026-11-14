@@ -54,6 +54,7 @@ export function sqliteStage(storage, { id, adminKey: key = '' }) {
     id, adminKey: key, prefix: `${id}:`,
     prepare: (text) => statement(text),
     batch: async (list) => storage.transactionSync(() => list.map((st) => runNow(st.text, st.args))),
+    alarmAt: (ms) => storage.setAlarm(ms), // the stage's own alarm (stage.js): the practice stream's 20 minutes
   };
 }
 

@@ -99,9 +99,9 @@ $('about').textContent = show.description;
 $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
 const online = show.stream.mode === 'ticket';
-document.body.classList.toggle('no-comments', show.comments === false); // tips stay; the words go // watching from home needs an Online ticket (or a room ticket)
-// A stream-only gig (no room tickets): the show's link opens the home view.
-// The setup page's phone (view=ticket) follows the same rule, and turns back when room tickets are switched on again.
+document.body.classList.toggle('no-comments', show.comments === false); // tips stay; the words go // watching from home needs a Watch online ticket (or a venue ticket)
+// A stream-only gig (no venue tickets): the show's link opens the home view.
+// The setup page's phone (view=ticket) follows the same rule, and turns back when venue tickets are switched on again.
 const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
 if (AS === 'room' && homeOnly && (top === self || TICKET_VIEW)) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
 if (AS === 'home' && TICKET_VIEW && !homeOnly) location.replace(`${location.pathname}?view=ticket`);
@@ -698,6 +698,9 @@ if (WALLET_CARD) {
   sum.lastElementChild.hidden = true;
   $('wallet-page').textContent = 'My browser wallet';
   $('topup').textContent = 'Add test sats';
+  // A Watch online ticket (a flat fee) is bought on the wallet card: the money buttons' row isn't on this page.
+  $('whole').classList.add('primary');
+  document.querySelector('.purse-actions').prepend($('whole'));
   $('say-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
   // All the goals met: a ₿ button by them opens the tip box under the comment, as ₿ there does.
   $('goal-more').onclick = () => { unlockAudio(); ownForm(true); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('own-sats').focus({ preventScroll: true }); };
@@ -879,7 +882,7 @@ function render() {
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
   $('whole').hidden = AS !== 'home' || !online || !show.online?.price || ticket || closed;
-  $('whole').textContent = `Online ticket · ${sats(show.online?.price)}`;
+  $('whole').textContent = `Watch online · ${sats(show.online?.price)}`;
   $('whole-card').hidden = !WALLET_CARD || $('whole').hidden;
   $('price-box').hidden = !pays();
   $('play').disabled = $('big-play').disabled = !live;
@@ -887,9 +890,9 @@ function render() {
 
   // At the door: the room's ticket includes the drink; at home, the whole set for the artist's part alone.
   if (!ticket) {
-    $('door-title').textContent = room ? 'Ticket' : 'The whole ticket';
+    $('door-title').textContent = room ? 'Venue ticket' : 'Watch online';
     $('ticket-note').textContent = room ? '' : free ? 'Or watch free, with tips.' : 'Or press play and pay as you watch.'; // the ticket page has only its buttons
-    $('buy').textContent = room ? `Ticket · ${sats(s.total)}` : `Pay ${sats(show.online?.price || 0)}`;
+    $('buy').textContent = room ? `Venue ticket · ${sats(s.total)}` : `Pay ${sats(show.online?.price || 0)}`;
     if (room && door.soldOut) { $('buy').textContent = 'Sold out'; $('buy').disabled = true; }
     $('door-home').hidden = !room || show.stream.mode === 'off';
     $('door-home').href = `${location.pathname}?as=home`;
@@ -902,7 +905,7 @@ function render() {
 
   // Find my ticket, where a ticket is bought; Keep it with a passkey, straight after paying until it's done: in the
   // ticket's box ahead of the gig, beside the door's line on the gig day, under the tips at home.
-  // At home too whenever the gig sells tickets, even with a free stream (a room ticket can be found from there).
+  // At home too whenever the gig sells tickets, even with a free stream (a venue ticket can be found from there).
   const findOn = PASSKEYS && !ticket && !closed && (room ? !$('door').hidden : !!(show.ticket.on || (online && show.online?.price)));
   $('find').hidden = !findOn;
   const keepOn = PASSKEYS && ticket && !door.passkey && !door.checkedAt && !closed && (confirmed || (room ? !$('inside').hidden : true));
@@ -1253,7 +1256,7 @@ else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
-// The room ticket in the phone's wallet (the door check on): Apple Wallet on Apple devices, Google Wallet elsewhere
+// The venue ticket in the phone's wallet (the door check on): Apple Wallet on Apple devices, Google Wallet elsewhere
 // (Android, and Chrome on a computer, which saves it to the Google account). Not on Apple, the same .pkpass file as
 // Apple's for open-source wallets (Catima, PassAndroid): kept on the phone, no account. The card carries the page's door QR.
 const APPLE = /iPhone|iPad|Macintosh/.test(navigator.userAgent);

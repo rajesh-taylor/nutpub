@@ -29,9 +29,10 @@ export const NUTZAP_EMOJI = ['⚡', '🥜', '🍺', '🎸', '🎤', '🔥', '❤
 export const blank = () => ({
   title: '',                            // optional: the artist may leave it blank
   description: '',                      // optional: a line or two under the title
+  set: '',                              // the recorded clip that plays when nobody's live: '' the default, or a name under media/sets/ (frankie-1)
   artist: '',                           // not on the tag line; the buttons use it ("Tip Longy")
   venue: '',
-  capacity: null,                       // how many room tickets can be sold; blank: no limit
+  capacity: null,                       // how many venue tickets can be sold; blank: no limit
   date: '',                             // YYYY-MM-DD, UK time
   streams: '',                          // HH:MM, the one start time: the stream opens to the public then
   starts: '',                           // HH:MM, the show's start: gone from setup 10 Nov (one start time), kept for old shows
@@ -40,11 +41,11 @@ export const blank = () => ({
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
-  stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (an Online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
-  online: { price: null, fiat: null, locked: false }, // the Online ticket, in sats; fiat: £ by card, which fills the sats unless locked
+  stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (a Watch online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
+  online: { price: null, fiat: null, locked: false }, // the Watch online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
-  ticket: { on: false, price: null, fiat: null, locked: false }, // the room ticket in sats; fiat: £, the card price, which fills the sats unless locked
+  ticket: { on: false, price: null, fiat: null, locked: false }, // the venue ticket in sats; fiat: £, the card price, which fills the sats unless locked
   door: { on: false },                  // door check: the ticket page's QR (new every 30 s) is scanned once at the door (off by default)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   goals: [{ label: '', at: null }, { label: '', at: null }], // up to 2 stretch goals, fed by tips (Rajesh 13 Nov: two at most)
@@ -75,6 +76,7 @@ export function clean(input = {}) {
   const show = {
     title: text(input.title, 80),
     description: text(input.description, 280),
+    set: /^[a-z0-9-]{1,40}$/.test(input.set) ? input.set : '',
     artist: text(input.artist, 60),
     // Empty: taken from the artist's name, once. After that it stays put, so links and posters keep working.
     page: pageName(input.page) || pageName(input.artist),
@@ -156,7 +158,7 @@ export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' |
 // chat and stage. Its one-line totals are kept first (Past gigs). Payments stay to collect.
 export async function clearGig() {
   await keepGigLine((await kv.get('endedAt')) || undefined);
-  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM passkeys'), sql('DELETE FROM nostr'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom', 'endedAt', 'stageTimes', 'reachedAt')"), sql('UPDATE messages SET deleted = 1')]);
+  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM passkeys'), sql('DELETE FROM nostr'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freeFrom', 'liveFrom', 'onAirFrom', 'endedAt', 'stageTimes', 'reachedAt')"), sql('UPDATE messages SET deleted = 1')]);
   const at = now();
   await kv.set('nightStart', at); // Takings counts this gig from here
   await kv.set('stage', 'doors');

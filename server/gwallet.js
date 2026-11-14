@@ -1,4 +1,4 @@
-// The room ticket in Google Wallet: a "Save to Google Wallet" link, a JWT signed with our signer's key (RS256,
+// The venue ticket in Google Wallet: a "Save to Google Wallet" link, a JWT signed with our signer's key (RS256,
 // WebCrypto; 1 to 3 ms of CPU on Cloudflare, 11 Nov). Nothing is sent to Google from here: the phone takes the link
 // to Google, which adds the card. Same door QR, artist, venue and date as the Apple card; nothing about who bought it.
 // One card design (a "class") per version of the gig's details: an id from their hash, so a change makes a new one

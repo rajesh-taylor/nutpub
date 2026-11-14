@@ -35,7 +35,7 @@ export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(
 // The X-Message header on a tip: URI-encoded, so any language survives the header.
 export const tipMessage = (c) => { try { return decodeURIComponent(c.req.headers.get('X-Message') || ''); } catch { return ''; } };
 
-// ---- The door check (10 Nov, from the saved 9 Nov work, without the drink). Each room ticket has a door code of its
+// ---- The door check (10 Nov, from the saved 9 Nov work, without the drink). Each venue ticket has a door code of its
 // own, never its pass (the pass is the ticket itself). The door link carries a key of its own: the server keeps only
 // its SHA-256, and a new link cancels the old one. The artist's own browser opens the door page too.
 const CODE = /^[0-9a-f]{24}$/;
@@ -119,15 +119,15 @@ export function mountDoor(route, admin, pass) {
   });
 
   // ---- The door, step 1: the artist's part of the ticket. Paid already: in (a retry is safe).
-  // ?as=home buys the Online ticket instead: its own price, no drink, and it watches the stream but isn't a way into
-  // the room. A room ticket watches from home too.
+  // ?as=home buys the Watch online ticket instead: its own price, no drink, and it watches the stream but isn't a way into
+  // the room. A venue ticket watches from home too.
   const home = (c) => c.url.searchParams.get('as') === 'home';
   const ticketOn = async (c) => {
     const show = await showOf(c);
-    if (home(c)) return show.stream.mode === 'ticket' && show.online.price ? null : json({ error: 'not_ready', detail: 'No Online ticket on this show.' }, 409);
+    if (home(c)) return show.stream.mode === 'ticket' && show.online.price ? null : json({ error: 'not_ready', detail: 'No Watch online ticket on this show.' }, 409);
     return show.ticket.on && show.ticket.price ? null : json({ error: 'not_ready', detail: 'No ticket price set yet.' }, 409);
   };
-  // The room's limit: room tickets only, checked before any payment. Blank capacity: no limit.
+  // The room's limit: venue tickets only, checked before any payment. Blank capacity: no limit.
   const roomFull = async (c) => {
     const cap = (await showOf(c)).capacity;
     return !!cap && (await one("SELECT COUNT(*) AS n FROM tickets WHERE kind = 'room'")).n >= cap;
@@ -136,7 +136,7 @@ export function mountDoor(route, admin, pass) {
     async (c) => ((await hasTicket(c.pass)) ? json({ in: true }) : null),
     async (c) => (!home(c) && (await roomFull(c)) ? json({ error: 'sold_out', detail: 'Sold out.' }, 409) : null),
     cashuGate(async (c) => (home(c) ? (await showOf(c)).online.price : ticketSplit(await showOf(c)).artist),
-      async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'online ticket' : 'privacy ticket'}`,
+      async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'watch online' : 'venue ticket'}`,
       { lockTo: artistKey, kind: 'ticket' }),
     async (c) => {
       await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind, code, secret) VALUES (?, ?, ?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room', randomHex(12), randomHex(32));
@@ -164,7 +164,7 @@ export function mountDoor(route, admin, pass) {
   const heldBy = async (id) => {
     const d = await one(`${DRINK} WHERE d.pass = ?`, id);
     const t = await ticketOf(id);
-    // code and secret: the room ticket's door code and its time code's secret, for its QR (the page shows it only
+    // code and secret: the venue ticket's door code and its time code's secret, for its QR (the page shows it only
     // when the door check is on). Only this phone's own pass is given them, and the secret only while the ticket has
     // no passkey: after that, only a passkey check gives it (passkey.js), so a copied ticket link can't open the door QR.
     const room = t?.kind === 'room';

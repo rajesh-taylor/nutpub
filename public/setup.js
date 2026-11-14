@@ -2,7 +2,7 @@
 import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
-  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Online ticket price',
+  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price',
   date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
@@ -168,7 +168,7 @@ function read() {
 
 // Show or hide the fields that belong to a choice; redraw the tip button preview.
 // The kind of night (Rajesh 11 Nov): Room only, Room + live stream, Live stream only. It's not saved itself: it sets
-// Room tickets and the stream's mode, which are.
+// Venue tickets and the stream's mode, which are.
 const nightOf = (s) => (s.ticket.on ? (s.stream.mode === 'off' ? 'room' : 'both') : s.stream.mode === 'off' ? '' : 'stream');
 let lastMode = 'free'; // the stream's way to pay, kept while a Room only night has it off
 function applyNight(kind) {
@@ -486,7 +486,7 @@ async function drawMods() {
 }
 // Scan at the door needs the venue's yes: turning it on asks first (a click that's cancelled leaves it off, unsaved).
 $('door-on').addEventListener('click', (e) => {
-  if ($('door-on').checked && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach room ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
+  if ($('door-on').checked && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
 });
 
 // ---- The door link: a key of its own, which opens the door page only. Kept in this browser, like the mod links.

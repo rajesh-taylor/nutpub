@@ -126,7 +126,7 @@
       .board .ticket-split { grid-template-columns: 1fr; }
       .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
     }
-    /* Room tickets: a yes/no, so a switch (Square, Toast and YouTube Studio do the same); the row underneath shows when it's on. */
+    /* Venue tickets: a yes/no, so a switch (Square, Toast and YouTube Studio do the same); the row underneath shows when it's on. */
     .board .room-switch { align-items: center; gap: 14px; min-height: 44px; margin: 0 0 10px; }
     .board .room-switch input { appearance: none; -webkit-appearance: none; position: relative; width: 44px !important; height: 26px !important; margin: 0 !important; border-radius: 13px; background: rgb(239 227 200 / .18); border: 1px solid rgb(239 227 200 / .3); cursor: pointer; transition: background .15s; }
     .board .room-switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--cream); transition: transform .15s; }
@@ -161,7 +161,7 @@
     .ready-box .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--amber); flex: none; }
     .ready-box.ok .dot { background: #1e7a3c; box-shadow: 0 0 0 4px rgb(30 122 60 / .25); } /* a solid dark green: ready */
     .ready-text { font-size: 15px; color: var(--smoke); }
-    .board .choice[hidden] { display: none !important; } /* e.g. Scan at the door, while Room tickets is off */
+    .board .choice[hidden] { display: none !important; } /* e.g. Scan at the door, while Venue tickets is off */
     .board .choice input { accent-color: var(--amber); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
     .board .choice input.inline-sats { box-sizing: border-box; width: 3.6em; -moz-appearance: textfield; appearance: textfield; height: auto; margin: 0 4px; padding: 3px 6px; font: inherit; color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 3px; }
     .board .split { border: 1px dashed rgb(217 149 58 / .6); border-radius: 4px; padding: 12px 14px; margin: 6px 0 14px; font-size: 15px; }
@@ -310,24 +310,24 @@
 
           <section class="panel wide">
             <h2>Ticketing</h2>
-            <!-- Rajesh 11 Nov: in the order an artist decides. The kind of night sets Room tickets (ticket.on) and the
+            <!-- Rajesh 11 Nov: in the order an artist decides. The kind of night sets Venue tickets (ticket.on) and the
                  stream's mode; the two inputs stay, hidden, so the saved show is the same as before. -->
             <h3 class="step-head">What kind of night?</h3>
             <div class="night-kinds" role="radiogroup" aria-label="What kind of night">
               <label class="night"><input type="radio" name="night" value="room"><span><b>Room only</b><small>Tickets for the room, no live stream</small></span></label>
               <label class="night"><input type="radio" name="night" value="both"><span><b>Room + live stream</b><small>Tickets for the room, and the stream for fans at home</small></span></label>
-              <label class="night"><input type="radio" name="night" value="stream"><span><b>Live stream only</b><small>No room tickets: the gig is online</small></span></label>
+              <label class="night"><input type="radio" name="night" value="stream"><span><b>Live stream only</b><small>No venue tickets: the gig is online</small></span></label>
             </div>
-            <label hidden><input type="checkbox" data-path="ticket.on" id="ticket-on" aria-label="Sell room tickets"></label>
+            <label hidden><input type="checkbox" data-path="ticket.on" id="ticket-on" aria-label="Sell venue tickets"></label>
             <!-- Plan gig A (14 Nov): fans at home on the left, the room and its door on the right, the door in plain steps. -->
             <div class="ticket-split">
               <div class="half" data-night="both stream">
                 <h3 class="step-head">Fans at home</h3>
                 <p class="half-head">How they pay for the live stream</p>
                 <div class="home-choices">
-            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Online ticket</b></span></label>
+            <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Watch online</b></span></label>
                 <div class="price-row online-row" data-price="online" data-when="stream.mode=ticket">
-                  <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="online.fiat" aria-label="Online ticket price in pounds, by card"></label>
+                  <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="online.fiat" aria-label="Watch online price in pounds, by card"></label>
                   <span class="about" aria-hidden="true">≈</span>
                   <div class="field sats-field"><label for="online-sats">Bitcoin price in Sats</label>
                     <span class="sats-box"><input id="online-sats" type="number" min="1" step="1" inputmode="numeric" data-path="online.price">
@@ -341,7 +341,7 @@
               </div>
               <div class="half" data-night="room both">
                 <h3 class="step-head">In the room</h3>
-                <p class="half-head">Room ticket</p>
+                <p class="half-head">Venue ticket</p>
                 <div class="price-row" data-price="ticket" data-when="ticket.on">
               <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
               <span class="about" aria-hidden="true">≈</span>
@@ -353,7 +353,7 @@
                   <label class="choice room-switch"><b>Scan tickets at the door</b><input type="checkbox" role="switch" data-path="door.on" id="door-on" aria-label="Scan tickets at the door"></label>
                   <p class="switch-note door-off" data-when="door.on=false">Off: nobody scans. Fans' ticket pages go straight to the show.</p>
                   <ol class="door-how" data-when="door.on">
-                    <li><span class="num" aria-hidden="true">1</span><span>Each room ticket shows a QR on the gig day. It <b>updates every 30 seconds</b>, so screenshots can't get in.</span></li>
+                    <li><span class="num" aria-hidden="true">1</span><span>Each venue ticket shows a QR on the gig day. It <b>updates every 30 seconds</b>, so screenshots can't get in.</span></li>
                     <li><span class="num" aria-hidden="true">2</span><span>To turn a mobile into a <b>door ticket scanner</b>, point its camera at the QR code below, or send it the link.</span></li>
                     <li><span class="num" aria-hidden="true">3</span><span>They point it at each ticket. <b>Green: in.</b> Each ticket gets in once.</span></li>
                   </ol>

@@ -10,12 +10,12 @@
   "scripts": {
     "start": "npm run build && npm run media && wrangler dev",
     "deploy": "npm run build && npm run media && wrangler deploy --var VERSION:$(date +%s)",
-    "media": "rm -rf public/set-media && cp -R media/set public/set-media",
+    "media": "rm -rf public/set-media && cp -R media/set public/set-media && if [ -d media/sets ]; then cp -R media/sets public/set-media/sets; fi",
     "setup": "node scripts/setup.js",
     "check": "node scripts/check.js",
     "test": "node --test test/*.test.js",
     "cut-set": "sh scripts/cut-set.sh",
-    "build": "esbuild client/wallet-page.js client/viewer.js client/bar.js client/night.js client/barstrip.js client/money.js client/showtime.js client/door.js client/qr.js client/screen.js client/front-door.js --bundle --format=esm --target=es2022 --minify --sourcemap --splitting --outdir=public/js"
+    "build": "esbuild client/wallet-page.js client/viewer.js client/bar.js client/night.js client/barstrip.js client/money.js client/showtime.js client/door.js client/qr.js client/screen.js client/front-door.js client/artist-key.js --bundle --format=esm --target=es2022 --minify --sourcemap --splitting --outdir=public/js"
   },
   "dependencies": {
     "@cashu/cashu-ts": "5.0.0-rc.4",

@@ -58,6 +58,32 @@ export async function recordings() {
 }
 export const deleteRecording = (uid) => stream('DELETE', `/${uid}`);
 
+// Practice stages (every <id>.thenutpub.com) stop a stream 20 minutes after it first comes on air in a gig: Stream bills
+// by the minute, and a phone left streaming for hours would run up the bill. The input is switched off (Stream refuses
+// the phone), by whichever comes first: a page asking (liveNow) or the stage's alarm. A new gig switches it back on.
+export const PRACTICE_MINUTES = 20;
+const enable = (uid, on) => stream('PUT', `/live_inputs/${uid}`, { enabled: on });
+async function practiceCap(uid, input, live) {
+  const st = stageDb();
+  if (!st?.id) return live;
+  let from = await kv.get('onAirFrom');
+  if (!from && input.enabled === false) await enable(uid, true); // a new gig: on again (it shows as live at the next ask)
+  if (live && !from) { from = await kv.set('onAirFrom', seconds()); await st.alarmAt?.(Date.now() + PRACTICE_MINUTES * 60_000 + 5_000); }
+  if (from && seconds() - from >= PRACTICE_MINUTES * 60) {
+    if (input.enabled !== false) await enable(uid, false);
+    return false;
+  }
+  return live;
+}
+// The stage's alarm: 20 minutes on, switch its stream off, whether or not anyone is looking.
+export async function stopPractice() {
+  const from = await kv.get('onAirFrom');
+  if (!stageDb()?.id || !from || seconds() - from < PRACTICE_MINUTES * 60 - 30) return;
+  for (const r of await all("SELECT value FROM kv WHERE key LIKE 'live:%'")) {
+    try { await enable(JSON.parse(r.value), false); } catch (e) { console.log(`practice stop: ${String(e.message || e).slice(0, 120)}`); }
+  }
+}
+
 // Is the artist streaming right now? Stream's word on the input, asked at most every 10 s per Worker: every phone
 // polls the stage every 2 s, and that mustn't become a Stream API call each time.
 const ON_AIR = ['connected', 'reconnected'];
@@ -71,7 +97,7 @@ export async function liveNow(page) {
     const uid = await kv.get(`live:${page}`);
     if (uid) {
       const input = await stream('GET', `/live_inputs/${uid}`);
-      live = ON_AIR.includes(input.status?.current?.state ?? input.status);
+      live = await practiceCap(uid, input, ON_AIR.includes(input.status?.current?.state ?? input.status));
     }
   } catch (e) {
     console.log(`live status: ${String(e.message || e).slice(0, 120)}`);
@@ -166,7 +192,7 @@ export function mountLive(route, admin, pass) {
       if (stage === 'doors') return json({ error: 'soon', detail: 'The stream hasn’t started yet.' }, 409);
       if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
       const ticketed = await hasTicket(c.pass);
-      if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy an Online ticket to watch.' }, 403);
+      if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy a ticket to watch online.' }, 403);
       if (show.stream.mode === 'pay' && !ticketed && !show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       const refused = await takeSeat(c, show, ticketed); // before any payment: nobody pays for a seat they can't have
       if (refused) return refused;

@@ -3,10 +3,12 @@
 #   media/set/audio/seg-NNN.wav  sound: 44.1 kHz stereo PCM, sample-exact, so the pieces play back gaplessly
 #   media/set/video/seg-NNN.mp4  picture: H.264, no sound, a keyframe at the start of each piece
 # The last piece is padded to a full 10 s (silence, last frame held).
-# Usage: scripts/cut-set.sh <video file>
+# Usage: scripts/cut-set.sh <video file> [name]
+#   no name: media/set, the default set (Longy's clip); a name: media/sets/<name>, a gig's own (show.set, e.g. frankie-1)
 set -e
-[ -n "$1" ] || { echo "usage: $0 <video file>"; exit 1; }
+[ -n "$1" ] || { echo "usage: $0 <video file> [name]"; exit 1; }
 out="$(dirname "$0")/../media/set"
+[ -n "$2" ] && out="$(dirname "$0")/../media/sets/$2"
 rm -rf "$out"; mkdir -p "$out/audio" "$out/video"
 dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1")
 n=$(awk -v d="$dur" 'BEGIN { print int((d + 9.999) / 10) }')
@@ -19,4 +21,4 @@ while [ "$i" -lt "$n" ]; do
   i=$((i + 1))
 done
 printf '{ "segments": %s, "segmentMs": 10000 }\n' "$n" > "$out/set.json"
-echo "$n pieces in media/set"
+echo "$n pieces in $out"

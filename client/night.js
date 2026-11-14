@@ -27,6 +27,7 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
+const onSetlist = await api('GET', '/api/admin/setlist').then((r) => !!r.setlist).catch(() => false); // a stage's example gigs (setlist.js)
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
 const bar = await openWallet(health.mint.url, 'nutpub-bar');
 
@@ -178,7 +179,7 @@ function paint() {
   $('v-tips').textContent = fig(s.tips);
   $('s-tips').textContent = `${n(s.tipsN)} tip${s.tipsN === 1 ? '' : 's'}${s.zaps ? ` · ${n(s.zaps)} Nutzap${s.zaps === 1 ? '' : 's'}` : ''}`;
   $('v-home').textContent = fig(s.home);
-  $('s-home').textContent = s.stream === 'ticket' ? 'Online tickets' : s.stream === 'free' ? 'Free to watch' : 'Pay as you watch';
+  $('s-home').textContent = s.stream === 'ticket' ? 'Watch online' : s.stream === 'free' ? 'Free to watch' : 'Pay as you watch';
   $('t-drinks').classList.toggle('later', !s.drinkOn);
   $('v-drinks').textContent = s.drinkOn ? fig(s.drinks) : '—';
   $('s-drinks').textContent = s.drinkOn ? `${n(s.drinksN)} not poured by last orders` : 'With the first drink';
@@ -201,7 +202,7 @@ function paint() {
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
   $('finish').hidden = !done;
   $('finish-go').hidden = !s.over;
-  $('finish-note').textContent = s.over ? 'Plan gig opens for the next one, same settings.' : 'Finish gig comes once the night’s over: End night on Show Time.';
+  $('finish-note').textContent = s.over ? (onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held;
   $('move').disabled = !toMove;
@@ -317,6 +318,7 @@ function showKept() {
   $('moved-fee').hidden = !k.fee;
   $('artist-token').textContent = k.token;
   $('open-wallet').href = `cashu:${k.token}`;
+  $('cashu-me').href = `https://wallet.cashu.me/#token=${k.token}`;
   $('moved-wait').lastElementChild.textContent = 'Waiting for your wallet.';
   const check = async () => {
     if (document.hidden) return;
@@ -352,10 +354,13 @@ $('bar-home').onclick = async () => {
 $('finish-go').onclick = async () => {
   $('finish-go').disabled = true;
   try {
-    await api('POST', '/api/admin/next-gig');
+    const out = await api('POST', '/api/admin/next-gig');
     try { localStorage.removeItem(MOVED); } catch {}
     await Promise.all([refresh(), pastGigs()]);
-    $('artist-status').replaceChildren('Finished. ', Object.assign(document.createElement('a'), { href: '/setup', textContent: 'Plan gig' }), ' is ready for the next one.');
+    // On a stage the gig ticks off the setlist, and the next one is ready there.
+    $('artist-status').replaceChildren(...(out?.setlist
+      ? ['Ticked off. ', Object.assign(document.createElement('a'), { href: '/', textContent: 'Your setlist' }), ' has the next one.']
+      : ['Finished. ', Object.assign(document.createElement('a'), { href: '/setup', textContent: 'Plan gig' }), ' is ready for the next one.']));
   } catch (e) { $('artist-status').textContent = `Not done: ${e.message}`; }
   finally { $('finish-go').disabled = false; }
 };

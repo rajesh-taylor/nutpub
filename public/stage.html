@@ -29,14 +29,18 @@
     .setlist .head { margin: 0; font-size: 26px; text-decoration: underline; text-underline-offset: 6px; }
     .setlist .li { margin: 0; font-size: 22px; line-height: 1.15; }
     .setlist .li small { display: block; font: 12px/1.35 var(--body); color: #555; margin-top: 2px; }
-    .setlist .li.encore { color: #c4521a; }
-    .setlist a { color: inherit; text-decoration: none; }
-    .setlist a:hover small, .setlist a:focus-visible small { text-decoration: underline; }
+    /* Done: crossed off in pen, with a tick. The one on now: in red. */
+    .setlist .li.done { color: #8a8a8a; text-decoration: line-through; text-decoration-thickness: 2px; }
+    .setlist .li { position: relative; }
+    .setlist .li.done::after { content: "✓"; position: absolute; top: -4px; right: 0; font-size: 30px; color: #2f7d32; }
+    .setlist .li.now { color: #c4521a; }
     .setlist .aside { margin: 4px 0 0; font-size: 15px; color: #6a6a6a; transform: rotate(-3deg); }
     .go { display: block; padding: 16px 0 13px; border-radius: 6px; background: var(--amber); color: var(--deep); font: 400 26px/1 var(--poster);
       letter-spacing: .08em; text-decoration: none; }
     .go:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
     .under { margin: 12px 0 0; font-size: 17px; color: var(--cream); }
+    .under a { color: #e8a845; }
+    .how { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--smoke); }
     .out { margin: auto 0; }
     .out p { color: var(--smoke); }
     .out a { color: #e8a845; }
@@ -77,14 +81,15 @@
           <span class="gaffa" style="top: -10px; right: -18px; transform: rotate(22deg);" aria-hidden="true"></span>
           <span class="gaffa" style="bottom: -8px; left: 100px; transform: rotate(-3deg);" aria-hidden="true"></span>
           <p class="mk head">Setlist</p>
-          <p class="mk li">1. Stream only<small>The warm-up. Go live, paid by the minute.</small></p>
-          <p class="mk li">2. Room + stream<small>Tickets, the 30-second door QR, a free first drink.</small></p>
-          <p class="mk li encore"><a id="encore" href="/longy">Encore: Longy @ Peggy Sue's<small>His real night, Tue 17 Nov. Look, don't touch.</small></a></p>
+          <p class="mk li" data-step="longy">1. Longy<small>Venue tickets and Watch online. Buy one, say hello in the chat.</small></p>
+          <p class="mk li" data-step="frankie">2. Frankie Peroni<small>Pay as you watch, 60 sats a minute. Tip in the comments.</small></p>
+          <p class="mk li" data-step="yours">3. Your gig<small>Your prices, your stretch goal.</small></p>
           <p class="mk aside">(don't forget to tune up)</p>
         </section>
       </div>
-      <a class="go" href="/setup">Plan your first gig</a>
-      <p class="under">Gig 1 is stream only. Test sats only.</p>
+      <a class="go" id="go" href="/setup">Plan gig</a>
+      <p class="under" id="under">You're the artist here. <a id="fan" href="/" target="_blank" rel="noopener">Open the fan's page</a> in a second tab.</p>
+      <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Takings: Move, then Finish gig.</p>
     </div>
     <div id="theirs" class="out" hidden>
       <h1>An artist's stage</h1>
@@ -96,7 +101,6 @@
     // The stage's home: the artist's setlist. Arriving from Put on a gig or Back to your stage, the link carries a
     // one-time code (#h=), traded once here for the stage's setup key, which this browser keeps (as Plan gig does).
     const front = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`; // thenutpub.com
-    document.getElementById('encore').href = `${front}/longy`;
     document.getElementById('back').href = `${front}/#back`;
     const code = new URLSearchParams(location.hash.slice(1)).get('h');
     let key = null;
@@ -107,8 +111,22 @@
         .then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.key) { key = r.key; try { localStorage.setItem('nutpub-admin', key); } catch {} }
     }
-    const ok = key && (await fetch('/api/admin/templates', { headers: { 'X-Admin': key } }).then((x) => x.ok).catch(() => false));
-    document.getElementById(ok ? 'mine' : 'theirs').hidden = false;
+    const r = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
+    document.getElementById(r ? 'mine' : 'theirs').hidden = false;
+    // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
+    const list = r?.setlist;
+    if (list) {
+      for (const li of document.querySelectorAll('[data-step]')) {
+        li.classList.toggle('done', list.done.includes(li.dataset.step));
+        li.classList.toggle('now', li.dataset.step === list.at && !list.done.includes(list.at));
+      }
+      const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s' }[list.at];
+      document.getElementById('go').textContent = name ? `Open ${name} gig` : 'Plan your gig';
+      document.getElementById('fan').href = r.path;
+      document.getElementById('how').hidden = !name;
+      // Every payment is locked to the artist's key: made here once, so the fan's tab can buy straight away.
+      import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
+    }
   </script>
 </body>
 </html>

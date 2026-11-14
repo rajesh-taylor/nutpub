@@ -1,6 +1,6 @@
 // The door QR's time code (RFC 6238, TOTP): HMAC-SHA-256 over the 30-second step, 8 digits. WebCrypto only, so the
 // same file runs on the phone (the ticket page draws its door QR every 30 seconds, no signal needed) and on the
-// server (the door's check). Each room ticket has a secret of its own, beside its door code.
+// server (the door's check). Each venue ticket has a secret of its own, beside its door code.
 export const STEP = 30;
 export const DIGITS = 8;
 export const stepAt = (ms) => Math.floor(ms / 1000 / STEP);

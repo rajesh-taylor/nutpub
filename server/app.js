@@ -20,6 +20,7 @@ import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor } from './stages.js';
+import { setlist, finished } from './setlist.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -88,7 +89,9 @@ route('GET', '/api/show/qr.svg', async (c) => {
   return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 });
 route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
-route('POST', '/api/admin/next-gig', admin, attempt(() => nextGig()));
+// Finish gig. On a stage it also ticks the gig off the setlist and opens the next one (setlist.js).
+route('POST', '/api/admin/next-gig', admin, attempt(async (c) => { const out = await nextGig(); const list = await finished(c.env); return list ? { ...(await current({})), setlist: list } : out; }));
+route('GET', '/api/admin/setlist', admin, attempt(async (c) => ({ setlist: await setlist(c.env), path: (await current(c)).path })));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
 route('POST', '/api/admin/templates', admin, attempt(async (c) => { const b = await body(c); return saveTemplate(b?.name, b?.show); }));

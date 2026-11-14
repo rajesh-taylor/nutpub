@@ -622,6 +622,7 @@ body.at-door #door-home { background: rgb(5 9 20 / .72); }
    on a wide screen, under the line on a phone. The room's phone and The show's frame keep their own look. */
 body.wallet-card { background: var(--deep); }
 body.wallet-card .backdrop, body.wallet-card .money { display: none !important; }
+body.wallet-card #whole { flex-basis: 100%; }
 .show-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; margin: 10px 0 0; }
 body.wallet-card .show-line .masthead { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
 body.wallet-card .nutpub-line { display: none; }

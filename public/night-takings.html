@@ -40,6 +40,7 @@
     .tile .v { font: 400 34px/1 var(--poster); letter-spacing: .05em; color: var(--cream); font-variant-numeric: tabular-nums; }
     .tile .s { font-size: 12px; color: var(--smoke); }
     .tile.later { border-style: dashed; opacity: .6; }
+    .cashu-me { display: block; margin-top: 12px; text-align: center; }
     .move-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
     .move { height: 54px; padding: 0 36px; font-size: 22px; }
     .lock { margin: 0; display: flex; gap: 8px; font-size: 13px; line-height: 1.45; color: var(--smoke); flex: 1 1 260px; }
@@ -185,8 +186,11 @@
         <div class="code"><span id="artist-token" aria-label="Your money, as one code"></span></div>
         <div class="pair-btns">
           <button type="button" class="btn quiet" id="copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg><span id="copy-word">Copy</span></button>
-          <a class="btn primary" id="open-wallet" href="#">Open my wallet app</a>
+          <a class="btn quiet" id="open-wallet" href="#">Open my wallet app</a>
         </div>
+        <!-- Cashu.me reads the code from after the # (never sent to its server) and receives it. -->
+        <a class="btn primary cashu-me" id="cashu-me" href="#" target="_blank" rel="noopener noreferrer">Move to Cashu.me</a>
+        <p class="note">Cashu.me asks to add the test mint: say yes.</p>
         <p class="note">In your wallet app (Minibits, Cashu.me, Macadamia): <strong style="color: var(--cream);">Receive</strong>, then paste.</p>
         <p class="waiting-line" role="status" id="moved-wait"><i></i><span>Waiting for your wallet.</span></p>
         <p class="note">The code stays here until your wallet has it. Anyone with the code can take the money: keep it to yourself.</p>
