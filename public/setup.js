@@ -58,7 +58,7 @@ function fill(s) {
     if (el === document.activeElement) continue; // still being typed in
     const v = get(show, el.dataset.path);
     if (el.type === 'checkbox') el.checked = !!v;
-    else if (el.type === 'radio') el.checked = el.value === v;
+    else if (el.type === 'radio') el.checked = el.value === String(v);
     else if (el.tagName !== 'SELECT' || el.classList.contains('nz-emoji')) el.value = v ?? '';
   }
   $('langs').innerHTML = Object.entries(LANGS).map(([code, name]) =>

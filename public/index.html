@@ -124,10 +124,16 @@
       <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><span class="goal-more-row" id="goal-more-row" hidden><button type="button" class="coin btc goal-more" id="goal-more">Tip in ₿itcoin</button><button type="button" class="goal-card" id="goal-card" title="Card tips through Stripe: not wired up yet">Tip with Card</button></span></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
       <form class="say" id="say">
-        <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
-        <span class="say-tools"><button type="button" class="coin btc" id="say-btc" aria-label="Tip in bitcoin" aria-expanded="false">₿</button><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send the comment">➤</button></span>
+        <!-- The comment and a tip in one box (Rajesh 14 Nov): words on the left, sats on the right; Enter sends both.
+             No sats: a free comment. Comments off: the sats alone. -->
+        <span class="say-field">
+          <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
+          <label class="say-sats" id="say-sats-box"><span class="say-unit" id="say-unit" aria-hidden="true">₿</span><input id="say-sats" type="number" min="21" max="1000000" step="1" inputmode="numeric" placeholder="sats" autocomplete="off" aria-label="A tip with it, in sats (21 or more). Empty: a free comment."></label>
+        </span>
+        <span class="say-tools"><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send">➤</button></span>
           <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
+      <p class="say-thanks" id="say-thanks" role="status" hidden></p>
       <p class="nutzaps" id="nutzaps" hidden><small>Nutzap from your browser wallet, with your Nostr name</small><span class="nutzap-btns" id="nutzap-btns"></span></p>
     </section>
 
@@ -138,8 +144,7 @@
         <button class="btn primary" id="tip" disabled></button>
         <button class="btn" id="whole" hidden></button>
         <button class="btn quiet" id="whole-card" disabled hidden>Watch online by card · not wired up</button>
-        <button class="btn" id="own" disabled>Your amount</button>
-        <button class="btn quiet" id="card-tip" disabled>Card · not wired up</button>
+        <button class="btn quiet" id="card-tip" disabled title="Card tips through Stripe: not wired up yet">Tip with Stripe</button>
       </p>
       <form class="own" id="own-form" hidden>
         <input type="number" id="own-sats" min="21" max="1000000" step="1" inputmode="numeric" placeholder="21 sats or more" aria-label="Tip amount in sats, 21 or more">
@@ -148,7 +153,7 @@
       </form>
       <!-- What's in the wallet. -->
       <div class="purse">
-        <a class="purse-sum" href="/wallet.html" id="wallet-link"><span>Your wallet</span> <b id="balance">…</b> <span>test sats</span></a>
+        <a class="purse-sum" href="/wallet.html" id="wallet-link"><span>Your wallet</span> <b id="balance">…</b> <span>sats</span></a>
         <div class="purse-actions">
           <a class="btn" href="/wallet.html" id="wallet-page">Wallet</a>
           <button class="btn quiet" id="topup" hidden>Add 150,000 test sats</button>

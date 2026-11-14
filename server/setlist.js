@@ -4,7 +4,7 @@
 // current show; Finish gig on Takings ticks it off and opens the next. They're examples: nothing is sold until the
 // artist, as a fan in another tab, buys it. Longy's own stage (thenutpub.com) has no setlist.
 import { kv, run, one, stageDb } from './db.js';
-import { blank, clean, currentShow } from './shows.js';
+import { blank, clean, currentShow, clearGig } from './shows.js';
 import { usePhotos } from './photo.js';
 
 const ukDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
@@ -40,8 +40,10 @@ const GIGS = {
 export const STEPS = ['longy', 'frankie', 'yours'];
 
 // Puts a gig on the stage as its current show: today's date, the stream open from now, its own photos.
+// Your gig comes back as the artist left it (kept aside while an example is done again).
 async function open(step, env) {
-  const { show } = clean({ ...blank(), ...GIGS[step].show, date: ukDay(), streams: ukTime() });
+  const kept = step === 'yours' ? await kv.get('yourGig', null) : null;
+  const { show } = clean({ ...blank(), ...(kept || GIGS[step].show), date: ukDay(), streams: ukTime() });
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), new Date().toISOString());
   await usePhotos(env, GIGS[step].photos);
@@ -69,7 +71,20 @@ export async function finished(env) {
   if (!stageDb()?.id || !list) return null;
   const done = list.done.includes(list.at) ? list.done : [...list.done, list.at];
   await kv.set('setlist', { at: list.at, done });
-  const next = STEPS[STEPS.indexOf(list.at) + 1];
+  const next = STEPS.find((s) => !done.includes(s)); // the first not done yet (after a gig done again, it skips ahead)
   if (next) await open(next, env);
+  return kv.get('setlist');
+}
+
+// Do a gig again (Rajesh 15 Nov: judges go back before moving on): tap a crossed-off line on the setlist. The gig on
+// now is cleared as Finish gig clears it (sats waiting on Takings stay there: they're listed until moved); Your gig's
+// settings are kept aside for when it comes back. The gig opens fresh and loses its tick until it's finished again.
+export async function again(step, env) {
+  const list = await kv.get('setlist', null);
+  if (!stageDb()?.id || !list || !STEPS.includes(step)) return null;
+  if (list.at === 'yours') await kv.set('yourGig', (await currentShow()).show);
+  await clearGig();
+  await kv.set('setlist', { at: list.at, done: list.done.filter((s) => s !== step) });
+  await open(step, env);
   return kv.get('setlist');
 }

@@ -826,7 +826,7 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* Comments off (setup): the chat keeps the goals and the tips, without a box for words. */
-body.no-comments #say-text, body.no-comments #say-send, body.no-comments #say-free { display: none !important; }
+body.no-comments #say-text { display: none !important; } /* the sats field and Send stay: tips still go, without words */
 
 /* ---- ₿ / £ / $ for the whole page: faint drawn flags (emoji flags show as letters on Windows); orange is ₿'s alone. */
 .unit { display: inline-flex; gap: 7px; flex: none; }
@@ -1040,3 +1040,54 @@ body .door-line .door-where { color: var(--smoke); font-size: 14px; }
 .pub-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
 .pub-sign text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
 .pub-sign .btc { fill: #f7931a; }
+
+/* ---- Session 26 (15 Nov): the fan's side, smoothed. */
+/* The chat over the picture: each line sharp on a faint band (no shadow smudging the names and the gold amounts), only
+   the newest few (3, 5 or 10, the artist's pick on the Comments card), the oldest dropping off the top. */
+body.immersive .feed { max-height: none; overflow: hidden; -webkit-mask-image: none; mask-image: none; gap: 4px; }
+body.immersive .feed li, body.immersive .feed li.tipped { text-shadow: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 15px; }
+body.immersive .feed li:nth-last-child(n+4) { display: none; }
+body.immersive[data-rows="5"] .feed li:nth-last-child(n+4), body.immersive[data-rows="10"] .feed li:nth-last-child(n+4) { display: block; }
+body.immersive[data-rows="5"] .feed li:nth-last-child(n+6), body.immersive[data-rows="10"] .feed li:nth-last-child(n+11) { display: none; }
+/* The comment box: the words, and on the right inside it a small tip field (₿ and sats, or £ and pounds). */
+.say-field { position: relative; flex: 1 1 auto; min-width: 0; display: flex; }
+.say-field #say-text { flex: 1 1 auto; padding-right: 92px; }
+.say-sats { position: absolute; right: 4px; top: 4px; bottom: 4px; display: flex; align-items: center; gap: 3px; padding: 0 2px 0 8px; border-left: 1px solid rgb(239 227 200 / .2); cursor: text; }
+.say-unit { font: 700 15px/1 var(--body); color: var(--btc); }
+.say-sats.fiat .say-unit { color: var(--cream); }
+.say-sats input { width: 60px; min-width: 0; padding: 0; border: 0; background: none; font: 15px var(--body); color: var(--amber); outline: none; }
+.say-sats input::placeholder { color: var(--smoke); }
+.say-sats:focus-within { box-shadow: inset 0 -2px 0 var(--amber); }
+body[data-as="home"] .say-field { flex: 1 1 100%; }
+body.wallet-card .say-field #say-text { padding-right: 186px; }
+body.wallet-card .say-sats { right: 82px; top: 6px; bottom: 6px; }
+body.wallet-card .say-unit, body.wallet-card .say-sats input { font-size: 16px; }
+body .say .say-sats input { flex: none; width: 60px; padding: 0; border: 0; background: none; }
+body.no-comments .say .say-sats input { flex: 1 1 auto; width: auto; }
+/* Comments off: no words, so the tip field is the whole box. */
+body.no-comments .say-field { min-height: 40px; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; background: var(--deep); }
+body.immersive.no-comments .say-field { background: rgb(5 9 20 / .55); }
+body.no-comments .say-sats { left: 4px; border-left: 0; }
+body.no-comments .say-sats input { flex: 1 1 auto; width: auto; }
+/* The tipper's thank-you: small, under the box, for a few seconds. */
+.say-thanks { margin: 4px 2px 0; font-size: 14px; color: var(--amber); }
+body[data-as="room"] .chat > .say-thanks { order: 7; }
+body.immersive .say-thanks { align-self: flex-end; padding: 2px 8px; border-radius: 4px; background: rgb(5 9 20 / .62); }
+/* In the room, less to look at (Rajesh 15 Nov): no currency switch (₿ sits in the comment box; the home page's wallet
+   card keeps it). One line along the bottom: the wallet on the left ("Your" over "wallet"), then Tip Longy ₿ with
+   its amount small under it, then Tip with Stripe. */
+body[data-as="room"] .unit { display: none; }
+#tip { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.05; }
+#tip .tip-amt { font: 400 13px/1 var(--body); letter-spacing: 0; text-transform: none; opacity: .8; }
+body[data-as="room"] .bottom:has(#money:not([hidden])) { display: flex; align-items: center; justify-content: center; gap: 12px; }
+body[data-as="room"] .bottom .purse { order: -1; flex: none; margin: 0; padding: 0; }
+body[data-as="room"] .purse-sum { align-items: center; gap: 8px; }
+body[data-as="room"] .purse-sum span:first-child { width: min-content; white-space: normal; font-size: 13px; line-height: 1.1; text-align: left; }
+body[data-as="room"] .bottom .money { margin: 0; flex-wrap: nowrap; gap: 8px; }
+body[data-as="room"] .bottom .money .btn { min-height: 46px; font-size: 16px; }
+@media (max-width: 699px) {
+  body[data-as="room"] .bottom:has(#money:not([hidden])) { gap: 8px; }
+  body[data-as="room"] .purse-sum b { font-size: 20px; }
+  body[data-as="room"] .bottom .money .btn { font-size: 14px; padding: 7px 9px 5px; white-space: normal; }
+  body[data-as="room"] .bottom #card-tip { max-width: 92px; }
+}

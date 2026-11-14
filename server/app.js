@@ -20,7 +20,7 @@ import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor } from './stages.js';
-import { setlist, finished } from './setlist.js';
+import { setlist, finished, again } from './setlist.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -91,6 +91,12 @@ route('GET', '/api/show/qr.svg', async (c) => {
 route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
 // Finish gig. On a stage it also ticks the gig off the setlist and opens the next one (setlist.js).
 route('POST', '/api/admin/next-gig', admin, attempt(async (c) => { const out = await nextGig(); const list = await finished(c.env); return list ? { ...(await current({})), setlist: list } : out; }));
+route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
+  const step = String((await body(c))?.step || '');
+  const list = await again(step, c.env);
+  if (!list) throw new Error('That gig isn\u2019t on this stage\u2019s setlist.');
+  return { setlist: list, path: (await current(c)).path };
+}));
 route('GET', '/api/admin/setlist', admin, attempt(async (c) => ({ setlist: await setlist(c.env), path: (await current(c)).path })));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));

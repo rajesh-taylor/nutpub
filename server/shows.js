@@ -1,12 +1,12 @@
 // The show: what the account holder (artist or venue) sets on /setup before going live. One current show,
 // plus named templates to start the next one from. Both live in D1.
-import { one, all, run, sql, batch, kv } from './db.js';
+import { one, all, run, sql, batch, kv, stageDb } from './db.js';
 import { keepGigLine } from './closing.js';
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
 // A page address: "Longy" -> longy, "Bitfest '26" -> bitfest-26. Names the site's own folders use are left out.
-const TAKEN = ['api', 'img', 'js', 'fonts'];
+const TAKEN = ['api', 'img', 'js', 'fonts', 'gig']; // gig: a stage's gig with no page name yet (below)
 export const pageName = (name) => {
   const s = String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
@@ -41,6 +41,7 @@ export const blank = () => ({
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
+  chatRows: 3,                          // over the picture, the newest 3, 5 or 10 lines of the chat (Rajesh 14 Nov)
   stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (a Watch online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
   online: { price: null, fiat: null, locked: false }, // the Watch online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
@@ -89,6 +90,7 @@ export function clean(input = {}) {
       return [...list, { name: text(s?.name, 40), percent: n >= 1 && used < 94 ? Math.min(n, 94 - used) : null, lightning: LN_ADDRESS.test(lightning) ? lightning : '' }];
     }, []),
     comments: input.comments !== false,
+    chatRows: [5, 10].includes(Number(input.chatRows)) ? Number(input.chatRows) : 3,
     stream: {
       mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',
       perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov
@@ -148,7 +150,9 @@ const now = () => new Date().toISOString();
 export async function currentShow() {
   const row = await one("SELECT settings, updated FROM shows WHERE id = 'current'");
   const { show, problems } = clean(row ? JSON.parse(row.settings) : blank());
-  return { show, problems, updated: row?.updated ?? null, path: show.page ? `/${show.page}` : '/' };
+  // No page name yet: on Longy's site the home page; on a stage (whose / is the setlist) /gig, so Plan gig's phone and
+  // the fan's tab show the ticket, not the setlist (Rajesh 15 Nov).
+  return { show, problems, updated: row?.updated ?? null, path: show.page ? `/${show.page}` : stageDb()?.id ? '/gig' : '/' };
 }
 
 // The gig has been: the host ended the night, or its date has gone.

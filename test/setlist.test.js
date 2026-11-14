@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { configure } from '../server/config.js';
 import { sqliteStage, withStage, useDb, kv, run } from '../server/db.js';
 import { currentShow, nextGig } from '../server/shows.js';
-import { setlist, finished } from '../server/setlist.js';
+import { setlist, finished, again } from '../server/setlist.js';
 
 function fakeStorage() {
   const db = new DatabaseSync(':memory:');
@@ -95,5 +95,19 @@ test('Longy’s own stage has no setlist', async () => {
   await withStage(makeStage(''), async () => {
     assert.equal(await setlist(env), null);
     assert.equal(await finished(env), null);
+  });
+});
+
+test('a crossed-off gig opens again; Your gig keeps its settings; finishing it skips ahead', async () => {
+  await withStage(st, async () => {
+    await setlist(env);
+    await finish(); await finish(); // on Your gig
+    const mine = (await currentShow()).show;
+    await run("UPDATE shows SET settings = ? WHERE id = 'current'", JSON.stringify({ ...mine, artist: 'Ann' }));
+    assert.deepEqual(await again('longy', env), { at: 'longy', done: ['frankie'] });
+    assert.equal((await currentShow()).show.artist, 'Longy');
+    assert.deepEqual(await finish(), { at: 'yours', done: ['frankie', 'longy'] }); // straight back to Your gig
+    assert.equal((await currentShow()).show.artist, 'Ann');
+    assert.equal(await again('nobody', env), null);
   });
 });

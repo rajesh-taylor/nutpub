@@ -49,7 +49,7 @@ const T = {
   liveEnded: 'The stream has stopped.', liveLost: 'The picture stopped. Press play to rejoin.',
   empty: 'Your wallet’s empty. Top it up to keep playing.',
   tipDone: (label) => `${label}: paid. Thank you!`,
-  ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (n) => `${n} sat${n === 1 ? '' : 's'} tipped. Thank you!`,
+  ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (amount) => `${amount} tipped. Thank you!`, thanks: 'Thank you!',
   retrying: 'Lost the reply. Asking again with the same payment…',
   retried: 'Same payment, same 10 seconds. Charged once.',
   notReady: 'The show isn’t ready yet.',
@@ -99,7 +99,8 @@ $('about').textContent = show.description;
 $('about').hidden = !show.description;
 const free = show.stream.mode === 'free';
 const online = show.stream.mode === 'ticket';
-document.body.classList.toggle('no-comments', show.comments === false); // tips stay; the words go // watching from home needs a Watch online ticket (or a venue ticket)
+document.body.classList.toggle('no-comments', show.comments === false);
+document.body.dataset.rows = [5, 10].includes(show.chatRows) ? show.chatRows : 3; // the chat over the picture: the newest few, the artist's pick // tips stay; the words go // watching from home needs a Watch online ticket (or a venue ticket)
 // A stream-only gig (no venue tickets): the show's link opens the home view.
 // The setup page's phone (view=ticket) follows the same rule, and turns back when venue tickets are switched on again.
 const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
@@ -118,8 +119,13 @@ function priceLine() {
   $('price').textContent = !left || left <= 0 ? T.perMinute(n)
     : left === Infinity ? T.freeFirst(freeMinutes(), n) : T.freeLeft(Math.ceil(left / 60), n);
 }
-const tipText = `Tip ${show.artist || ''} · ${sats(show.tip.price || 0)}`.replace('  ', ' ');
-$('tip').textContent = $('ov-tip').textContent = tipText;
+// The quick tip's words: "Tip Longy ₿", and under it, small, what one tap pays ("2,100 sats").
+function tipLabel(amount) {
+  const el = (tag, className, textContent) => Object.assign(document.createElement(tag), { className, textContent });
+  $('tip').replaceChildren(el('span', 'tip-top', `Tip ${show.artist || ''} ₿`.replace('  ', ' ')), el('small', 'tip-amt', amount));
+  $('ov-tip').textContent = `Tip ${show.artist || ''} · ${amount}`.replace('  ', ' ');
+}
+tipLabel(sats(show.tip.price || 0));
 
 // ---- This phone's pass: what paid pieces are recorded against. Kept in this browser.
 // A saved ticket link (…#ticket=<pass>): this browser takes that pass, ticket and all. After the #, so it never reaches a server log.
@@ -216,7 +222,6 @@ $('topup').hidden = !health.mint.test;
 $('wallet-page').parentElement.classList.toggle('solo', !health.mint.test);
 $('play').disabled = $('big-play').disabled = false;
 $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
-$('own').disabled = false;
 
 $('door-topup').onclick = () => $('topup').onclick();
 $('topup').onclick = async () => {
@@ -524,7 +529,7 @@ const layout = () => {
   $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
   // In full screen ₿ sits in the bottom bar, and the amount opens on the picture above it.
   if (full && $('own-form').parentElement !== $('player')) $('player').append($('own-form'));
-  else if (!full && $('own-form').parentElement === $('player')) ownSpot.after($('own-form'));
+  else if (!full && $('own-form').parentElement === $('player')) { ownSpot.after($('own-form')); $('own-form').hidden = true; } // full screen's own: off it, the comment box takes the sats
   wake();
 };
 // Full screen, playing: the bars fade after 3 seconds without the mouse (or a tap), as on YouTube.
@@ -570,7 +575,7 @@ async function tip(button) {
   try {
     const res = await paidFetch('/api/tip', said());
     if (res.ok) { sent(); tipped(res); }
-    say(res.ok ? T.tipDone(show.tip.label || 'Tip') : await refusal(res), res.ok);
+    if (res.ok) thank(T.tipDone(show.tip.label || 'Tip')); else say(await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
   }
@@ -625,7 +630,7 @@ async function nutzap(b, n) {
     if (res.ok) {
       sent(); tipped(res);
       publish(event, zapTo.relays).catch(() => {}); // in public, where any Nostr app can see it
-      say(`Nutzapped ${reads(n)}: in the chat with your name.`, true);
+      thank(`Nutzapped ${reads(n)}: in the chat with your name.`);
     } else say(await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
@@ -633,18 +638,16 @@ async function nutzap(b, n) {
 }
 $('ov-tip').onclick = () => tip($('ov-tip'));
 
-// ---- Tip sats, your amount: type it, then "Tip n sats" pays exactly that (its own 402).
+// ---- Tip sats, your amount. Off full screen it's the comment box's sats field (words and tip go together); in full
+// screen, where the chat isn't on the picture, ₿ Tip in the bottom bar opens a box of its own on the picture.
 const MIN_TIP = 21; // the server's minimum too (server/set.js)
-const ownSats = () => { const v = $('own-sats').value; const n = inFiat() ? satsFrom(v, rate[unit]) : Number(v); return Number.isInteger(n) && n >= MIN_TIP && n <= 1_000_000 ? n : 0; };
+// A box's amount in sats: it takes pounds, dollars or euros when the page reads in them.
+const satsIn = (box) => { const v = box.value; const n = inFiat() ? satsFrom(v, rate[unit]) : Number(v); return Number.isInteger(n) && n >= MIN_TIP && n <= 1_000_000 ? n : 0; };
+const ownSats = () => satsIn($('own-sats'));
 const ownForm = (open) => {
   $('own-form').hidden = !open;
-  $('own').hidden = open;
-  // While the amount is open the comment box's words go with the tip: its arrow waits (Return goes to the tip).
-  $('say-btc').setAttribute('aria-expanded', open);
-  $('say-send').disabled = open;
   if (open) { $('own-sats').value = ''; $('own-sats').oninput(); $('own-sats').focus(); }
 };
-$('own').onclick = () => { unlockAudio(); ownForm(true); };
 $('own-cancel').onclick = () => ownForm(false);
 $('own-sats').oninput = () => {
   const n = ownSats();
@@ -658,14 +661,27 @@ $('own-form').onsubmit = async (e) => {
   $('own-pay').disabled = true;
   try {
     const res = await paidFetch(`/api/tip/${n}`, said());
-    say(res.ok ? T.ownDone(n) : await refusal(res), res.ok);
-    if (res.ok) { sent(); tipped(res); ownForm(false); }
+    if (res.ok) {
+      sent(); tipped(res); thank(T.ownDone(reads(n)));
+      if (document.body.classList.contains('full')) { $('own-pay').textContent = T.thanks; setTimeout(() => ownForm(false), 1500); } else ownForm(false);
+    } else say(await refusal(res));
   } catch (err) {
     say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
   }
   $('own-pay').disabled = !ownSats();
   balance();
 };
+// The thank-you is the tipper's alone: small, by the comment box, for a few seconds (Rajesh 14 Nov: no pop-up on the
+// picture; the tip itself shows in the chat). Full screen: the amount box says it. No box on screen: the status line.
+let thanksTimer = 0;
+function thank(text) {
+  if (document.body.classList.contains('full')) return;
+  if (!$('say').offsetParent) return say(text, true);
+  clearTimeout(thanksTimer);
+  $('say-thanks').textContent = text;
+  $('say-thanks').hidden = false;
+  thanksTimer = setTimeout(() => { $('say-thanks').hidden = true; }, 6000);
+}
 
 // ---- The night: the door, the welcome and the free drink, the stage (doors, open, on, closed), the live chat.
 const body = document.body;
@@ -687,10 +703,6 @@ if (WALLET_CARD) {
   $('player').after(line);
   // What just happened ("Stopped. Nothing more is charged.") on the same line, from the right.
   line.append(document.querySelector('.masthead'), $('when'), $('status'));
-  // Tips start from the comment box: ₿ opens the amount, and the comment goes with the tip.
-  $('say').after($('own-form'));
-  ownSpot.remove();
-  $('own-form').before(ownSpot);
   // The balance is a figure, not a link; the buttons say what they do.
   const sum = $('wallet-link');
   sum.removeAttribute('href');
@@ -701,9 +713,8 @@ if (WALLET_CARD) {
   // A Watch online ticket (a flat fee) is bought on the wallet card: the money buttons' row isn't on this page.
   $('whole').classList.add('primary');
   document.querySelector('.purse-actions').prepend($('whole'));
-  $('say-btc').onclick = () => { unlockAudio(); ownForm($('own-form').hidden); };
-  // All the goals met: a ₿ button by them opens the tip box under the comment, as ₿ there does.
-  $('goal-more').onclick = () => { unlockAudio(); ownForm(true); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('own-sats').focus({ preventScroll: true }); };
+  // All the goals met: a ₿ button by them goes to the sats in the comment box.
+  $('goal-more').onclick = () => { unlockAudio(); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('say-sats').focus({ preventScroll: true }); };
 } else if (AS === 'home') $('money').after($('goal'));
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
@@ -758,7 +769,7 @@ function words() {
   $('billing').textContent = show.title;
   $('billing').hidden = !show.title;
   $('about').textContent = show.description;
-  $('tip').textContent = $('ov-tip').textContent = `Tip ${show.artist || ''} · ${reads(show.tip.price || 0)}`;
+  tipLabel(reads(show.tip.price || 0));
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
   $('say-tip').textContent = `Send with ${reads(show.tip.price || 0)}`;
   nutzapButton();
@@ -1327,6 +1338,13 @@ function drawUnit() {
     box.setAttribute('aria-label', `Tip amount in ${{ gbp: 'pounds', usd: 'dollars', eur: 'euros' }[mode]}`);
   }
   box.oninput();
+  // The comment box's tip field reads the same: ₿ and sats, or £ and pounds.
+  const tipBox = $('say-sats');
+  tipBox.value = '';
+  if (mode === 'btc') Object.assign(tipBox, { min: 21, max: 1_000_000, step: 1, inputMode: 'numeric', placeholder: 'sats' });
+  else { tipBox.removeAttribute('max'); Object.assign(tipBox, { min: box.min, step: 0.01, inputMode: 'decimal', placeholder: '0.00' }); }
+  $('say-unit').textContent = mode === 'btc' ? '₿' : SYMBOL[mode];
+  $('say-sats-box').classList.toggle('fiat', mode !== 'btc');
 }
 unitBox.onclick = (e) => {
   const b = e.target.closest('button');
@@ -1357,20 +1375,27 @@ function sent() {
   $('say-text').value = '';
   setTimeout(() => tick().catch(() => {}), 300);
 }
-// Return in the comment box while ₿ is open pays the tip with the words (the greyed arrow blocks the form's own Return).
-$('say-text').addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' || e.isComposing || $('own-form').hidden) return;
-  e.preventDefault();
-  if (ownSats()) $('own-form').requestSubmit(); else $('own-sats').focus();
-});
+// The comment box: words, sats or both. Enter (or Send) sends them together; no sats is a free comment.
 $('say').onsubmit = async (e) => {
   e.preventDefault();
-  if (!$('own-form').hidden) { // ₿ is open: the words are the tip's message, never a comment on their own
-    if (ownSats()) $('own-form').requestSubmit(); else $('own-sats').focus();
+  unlockAudio();
+  const box = $('say-sats');
+  const n = satsIn(box);
+  if (box.value.trim() && !n) { say(T.refused.too_small); box.focus(); return; }
+  if (n) {
+    $('say-send').disabled = $('say-free').disabled = true;
+    try {
+      const res = await paidFetch(`/api/tip/${n}`, said());
+      if (res.ok) { sent(); tipped(res); box.value = ''; thank(T.ownDone(reads(n))); } else say(await refusal(res));
+    } catch (err) {
+      say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
+    }
+    $('say-send').disabled = $('say-free').disabled = false;
+    balance();
     return;
   }
   const text = $('say-text').value.trim();
-  if (!text) return;
+  if (!text) { if (show.comments === false) box.focus(); return; }
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };

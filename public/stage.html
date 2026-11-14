@@ -34,10 +34,15 @@
     .setlist .li { position: relative; }
     .setlist .li.done::after { content: "✓"; position: absolute; top: -4px; right: 0; font-size: 30px; color: #2f7d32; }
     .setlist .li.now { color: #c4521a; }
+    /* Done: a Repeat gig button under it (Rajesh 15 Nov), not crossed out (inline-block stops the line-through). */
+    .setlist .repeat { display: inline-block; margin: 8px 0 0; padding: 5px 12px 4px; border: 1.5px solid #141414; border-radius: 4px; background: #fbfaf5;
+      font: 400 16px/1 var(--poster); letter-spacing: .08em; text-transform: uppercase; color: #141414; cursor: pointer; }
+    .setlist .repeat:hover, .setlist .repeat:focus-visible { background: #141414; color: #fbfaf5; outline: none; }
     .setlist .aside { margin: 4px 0 0; font-size: 15px; color: #6a6a6a; transform: rotate(-3deg); }
     .go { display: block; padding: 16px 0 13px; border-radius: 6px; background: var(--amber); color: var(--deep); font: 400 26px/1 var(--poster);
       letter-spacing: .08em; text-decoration: none; }
     .go:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+    .go.fan { margin-top: 12px; padding: 13px 0 10px; background: none; border: 1px solid var(--amber); color: var(--amber); font-size: 20px; }
     .under { margin: 12px 0 0; font-size: 17px; color: var(--cream); }
     .under a { color: #e8a845; }
     .how { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--smoke); }
@@ -84,11 +89,10 @@
           <p class="mk li" data-step="longy">1. Longy<small>Venue tickets and Watch online. Buy one, say hello in the chat.</small></p>
           <p class="mk li" data-step="frankie">2. Frankie Peroni<small>Pay as you watch, 60 sats a minute. Tip in the comments.</small></p>
           <p class="mk li" data-step="yours">3. Your gig<small>Your prices, your stretch goal.</small></p>
-          <p class="mk aside">(don't forget to tune up)</p>
         </section>
       </div>
       <a class="go" id="go" href="/setup">Plan gig</a>
-      <p class="under" id="under">You're the artist here. <a id="fan" href="/" target="_blank" rel="noopener">Open the fan's page</a> in a second tab.</p>
+      <a class="go fan" id="fan" href="/" target="_blank" rel="noopener">Open the gig as a fan in a 2nd tab</a>
       <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Takings: Move, then Finish gig.</p>
     </div>
     <div id="theirs" class="out" hidden>
@@ -121,9 +125,24 @@
         li.classList.toggle('now', li.dataset.step === list.at && !list.done.includes(list.at));
       }
       const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s' }[list.at];
-      document.getElementById('go').textContent = name ? `Open ${name} gig` : 'Plan your gig';
+      // Two buttons, two people (Rajesh 15 Nov): the artist's pages, then the fan's page in a tab of its own.
+      document.getElementById('go').textContent = name ? `Open ${name} gig as ${name.replace('\u2019s', '')}` : 'Plan your gig';
+      document.getElementById('fan').textContent = name ? `Open ${name} gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab';
       document.getElementById('fan').href = r.path;
       document.getElementById('how').hidden = !name;
+      const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', yours: 'your gig' };
+      for (const li of document.querySelectorAll('[data-step].done')) {
+        const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'repeat', textContent: '\u21bb Repeat gig' });
+        btn.setAttribute('aria-label', `Repeat ${title[li.dataset.step]}`);
+        li.append(btn);
+        btn.onclick = async () => {
+          const now = ` It clears ${title[list.at]} (its tickets and chat). Sats waiting on Takings stay there.`;
+          if (!confirm(`Open ${title[li.dataset.step]} again?${now}`)) return;
+          const out = await fetch('/api/admin/setlist/again', { method: 'POST', headers: { 'X-Admin': key, 'Content-Type': 'application/json' }, body: JSON.stringify({ step: li.dataset.step }) })
+            .then((x) => x.json()).catch(() => ({ error: 'No answer: try again.' }));
+          if (out.error) alert(out.error); else location.reload();
+        };
+      }
       // Every payment is locked to the artist's key: made here once, so the fan's tab can buy straight away.
       import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
     }
