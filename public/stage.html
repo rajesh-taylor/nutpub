@@ -32,11 +32,12 @@
     /* Done: crossed off in pen, with a tick. The one on now: in red. */
     .setlist .li.done { color: #8a8a8a; text-decoration: line-through; text-decoration-thickness: 2px; }
     .setlist .li { position: relative; }
-    .setlist .li.done::after { content: "✓"; position: absolute; top: -4px; right: 0; font-size: 30px; color: #2f7d32; }
+    /* Done: a small tick and Repeat gig beside it, top right (Rajesh 15 Nov). Inline-block stops the line-through. */
+    .setlist .done-tag { position: absolute; top: 2px; right: -6px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+    .setlist .done-tag .tick { font-size: 20px; line-height: 1; color: #2f7d32; }
     .setlist .li.now { color: #c4521a; }
-    /* Done: a Repeat gig button under it (Rajesh 15 Nov), not crossed out (inline-block stops the line-through). */
-    .setlist .repeat { display: inline-block; margin: 8px 0 0; padding: 5px 12px 4px; border: 1.5px solid #141414; border-radius: 4px; background: #fbfaf5;
-      font: 400 16px/1 var(--poster); letter-spacing: .08em; text-transform: uppercase; color: #141414; cursor: pointer; }
+    .setlist .repeat { display: inline-block; padding: 4px 7px 3px; border: 1.5px solid #141414; border-radius: 4px; background: #fbfaf5;
+      font: 400 13px/1 var(--poster); letter-spacing: .06em; text-transform: uppercase; color: #141414; white-space: nowrap; cursor: pointer; }
     .setlist .repeat:hover, .setlist .repeat:focus-visible { background: #141414; color: #fbfaf5; outline: none; }
     .setlist .aside { margin: 4px 0 0; font-size: 15px; color: #6a6a6a; transform: rotate(-3deg); }
     .go { display: block; padding: 16px 0 13px; border-radius: 6px; background: var(--amber); color: var(--deep); font: 400 26px/1 var(--poster);
@@ -134,7 +135,10 @@
       for (const li of document.querySelectorAll('[data-step].done')) {
         const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'repeat', textContent: '\u21bb Repeat gig' });
         btn.setAttribute('aria-label', `Repeat ${title[li.dataset.step]}`);
-        li.append(btn);
+        const tag = Object.assign(document.createElement('span'), { className: 'done-tag' });
+        tag.append(Object.assign(document.createElement('span'), { className: 'tick', textContent: '\u2713' }), btn);
+        tag.querySelector('.tick').setAttribute('aria-label', 'Done');
+        li.append(tag);
         btn.onclick = async () => {
           const now = ` It clears ${title[list.at]} (its tickets and chat). Sats waiting on Takings stay there.`;
           if (!confirm(`Open ${title[li.dataset.step]} again?${now}`)) return;
