@@ -65,8 +65,18 @@ function fill(s) {
     `<label class="choice inline"><input type="checkbox" data-lang="${code}"${show.languages.includes(code) ? ' checked' : ''}> ${name}</label>`).join('');
   languageChoices();
   drawSplits();
+  drawGoals();
   refresh();
 }
+
+// The second stretch goal shows once it's filled in or + Add a stretch is pressed (two at most, Rajesh 13 Nov).
+let secondGoal = false;
+function drawGoals() {
+  const two = secondGoal || !!(show.goals?.[1]?.label || show.goals?.[1]?.at);
+  $('goal-2').hidden = !two;
+  $('add-goal').hidden = two;
+}
+$('add-goal').onclick = () => { secondGoal = true; drawGoals(); $('goal-2').querySelector('input').focus(); };
 
 // The artist's own Lightning address is an ordinary field; the rows are drawn round it.
 const fieldLightning = Object.assign(document.createElement('input'), { type: 'email', placeholder: 'e.g. longy@walletofsatoshi.com', maxLength: 120, ariaLabel: 'The artist\u2019s Lightning address' });

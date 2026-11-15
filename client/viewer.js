@@ -805,12 +805,20 @@ const PHONE = matchMedia('(max-width: 899px)');
 function phoneMoves() {
   if (!ONE) return;
   $('tab-tip').prepend($('goal'));
-  $('tip-btns').append($('tip'), $('card-tip'));
+  $('tip-btns').prepend($('tip'));
+  $('tip-btns').append($('card-tip'));
   if (PHONE.matches) $('tab-ticket').before($('tab-tip'));
   else $('tab-ticket').append($('tab-tip'));
 }
 phoneMoves();
 PHONE.addEventListener('change', phoneMoves);
+// Your amount (Rajesh 15 Nov, late): the comment box's sats field is a tip of any amount; this puts the cursor there.
+$('tip-own').onclick = () => {
+  unlockAudio();
+  if (PHONE.matches) body.dataset.tab = 'tip'; // the Tip tab keeps the comment box under it
+  $('say-sats').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  $('say-sats').focus({ preventScroll: true });
+};
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
 if (AS === 'home') for (const a of document.querySelectorAll('a[href="/wallet.html"]')) a.href = '/wallet.html?as=home'; // its own wallet

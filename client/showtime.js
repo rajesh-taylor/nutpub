@@ -25,6 +25,9 @@ $('screen-copy').addEventListener('click', async () => {
 import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, info.artistKey)).catch(() => {});
 
 const streamed = info.show.stream.mode !== 'off';
+// An example gig (a stage's setlist): its set plays from a recording, so no Larix. The stream button becomes a status
+// light, ● On air, and the signal box says so (Rajesh 14 Nov).
+const EXAMPLE = await api('GET', '/api/admin/setlist').then((r) => !!r.setlist).catch(() => false);
 $('stream-btn').hidden = !streamed;
 $('signal').hidden = !streamed;
 
@@ -63,6 +66,9 @@ function steps() {
     b.classList.toggle('now', isNow);
     b.classList.toggle('done', i < at || (isNow && now.stage === 'closed'));
     b.textContent = i < at || (isNow && now.stage === 'closed') ? TICK + past : isNow ? current : next;
+    const light = EXAMPLE && b.dataset.stage === 'open' && now.stage !== 'doors';
+    b.classList.toggle('on-air', light);
+    if (light) b.textContent = now.stage === 'closed' ? '\u25cf Off air' : '\u25cf On air';
   }
   const t = now.times || {};
   const open = t.open || (now.stage !== 'doors' && now.opensAt ? new Date(now.opensAt * 1000).toISOString() : null);
@@ -81,6 +87,13 @@ function steps() {
 // What the artist needs to know before going out: is the stream reaching us, and can viewers see it yet.
 function signal() {
   const before = now.stage === 'doors';
+  if (EXAMPLE && !now.live) {
+    $('signal').classList.toggle('on', now.stage !== 'closed' && !before);
+    $('signal-head').textContent = now.stage === 'closed' ? 'Off air' : before ? 'Ready: the set is a recording' : 'On air: the set plays from a recording';
+    $('signal-text').textContent = now.stage === 'closed' ? 'The night is over.' : 'No Larix needed on an example gig. Viewers can watch now.';
+    preview();
+    return;
+  }
   $('signal').classList.toggle('on', !!now.live);
   $('signal-head').textContent = now.live
     ? (before ? 'Your stream is reaching us' : now.stage === 'closed' ? 'Your stream is still coming in' : 'You’re live')

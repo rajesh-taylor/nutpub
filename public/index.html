@@ -134,8 +134,8 @@
       <button type="button" data-tab="wallet">Wallet <b id="tab-balance"></b></button>
     </nav>
     <section class="tab-tip" id="tab-tip" aria-label="Tip" hidden>
-      <p class="tip-btns" id="tip-btns"></p>
-      <p class="hint">Your own amount: put it in the comment box’s sats, with words or without.</p>
+      <p class="tip-btns" id="tip-btns"><button type="button" class="btn quiet" id="tip-own">Your amount</button></p>
+      <p class="hint">Your amount goes in the comment box’s sats, with words or without.</p>
     </section>
     <section class="tab-ticket" id="tab-ticket" aria-label="Ticket" hidden>
       <div class="card tt-card" id="tt-online" hidden>
@@ -163,7 +163,7 @@
              No sats: a free comment. Comments off: the sats alone. -->
         <span class="say-field">
           <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
-          <label class="say-sats" id="say-sats-box"><span class="say-unit" id="say-unit" aria-hidden="true">₿</span><input id="say-sats" type="number" min="21" max="1000000" step="1" inputmode="numeric" placeholder="sats" autocomplete="off" aria-label="A tip with it, in sats (21 or more). Empty: a free comment."></label>
+          <label class="say-sats" id="say-sats-box"><span class="say-unit" id="say-unit" aria-hidden="true">₿</span><input id="say-sats" type="number" min="21" max="1000000" step="1" inputmode="numeric" placeholder="tip, sats" autocomplete="off" aria-label="A tip with it, in sats (21 or more). Empty: a free comment."></label>
         </span>
         <span class="say-tools"><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send">➤</button></span>
           <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>

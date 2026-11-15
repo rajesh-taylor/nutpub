@@ -1243,3 +1243,13 @@ body.no-stream .big-play, body.no-stream .player .bar { display: none !important
 .role small { font: inherit; letter-spacing: .08em; opacity: .75; }
 body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-left: auto; margin-right: auto; }
 .board-head .role { margin: 0; font-size: 15px; padding: 5px 10px 3px; }
+
+/* Plan gig's Tips, stretch goals and splits card: three short parts under one heading. */
+.panel h3.sub { margin: 18px 0 8px; font: 400 19px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
+.panel h2 + h3.sub { margin-top: 4px; }
+.panel .tip-amount { max-width: 220px; }
+/* Stretch goals | splits (Rajesh 15 Nov, late): side by side with a hairline on a laptop, stacked on a phone. */
+.two-up { display: grid; gap: 8px 32px; }
+@media (min-width: 1100px) { .two-up { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .two-up > div + div { padding-left: 32px; border-left: 1px solid rgb(239 227 200 / .14); } }
+.panel .sub-note { margin: -2px 0 12px; font-size: 15px; color: var(--smoke); }
+#goal-2[hidden] { display: none; }

@@ -23,12 +23,11 @@
     .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 8px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: grid; gap: 8px; font-size: 16px; white-space: nowrap; }
     .nut-menu a { color: var(--amber); }
     .judge h1 { margin: 0; padding-right: 56px; font: 400 clamp(42px, 7vw, 62px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
-    /* Write-up B (Rajesh 15 Nov, late): plain words up top, the Cashu and Nostr specs on each poster's small print. */
-    .lines { display: grid; gap: 10px; max-width: 65ch; }
-    .lines p { margin: 0; font: 17px/1.55 var(--body); color: var(--smoke); }
-    .lines b { color: var(--cream); font-weight: 600; }
-    .lines .n { color: #e8a845; font: 400 20px/1 var(--poster); letter-spacing: .06em; }
-    .lines .key b { color: #e8a845; }
+    /* Two lines (Rajesh 15 Nov, late): the posters say the rest; the specs are on each poster's small print. */
+    .lines { display: grid; gap: 8px; }
+    .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
+    .lines b { color: var(--cream); font-weight: 400; }
+    .lines .key { color: #e8a845; }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 18px; align-items: start; }
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
     .poster { position: relative; display: grid; min-width: 0; border-radius: 2px; color: #1a1408;
@@ -77,10 +76,8 @@
     </details>
     <h1>Judge for yourself</h1>
     <div class="lines">
-      <p><b>Three gigs, three ways an artist gets paid.</b> Test sats only: NutPub never holds a sat.</p>
-      <p><span class="n">1</span> · Pay once to watch online. <span class="n">2</span> · Pay by the minute. <span class="n">3</span> · Pay at the door, watch free at home. Number 3 is how most artists like Longy and Frankie work today.</p>
-      <p>Have your phone ready for the door and the bar, or press <b>Let in by hand</b> and <b>Pour by hand</b>.</p>
-      <p class="key">Every gig ends on <b>Takings</b>: move your sats to <b>Cashu.me</b>.</p>
+      <p><b>Three gigs, three ways an artist gets paid: Cashu ecash over HTTP 402.</b></p>
+      <p>Have your phone ready for the door and the bar (or press <b>Let in by hand</b> and <b>Pour by hand</b>), and end every gig on <b class="key">Takings</b>, moving your sats to <b class="key">Cashu.me</b>.</p>
     </div>
 
     <div class="wall">

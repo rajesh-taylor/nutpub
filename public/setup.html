@@ -72,7 +72,7 @@
     .board .slot.full label span { display: none; }
     .board .slot small { font-size: 11px; }
     .board .slot .drop { position: absolute; top: 4px; right: 4px; font-size: 14px; padding: 4px 7px 2px; background: rgb(5 9 20 / .75); }
-    @media (min-width: 901px) { .board .wide .goal-row { grid-template-columns: repeat(2, minmax(0, 2fr) minmax(0, 1fr)); } }
+    /* One goal a row (15 Nov, late): Goal, then At, sats. */
     @media (min-width: 901px) { .board .wide .nutzap-row { grid-template-columns: repeat(3, minmax(0, 1fr) minmax(0, 2fr)); } }
     .board .phone-frame iframe { pointer-events: none; } /* a picture of the ticket page: nothing to pay here */
     .board .price-row { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: flex-start; }
@@ -397,29 +397,42 @@
             <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
             </div>
           </section>
-          <section class="panel wide">
-            <h2>Show Splits</h2>
-            <div class="split-rows" id="split-rows"></div>
-            <p class="add-row"><button type="button" class="btn quiet" id="add-split">+ Add a split</button></p>
-          </section>
-
-          <section class="panel wide">
-            <h2>Stretch goals</h2>
-            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Fed by live tips. Everyone sees the bar fill.</p>
-            <div class="goal-row">
-              <label class="field">Goal<input data-path="goals.0.label" maxlength="60"></label>
-              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"></label>
-              <label class="field">Goal<input data-path="goals.1.label" maxlength="60"></label>
-              <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
+          <!-- One card (Rajesh 15 Nov, late): the stretch goals the tips fill, a hairline, then who shares the takings. -->
+          <section class="panel wide" id="goals-card">
+            <h2>Stretch goals and splits</h2>
+            <div class="two-up">
+              <div>
+                <h3 class="sub">Stretch goals</h3>
+                <p class="sub-note">Fed by live tips. Everyone sees the bar fill.</p>
+                <div class="goal-row">
+                  <label class="field">Goal<input data-path="goals.0.label" maxlength="60"></label>
+                  <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.0.at"></label>
+                </div>
+                <div class="goal-row" id="goal-2">
+                  <label class="field">Second goal<input data-path="goals.1.label" maxlength="60"></label>
+                  <label class="field">At, sats<input type="number" min="1" step="1" inputmode="numeric" data-path="goals.1.at"></label>
+                </div>
+                <p class="add-row"><button type="button" class="btn quiet" id="add-goal">+ Add a stretch</button></p>
+                <div class="goal-track"><i id="goal-bar"></i></div>
+                <p style="margin: 0; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
+              </div>
+              <div>
+                <h3 class="sub">Splits</h3>
+                <p class="sub-note">Who shares the takings.</p>
+                <div class="split-rows" id="split-rows"></div>
+                <p class="add-row"><button type="button" class="btn quiet" id="add-split">+ Add a split</button></p>
+              </div>
             </div>
-            <label class="field">Thank-you message, shown once the last goal is met<input data-path="goalsThanks" maxlength="140" placeholder="e.g. You did it! The new song is coming up next."></label>
-            <div class="goal-track"><i id="goal-bar"></i></div>
-            <p style="margin: 0 0 14px; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
           </section>
 
-          <section class="panel wide">
-            <h2>Nutzap buttons</h2>
-            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">One-tap tips under the chat, for fans signed in with Nostr: public, with their name. Up to three. Leave an amount empty for fewer.</p>
+          <!-- Tips and Nutzaps (Rajesh 15 Nov, late): the one-tap tip for everyone, then the Nutzap buttons for Nostr fans. -->
+          <section class="panel wide" id="tips-card">
+            <h2>Tips and Nutzaps</h2>
+            <h3 class="sub">Tip button</h3>
+            <p class="sub-note">One tap, for every fan. Any other amount goes in the comment box.</p>
+            <label class="field tip-amount">Each tap tips, sats<input type="number" min="21" step="1" inputmode="numeric" data-path="tip.price" placeholder="2100"></label>
+            <h3 class="sub">Nutzap buttons</h3>
+            <p class="sub-note">One-tap tips under the chat, for fans signed in with Nostr: public, with their name. Up to three. Leave an amount empty for fewer.</p>
             <div class="nutzap-row">
               <label class="field">Emoji<select data-path="nutzaps.0.emoji" class="nz-emoji"></select></label>
               <label class="field">Sats<input type="number" min="21" step="1" inputmode="numeric" data-path="nutzaps.0.sats" placeholder="21"></label>
@@ -474,7 +487,7 @@
         <div hidden>
           <span id="tip-preview"></span>
           <!-- Off for the demo; they come back with a Venue/Hosts section. -->
-          <input data-path="tip.label"><input type="number" data-path="tip.price">
+          <input data-path="tip.label">
           <a id="takings-link"></a><a id="bar-link"></a><a id="doors-open"></a>
           <div id="langs"></div><select data-path="language" id="language"></select>
           <input type="checkbox" data-path="wallet.on"><input type="checkbox" data-path="retry.on">
