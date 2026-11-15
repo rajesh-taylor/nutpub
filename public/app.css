@@ -1222,3 +1222,41 @@ body.one .tab-ticket > #tt-online { order: -1; }
 body.one .door-line .door-where { display: none !important; } /* the tab says it already: the QR is right there */
 @media (min-width: 900px) { body.one .tab-ticket, body.one .tab-ticket > .inside { align-items: start; } }
 @media (min-width: 900px) { body.one .tabs { display: none; } }
+
+/* ---- One screen, full screen (session 28, 15 Nov; "Laptop · one full-screen look" on Gig Page Phone Options): the
+   picture fills the window above one strip along the bottom (the wallet, the drink, the tip, the comment box with its
+   sats). LIVE and a small TEST MINT chip sit inside the picture; the newest chat lines over its bottom right. */
+.test-chip, .strip[hidden] { display: none; }
+body.one.full { --strip: 72px; }
+body.one.full .test-banner { display: none; }
+body.viewer.one.full .player { inset: 0 0 var(--strip) 0; }
+body.viewer.one.full .live-badge { position: absolute; top: 16px; left: 16px; }
+body.one.full.test-mint .test-chip { display: block; position: absolute; z-index: 2; top: 17px; right: 16px; padding: 4px 8px 3px; font: 400 13px/1 var(--poster); letter-spacing: .16em; text-transform: uppercase; color: var(--amber); background: rgb(5 9 20 / .6); border: 1px solid var(--amber); border-radius: 3px; transition: opacity .4s; }
+body.one.full.idle .test-chip { opacity: 0; }
+body.one.full .ov-btc, body.one.full #ov-tip { display: none !important; }
+body.viewer.one.full .player .own { display: none; }
+body.viewer.one.full .status { top: 56px; }
+/* The strip: one line, always there (the controls on the picture fade; the strip doesn't). */
+body.one.full .strip { position: fixed; z-index: 4; left: 0; right: 0; bottom: 0; height: var(--strip); box-sizing: border-box; display: flex; align-items: center; gap: 12px;
+  padding: 0 max(16px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px, env(safe-area-inset-left)); background: var(--deep); border-top: 1px solid rgb(239 227 200 / .12); }
+.strip [hidden] { display: none !important; }
+.strip-wallet { flex: none; font: 400 15px/1 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--smoke); white-space: nowrap; }
+.strip-wallet b { font-size: 24px; letter-spacing: .04em; color: var(--amber); font-weight: 400; margin-left: 4px; }
+.strip > .btn { flex: none; height: 46px; padding: 0 16px; font-size: 18px; white-space: nowrap; }
+.strip #tip { flex-direction: row; gap: 8px; background: var(--amber); color: var(--deep); border-color: var(--amber); }
+.strip #tip .tip-amt { font-size: 15px; }
+.strip .say { flex: 1 1 auto; min-width: 0; margin: 0; }
+body.one.full .strip .say input { padding-top: 11px; padding-bottom: 11px; }
+/* The chat over the picture: its newest lines only (3, 5 or 10, the artist's pick), at the bottom right, above the
+   controls. The words stay one size on a big screen. */
+body.one.full .chat { position: fixed; z-index: 3; top: auto; right: 16px; bottom: calc(var(--strip) + 64px); left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none; display: block; }
+body.one.full .chat > :not(.feed) { display: none !important; }
+body.one.full .feed { max-height: none; overflow: hidden; gap: 4px; align-items: flex-end; }
+body.one.full .feed li, body.one.full .feed li.tipped { display: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 16px; line-height: 1.35; }
+body.one.full .feed li:nth-last-child(-n+3) { display: block; }
+body.one.full[data-rows="5"] .feed li:nth-last-child(-n+5), body.one.full[data-rows="10"] .feed li:nth-last-child(-n+10) { display: block; }
+/* Full screen hides the page's other parts: the tabs, the cards, the wallet card. */
+body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.one.full .tab-tip, body.one.full .bottom { display: none !important; }
+.strip #tip:disabled { display: none; } /* no tip price set: the comment box's sats only */
+/* A narrow window (a phone turned sideways keeps its height, not its width): the comment box alone in the strip. */
+@media (max-width: 699px) { .strip .strip-wallet, .strip > .btn { display: none !important; } }

@@ -197,7 +197,7 @@ const balance = async () => {
   $('balance').textContent = inFiat() ? fiat(have) : n;
   const d = document.getElementById('door-balance'); // on the door's ticket box too: you see what you have before you pay
   if (d) d.textContent = n;
-  $('tab-balance').textContent = inFiat() ? fiat(have) : n; // and on the Wallet tab
+  $('tab-balance').textContent = $('strip-balance').textContent = inFiat() ? fiat(have) : n; // the Wallet tab, the full-screen strip
 };
 // Until the wallet answers, say so: an empty balance would look like lost sats.
 $('balance').classList.add('opening');
@@ -563,8 +563,21 @@ let sidewaysOut = false; // a sideways phone starts full screen; the button step
 // Where the tip's amount lives off full screen (under the comment box, or under the money buttons).
 const ownSpot = document.createComment('own-form');
 $('own-form').before(ownSpot);
+// One screen, full screen (15 Nov): the drink, the tip and the comment box go into the strip along the bottom, and come
+// back to where they were on the way out. The chat's newest lines sit over the picture (styles).
+const parked = new Map();
+function fullMoves(full) {
+  if (!ONE) return;
+  $('strip').hidden = !full;
+  for (const id of ['drink-open', 'tip', 'say']) {
+    const el = $(id);
+    if (full && !parked.has(id)) { const mark = document.createComment(id); el.before(mark); parked.set(id, mark); $('strip').append(el); }
+    if (!full && parked.has(id)) { parked.get(id).replaceWith(el); parked.delete(id); }
+  }
+}
 const layout = () => {
   const full = wantFull || (sideways.matches && !sidewaysOut);
+  fullMoves(full);
   document.body.classList.toggle('full', full);
   document.body.classList.toggle('sideways', sideways.matches);
   $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
@@ -599,6 +612,15 @@ $('full').onclick = () => {
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && wantFull) { wantFull = false; layout(); } // left with Esc or the back gesture
 });
+// Esc goes back where the browser has no real full screen (the page alone fills the window).
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wantFull && !document.fullscreenElement) { wantFull = false; layout(); } });
+const leaveFull = () => {
+  if (!body.classList.contains('full')) return;
+  if (sideways.matches && !wantFull) sidewaysOut = true;
+  wantFull = false;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  layout();
+};
 
 // iPhone (Low Power Mode) may refuse to start a video without a tap: any tap on the picture starts it.
 // With a mouse, a click on the picture plays and pauses it, as on YouTube (a phone's tap keeps the old way).
@@ -716,7 +738,7 @@ $('own-form').onsubmit = async (e) => {
 // picture; the tip itself shows in the chat). Full screen: the amount box says it. No box on screen: the status line.
 let thanksTimer = 0;
 function thank(text) {
-  if (document.body.classList.contains('full')) return;
+  if (document.body.classList.contains('full')) return ONE ? say(text, true) : undefined; // the strip has no room under the box
   if (!$('say').offsetParent) return say(text, true);
   clearTimeout(thanksTimer);
   $('say-thanks').textContent = text;
@@ -1104,7 +1126,7 @@ function ticketTab({ room, ticket, closed, s, confirmed }) {
   $('tt-venue-note').hidden = !then.length;
   $('tabs').querySelector('[data-tab="ticket"]').classList.toggle('nudge', nudge && tab !== 'ticket');
 }
-$('drink-open').onclick = () => { if (ONE) { showTab('ticket'); $('tab-ticket').scrollIntoView({ block: 'start' }); } };
+$('drink-open').onclick = () => { if (ONE) { leaveFull(); showTab('ticket'); $('tab-ticket').scrollIntoView({ block: 'start' }); } };
 
 $('drink-back').onclick = () => { drinkAside = true; render(); scrollTo(0, 0); };
 if (!ONE) $('drink-open').onclick = () => { drinkAside = false; render(); scrollTo(0, 0); };

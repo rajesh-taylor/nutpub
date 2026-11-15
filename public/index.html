@@ -97,6 +97,7 @@
         <p><b>The free part is over</b><span id="free-over-price"></span></p>
         <button type="button" class="btn primary" id="keep-watching">Keep watching</button>
       </div>
+      <span class="test-chip" aria-hidden="true">Test mint</span>
       <button class="big-play" id="big-play" aria-label="Play" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
       </button>
@@ -124,6 +125,8 @@
 
     <!-- One screen for every fan (15 Nov, design B): on a phone, four tabs under the picture. The page is the same for
          a venue ticket and for watching online; only the Ticket tab differs. On a laptop the tabs go and all of it shows. -->
+    <!-- Full screen on the gig page itself (15 Nov): one strip along the bottom, the video just above it. -->
+    <div class="strip" id="strip" hidden><span class="strip-wallet">Wallet <b id="strip-balance"></b></span></div>
     <nav class="tabs" id="tabs" aria-label="The gig page" hidden>
       <button type="button" data-tab="chat">Chat</button>
       <button type="button" data-tab="tip">Tip</button>
