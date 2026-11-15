@@ -8,7 +8,7 @@
 
 ## What it does
 
-- **For the artist:** three pages. **Plan gig** sets up the night weeks ahead: venue tickets, Watch online or pay by the minute, prices, door scanner, moderators and poster. **Show Time** runs the night with three buttons: Start stream, Start show, End night. **Takings** shows what came in, with The NutPub's 5% on its own line, and moves it to the artist's own Cashu wallet with one tap.
+- **For the artist:** three pages. **Plan gig** sets up the night weeks ahead: venue tickets, Watch online or pay by the minute, prices, door scanner, moderators and poster, with a phone beside it showing what fans will see. **Show Time** runs the night with three buttons (Start stream, Start show, End night) and two previews of the fan's page, at home and on a phone. **Takings** shows what came in, with The NutPub's 5% on its own line, moves it to the artist's own Cashu wallet with one tap, and ends as a till receipt. **Your recordings** on Takings: each broadcast as an MP4 to download, or delete; Stream's copy goes after 7 days.
 - **One gig page for every fan:** at the venue or at home, the same page. On a phone: the video on top, then **Chat · Tip · Ticket · Wallet**. Only the Ticket tab differs: a venue ticket holds the door QR and the free drink (and plays the video free, for anyone stuck at the back); at home it holds Watch online or the price a minute. On a laptop: the video with the chat beside it and the cards under it; full screen keeps one strip along the bottom (wallet, drink, tip, comment box) with the newest chat lines over the picture.
 - **For the fan:** pay in sats, then save the ticket as a passkey in the phone's password manager. **Find my ticket** brings it back on a new phone. (On judges' stages there are no passkeys: the ticket stays in the browser.) At the door, the QR changes every 30 seconds, so a screenshot won't get in.
 - **The 402 on live video:** the stream only plays with a short-lived signed token. Each minute the browser wallet pays an HTTP 402 (NUT-24) for the next token. If the fan stops paying, the picture stops. The artist can make the first minutes free.
@@ -33,13 +33,15 @@ Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.
 
 ## Judge for yourself
 
-**Judge for yourself** on the home page opens three gig posters: three ways an artist gets paid, Cashu ecash over HTTP 402. Best on a laptop with three tabs: the stage page as your guide, the artist's pages, and the fan's page. Have your phone ready for the door and the bar; with no phone, Show Time has **Let in by hand** and **Pour by hand**. Test sats only.
+thenutpub.com opens on **Judge for yourself**: three gig posters, three separate ways artists get paid with Cashu ecash over HTTP 402. Best on a laptop with two tabs: the artist's pages and the fan's page. Have your phone ready for the doormen and the bar staff; with no phone, Show Time has **Let in by hand** and **Pour by hand**. Test sats only.
 
-Each poster makes a stage of its own, at its own address (`<id>.thenutpub.com`) with its own database, holding just that gig. No passkeys and no account: this browser remembers the stage, so the poster then says **Open again** or **Start fresh**. The stage page lists four steps in order, each button where it's needed: open Plan gig as the artist and press Start show; enter as a fan in another tab; End night; move the sats on Takings. Longy's real night stays at thenutpub.com/longy.
+Each poster makes a stage of its own, at its own address (`<id>.thenutpub.com`) with its own database, holding just that gig, and opens it on **Plan gig** as the artist. No passkeys and no account: this browser remembers the stage, so the poster then says **Open again** (back where you left off) or **Start fresh**. Stages close themselves 7 days after they're made; Takings says when.
 
-1. **Longy** (start here): online only, one £20 ticket. Say hello in the chat (Aaron of Essex, his moderator, asks where everyone's watching from), tip with a comment, and watch his stretch goal move.
-2. **Frankie Peroni**: pay as you watch, 60 sats a minute (The Devils Train from The Fickle Pickle). Play, stop, come back, tip: you pay only for the minutes you watch. A £30 venue ticket is on sale too.
-3. **At the venue**: Frankie's second night. A £30 venue ticket with the first drink in it; the door scans the ticket, the bar pours the drink. At home the stream is free, with tips. This is how most artists work today, so not everything here is a 402.
+**Follow the Judges line.** Each of the artist's pages has one line at the top saying the next thing to do (Judges · 1 of 5 to 5 of 5): look at Plan gig, press Start show, open **Fan's page ↗**, End night once the fan's list is done, then Move and Finish gig on Takings. The fan's page has its own **Judges** list that ticks itself as you go; in full screen the next step sits on the picture.
+
+1. **Longy** (start here): online only, one £20 ticket. Say hello in the chat (Aaron of Essex, his moderator, asks where everyone's watching from), go full screen and tip 30,000 sats there, then tip again under his stretch goal and watch it move.
+2. **Frankie Peroni**: pay as you watch, 60 sats a minute (The Devils Train from The Fickle Pickle). Play, stop, play again, tip: you pay only for the minutes you watch. A £30 venue ticket is on sale too.
+3. **At the venue**: Frankie's second night. A £30 venue ticket with the first drink in it; the doormen scan the ticket, the bar staff pour the drink. At home the stream is free, with tips. This is how most artists work today, so not everything here is a 402.
 
 Every gig ends the same way: **End night** on Show Time, then **Takings**, **Move to Cashu.me** (it asks to add the test mint once: say yes). Takings then shows the night as a till receipt (each kind of takings, the 5%, what moved and the mint's fee); **Finish gig** stamps it PAID OUT and keeps it under Past gigs, and **Save receipt** prints it. Fans move their own leftover sats to Cashu.me from their wallet page. Each wallet page says whose it is: fan (and for which ticket), artist or bar. The clips play through the site's own player: nothing to install. Practice sets and streams stop after 20 minutes. Up to 50 stages at once until Sat 21 Nov, then 15.
 
@@ -53,12 +55,13 @@ All three: ecash from a Cashu mint (NUT-00 to 04), each payment locked to the ar
 
 ## Coming before 27 Nov
 
-- Your recordings on Takings (download or delete); stages that close themselves after 7 days.
 - Tickets the NutPub can't link to their buyer (blind-signed).
+- A guide to pricing for each kind of streamer.
 
 ## Known limits
 
 - The artist's key lives in one browser, with no backup yet. A passkey-sealed backup is planned.
+- Put on a gig (a stage of your own, sealed with a passkey) is built but off the home page until after 27 Nov: judges use the three posters.
 - On the test mint, a stream takes 10 viewers at a time.
 - Card payments and Show Splits payouts aren't wired up yet.
 
