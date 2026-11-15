@@ -1150,15 +1150,16 @@ function render() {
 const FULL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" role="img" aria-label="the full screen button"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
 function todoItems() {
   const s = split();
-  const full = { done: !!todo.full, html: `Go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture`, did: 'Went full screen' };
-  const tip = { done: tippedHere > 0, text: 'Tip with a comment', did: `Tipped ${sats(tippedHere)}`, now: 'Now tip with a comment: the box below' };
-  const hello = { done: !!todo.hello, text: 'Say hello in the chat', did: 'Said hello in the chat', now: 'Say hello: the comment box below' };
+  // `short`: the words in the laptop's one row; `tip`: the step is a tip (full screen's tip box glows for it).
+  const full = { done: !!todo.full, html: `Go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture`, did: 'Went full screen', short: `Full screen ${FULL_ICON}` };
+  const tip = { done: tippedHere > 0, text: 'Tip with a comment', did: `Tipped ${sats(tippedHere)}`, now: 'Now tip with a comment: the tip box below', short: 'Tip with a comment', tip: true };
+  const hello = { done: !!todo.hello, text: 'Say hello in the chat', did: 'Said hello in the chat', now: 'Say hello: the comment box below', short: 'Say hello in the chat' };
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
-    return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket' },
-      show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door' },
-      s.drink && { done: !!door.drink?.poured, text: 'Get your drink poured: the bar scans it, or Pour by hand on Show Time', did: 'Drink poured' },
-      free ? { ...tip, text: 'Tip: the stream is free here' } : tip].filter(Boolean);
+    return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
+      show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
+      s.drink && { done: !!door.drink?.poured, text: 'Get your drink poured: the bar scans it, or Pour by hand on Show Time', did: 'Drink poured', short: 'Get your drink poured' },
+      free ? { ...tip, text: 'Tip: the stream is free here', short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
   // under the stretch goal, to watch it move.
@@ -1167,12 +1168,14 @@ function todoItems() {
     const again = show.tip?.price ? `press ${show.tip.label || 'Tip'} ${sats(show.tip.price)}` : 'tip again';
     return [hello, full,
       { done: !!todo.tipFull, text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
-        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right' },
-      { done: !!todo.tipDesk, text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved' }];
+        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right',
+        short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
+      { done: !!todo.tipDesk, text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
+        short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
   if (show.stream.mode === 'pay') return [
-    { done: !!todo.played || spentHere > 0, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left' },
-    { done: !!todo.again, text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left' },
+    { done: !!todo.played || spentHere > 0, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
+    { done: !!todo.again, text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
     full, tip];
   return [];
 }
@@ -1196,11 +1199,17 @@ function todoDraw() {
   $('todo-now-text').textContent = items.find((i) => !i.done && i.now)?.now || 'Now leave full screen: the button, bottom right';
   box.classList.toggle('done', all);
   $('todo-k').textContent = all ? 'Judges: all done' : `Judges: try this${n ? ` · ${n} of ${items.length}` : ''}`;
+  const next = items.find((i) => !i.done);
+  // Full screen's tip box glows while the next step is a tip.
+  document.body.classList.toggle('todo-tip', !!next?.tip);
   $('todo-list').replaceChildren(...items.map((i) => {
-    const li = Object.assign(document.createElement('li'), { className: i.done ? 'done' : '' });
-    const words = document.createElement('span');
+    const li = Object.assign(document.createElement('li'), { className: i.done ? 'done' : i === next ? 'now' : '' });
+    // Two wordings, CSS shows one: the full words on a phone's Ticket tab, the short ones in a laptop's row.
+    const words = Object.assign(document.createElement('span'), { className: 'long' });
+    const brief = Object.assign(document.createElement('span'), { className: 'short' });
     if (i.done || !i.html) words.textContent = i.done ? i.did : i.text; else words.innerHTML = i.html; // our own words and icon only
-    li.append(words);
+    if (i.done) brief.textContent = i.shortDid || i.did; else brief.innerHTML = i.short || i.text; // ours too
+    li.append(words, brief);
     return li;
   }));
   $('todo-next').hidden = !all;

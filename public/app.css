@@ -1124,8 +1124,31 @@ body.one.full .todo-now:not([hidden]) { display: flex; flex-wrap: wrap; align-it
   body.one .tab-ticket > .bottom .purse-meter { padding: 0; border: 0; }
   body.one .tab-ticket > .bottom .purse-actions .btn { font-size: 16px; padding: 10px 16px 8px; }
 }
-/* On a laptop the list's card is two cards wide, so its lines don't wrap. */
-@media (min-width: 1100px) { body.one .tab-ticket > .tt-card:has(.todo:not([hidden])) { grid-column: span 2; } }
+/* Two wordings per step (viewer.js): the long one on a phone, the short one in a laptop's row. */
+.todo-list .short { display: none; }
+@media (min-width: 900px) {
+  /* A laptop (Rajesh 15 Nov): the steps in one row, short words, the one to do now shaded; the card the whole row's width. */
+  body.one .tab-ticket > .tt-card:has(.todo:not([hidden])) { grid-column: 1 / -1; }
+  .todo-list { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; align-items: start; }
+  .todo-list .long { display: none; }
+  .todo-list .short { display: inline; }
+  .todo-list li { font-size: 14px; }
+  .todo-list li.now { margin: -4px -6px; padding: 4px 6px; border-radius: 4px; background: rgb(217 149 58 / .14); }
+  .todo { gap: 8px; padding-top: 10px; }
+}
+/* Full screen's tip box (Rajesh 15 Nov): the comment box shorter, the tip its own labelled box beside it, wide enough
+   for 1,000,000; it glows while the Judges line asks for a tip. */
+body.one.full .strip .say-field { position: static; gap: 10px; }
+body.one.full .strip .say-field #say-text { padding-right: 12px; }
+body.one.full .strip .say-sats { position: static; flex: none; height: 46px; box-sizing: border-box; gap: 8px; padding: 0 12px; border: 2px solid rgb(232 168 69 / .7); border-radius: 6px; }
+body.one.full .strip .say-sats::before { content: "Tip"; font: 400 16px/1 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--amber); padding-top: 2px; }
+body.one.full .strip .say-sats::after { content: "sats"; font-size: 13px; color: var(--smoke); }
+body.one.full .strip .say-sats input { width: 104px; font-size: 18px; color: var(--cream); }
+body.one.full .strip .say-sats input::placeholder { color: transparent; }
+body.one.full .strip .say-sats:focus-within { box-shadow: none; border-color: var(--amber); }
+body.one.full.todo-tip .strip .say-sats { border-color: var(--amber); box-shadow: 0 0 0 4px rgb(217 149 58 / .22); }
+body.one.full .strip .say-tools { position: static; transform: none; }
+@media (max-width: 699px) { body.one.full .strip .say-sats { gap: 6px; padding: 0 8px; } body.one.full .strip .say-sats input { width: 70px; } body.one.full .strip .say-sats::after { display: none; } }
 /* The venue's page: the list is a row of its own over the ticket, the door QR and the drink. */
 body.one .tab-ticket > #tt-todo { grid-column: 1 / -1; }
 .tab-ticket { display: grid; gap: 12px; align-content: start; }

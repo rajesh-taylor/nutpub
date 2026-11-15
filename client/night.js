@@ -324,6 +324,8 @@ function kept() {
   try { const o = JSON.parse(v); return o?.token ? o : null; } catch { return v.startsWith('cashu') ? { token: v, amount: null, fee: null } : null; } // a code kept before 13 Nov
 }
 let watching = null;
+let onReturn = null;
+document.addEventListener('visibilitychange', () => { if (!document.hidden && kept()) onReturn?.(); });
 function showKept() {
   const k = kept();
   $('moved').hidden = !k;
@@ -344,10 +346,13 @@ function showKept() {
       clearInterval(watching);
       try { localStorage.removeItem(KEPT); localStorage.setItem(MOVED, JSON.stringify({ amount: k.amount, fee: k.fee })); } catch {}
       $('moved-wait').lastElementChild.textContent = 'In your wallet.';
-      setTimeout(() => { showKept(); refresh().catch(() => {}); }, 2500);
+      setTimeout(() => { showKept(); refresh().catch(() => {}); }, 300);
     } catch {}
   };
-  watching = setInterval(check, 5000);
+  // Every second, and at once when this tab comes back from Cashu.me (Rajesh 15 Nov: the receipt took 3 to 8 seconds:
+  // a 5-second check that skipped while the tab was hidden, then a 2.5-second pause).
+  watching = setInterval(check, 1000); // one small ask of the mint a second, only while waiting
+  onReturn = check;
   check();
 }
 $('copy').onclick = async () => {
@@ -433,12 +438,11 @@ function slip(g, { folded = false } = {}) {
     out.push(el('div', 'rule'));
   }
   out.push(ln('YOURS', sats(g.sats), 'tot'));
-  if (!folded) {
-    const pct = g.feePercent ?? 5;
-    out.push(ln(`The NutPub's ${pct}%`, `(${n(Math.round(((g.sats || 0) * pct) / 100))})`));
-    out.push(el('p', 'small', 'not taken on the test mint'));
-    out.push(el('div', 'rule'));
-  }
+  // The 5% on every receipt, folded too (Rajesh 15 Nov: after Finish gig it was missing).
+  const pct = g.feePercent ?? 5;
+  out.push(ln(`The NutPub's ${pct}%`, `(${n(Math.round(((g.sats || 0) * pct) / 100))})`));
+  out.push(el('p', 'small', 'not taken on the test mint'));
+  out.push(el('div', 'rule'));
   const m = g.moved;
   if (m?.amount) {
     out.push(ln('Moved to your own wallet', n(m.amount)));
