@@ -73,7 +73,7 @@ test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then the ve
     assert.equal(show.door.on, false);
     assert.deepEqual([...photos.keys()].sort(), ['k3f9x2:photo', 'k3f9x2:photo-wide1']); // Longy's wide photo gone
     assert.deepEqual(await finish(), { at: 'yours', done: ['longy', 'frankie'] });
-    assert.equal((await currentShow()).show.stream.mode, 'off'); // at the venue: no stream
+    assert.equal((await currentShow()).show.stream.mode, 'free'); // at the venue: the stream free, with tips
     assert.equal(photos.size, 0);
   });
 });
@@ -141,7 +141,7 @@ test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his ques
   });
 });
 
-test('the venue night (gig 3): £30 at the door with the first drink in it, the door on, no stream, last orders set', async () => {
+test('the venue night (gig 3): £30 at the door with the first drink in it, the door on, the stream free, last orders set', async () => {
   await withStage(st, async () => {
     await setlist(env, 'yours');
     const { show, problems } = await currentShow();
@@ -151,6 +151,7 @@ test('the venue night (gig 3): £30 at the door with the first drink in it, the 
     assert.ok(show.drink.price > 0 && show.ticket.price > show.drink.price);
     assert.match(show.lastOrders, /^\d\d:\d\d$/);
     assert.equal(show.door.on, true);
-    assert.equal(show.stream.mode, 'off');
+    assert.equal(show.stream.mode, 'free');
+    assert.equal(show.set, 'frankie-2');
   });
 });

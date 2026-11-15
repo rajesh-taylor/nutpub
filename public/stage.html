@@ -53,8 +53,9 @@
     /* A judge's stage (/judge): one gig, no setlist. The way back to the three cards, small, under the buttons. */
     /* Two short lines, each with room, then the buttons; the way back well below them (Rajesh 14 Nov). */
     .stage .one-how { list-style: none; margin: 22px 0 36px; padding: 0; display: grid; gap: 14px; text-align: left; font-size: 17px; line-height: 1.45; color: var(--cream); }
-    .stage .one-how .go { margin-top: 12px; text-align: center; }
-    .stage .one-how .go.fan { margin-top: 12px; }
+    /* Two lines each, not the list's full width (Rajesh 15 Nov, late). */
+    .stage .one-how .go { width: min(100%, 320px); margin-top: 12px; padding: 12px 16px 9px; box-sizing: border-box; text-align: center; font-size: 22px; line-height: 1.1; }
+    .stage .one-how .go.fan { margin-top: 12px; font-size: 20px; }
     .stage .one-how b { display: block; font: 400 19px/1.1 var(--poster); letter-spacing: .1em; color: #e8a845; margin-bottom: 2px; }
     .stage .back-cards { margin: 40px 0 0; font-size: 16px; }
     .stage .back-cards a { color: #e8a845; }
@@ -98,7 +99,7 @@
           <p class="mk head">Setlist</p>
           <p class="mk li" data-step="longy">1. Longy<small>Watch online, £20. Say hello in the chat, tip, see the stretch goal move.</small></p>
           <p class="mk li" data-step="frankie">2. Frankie Peroni<small>Pay as you watch, 60 sats a minute. Tip in the comments.</small></p>
-          <p class="mk li" data-step="yours">3. At the venue<small>No stream. The venue ticket, the door and the first drink.</small></p>
+          <p class="mk li" data-step="yours">3. At the venue<small>Pay at the door, the stream free. The door, the first drink, tips.</small></p>
         </section>
       </div>
       <a class="go" id="go" href="/setup">Plan gig</a>
@@ -142,14 +143,18 @@
       // End night, which sends every fan's page to Cheers.
       const name = { longy: 'Longy', frankie: 'Frankie', yours: 'Frankie' }[list.at];
       const fan = {
-        longy: 'Enter in a second tab. Buy the Watch online ticket, say hello in the chat, and tip Longy: watch his stretch goal move.',
-        frankie: 'Enter in a second tab. Watch for 2 minutes at 60 sats a minute: pay as you watch, stop any time. Tip Frankie with a comment.',
-        yours: 'Enter in a second tab. Buy the venue ticket, get let in at the door, then get your free first drink at the bar. No phone to scan with? Let in by hand and Pour by hand are on Show Time.',
+        longy: 'Buy the Watch online ticket, say hello in the chat, and tip Longy: watch his stretch goal move.',
+        frankie: 'Watch for 2 minutes at 60 sats a minute: pay as you watch, stop any time. Tip Frankie with a comment.',
+        yours: 'Buy the venue ticket, get let in at the door, then get your free first drink at the bar. No phone to scan with? Let in by hand and Pour by hand are on Show Time. At home the stream is free: tip Frankie.',
       }[list.at];
       document.getElementById('ready').textContent = { longy: 'Longy\u2019s gig is ready', frankie: 'Frankie\u2019s gig is ready', yours: 'The venue night is ready' }[list.at];
       const how = document.getElementById('one-how');
-      const go = Object.assign(document.getElementById('go'), { textContent: `Open \u201cPlan your gig\u201d as ${name}` });
-      const fanBtn = Object.assign(document.getElementById('fan'), { href: r.fan || r.path, textContent: 'Enter as a fan in a 2nd tab' });
+      // Each in a tab of its own (Rajesh 15 Nov, late): this page stays open as the guide.
+      const two = (a, b) => [a, document.createElement('br'), b];
+      const go = Object.assign(document.getElementById('go'), { target: '_blank', rel: 'noopener' });
+      go.replaceChildren(...two('Open \u201cPlan your gig\u201d', `as ${name} in a 2nd tab`));
+      const fanBtn = Object.assign(document.getElementById('fan'), { href: r.fan || r.path });
+      fanBtn.replaceChildren(...two('Enter as a fan', 'in a 3rd tab'));
       const step = (n, head, text, btn) => {
         const li = document.createElement('li');
         li.append(Object.assign(document.createElement('b'), { textContent: `${n} \u00b7 ${head}` }), text);
@@ -157,7 +162,7 @@
         return li;
       };
       how.replaceChildren(
-        step(1, `As ${name}`, 'See the prices on Plan your gig, then press Start show on Show Time.', go),
+        step(1, `As ${name}`, 'See the prices on Plan your gig, then press Start show on the Show Time page.', go),
         step(2, 'As a fan', fan, fanBtn),
         step(3, `Back as ${name}`, 'Press End night on Show Time.'),
         step(4, 'On Takings', 'Move the sats to your own Cashu wallet.'));

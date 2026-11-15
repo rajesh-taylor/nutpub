@@ -55,7 +55,8 @@ const GIGS = {
     cues: [{ after: 30, text: 'Federated Cashu mints could go a long way in helping decentralised music...' }],
   },
   // Gig 3, at the venue (Rajesh 15 Nov, late; the step keeps its old name, 'yours'): Frankie's second night at The
-  // Fickle Pickle, ready-made, no stream. Ticketing with the venue: £30 at the door with the first drink in it, £25 to
+  // Fickle Pickle, ready-made, the stream free with tips: how most artists work today (Longy and Frankie on Fountain,
+  // zap.stream, ShoSho), so not everything here is a 402. Ticketing with the venue: £30 at the door with the first drink in it, £25 to
   // Frankie and £5 locked to the bar's key until last orders, then Frankie's if it's not poured; the door scans the
   // ticket's QR. Sats from today's rate.
   yours: { photos: { tall1: '/img/yours-tall.jpg', wide1: '/img/yours-wide.jpg' },
@@ -63,10 +64,10 @@ const GIGS = {
       artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
       ticket: { on: true, price: null, fiat: 25, locked: false }, door: { on: true },
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
-      stream: { mode: 'off', perMinute: null, freeMinutes: null },
+      set: 'frankie-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
       tip: { label: 'Tip Frankie', price: 2100 },
     },
-    pin: 'At The Fickle Pickle tonight: show your ticket at the door, then your first drink is on Frankie.' },
+    pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
 };
 export const STEPS = ['longy', 'frankie', 'yours'];
 
