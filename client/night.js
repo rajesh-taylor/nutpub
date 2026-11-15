@@ -378,7 +378,7 @@ async function finishGig(btn) {
     // Rajesh 14 Nov: "Done. Open 1 · Plan your gig: Frankie Peroni's gig is waiting."
     const link = (href, textContent) => Object.assign(document.createElement('a'), { href, textContent });
     const list = out?.setlist;
-    const next = list && !list.done.includes(list.at) && { longy: 'Longy\u2019s gig', frankie: 'Frankie Peroni\u2019s gig', yours: 'your gig' }[list.at];
+    const next = list && !list.done.includes(list.at) && { longy: 'Longy\u2019s gig', frankie: 'Frankie Peroni\u2019s gig', yours: 'the venue night' }[list.at];
     finishedNext = list?.only ? null
       : next ? ['Done. Open ', link('/setup', '1 · Plan your gig'), `: ${next[0].toUpperCase()}${next.slice(1)} is waiting.`]
       : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']

@@ -49,15 +49,17 @@ test('a new stage opens on Longy’s gig, filled in, today', async () => {
     assert.deepEqual(problems, []);
     assert.equal(show.artist, 'Longy');
     assert.equal(show.date, today());
-    assert.equal(show.ticket.on, true); // venue tickets
+    assert.equal(show.ticket.on, false); // online only (15 Nov)
     assert.equal(show.stream.mode, 'ticket'); // a flat-fee Watch online ticket
     assert.ok(show.online.price > 0);
+    assert.equal(show.goals[0].label, 'Longy’s next gig streamed in HD'); // a stretch goal, £50 in sats
+    assert.ok(show.goals[0].at > 0);
     assert.equal(show.set, ''); // his clip, the default set
     assert.deepEqual([...photos.keys()].sort(), ['k3f9x2:photo', 'k3f9x2:photo-wide2']);
   });
 });
 
-test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then Your gig', async () => {
+test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then the venue night', async () => {
   await withStage(st, async () => {
     await setlist(env);
     assert.deepEqual(await finish(), { at: 'frankie', done: ['longy'] });
@@ -67,9 +69,11 @@ test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then Your g
     assert.equal(show.stream.mode, 'pay');
     assert.equal(show.stream.perMinute, 60);
     assert.equal(show.set, 'frankie-1');
+    assert.equal(show.drinks, false); // no drink, no door: those are gig 3's
+    assert.equal(show.door.on, false);
     assert.deepEqual([...photos.keys()].sort(), ['k3f9x2:photo', 'k3f9x2:photo-wide1']); // Longy's wide photo gone
     assert.deepEqual(await finish(), { at: 'yours', done: ['longy', 'frankie'] });
-    assert.equal((await currentShow()).show.set, 'frankie-2');
+    assert.equal((await currentShow()).show.stream.mode, 'off'); // at the venue: no stream
     assert.equal(photos.size, 0);
   });
 });
@@ -137,14 +141,16 @@ test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his ques
   });
 });
 
-test('Frankie’s practice gig: £30 at the door with the first drink in it, last orders set', async () => {
+test('the venue night (gig 3): £30 at the door with the first drink in it, the door on, no stream, last orders set', async () => {
   await withStage(st, async () => {
-    await setlist(env, 'frankie');
+    await setlist(env, 'yours');
     const { show, problems } = await currentShow();
     assert.deepEqual(problems, []);
     assert.equal(show.drinks, true);
     assert.equal(show.drink.mode, 'artist');
     assert.ok(show.drink.price > 0 && show.ticket.price > show.drink.price);
     assert.match(show.lastOrders, /^\d\d:\d\d$/);
+    assert.equal(show.door.on, true);
+    assert.equal(show.stream.mode, 'off');
   });
 });

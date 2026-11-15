@@ -1163,7 +1163,7 @@ body.one .drink .card-title { color: var(--amber); }
   body.one .tab-ticket > .inside { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   body.one .bottom { grid-row: 4; }
   body.one .chat { grid-row: 1 / span 4; }
-  body.one .tab-ticket > .tab-tip { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 20px; padding: 16px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--midnight); }
+  body.one .tab-ticket > .tab-tip { order: 99; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 20px; padding: 16px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--midnight); }
   body.one .tab-ticket > .tab-tip .goal { grid-column: 1 / -1; padding: 0; border: 0; background: none; }
   body.one .tab-ticket > .tab-tip .goal[hidden] { display: none; }
   body.one .tab-ticket > .tab-tip .tip-btns { grid-column: 2; grid-row: 2; display: flex; gap: 10px; }
@@ -1229,3 +1229,6 @@ body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.o
   body.one .tab-ticket { align-items: stretch; }
   body.one .tab-ticket > .tt-card { align-content: center; }
 }
+
+/* No stream (gig 3, at the venue): the photo and its line stay; no play button, no player bar. */
+body.no-stream .big-play, body.no-stream .player .bar { display: none !important; }

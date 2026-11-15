@@ -78,7 +78,7 @@
     <div class="lines">
       <p>Video comes in <b>10-second pieces</b>. Each one answers <b>402</b> until your browser pays for it in <b>Cashu ecash</b>, locked to the artist's key. NutPub never holds a sat.</p>
       <p class="one">Have your phone ready: the doormen and bar scan with it. No phone? Press <b>Let in by hand</b> or <b>Pour by hand</b>.</p>
-      <p>A venue ticket opens <b>the same page</b>: the door QR, the free drink, the chat and tips, and the video for anyone stuck at the back.</p>
+      <p>Gigs 1 and 2 stream: a flat online ticket, then <b>pay as you watch</b>. Gig 3 is <b>at the venue</b>: no stream, just the ticket, the door and the bar.</p>
       <p class="key">Every gig ends at <b>Takings</b>: move the sats to <b>Cashu.me</b>.</p>
     </div>
 
@@ -90,8 +90,8 @@
           <p class="kicker">1 · <span class="here">Start here</span></p>
           <h2 class="who">Longy</h2>
           <p class="where">Peggy Sue’s Music Bar</p>
-          <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>£5</dd></dl>
-          <p class="does">Watch online, say hello in the chat, then tip with a comment.</p>
+          <dl><dt>Venue</dt><dd>–</dd><dt>Online</dt><dd>£20</dd></dl>
+          <p class="does">Buy the online ticket, say hello in the chat, then tip with a comment and watch the stretch goal move.</p>
           <div class="btns"></div>
           <p class="small-print">Watch online is one 402; each tip is another. Every payment is ecash locked to Longy's key (NUT-11): the server checks it, and can't spend it.</p>
         </div>
@@ -104,10 +104,10 @@
           <p class="kicker">2</p>
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">The Devils Train · The Fickle Pickle</p>
-          <dl><dt>Venue</dt><dd>£30, first drink free</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
-          <p class="does">Watch online first: play, stop, come back, tip. Then buy the venue ticket and get your drink scanned at the bar.</p>
+          <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
+          <p class="does">Watch online, pay as you watch: play, stop, come back, tip. You pay only for the minutes you watch.</p>
           <div class="btns"></div>
-          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24). The drink is locked to the bar's key until last orders, then falls back to Frankie (NUT-11 locktime). The mint enforces it.</p>
+          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged.</p>
         </div>
       </article>
 
@@ -115,13 +115,13 @@
         <span class="tape" style="left: 18px; transform: rotate(-5deg);" aria-hidden="true"></span><span class="tape" style="right: 24px; transform: rotate(8deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-yours-tall.jpg"><img src="/img/card-yours-wide.jpg" alt="Frankie Peroni and a fiddler on stage at The Fickle Pickle"></picture>
         <div class="inner">
-          <p class="kicker">3</p>
-          <h2 class="who">Your gig</h2>
-          <p class="where">Frankie’s second song, your way</p>
-          <dl><dt>Venue</dt><dd>Set price, door ticketing solution, first free drink</dd><dt>Online</dt><dd>By the minute or one price</dd></dl>
-          <p class="does">Set it up yourself, with a stretch goal. Then, as a fan: get let in at the door and get your drink at the bar.</p>
+          <p class="kicker">3 · At the venue</p>
+          <h2 class="who">Frankie Peroni</h2>
+          <p class="where">Second night · The Fickle Pickle</p>
+          <dl><dt>Venue</dt><dd>£30, first drink free</dd><dt>Online</dt><dd>–</dd></dl>
+          <p class="does">Ticketing with the venue: buy the venue ticket, get let in at the door, then get your first drink at the bar. No stream.</p>
           <div class="btns"></div>
-          <p class="small-print">The ticket's door QR changes every 30 seconds (TOTP), so a screenshot won't get in. The bar spends the drink at the mint; the fan's phone sees it go (NUT-07).</p>
+          <p class="small-print">The ticket's door QR changes every 30 seconds (TOTP), so a screenshot won't get in. The drink is locked to the bar's key until last orders, then falls back to Frankie (NUT-11 locktime); the bar spends it at the mint and the fan's phone sees it go (NUT-07).</p>
         </div>
       </article>
     </div>
@@ -133,7 +133,7 @@
     const KEEP = 'nutpub-judge-stages';
     const read = () => { try { return JSON.parse(localStorage.getItem(KEEP) || '{}') || {}; } catch { return {}; } };
     const keep = (gig, id) => { try { localStorage.setItem(KEEP, JSON.stringify({ ...read(), [gig]: id })); } catch {} };
-    const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', yours: 'Plan your gig' };
+    const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', yours: 'Start the venue night' };
     const el = (tag, props) => Object.assign(document.createElement(tag), props);
 
     async function start(gig, card) {

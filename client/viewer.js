@@ -992,7 +992,11 @@ function render() {
   $('countdown').hidden = !counting;
   body.classList.toggle('counting', counting);
   countdown();
-  $('doors-sign').hidden = AS === 'home' || stage !== 'doors';
+  // No stream (gig 3, at the venue): the photo and a line on it, no player (Rajesh 15 Nov, late).
+  const noStream = show.stream.mode === 'off';
+  body.classList.toggle('no-stream', noStream);
+  $('doors-sign').hidden = noStream ? closed : AS === 'home' || stage !== 'doors';
+  $('doors-sign').textContent = !noStream || stage === 'doors' ? 'Doors · chat open' : 'On stage now · at the venue only';
   $('live-badge').hidden = stage !== 'on' && !liveOn;
   $('budget-box').hidden = !liveOn || !pays();
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in

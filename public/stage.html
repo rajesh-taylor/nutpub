@@ -53,6 +53,8 @@
     /* A judge's stage (/judge): one gig, no setlist. The way back to the three cards, small, under the buttons. */
     /* Two short lines, each with room, then the buttons; the way back well below them (Rajesh 14 Nov). */
     .stage .one-how { list-style: none; margin: 22px 0 36px; padding: 0; display: grid; gap: 14px; text-align: left; font-size: 17px; line-height: 1.45; color: var(--cream); }
+    .stage .one-how .go { margin-top: 12px; text-align: center; }
+    .stage .one-how .go.fan { margin-top: 12px; }
     .stage .one-how b { display: block; font: 400 19px/1.1 var(--poster); letter-spacing: .1em; color: #e8a845; margin-bottom: 2px; }
     .stage .back-cards { margin: 40px 0 0; font-size: 16px; }
     .stage .back-cards a { color: #e8a845; }
@@ -94,9 +96,9 @@
           <span class="gaffa" style="top: -10px; right: -18px; transform: rotate(22deg);" aria-hidden="true"></span>
           <span class="gaffa" style="bottom: -8px; left: 100px; transform: rotate(-3deg);" aria-hidden="true"></span>
           <p class="mk head">Setlist</p>
-          <p class="mk li" data-step="longy">1. Longy<small>Venue tickets and Watch online. Buy one, say hello in the chat.</small></p>
+          <p class="mk li" data-step="longy">1. Longy<small>Watch online, £20. Say hello in the chat, tip, see the stretch goal move.</small></p>
           <p class="mk li" data-step="frankie">2. Frankie Peroni<small>Pay as you watch, 60 sats a minute. Tip in the comments.</small></p>
-          <p class="mk li" data-step="yours">3. Your gig<small>Your prices, your stretch goal.</small></p>
+          <p class="mk li" data-step="yours">3. At the venue<small>No stream. The venue ticket, the door and the first drink.</small></p>
         </section>
       </div>
       <a class="go" id="go" href="/setup">Plan gig</a>
@@ -136,34 +138,45 @@
     const list = r?.setlist;
     // One gig (a card on /judge, 14 Nov): no setlist, no Repeat gig; what to do, the two buttons, the way back.
     if (list?.only) {
-      // [title, artist, the fan's line, the artist's line]: short, one each.
-      const one = {
-        longy: ['Longy\u2019s gig is ready', 'Longy', 'Watch online, say hello, tip with a comment.', 'End night on Show Time, then move the sats on Takings.'],
-        frankie: ['Frankie\u2019s gig is ready', 'Frankie', 'Watch online first, then buy the venue ticket and get your free drink.', 'End night on Show Time, then move the sats on Takings.'],
-        yours: ['Your gig', null, 'Get let in at the door, then get your drink at the bar.', 'Plan it first: prices, the door, a drink, a stretch goal.'],
+      // One list in the order things happen, each button at its step (Rajesh 15 Nov, late): the fan's tab opens before
+      // End night, which sends every fan's page to Cheers.
+      const name = { longy: 'Longy', frankie: 'Frankie', yours: 'Frankie' }[list.at];
+      const fan = {
+        longy: 'Enter in a second tab. Buy the Watch online ticket, say hello in the chat, and tip Longy: watch his stretch goal move.',
+        frankie: 'Enter in a second tab. Watch for 2 minutes at 60 sats a minute: pay as you watch, stop any time. Tip Frankie with a comment.',
+        yours: 'Enter in a second tab. Buy the venue ticket, get let in at the door, then get your free first drink at the bar. No phone to scan with? Let in by hand and Pour by hand are on Show Time.',
       }[list.at];
-      document.getElementById('ready').textContent = one[0];
+      document.getElementById('ready').textContent = { longy: 'Longy\u2019s gig is ready', frankie: 'Frankie\u2019s gig is ready', yours: 'The venue night is ready' }[list.at];
       const how = document.getElementById('one-how');
-      const line = (head, text) => { const li = document.createElement('li'); li.append(Object.assign(document.createElement('b'), { textContent: head }), text); return li; };
-      how.replaceChildren(...(one[1] ? [line('As the fan', one[2]), line(`As ${one[1]}`, one[3])] : [line('First, as the artist', one[3]), line('Then, as the fan', one[2])]));
+      const go = Object.assign(document.getElementById('go'), { textContent: `Open \u201cPlan your gig\u201d as ${name}` });
+      const fanBtn = Object.assign(document.getElementById('fan'), { href: r.fan || r.path, textContent: 'Enter as a fan in a 2nd tab' });
+      const step = (n, head, text, btn) => {
+        const li = document.createElement('li');
+        li.append(Object.assign(document.createElement('b'), { textContent: `${n} \u00b7 ${head}` }), text);
+        if (btn) li.append(btn);
+        return li;
+      };
+      how.replaceChildren(
+        step(1, `As ${name}`, 'See the prices on Plan your gig, then press Start show on Show Time.', go),
+        step(2, 'As a fan', fan, fanBtn),
+        step(3, `Back as ${name}`, 'Press End night on Show Time.'),
+        step(4, 'On Takings', 'Move the sats to your own Cashu wallet.'));
       how.hidden = false;
       document.getElementById('board').hidden = document.getElementById('how').hidden = true;
       document.getElementById('back-cards').hidden = false;
-      document.getElementById('go').textContent = one[1] ? `Open ${one[1]}\u2019s gig as ${one[1]}` : 'Plan your gig';
-      Object.assign(document.getElementById('fan'), { href: r.fan || r.path, textContent: one[1] ? `Open ${one[1]}\u2019s gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab' });
       import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
     } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
         li.classList.toggle('done', list.done.includes(li.dataset.step));
         li.classList.toggle('now', li.dataset.step === list.at && !list.done.includes(list.at));
       }
-      const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s' }[list.at];
+      const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s', yours: 'Frankie\u2019s' }[list.at];
       // Two buttons, two people (Rajesh 15 Nov): the artist's pages, then the fan's page in a tab of its own.
       document.getElementById('go').textContent = name ? `Open ${name} gig as ${name.replace('\u2019s', '')}` : 'Plan your gig';
       document.getElementById('fan').textContent = name ? `Open ${name} gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab';
       document.getElementById('fan').href = r.fan || r.path;
       document.getElementById('how').hidden = !name;
-      const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', yours: 'your gig' };
+      const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', yours: 'the venue night' };
       for (const li of document.querySelectorAll('[data-step].done')) {
         const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'repeat', textContent: '\u21bb Repeat gig' });
         btn.setAttribute('aria-label', `Repeat ${title[li.dataset.step]}`);

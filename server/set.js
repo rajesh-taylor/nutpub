@@ -78,8 +78,9 @@ export function mountSet(route) {
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).
   route('GET', /^\/api\/set\/audio\/(?<n>\d+)$/, pass, piece,
     async (c) => {
-      if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
       const { stream } = await showOf(c);
+      if (stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
+      if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
       if (stream.mode === 'ticket') return json({ error: 'ticket_needed', detail: 'Buy Watch online first: one price for the whole show.' }, 403);
       if (!stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
@@ -93,6 +94,7 @@ export function mountSet(route) {
 
   // The picture for piece n: only for a pass that paid for that piece's sound.
   route('GET', /^\/api\/set\/video\/(?<n>\d+)$/, pass, piece, async (c) => {
+    if ((await showOf(c)).stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
     if (!(await free(c)) && !(await hasTicket(c.pass)) && !(await hasPaid(c.pass, c.piece))) {
       return json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' }, 403);
     }

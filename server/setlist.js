@@ -21,9 +21,12 @@ const GIGS = {
     photos: { tall1: '/img/longy-tall.jpg', wide2: '/img/longy-wide.jpg' },
     show: {
       artist: 'Longy', page: 'longy', venue: 'Peggy Sue’s Music Bar', capacity: 100,
-      ticket: { on: true, price: null, fiat: 30, locked: false }, // £30 for every venue ticket (Rajesh 15 Nov); sats from today's rate
-      stream: { mode: 'ticket', perMinute: null, freeMinutes: null }, // his clip is under a minute: a flat fee, never by the minute
-      online: { price: null, fiat: 5, locked: false },
+      // Online only (Rajesh 15 Nov, late): one Watch online ticket at £20, no venue tickets. His clip is under a minute:
+      // a flat fee, never by the minute. Comments, tips and a stretch goal.
+      ticket: { on: false, price: null, fiat: null, locked: false },
+      stream: { mode: 'ticket', perMinute: null, freeMinutes: null },
+      online: { price: null, fiat: 20, locked: false },
+      goals: [{ label: 'Longy’s next gig streamed in HD', at: null }, { label: '', at: null }], goalsFiat: [50],
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
       languages: ['en', 'de', 'es', 'fr', 'pt'],
@@ -41,21 +44,29 @@ const GIGS = {
       artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea',
       description: 'The Devils Train, filmed at The Fickle Pickle. Russ Strutter, bass · Levent Basharan, lead guitar solo · Emma Jane Beaumont, backing vocals. Find Frankie on Fountain: frankieperoni@fountain.fm',
       set: 'frankie-1',
-      // £30 at the door, the first drink in it (Rajesh 14 Nov): £25 to Frankie, £5 locked to the bar's key until last
-      // orders, then Frankie's if it's not poured. Its sats from today's rate, as the ticket's.
-      ticket: { on: true, price: null, fiat: 25, locked: false },
-      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
+      // Pay as you watch (Rajesh 15 Nov, late): 60 sats a minute online, the only way judges pay here. A £30 venue
+      // ticket is on sale, with no door check and no drink: those are gig 3's.
+      ticket: { on: true, price: null, fiat: 30, locked: false },
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
       tip: { label: 'Tip Frankie', price: 2100 },
     },
-    pin: '60 sats a minute: pay as you watch, stop any time. Venue ticket? Your first drink is on Frankie.',
+    pin: '60 sats a minute: pay as you watch, stop any time. Tip with a comment: sats in the box on the right.',
     // A guest's line half a minute in: a quiet nod to the btc++ Berlin talk on federated mints.
     cues: [{ after: 30, text: 'Federated Cashu mints could go a long way in helping decentralised music...' }],
   },
-  // The artist's own show to Frankie's second song: the venue ticket, the door, the first drink and both ways of
-  // watching are on, the prices, names and stretch goal theirs to fill in (Plan gig lists what's missing).
+  // Gig 3, at the venue (Rajesh 15 Nov, late; the step keeps its old name, 'yours'): Frankie's second night at The
+  // Fickle Pickle, ready-made, no stream. Ticketing with the venue: £30 at the door with the first drink in it, £25 to
+  // Frankie and £5 locked to the bar's key until last orders, then Frankie's if it's not poured; the door scans the
+  // ticket's QR. Sats from today's rate.
   yours: { photos: { tall1: '/img/yours-tall.jpg', wide1: '/img/yours-wide.jpg' },
-    show: { set: 'frankie-2', ticket: { on: true }, door: { on: true }, drinks: true, drink: { mode: 'artist', price: null }, stream: { mode: 'pay', perMinute: null } } },
+    show: {
+      artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
+      ticket: { on: true, price: null, fiat: 25, locked: false }, door: { on: true },
+      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
+      stream: { mode: 'off', perMinute: null, freeMinutes: null },
+      tip: { label: 'Tip Frankie', price: 2100 },
+    },
+    pin: 'At The Fickle Pickle tonight: show your ticket at the door, then your first drink is on Frankie.' },
 };
 export const STEPS = ['longy', 'frankie', 'yours'];
 
@@ -68,6 +79,7 @@ async function open(step, env) {
   const { gbp } = await getRate();
   for (const p of [gig.ticket, gig.online]) if (p && p.fiat && !p.locked) p.price = satsFrom(p.fiat, gbp);
   if (gig.drinkFiat) gig.drink.price = satsFrom(gig.drinkFiat, gbp);
+  (gig.goalsFiat || []).forEach((f, i) => { if (gig.goals?.[i] && f) gig.goals[i].at = satsFrom(f, gbp); });
   // Last orders (an unpoured drink goes to the artist then): three hours from now, by midnight at the latest.
   const lastOrders = gig.drinks && !gig.lastOrders ? lastOrdersIn(3) : gig.lastOrders;
   const { show } = clean({ ...blank(), ...gig, date: ukDay(), streams: ukTime(), ...(lastOrders ? { lastOrders } : {}) });
