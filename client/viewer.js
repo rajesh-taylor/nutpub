@@ -15,6 +15,11 @@ const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 
 const TICKET_VIEW = new URLSearchParams(location.search).get('view') === 'ticket';
 const CLOSING_VIEW = new URLSearchParams(location.search).get('view') === 'closing'; // Takings' picture of the end of the night
 const KEEP = AS === 'home' ? '-home' : '';
+// One screen for every fan (15 Nov, design B): the gig page on its own looks the same with a venue ticket and watching
+// online (the four tabs on a phone; the picture, the chat beside it and the cards under it on a laptop). Only the
+// Ticket tab differs. AS still says which ticket and wallet this page holds (the venue's, or watching online's).
+// Inside a host page (The show, the setup page's phone) the old room and home views stay for now.
+const ONE = top === self;
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
 const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plenty of tips
@@ -165,7 +170,7 @@ const meter = () => {
   $('free-note').hidden = !free;
   // A judge's practice gig with the first drink (Frankie's, Your gig): once they've paid to watch at home, the venue
   // ticket is the next thing to try (Rajesh 14 Nov).
-  $('try-venue').hidden = !(judge && AS === 'home' && show.ticket.on && show.drinks && given > 0);
+  $('try-venue').hidden = !(!ONE && judge && AS === 'home' && show.ticket.on && show.drinks && given > 0);
 };
 // A tip went through: the server says this browser's new total.
 const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { tippedHere = j.total; meter(); } }).catch(() => {});
@@ -192,6 +197,7 @@ const balance = async () => {
   $('balance').textContent = inFiat() ? fiat(have) : n;
   const d = document.getElementById('door-balance'); // on the door's ticket box too: you see what you have before you pay
   if (d) d.textContent = n;
+  $('tab-balance').textContent = inFiat() ? fiat(have) : n; // and on the Wallet tab
 };
 // Until the wallet answers, say so: an empty balance would look like lost sats.
 $('balance').classList.add('opening');
@@ -311,7 +317,7 @@ const backdropTo = (url) => {
 function backdrop(on) {
   clearInterval(turn);
   // The home page has no backdrop: photos only on the ticket, the poster and the player before Play.
-  if (AS === 'home' && top === self) return;
+  if (ONE) return;
   // Two tall photos for phones, two wide for screens: the first until it plays, then they take turns.
   const mine = (matchMedia('(orientation: landscape)').matches ? [showPhotos.wide1, showPhotos.wide2] : [showPhotos.tall1, showPhotos.tall2]).filter(Boolean);
   const list = mine.length ? (on ? mine : mine.slice(0, 1)) : showPhoto ? [showPhoto] : on ? BERLIN.playing : BERLIN.before;
@@ -541,7 +547,10 @@ function stop(why) {
   say(why || (free ? '' : wasLive && pays() ? T.paused : T.stopped));
 }
 
-const toggle = () => (playing ? stop() : needsTicket() ? askTicket() : play());
+// The venue's page with no ticket yet: the video comes with the venue ticket, or with watching online (the other page).
+const needsVenue = () => ONE && AS === 'room' && !door.ticket && !MOD && !free;
+const toggle = () => (playing ? stop() : needsTicket() ? askTicket()
+  : needsVenue() ? (showTab('ticket'), say('A venue ticket plays the show here. Or watch online.')) : play());
 $('play').onclick = toggle;
 $('big-play').onclick = toggle;
 
@@ -717,7 +726,20 @@ function thank(text) {
 
 // ---- The night: the door, the welcome and the free drink, the stage (doors, open, on, closed), the live chat.
 const body = document.body;
-body.dataset.as = AS;
+body.dataset.as = ONE ? 'home' : AS; // one look for both: the page's styles follow watching at home's
+body.classList.toggle('one', ONE);
+// The tabs (phones): Chat, Tip, Ticket, Wallet. The first render picks one: Ticket while the venue's page needs its
+// ticket or its door QR, Chat otherwise.
+let tab = null;
+function showTab(t) {
+  tab = t;
+  body.dataset.tab = t;
+  for (const b of $('tabs').querySelectorAll('button')) b.setAttribute('aria-pressed', b.dataset.tab === t);
+  if (t === 'ticket') $('tabs').querySelector('.nudge')?.classList.remove('nudge');
+}
+$('tabs').onclick = (e) => { const b = e.target.closest('button[data-tab]'); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
+$('tabs').hidden = !ONE;
+$('tab-tip').hidden = $('tab-ticket').hidden = !ONE;
 if (top !== self) { // inside a host page: it has its own way out, and its own test strip
   $('back-link').remove();
   body.classList.add('framed');
@@ -725,7 +747,7 @@ if (top !== self) { // inside a host page: it has its own way out, and its own t
 }
 // At home the stretch goal sits under the money buttons, in a box of its own (board 2); the chat keeps the messages.
 // The page of its own (not inside The show's frame): the goal over one wallet card holding all the money buttons.
-const WALLET_CARD = AS === 'home' && top === self;
+const WALLET_CARD = ONE; // the venue's page too, since one screen (15 Nov)
 if (WALLET_CARD) {
   body.classList.add('wallet-card');
   // The wallet card: the wallet, what this costs, what just happened, the stretch goal.
@@ -742,12 +764,28 @@ if (WALLET_CARD) {
   sum.lastElementChild.hidden = true;
   $('wallet-page').textContent = 'My browser wallet';
   $('topup').textContent = 'Add test sats';
-  // A Watch online ticket (a flat fee) is bought on the wallet card: the money buttons' row isn't on this page.
-  $('whole').classList.add('primary');
-  document.querySelector('.purse-actions').prepend($('whole'));
+  // The Ticket tab (a card of its own on a laptop): the venue's ticket box and the night's door and drink, or how this
+  // page watches online: the Watch online ticket (a flat fee), the price a minute and the limit.
+  $('whole').classList.add('primary', 'wide');
+  $('tab-ticket').prepend($('door'), $('inside'));
+  $('tt-online').insertBefore($('whole'), $('tt-meter'));
+  $('tt-meter').append($('price-box'), $('budget-box'));
+  $('door-home').textContent = 'Watch online instead';
+  $('door-show').textContent = 'Full screen for the door';
+  // The picture, the gig's line, then the tabs.
+  line.after($('tabs'));
   // All the goals met: a ₿ button by them goes to the sats in the comment box.
   $('goal-more').onclick = () => { unlockAudio(); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('say-sats').focus({ preventScroll: true }); };
 } else if (AS === 'home') $('money').after($('goal'));
+// On a phone the Tip tab holds the stretch goal and the tip button; on a laptop the goal goes back on the wallet card.
+const PHONE = matchMedia('(max-width: 899px)');
+function phoneMoves() {
+  if (!ONE) return;
+  if (PHONE.matches) { $('tab-tip').prepend($('goal')); $('tip-btns').append($('tip'), $('card-tip')); }
+  else { document.querySelector('.purse').append($('goal')); $('drink-open').after($('tip')); $('money').append($('card-tip')); }
+}
+phoneMoves();
+PHONE.addEventListener('change', phoneMoves);
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
 $('welcome-photo').src = showPhoto || DEFAULT_PHOTO;
 if (AS === 'home') for (const a of document.querySelectorAll('a[href="/wallet.html"]')) a.href = '/wallet.html?as=home'; // its own wallet
@@ -758,7 +796,8 @@ $('closing-photo').src = showPhotos.wide2 || showPhoto || DEFAULT_PHOTO;
 const WIDE = matchMedia('(orientation: landscape)');
 let cover;
 const setCover = () => {
-  cover = (WIDE.matches && showPhotos.wide1) || showPhoto || '/img/fp-32.jpg';
+  // One screen: the picture is wide on a phone too, so the wide photo first.
+  cover = ((ONE || WIDE.matches) && (showPhotos.wide1 || (ONE && showPhotos.wide2))) || showPhoto || '/img/fp-32.jpg';
   $('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
   if (playing) $('player').style.backgroundImage = 'none';
 };
@@ -872,15 +911,15 @@ async function doorQr() {
   try {
     const [{ qrSvg }, otp] = await Promise.all([import('./qr.js'), totp(door.secret, step)]);
     const svg = await qrSvg(`${location.origin}/door.html#t=${door.code}.${otp}`, { icons: true }); // a peanut, a mic and a beer
-    if (qrDrawn === want) $('door-qr').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    if (qrDrawn === want) $('door-qr').src = $('door-qr-tab').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
   } catch (e) { if (qrDrawn === want) qrDrawn = ''; throw e; } // try again next second, not next step
 }
 // Under the QR: a bar that empties as its 30 seconds run out, on the server's clock.
 function doorBar() {
   const left = 1 - (((Date.now() + skew) / 1000) % 30) / 30;
-  $('door-bar-fill').style.width = `${Math.round(left * 100)}%`;
+  $('door-bar-fill').style.width = $('door-bar-tab-fill').style.width = `${Math.round(left * 100)}%`;
 }
-setInterval(() => { if (!document.hidden) { doorQr().catch(() => {}); if (!$('door-screen').hidden) doorBar(); } }, 1000);
+setInterval(() => { if (!document.hidden) { doorQr().catch(() => {}); if (!$('door-screen').hidden || (ONE && !$('door-pass').hidden)) doorBar(); } }, 1000);
 
 let doorShown = false;
 // The free drink on its own (Rajesh 14 Nov): it opens by itself once the ticket's in (after the door, if the door scans),
@@ -897,13 +936,14 @@ function render() {
   const doorCheck = !!(show.ticket.on && show.door?.on);
   const atDoor = room && ticket && door.ticketKind === 'room' && doorCheck && !door.checkedAt && stage === 'on';
   const drinkHeld = room && ticket && !closed && !TICKET_VIEW && !!door.drink && !!s.drink && (!doorCheck || !!door.checkedAt);
-  const drinkFocus = drinkHeld && !drinkAside;
+  // One screen: no drink card of its own and no full-window room view: the drink and the door live on the Ticket tab.
+  const drinkFocus = !ONE && drinkHeld && !drinkAside;
   body.classList.toggle('drink-focus', drinkFocus);
-  body.classList.toggle('immersive', !closed && AS === 'room' && ticket && stage === 'on' && !atDoor && !drinkFocus);
+  body.classList.toggle('immersive', !ONE && !closed && AS === 'room' && ticket && stage === 'on' && !atDoor && !drinkFocus);
   $('closing').hidden = !closed;
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
   $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
-  $('inside').hidden = closed || !room || !ticket || (stage !== 'doors' && !atDoor && !drinkFocus);
+  $('inside').hidden = closed || !room || !ticket || (!ONE && stage !== 'doors' && !atDoor && !drinkFocus);
   $('drink-back').hidden = !drinkFocus;
   $('drink-open').hidden = !drinkHeld || drinkFocus || !!door.drink?.poured;
   // Bought ahead of the night: the page is only the confirmation (the photo, the receipt, the link). The tips, goals,
@@ -914,14 +954,14 @@ function render() {
   if (confirmed) receipt();
   walletLinks(WALLET_CARDS && room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
-  body.classList.toggle('at-door', room && !$('door').hidden);
+  body.classList.toggle('at-door', !ONE && room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
   if (body.classList.contains('at-door')) { if (!doorShown) scrollTo(0, 0); doorShown = true; doorTop(); }
   body.classList.toggle('inside-doors', !$('inside').hidden);
-  $('player').hidden = closed || (room && (!ticket || stage !== 'on' || atDoor));
+  $('player').hidden = closed || (!ONE && room && (!ticket || stage !== 'on' || atDoor));
   $('money').hidden = closed || (room && !ticket);
-  // In the room the chat opens with the set: at doors the phone is the ticket and the drink.
-  $('chat').hidden = closed || (room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
+  // In the room the chat opens with the set: at doors the phone is the ticket and the drink. One screen: always.
+  $('chat').hidden = closed || (!ONE && room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start show.
   const live = AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on';
   const counting = AS === 'home' && !closed && !confirmed && !opened && !TICKET_VIEW && !MOD;
@@ -966,6 +1006,7 @@ function render() {
   if (keepOn) {
     if (confirmed) { if ($('keep').nextElementSibling !== $('save-link')) $('save-link').before($('keep')); }
     else if (room) { if ($('keep').previousElementSibling !== $('door-pass')) $('door-pass').after($('keep')); }
+    else if (ONE) { if ($('keep').parentElement !== $('tab-ticket')) $('tab-ticket').append($('keep')); } // on the Ticket tab
     else { const purse = document.querySelector('.purse'); if ($('keep').nextElementSibling !== purse) purse.before($('keep')); } // at home: above the wallet, in sight
   }
   if (confirmed) {
@@ -986,12 +1027,16 @@ function render() {
   // One thing at a time until they're in: save the passkey, then Show at the door. Goals, tips and chat come after.
   // In the room only: at home the show is on the screen, so the chat and the wallet stay (Rajesh 15 Nov: a Watch online
   // ticket left the page blank under the video, the Save button hidden with the rest).
-  body.classList.toggle('ticket-steps', room && (keepFirst || (passOn && !door.checkedAt)));
+  body.classList.toggle('ticket-steps', !ONE && room && (keepFirst || (passOn && !door.checkedAt)));
+  // The first render picks the tab: the Ticket tab while the venue's page has no ticket or its door QR is still to show.
+  if (ONE && tab === null) showTab(confirmed || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
+  if (ONE && confirmed && tab !== 'ticket') showTab('ticket'); // bought ahead: the receipt is the page
+  $('door-pass').classList.toggle('in', !!door.checkedAt);
   // Under Show at the door: where this page lives, so it's easy to find again on the night.
   $('door-where').hidden = !(passOn && !door.checkedAt);
   $('door-where').textContent = 'Open before you go in for door staff.';
   // Photo first, then who and where, then the button (13 Nov design): the page's own heading steps aside.
-  body.classList.toggle('ticket-head', room && (confirmed || (passOn && !door.checkedAt)));
+  body.classList.toggle('ticket-head', !ONE && room && (confirmed || (passOn && !door.checkedAt)));
   if (passOn) {
     $('door-kicker').textContent = [show.date === ukNow().slice(0, 10) ? 'Tonight' : shortDay(show.date && `${show.date}T12:00:00Z`), show.streams && `starts ${show.streams}`].filter(Boolean).join(' · ');
     $('door-artist-big').textContent = show.artist || '';
@@ -1011,17 +1056,58 @@ function render() {
   }
 
   // The free drink: a QR with its number only. The bar's page finds the locked token and pours it.
-  $('drink').hidden = !door.drink || !s.drink || (drinkHeld && drinkAside); // set aside: Your free drink by the tips brings it back
-  if (door.drink) {
+  $('drink').hidden = !door.drink || !s.drink || (!ONE && drinkHeld && drinkAside); // set aside: Your free drink by the tips brings it back
+  // One screen: with a door to get through, the drink waits under the door QR until the ticket's scanned.
+  const drinkWaits = ONE && doorCheck && !door.checkedAt;
+  $('drink').classList.toggle('waiting', drinkWaits);
+  if (door.drink && drinkWaits) {
+    $('drink-title').textContent = 'Your free drink';
+    $('drink-note').textContent = 'Its QR shows here once you’re in.';
+  } else if (door.drink) {
     $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
     $('drink-title').textContent = door.drink.poured ? 'Enjoy your pint, cheers!' : 'Get your free drink';
     $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
+  if (ONE) ticketTab({ room, ticket, closed, s, confirmed });
 }
 
+// The Ticket tab when watching online: how this page watches, and the venue ticket on the venue's page beside it.
+// (The venue's page shows its own ticket box, door QR and drink there, with "Watch online instead".)
+function ticketTab({ room, ticket, closed, s, confirmed }) {
+  const online = show.stream.mode === 'ticket';
+  if (room) { // a venue ticket with no door QR to show: say so, so the tab is never empty
+    $('tt-online').hidden = !ticket || closed || confirmed || !$('door-pass').hidden;
+    $('tt-online-k').textContent = 'Your venue ticket';
+    $('tt-online-line').textContent = 'Paid. The video plays free with it.';
+    $('tt-meter').hidden = true;
+    $('tt-venue').hidden = true;
+    return;
+  }
+  $('tt-online').hidden = closed || show.stream.mode === 'off';
+  $('tt-online-k').textContent = 'Watching online';
+  $('tt-online-line').textContent = MOD ? 'You watch free: you’re a mod.'
+    : online ? (ticket ? 'Paid: the whole show plays here.' : 'One price for the whole show.')
+    : free ? 'Free to watch, with tips.' : 'Stop the video and nothing more is charged.';
+  $('tt-meter').hidden = !pays();
+  const venue = !room && !closed && !!show.ticket.on;
+  $('tt-venue').hidden = !venue;
+  if (!venue) return;
+  // A judge who has paid to watch: the venue ticket is the next thing to try (Rajesh 14 Nov).
+  const nudge = judge && show.drinks && (spentHere + tippedHere + ticketHere) > 0;
+  $('tt-venue-k').textContent = `At ${venueName() || 'the venue'}?`;
+  $('tt-venue-line').textContent = `Venue ticket ${reads(s.total)}${s.drink ? ', first drink free' : ''}.`;
+  $('tt-venue-go').textContent = `${nudge ? 'Now try the venue ticket' : 'Venue ticket'} · ${reads(s.total)}`;
+  $('tt-venue-go').href = location.pathname;
+  const then = [show.door?.on && 'your door QR', s.drink && 'your drink'].filter(Boolean);
+  $('tt-venue-note').textContent = then.length ? `${then.join(' and ').replace(/^y/, 'Y')} then show${then.length > 1 ? '' : 's'} here.` : '';
+  $('tt-venue-note').hidden = !then.length;
+  $('tabs').querySelector('[data-tab="ticket"]').classList.toggle('nudge', nudge && tab !== 'ticket');
+}
+$('drink-open').onclick = () => { if (ONE) { showTab('ticket'); $('tab-ticket').scrollIntoView({ block: 'start' }); } };
+
 $('drink-back').onclick = () => { drinkAside = true; render(); scrollTo(0, 0); };
-$('drink-open').onclick = () => { drinkAside = false; render(); scrollTo(0, 0); };
+if (!ONE) $('drink-open').onclick = () => { drinkAside = false; render(); scrollTo(0, 0); };
 
 // The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
 $('door-show').onclick = async () => {
@@ -1308,9 +1394,12 @@ $('own-sats').addEventListener('blur', tipAboveKeyboard);
 vv?.addEventListener('resize', tipAboveKeyboard);
 vv?.addEventListener('scroll', tipAboveKeyboard);
 // ---- Save your ticket: it lives in this browser, which can forget it after a week away. The link brings it back, on any device.
-if (AS === 'home') document.querySelector('.bottom').append($('save-ticket'));
-if (AS === 'home') $('money').after($('find')); // Find my ticket: under the tips at home (the ticket box is the room's)
-else $('welcome').append($('save-ticket')); // in the room: over the photo
+if (ONE) { // on the Ticket tab: the receipt at the top, Find my ticket under the cards
+  if (AS === 'home') { $('tab-ticket').prepend($('save-ticket')); $('tab-ticket').append($('find')); }
+} else if (AS === 'home') {
+  document.querySelector('.bottom').append($('save-ticket'));
+  $('money').after($('find')); // Find my ticket: under the tips at home (the ticket box is the room's)
+} else $('welcome').append($('save-ticket')); // in the room: over the photo
 const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');

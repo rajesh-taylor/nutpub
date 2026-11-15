@@ -59,6 +59,10 @@
       <!-- On the gig day, with Scan at the door on: one slim line; the QR opens full screen. Scanned once: "You're in". -->
       <div class="door-line" id="door-pass" hidden>
         <p><b id="door-pass-title">Your ticket</b> <span id="door-pass-note"></span></p>
+        <!-- One screen (15 Nov): on the Ticket tab the door QR sits on the tab itself, its 30 seconds under it. -->
+        <img class="door-qr-tab" id="door-qr-tab" alt="Your ticket's QR code, for the door">
+        <span class="door-bar door-bar-tab" aria-hidden="true"><i id="door-bar-tab-fill"></i></span>
+        <p class="door-tab-note">New every 30 seconds. Don’t screenshot it.</p>
         <div class="st-head" id="door-head"><p class="st-kicker" id="door-kicker"></p><h2 class="st-artist" id="door-artist-big"></h2><p class="st-when" id="door-venue"></p></div>
         <span class="door-btns">
           <button type="button" class="btn primary" id="door-show">Show at the door</button>
@@ -117,6 +121,32 @@
         </button>
       </div>
     </div>
+
+    <!-- One screen for every fan (15 Nov, design B): on a phone, four tabs under the picture. The page is the same for
+         a venue ticket and for watching online; only the Ticket tab differs. On a laptop the tabs go and all of it shows. -->
+    <nav class="tabs" id="tabs" aria-label="The gig page" hidden>
+      <button type="button" data-tab="chat">Chat</button>
+      <button type="button" data-tab="tip">Tip</button>
+      <button type="button" data-tab="ticket">Ticket</button>
+      <button type="button" data-tab="wallet">Wallet <b id="tab-balance"></b></button>
+    </nav>
+    <section class="tab-tip" id="tab-tip" aria-label="Tip" hidden>
+      <p class="tip-btns" id="tip-btns"></p>
+      <p class="hint">Your own amount: put it in the comment box’s sats, with words or without.</p>
+    </section>
+    <section class="tab-ticket" id="tab-ticket" aria-label="Ticket" hidden>
+      <div class="card tt-card" id="tt-online" hidden>
+        <p class="tt-k" id="tt-online-k">Watching online</p>
+        <p class="tt-meter" id="tt-meter"></p>
+        <p class="tt-line" id="tt-online-line"></p>
+      </div>
+      <div class="card tt-card" id="tt-venue" hidden>
+        <p class="tt-k" id="tt-venue-k"></p>
+        <p class="tt-line" id="tt-venue-line"></p>
+        <a class="btn primary wide" id="tt-venue-go"></a>
+        <p class="hint" id="tt-venue-note"></p>
+      </div>
+    </section>
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>

@@ -1123,3 +1123,102 @@ body.drink-focus #drink-back { margin: 4px 0 0; }
 /* In the room, the gig's credits sit under the photo, never over a face (Rajesh 14 Nov). */
 body[data-as="room"] .welcome { flex-direction: column; }
 body[data-as="room"] .welcome figcaption { position: static; padding: 10px 4px 0; background: none; color: var(--smoke); font-size: 14px; }
+
+/* ---- One screen for every fan (session 28, 15 Nov; design B on "Gig Page Phone Options"). The gig page on its own
+   looks the same with a venue ticket and watching online (body.one). On a phone: the picture, the gig's line, four tabs
+   (Chat · Tip · Ticket · Wallet), one tab's content at a time. On a laptop: no tabs; the picture with the chat beside it,
+   then the ticket's cards and the wallet card under it. */
+.tabs[hidden], .tab-tip[hidden], .tab-ticket[hidden] { display: none !important; }
+.tt-card { display: grid; gap: 8px; margin: 0; }
+.tt-card[hidden] { display: none; }
+.tt-k, .tab-ticket .card-title, .tab-ticket .door-line b { margin: 0; font: 400 15px/1 var(--poster); letter-spacing: .14em; text-transform: uppercase; color: var(--amber); }
+.tt-line { margin: 0; font-size: 16px; color: var(--cream); }
+.tt-meter { margin: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.tt-meter[hidden] { display: none; }
+.tt-card .btn.wide, .tab-ticket .btn.wide { margin: 4px 0 0; }
+.tt-card .hint { margin: 0; font-size: 14px; }
+.tab-ticket { display: grid; gap: 12px; align-content: start; }
+.tab-ticket > .card, .tab-ticket > section.card { margin: 0; background: var(--midnight); }
+body.one .tab-ticket .door { padding: 16px; }
+body.one .tab-ticket .door .btn.wide { margin: 0 0 8px; }
+/* The venue's night on the tab: no photo (the picture's above); the door QR on the tab itself, then the drink. */
+body.one .inside { display: grid; gap: 12px; }
+body.one .inside[hidden] { display: none; }
+body.one .welcome { display: none; }
+body.one .door-line { flex-direction: column; align-items: center; gap: 10px; margin: 0; padding: 16px; text-align: center; border-color: rgb(239 227 200 / .14); background: var(--midnight); }
+body.one .door-line[hidden] { display: none; }
+body.one .door-line > p:first-child { text-align: center; }
+body.one .door-line .st-head { display: none; }
+body.one .door-qr-tab { display: block; width: min(220px, 64vw); aspect-ratio: 1; padding: 10px; box-sizing: border-box; border-radius: 10px; background: var(--cream); }
+body.one .door-qr-tab:not([src]) { visibility: hidden; }
+body.one .door-bar-tab { width: min(220px, 64vw); }
+body.one .door-tab-note { margin: 0; font-size: 13px; color: var(--smoke); }
+body.one .door-line .door-btns { width: 100%; flex-direction: column; }
+body.one #door-show { width: 100%; }
+/* Scanned in: one line, the QR goes. */
+body.one .door-line.in { flex-direction: row; justify-content: flex-start; padding: 10px 16px; }
+body.one .door-line.in .door-qr-tab, body.one .door-line.in .door-bar-tab, body.one .door-line.in .door-tab-note, body.one .door-line.in .door-btns { display: none; }
+body.one .door-line.in #door-pass-title { color: #5fd38a; }
+body:not(.one) .door-qr-tab, body:not(.one) .door-bar-tab, body:not(.one) .door-tab-note { display: none; }
+body.one .drink { margin: 0; background: var(--midnight); }
+body.one .drink.waiting { flex-direction: row; text-align: left; opacity: .6; }
+body.one .drink.waiting img { display: none; }
+body.one .drink.waiting .hint { margin: 4px 0 0; }
+body.one .drink .card-title { color: var(--amber); }
+/* The Tip tab: the goal, then one tip button and the card tip under it. */
+.tab-tip { display: grid; gap: 12px; }
+.tab-tip .goal { margin: 0; padding: 14px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--midnight); }
+.tab-tip .tip-btns { display: grid; gap: 10px; margin: 0; }
+.tab-tip .tip-btns .btn { width: 100%; min-height: 56px; font-size: 20px; }
+.tab-tip #tip.primary { background: var(--amber); color: var(--deep); }
+.tab-tip #tip .tip-amt { font-size: 13px; }
+.tab-tip .hint { margin: 0; font-size: 14px; }
+
+@media (max-width: 899px) {
+  body.one main { display: flex; flex-direction: column; min-height: calc(100dvh - 32px); padding: 0 0 12px; }
+  body.one .back-link { order: 0; }
+  body.one .player { order: 1; }
+  body.one .show-line { order: 2; margin: 8px 0 0; }
+  body.one .tabs { order: 3; }
+  body.one #tab-ticket, body.one #tab-tip { order: 4; margin: 12px 0 0; }
+  body.one .chat { order: 5; }
+  body.one .bottom { order: 6; }
+  body.one .tabs { display: flex; margin: 8px 0 0; border-bottom: 1px solid rgb(239 227 200 / .12); }
+  body.one .tabs button { flex: 1; height: 42px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--smoke); font: 400 18px/1 var(--poster); letter-spacing: .08em; white-space: nowrap; cursor: pointer; }
+  body.one .tabs button[data-tab="wallet"] { flex: 1.6; }
+  body.one .tabs button b { font-weight: 400; color: var(--amber); }
+  body.one .tabs button[aria-pressed="true"] { color: var(--cream); border-bottom-color: var(--amber); }
+  body.one .tabs button.nudge::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 5px; vertical-align: 3px; border-radius: 50%; background: var(--amber); }
+  /* One tab at a time. The comment box stays on Chat and Tip. */
+  body.one:not([data-tab="ticket"]) #tab-ticket, body.one:not([data-tab="tip"]) #tab-tip, body.one:not([data-tab="wallet"]) .bottom { display: none !important; }
+  body.one[data-tab="ticket"] .chat, body.one[data-tab="wallet"] .chat { display: none !important; }
+  body.one[data-tab="tip"] .chat > :not(.say):not(.say-thanks):not(.nutzaps) { display: none !important; }
+  /* The chat as B draws it: no card round it, the newest at the bottom, the comment box under it. */
+  body.one .chat { flex: 1 1 auto; display: flex; flex-direction: column; margin: 8px 0 0; padding: 0; border: 0; background: none; }
+  body.one .chat-top { margin: 0 0 6px; padding: 0; border: 0; }
+  body.one .chat-head { display: none !important; }
+  body.one .feed { flex: 1 1 auto; max-height: none; min-height: 160px; justify-content: flex-end; }
+  body.one .bottom .purse { margin: 12px 0 0; }
+  /* Bought ahead of the night: only the receipt. */
+  body.one.confirmed .tabs { display: none !important; }
+  body.one.confirmed #tab-ticket { display: grid !important; }
+}
+
+@media (min-width: 900px) {
+  /* A laptop: the ticket's cards in a row between the gig's line and the wallet card; the chat the whole height. */
+  body.one main { grid-template-rows: auto auto auto auto; }
+  body.one .tab-ticket { grid-column: 1; grid-row: 3; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin: 12px 0 0; }
+  body.one .tab-ticket:not(:has(> :not([hidden]))) { display: none; }
+  body.one .tab-ticket > .inside { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  body.one .bottom { grid-row: 4; }
+  body.one .chat { grid-row: 1 / span 4; }
+  body.one .tab-tip { display: none !important; }
+}
+/* The venue's ticket box: no "Card · not wired up" (the room's phone never had it); at doors the sign, no play button. */
+body.one #card { display: none; }
+body.one .doors-sign:not([hidden]) ~ .big-play { display: none; }
+/* "Your venue ticket" (or "Watching online") first on the tab, then the drink. */
+body.one .tab-ticket > #tt-online { order: -1; }
+body.one .door-line .door-where { display: none !important; } /* the tab says it already: the QR is right there */
+@media (min-width: 900px) { body.one .tab-ticket, body.one .tab-ticket > .inside { align-items: start; } }
+@media (min-width: 900px) { body.one .tabs { display: none; } }
