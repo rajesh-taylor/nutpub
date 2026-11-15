@@ -485,7 +485,7 @@ async function recordings() {
     const row = el('div', 'past-row');
     const p = el('p');
     p.append(`${day(v.created)} · ${v.minutes} min`, document.createElement('br'),
-      el('span', '', v.recording ? 'Recording now' : `From Larix · gone ${day(v.gone)}`));
+      el('span', '', v.recording ? 'Recording now' : `Recorded live · gone ${day(v.gone)}`));
     const acts = el('span', 'acts');
     const get = Object.assign(el('button', 'btn quiet', 'Download'), { type: 'button', disabled: v.recording });
     const del = Object.assign(el('button', 'btn quiet del', 'Delete'), { type: 'button', disabled: v.recording });
@@ -499,7 +499,7 @@ async function recordings() {
     acts.append(get, del);
     row.append(p, acts);
     return row;
-  }) : [el('p', 'none', 'None yet: go live from Larix and the set is recorded here.')]));
+  }) : [el('p', 'none', 'None yet: go live from your streaming app and the set is recorded here.')]));
 }
 async function fetchMp4(v, btn) {
   btn.disabled = true;

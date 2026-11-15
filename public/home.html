@@ -14,7 +14,7 @@
     .billing::before, .billing::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgb(232 163 61 / .45)); }
     .billing::after { transform: scaleX(-1); }
     .wins { margin: 8px 0 32px; }
-    .two { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+    .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
     .two > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
     .two .fans { text-align: center; align-items: center; }
     .two .biz { text-align: right; align-items: flex-end; }
@@ -184,11 +184,12 @@
             <a id="put-on" class="put-on" href="/judge">Judge for yourself</a>
             <p class="small-print">Doors: whenever you like · Entry: free · Sats: pretend · Applause: real</p>
           </section>
-          <p class="been">Been before? <button type="button" id="come-back" class="link">Back to your stage</button></p>
+          <!-- Back to your stage: parked with Put on a gig until after 27 Nov (Rajesh 15 Nov); front-door.js still uses it. -->
+          <p class="been" hidden>Been before? <button type="button" id="come-back" class="link">Back to your stage</button></p>
           <p id="door-said" class="door-said" role="status" hidden></p>
         </div>
         <div class="fans"><h2>The Punters</h2><p class="line">Buy tickets and live stream access</p><p class="line">No apps. No tracking.</p><a class="btn primary" href="/longy">Try it with test sats</a></div>
-        <div class="biz"><h2>Small Businesses</h2><p class="line">Collab with Artists.</p><p class="line">Integrated ticketing</p><span class="btn soon">Coming soon</span></div>
+        <!-- Small Businesses: off the home page until after 27 Nov (Rajesh 15 Nov). -->
       </div>
     </section>
     <section class="lineup" aria-label="Built with">
