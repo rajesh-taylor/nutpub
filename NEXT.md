@@ -861,6 +861,16 @@ No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86
 
 **Then, session 30:** the guide, a full run on a laptop, pricing per kind of streamer; the fan page inside the artist's pages (The show, Plan gig's phone) to the one screen, if Rajesh wants it.
 
+**Before 27 Nov, must be built and ready by Thu 26 Nov (Rajesh, 15 Nov): blind-signed tickets** (Rajesh calls it "double blind"; the 18–26 Nov slot, about two sessions, a drawing first). The prompter definitely waits until after 27 Nov. The gig's key signs a ticket it can't see, so the door checks it's valid and unused without knowing which purchase it came from: "we can't tell who came", and tickets can be given to a friend. The blind signing from cashu-ts's own code, with Cashu's official test values. To settle first: a ticket that can be passed on can be screenshotted (the door still lets each in once; the 30-second QR needs rethinking), and Find my ticket needs a backup (a passkey) since the ticket isn't tied to its buyer.
+
+**After 27 Nov, agreed Sun 15 Nov (AI, live streaming, 402 and Stripe):**
+- **An AI stage manager for the solo artist, as a prompter:** between songs Show Time shows one big line ("Cheers, Berlin, 2,100 sats: For the encore") and the artist reads it out in their own voice. The AI picks which tips to read and words them, skipping anything rude; only tips with a message, above an amount the artist sets; only between songs (the artist taps Between songs, or it waits for a pause). It also pins the stretch goal when it's close and, after the gig, writes the thank-you. Not an AI voice in the stream (the sound comes from the artist's phone through Larix); maybe later the venue's screen speaking it through the pub's speakers.
+- **A live Q&A between acts and at the afterparty:** fans and the artist talking on the stream. To shape: questions sent with a tip go into a queue on the prompter (a paid question is a 402), and/or fans joining by voice or video.
+- **Paid clips:** the AI cuts the best 30 seconds; someone who finds the clip on social media pays a few sats through the 402 for the full song.
+- **Agents that pay the 402:** the gig search MCP server, then an assistant buying the ticket or the minutes for its person within a limit they set.
+- **Stripe as a top-up, not per minute:** card fees rule out tiny charges, so £5 by card goes to the artist's own Stripe account as credit for their gigs, spent by the minute; the NutPub still holds nothing. Check what Stripe offers for agent payments then.
+- **A merch card** (t-shirts) for home fans.
+
 **Then, session 28 (Opus): the ending (the earlier note):** the till receipt (Ending 2), Your recordings, Start over, stages closing after 7 days; Splits and Stretches as one card; Show Time's "● On air" on examples; `MAX_STAGES` back down after 21 Nov.
 
 **Goal:** a 3-minute demo on the Cashu dev call, **Thu 29 Oct 2026** (date and time to be confirmed: usually the last Thursday of the month; screen share, slides before and after).
