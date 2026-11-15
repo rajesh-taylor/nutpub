@@ -961,7 +961,6 @@ function render() {
   // One screen: no drink card of its own and no full-window room view: the drink and the door live on the Ticket tab.
   const drinkFocus = !ONE && drinkHeld && !drinkAside;
   body.classList.toggle('drink-focus', drinkFocus);
-  body.classList.toggle('immersive', !ONE && !closed && AS === 'room' && ticket && stage === 'on' && !atDoor && !drinkFocus);
   $('closing').hidden = !closed;
   // A ticket bought while the free drink was off stays a ticket: the drink is only offered again if it failed here.
   $('door').hidden = closed || !room || !show.ticket.on || (ticket && (!room || door.drink || !s.drink || !drinkDue()));
@@ -1117,9 +1116,10 @@ function ticketTab({ room, ticket, closed, s, confirmed }) {
   if (!venue) return;
   // A judge who has paid to watch: the venue ticket is the next thing to try (Rajesh 14 Nov).
   const nudge = judge && show.drinks && (spentHere + tippedHere + ticketHere) > 0;
-  $('tt-venue-k').textContent = `At ${venueName() || 'the venue'}?`;
+  $('tt-venue-k').textContent = `Going to ${venueName() || 'the gig'}?`; // Rajesh 15 Nov: not "At": they're at home
   $('tt-venue-line').textContent = `Venue ticket ${reads(s.total)}${s.drink ? ', first drink free' : ''}.`;
-  $('tt-venue-go').textContent = `${nudge ? 'Now try the venue ticket' : 'Venue ticket'} · ${reads(s.total)}`;
+  // A link, not a payment: it opens the venue's page, where the Venue ticket button (with its price) pays. The arrow says so.
+  $('tt-venue-go').textContent = `${nudge ? 'Now try the venue ticket' : 'Venue ticket'} →`;
   $('tt-venue-go').href = location.pathname;
   const then = [show.door?.on && 'your door QR', s.drink && 'your drink'].filter(Boolean);
   $('tt-venue-note').textContent = then.length ? `${then.join(' and ').replace(/^y/, 'Y')} then show${then.length > 1 ? '' : 's'} here.` : '';

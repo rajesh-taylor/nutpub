@@ -274,7 +274,6 @@ body[data-as="home"] .chat-top .pin { order: 3; flex: 1 0 100%; }
 .nostr-in .nostr-btn:hover { filter: brightness(1.12); }
 .nostr-in .nostr-btn:focus-visible { outline: 2px solid #b98cff; outline-offset: 2px; }
 .nostr-in .nostr-note { white-space: normal; color: var(--cream); }
-body.immersive .nostr-in, body[data-as="room"][data-stage="doors"] .nostr-in { display: none; }
 /* Nostr Connect (13 Nov): waiting for the fan's signer app, across the chat's width. Look: for design. */
 .chat-top .nostr-in.connecting, body[data-as="home"] .chat-top .nostr-in.connecting { order: 4; flex: 1 0 100%; margin: 4px 0 8px; white-space: normal; overflow: visible; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .nostr-in .nostr-qr { display: block; width: 200px; max-width: 100%; }
@@ -305,7 +304,6 @@ body[data-as="home"]:not(.wallet-card) .chat-top .nostr-in .nostr-btn { padding:
 .nutzaps small { font-size: 13px; color: var(--smoke); }
 .nutzap-btns { display: flex; gap: 8px; margin-left: auto; }
 .nutzaps .btn.nutzap { padding: 6px 12px 4px; font-size: 15px; }
-body.immersive .nutzaps, body[data-as="room"][data-stage="doors"] .nutzaps { display: none; }
 .btn.nutzap:hover { filter: brightness(1.12); }
 .feed .mod-icon { font-size: 15px; }
 .feed .mod-icon.btc, .mod-bar .btc { color: var(--amber); font-weight: 700; }
@@ -325,41 +323,11 @@ body.immersive .nutzaps, body[data-as="room"][data-stage="doors"] .nutzaps { dis
 .goal b { display: block; height: 100%; width: 0; background: var(--amber); transition: width .6s; }
 #card-tip { font-size: 15px; }
 
-/* In the room, once the set plays: the phone is the stage. Picture fills the screen upright (Insta Live, TikTok);
-   the chat rises on the right from the bottom, see-through, just above the message box and the money. One column
-   stacked at the bottom, so nothing floats in between and nothing covers the play button. */
-body.immersive .masthead, body.immersive .nostr { display: none; }
-body.immersive main { position: fixed; inset: 0; max-width: none; padding: 0 12px 10px; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
-body.immersive main > * { pointer-events: auto; }
-body.immersive .player { position: fixed; inset: 0; width: auto; margin: 0; aspect-ratio: auto; border-radius: 0; z-index: 0; }
-body.immersive .player video { object-fit: cover; }
-body.immersive.live-video .player video { object-fit: contain; object-position: center; }
-body.immersive .player .bar { top: 30px; bottom: auto; background: none; }
-body.immersive .chat { position: relative; z-index: 2; margin: 0; align-self: flex-end; width: min(100%, 420px); pointer-events: none; }
-body.immersive .chat .say, body.immersive .chat .goal { pointer-events: auto; }
-body.immersive .feed { max-height: 34vh; align-items: flex-end; text-align: right; -webkit-mask-image: linear-gradient(transparent, #000 30%); mask-image: linear-gradient(transparent, #000 30%); }
-body.immersive .feed li { background: none; text-shadow: 0 1px 3px rgb(0 0 0 / .9); padding: 2px 4px; }
-body.immersive .feed li.tipped { background: rgb(5 9 20 / .45); }
-body.immersive .say input { background: rgb(5 9 20 / .55); }
-body.immersive .bottom { position: relative; z-index: 2; margin: 6px -12px -10px; padding: 18px 12px 10px; background: linear-gradient(transparent, rgb(5 9 20 / .92) 35%); }
-body.immersive .money { margin: 4px 0; }
-body.immersive .status { position: fixed; top: 60px; left: 0; right: 0; z-index: 2; }
-body.immersive .purse { margin: 4px 0 0; padding: 6px 10px; }
-body.immersive .purse-sum b { font-size: 26px; }
-body.immersive .purse-meter { display: none; }
 .back-link { display: inline-block; margin: 12px 0 0; font-size: 15px; color: var(--cream); text-decoration: none; opacity: .85; }
 .back-link:hover { color: var(--amber); }
-body.viewer:not(.immersive) main { position: relative; }
+body.viewer main { position: relative; }
 .back-row { margin: 0 0 8px; text-align: left; }
 
-/* At home: the same full-picture view, with the title top left and the ticket above the money. */
-body.immersive[data-as="home"] .masthead { display: block; position: fixed; top: 84px; left: 16px; text-align: left; z-index: 2; pointer-events: none; }
-body.immersive[data-as="home"] .masthead .wordmark { font-size: 36px; margin: 0; text-shadow: 0 2px 10px rgb(5 9 20 / .8); }
-body.immersive[data-as="home"] .masthead .tag { margin: 4px 0 0; text-align: left; }
-body.immersive[data-as="home"] .when { margin: 4px 0 0; text-shadow: 0 1px 4px rgb(5 9 20 / .9); }
-body.immersive[data-as="home"] .door { position: relative; z-index: 2; align-self: flex-start; width: min(100%, 420px); margin: 0 0 8px; }
-body.immersive[data-as="home"] .doors-sign { background: rgb(5 9 20 / .35); }
-body.immersive .back-link { position: fixed; top: 42px; left: 64px; z-index: 3; }
 
 /* Before the start time: a countdown on the artist's picture. A soft dark centre keeps it readable on a busy photo;
    the numbers are the poster's, the seconds turn amber in the last minute. Sized by the player, not the screen. */
@@ -498,15 +466,15 @@ body.setup.wide main { max-width: 1600px; }
 
 /* The room's phone before the set: the photo and the drink at the top, the goal and the tips at the very bottom,
    so the drink's QR gets the room. No wallet buttons: test sats arrive by themselves, and the ticket box says so. */
-body.viewer[data-as="room"]:not(.immersive) main { min-height: calc(100dvh - 40px); display: flex; flex-direction: column; padding-bottom: 8px; }
-body.viewer[data-as="room"]:not(.immersive) .chat { margin-top: auto; }
-body.viewer[data-as="room"]:not(.immersive) .door ~ .status:empty { display: none; }
+body.viewer[data-as="room"] main { min-height: calc(100dvh - 40px); display: flex; flex-direction: column; padding-bottom: 8px; }
+body.viewer[data-as="room"] .chat { margin-top: auto; }
+body.viewer[data-as="room"] .door ~ .status:empty { display: none; }
 body[data-as="room"][data-stage="doors"] .feed, body[data-as="room"][data-stage="doors"] .say, body[data-as="room"][data-stage="doors"] .nostr { display: none; }
 body[data-as="room"] .purse-actions, body[data-as="room"] .purse-meter { display: none; }
 body[data-as="room"] .purse { justify-content: center; padding: 6px 10px; margin: 4px 0 0; border: 0; background: none; }
 body[data-as="room"] .purse-sum { flex-direction: row; align-items: baseline; gap: 6px; }
 body[data-as="room"] .purse-sum b { font-size: 22px; }
-body[data-as="room"]:not(.immersive) .bottom:has(#money[hidden]) .purse { display: none; } /* at the door, the ticket box shows the wallet */
+body[data-as="room"] .bottom:has(#money[hidden]) .purse { display: none; } /* at the door, the ticket box shows the wallet */
 .drink { flex-direction: column; text-align: center; }
 .drink img { width: 200px; height: 200px; }
 .linkish { background: none; border: 0; padding: 0; margin-left: 6px; font: inherit; font-size: 14px; color: var(--amber); text-decoration: underline; cursor: pointer; }
@@ -553,8 +521,6 @@ body.framed[data-as="home"] .status:empty { display: none; }
 /* Inside the room at doors: one picture (the artist's welcome), on black. */
 body.inside-doors .backdrop { display: none; }
 body.inside-doors { background: var(--deep); }
-/* The room's phone: the clip is landscape, so the upright crop shifts right of centre, where Longy stands. */
-body.immersive .player video { object-position: 62% 30%; }
 body.framed.takings { padding-top: 0; }
 body.framed.takings .wordmark, body.framed.takings .tag + .locked ~ * .btn.quiet[href="/setup.html"], body.framed.takings p:has(> a[href="/setup.html"]) { display: none; }
 body.framed.takings .tag { margin: 12px 0 14px; font-size: 22px; }
@@ -565,12 +531,6 @@ body.framed.takings main { padding-top: 0; }
 body.muted .i-muted { display: block; }
 #vol { width: 90px; accent-color: var(--amber); }
 @media (max-width: 600px) { #vol { display: none; } }
-body.immersive #vol { display: none; }
-/* The phone's status line sat over the play/stop button at the top: lower it, and let taps through. */
-body.immersive .status { top: 84px; pointer-events: none; }
-body.immersive .player .bar { z-index: 3; }
-/* The upright crop: show more of the left of the clip. */
-body.immersive .player video { object-position: 25% 30%; }
 
 /* In the room at doors: the artist's photo fills the phone between the date and the tips (it shares the space with
    the drink's QR when the free drink is on), so there's no empty gap. */
@@ -1042,13 +1002,6 @@ body .door-line .door-where { color: var(--smoke); font-size: 14px; }
 .pub-sign .btc { fill: #f7931a; }
 
 /* ---- Session 26 (15 Nov): the fan's side, smoothed. */
-/* The chat over the picture: each line sharp on a faint band (no shadow smudging the names and the gold amounts), only
-   the newest few (3, 5 or 10, the artist's pick on the Comments card), the oldest dropping off the top. */
-body.immersive .feed { max-height: none; overflow: hidden; -webkit-mask-image: none; mask-image: none; gap: 4px; }
-body.immersive .feed li, body.immersive .feed li.tipped { text-shadow: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 15px; }
-body.immersive .feed li:nth-last-child(n+4) { display: none; }
-body.immersive[data-rows="5"] .feed li:nth-last-child(n+4), body.immersive[data-rows="10"] .feed li:nth-last-child(n+4) { display: block; }
-body.immersive[data-rows="5"] .feed li:nth-last-child(n+6), body.immersive[data-rows="10"] .feed li:nth-last-child(n+11) { display: none; }
 /* The comment box: the words, and on the right inside it a small tip field (₿ and sats, or £ and pounds). */
 .say-field { position: relative; flex: 1 1 auto; min-width: 0; display: flex; }
 .say-field #say-text { flex: 1 1 auto; padding-right: 92px; }
@@ -1066,13 +1019,11 @@ body .say .say-sats input { flex: none; width: 60px; padding: 0; border: 0; back
 body.no-comments .say .say-sats input { flex: 1 1 auto; width: auto; }
 /* Comments off: no words, so the tip field is the whole box. */
 body.no-comments .say-field { min-height: 40px; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; background: var(--deep); }
-body.immersive.no-comments .say-field { background: rgb(5 9 20 / .55); }
 body.no-comments .say-sats { left: 4px; border-left: 0; }
 body.no-comments .say-sats input { flex: 1 1 auto; width: auto; }
 /* The tipper's thank-you: small, under the box, for a few seconds. */
 .say-thanks { margin: 4px 2px 0; font-size: 14px; color: var(--amber); }
 body[data-as="room"] .chat > .say-thanks { order: 7; }
-body.immersive .say-thanks { align-self: flex-end; padding: 2px 8px; border-radius: 4px; background: rgb(5 9 20 / .62); }
 /* In the room, less to look at (Rajesh 15 Nov): no currency switch (₿ sits in the comment box; the home page's wallet
    card keeps it). One line along the bottom: the wallet on the left ("Your" over "wallet"), then Tip Longy ₿ with
    its amount small under it, then Tip with Stripe. */
@@ -1260,3 +1211,16 @@ body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.o
 .strip #tip:disabled { display: none; } /* no tip price set: the comment box's sats only */
 /* A narrow window (a phone turned sideways keeps its height, not its width): the comment box alone in the strip. */
 @media (max-width: 699px) { .strip .strip-wallet, .strip > .btn { display: none !important; } }
+/* A laptop holding a venue ticket (Rajesh 15 Nov): the ticket and the drink side by side in one row, the drink compact,
+   its QR on the left and its line beside it, still big enough for the bar's phone to read off the screen. */
+@media (min-width: 900px) {
+  body.one .tab-ticket > .inside:not([hidden]) { display: contents; }
+  body.one .tab-ticket .drink { flex-direction: row; align-items: center; gap: 16px; text-align: left; }
+  body.one .tab-ticket .drink img { width: 150px; height: 150px; }
+  body.one .tab-ticket .drink .hint { margin: 6px 0 0; }
+}
+/* The cards in a row share one height on a laptop (Rajesh 15 Nov), their words centred top to bottom. */
+@media (min-width: 900px) {
+  body.one .tab-ticket { align-items: stretch; }
+  body.one .tab-ticket > .tt-card { align-content: center; }
+}

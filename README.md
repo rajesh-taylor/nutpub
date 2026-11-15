@@ -9,6 +9,7 @@
 ## What it does
 
 - **For the artist:** three pages. **Plan gig** sets up the night weeks ahead: venue tickets, Watch online or pay by the minute, prices, door scanner, moderators and poster. **Show Time** runs the night with three buttons: Start stream, Start show, End night. **Takings** shows what came in, with The NutPub's 5% on its own line, and moves it to the artist's own Cashu wallet with one tap.
+- **One gig page for every fan:** at the venue or at home, the same page. On a phone: the video on top, then **Chat · Tip · Ticket · Wallet**. Only the Ticket tab differs: a venue ticket holds the door QR and the free drink (and plays the video free, for anyone stuck at the back); at home it holds Watch online or the price a minute. On a laptop: the video with the chat beside it and the cards under it; full screen keeps one strip along the bottom (wallet, drink, tip, comment box) with the newest chat lines over the picture.
 - **For the fan:** pay in sats, then save the ticket as a passkey in the phone's password manager. **Find my ticket** brings it back on a new phone. (On judges' stages there are no passkeys: the ticket stays in the browser.) At the door, the QR changes every 30 seconds, so a screenshot won't get in.
 - **The 402 on live video:** the stream only plays with a short-lived signed token. Each minute the browser wallet pays an HTTP 402 (NUT-24) for the next token. If the fan stops paying, the picture stops. The artist can make the first minutes free.
 - **Chat and tips:** a tip goes in the comment box: type your words, put sats in the box's own field, press Enter, and both arrive together. Over the video, the chat shows only the newest few lines (the artist picks 3, 5 or 10). With Nostr sign-in (a browser extension or a phone signer app), your name appears in the chat and you get one-tap Nutzaps. There's also a tippers screen for the venue's TV.
@@ -32,7 +33,7 @@ Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.
 
 ## Judge for yourself
 
-**Judge for yourself** on the home page opens three gig posters, best on a laptop with two tabs: the artist in one, the fan in the other. Have your phone ready for the door and the bar; with no phone, Show Time has **Let in by hand** and **Pour by hand**. Test sats only.
+**Judge for yourself** on the home page opens three gig posters, best on a laptop with two tabs: the artist in one, the fan in the other. Have your phone ready for the door and the bar; with no phone, Show Time has **Let in by hand** and **Pour by hand**. Test sats only. A venue ticket opens the same gig page as watching online: the door QR, the free drink, the chat and tips, and the video for anyone stuck at the back.
 
 Each poster makes a stage of its own, at its own address (`<id>.thenutpub.com`) with its own database, holding just that gig. No passkeys and no account: this browser remembers the stage, so the poster then says **Open again** or **Start fresh**. Longy's real night stays at thenutpub.com/longy.
 
@@ -48,7 +49,6 @@ Every gig ends the same way: **End night** on Show Time, then **Takings**, **Mov
 
 - A receipt at the end of each gig; stages that close themselves after 7 days.
 - Tickets the NutPub can't link to their buyer (blind-signed).
-- A calmer gig page on phones.
 
 ## Known limits
 
