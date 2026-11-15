@@ -227,8 +227,7 @@ let site = location.origin;
 function shareLink(path) {
   const link = `${site}${path}`;
   $('site-host').textContent = `${site.replace(/^https?:\/\//, '')}/`;
-  $('show-link').textContent = link.replace(/^https?:\/\//, '');
-  $('show-link').href = $('open-show').href = link;
+  $('open-show').href = link;
   $('poster-link').href = `${path}/poster`;
   $('qr').src = `/api/show/qr.svg?t=${Date.now()}`;
   $('share-link').hidden = !navigator.share;

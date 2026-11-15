@@ -778,6 +778,7 @@ function thank(text) {
 const body = document.body;
 body.dataset.as = ONE ? 'home' : AS; // one look for both: the page's styles follow watching at home's
 body.classList.toggle('one', ONE);
+body.classList.toggle('poster-view', TICKET_VIEW); // Plan gig's phone: the tall photo, no player
 // The tabs (phones): Chat, Tip, Ticket, Wallet. The first render picks one: Ticket while the venue's page needs its
 // ticket or its door QR, Chat otherwise.
 let tab = null;
@@ -863,6 +864,8 @@ let cover;
 const setCover = () => {
   // One screen: the picture is wide on a phone too, so the wide photo first.
   cover = ((ONE || WIDE.matches) && (showPhotos.wide1 || (ONE && showPhotos.wide2))) || showPhoto || '/img/fp-32.jpg';
+  // Plan gig's phone (Rajesh 15 Nov): the show hasn't started, so the gig's tall photo, the whole of it, as a poster.
+  if (TICKET_VIEW) cover = showPhotos.tall1 || showPhotos.tall2 || showPhoto || cover;
   $('player').style.background = `#000 center / cover no-repeat url("${cover}")`;
   if (playing) $('player').style.backgroundImage = 'none';
 };
