@@ -799,12 +799,15 @@ if (WALLET_CARD) {
   // All the goals met: a ₿ button by them goes to the sats in the comment box.
   $('goal-more').onclick = () => { unlockAudio(); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('say-sats').focus({ preventScroll: true }); };
 } else if (AS === 'home') $('money').after($('goal'));
-// On a phone the Tip tab holds the stretch goal and the tip button; on a laptop the goal goes back on the wallet card.
+// The Tip card: the stretch goal and the tip button. On a phone it's the Tip tab; on a laptop a card in the row under
+// the picture, after the ticket's cards (Rajesh 15 Nov: with no tip button there, tipping hid in the comment box).
 const PHONE = matchMedia('(max-width: 899px)');
 function phoneMoves() {
   if (!ONE) return;
-  if (PHONE.matches) { $('tab-tip').prepend($('goal')); $('tip-btns').append($('tip'), $('card-tip')); }
-  else { document.querySelector('.purse').append($('goal')); $('drink-open').after($('tip')); $('money').append($('card-tip')); }
+  $('tab-tip').prepend($('goal'));
+  $('tip-btns').append($('tip'), $('card-tip'));
+  if (PHONE.matches) $('tab-ticket').before($('tab-tip'));
+  else $('tab-ticket').append($('tab-tip'));
 }
 phoneMoves();
 PHONE.addEventListener('change', phoneMoves);

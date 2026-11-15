@@ -105,7 +105,13 @@ route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
 }));
 // An example gig's chat line, due now in a viewer's set (setlist.js): posted once, whoever asks first.
 route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((await body(c))?.n)) })));
-route('GET', '/api/admin/setlist', admin, attempt(async (c) => ({ setlist: await setlist(c.env), path: (await current(c)).path })));
+// `fan`: the fan's page as the judge should first see it. Frankie's gig starts online, at 60 sats a minute, then "Now try
+// the venue ticket" (Rajesh 15 Nov: the venue's page put the venue ticket first, so judges bought it to get in).
+route('GET', '/api/admin/setlist', admin, attempt(async (c) => {
+  const list = await setlist(c.env);
+  const { path } = await current(c);
+  return { setlist: list, path, fan: list?.at === 'frankie' ? `${path}?as=home` : path };
+}));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
 route('POST', '/api/admin/templates', admin, attempt(async (c) => { const b = await body(c); return saveTemplate(b?.name, b?.show); }));

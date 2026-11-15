@@ -150,7 +150,7 @@
       document.getElementById('board').hidden = document.getElementById('how').hidden = true;
       document.getElementById('back-cards').hidden = false;
       document.getElementById('go').textContent = one[1] ? `Open ${one[1]}\u2019s gig as ${one[1]}` : 'Plan your gig';
-      Object.assign(document.getElementById('fan'), { href: r.path, textContent: one[1] ? `Open ${one[1]}\u2019s gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab' });
+      Object.assign(document.getElementById('fan'), { href: r.fan || r.path, textContent: one[1] ? `Open ${one[1]}\u2019s gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab' });
       import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
     } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
@@ -161,7 +161,7 @@
       // Two buttons, two people (Rajesh 15 Nov): the artist's pages, then the fan's page in a tab of its own.
       document.getElementById('go').textContent = name ? `Open ${name} gig as ${name.replace('\u2019s', '')}` : 'Plan your gig';
       document.getElementById('fan').textContent = name ? `Open ${name} gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab';
-      document.getElementById('fan').href = r.path;
+      document.getElementById('fan').href = r.fan || r.path;
       document.getElementById('how').hidden = !name;
       const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', yours: 'your gig' };
       for (const li of document.querySelectorAll('[data-step].done')) {
