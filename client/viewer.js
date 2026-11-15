@@ -124,10 +124,12 @@ function priceLine() {
   $('price').textContent = !left || left <= 0 ? T.perMinute(n)
     : left === Infinity ? T.freeFirst(freeMinutes(), n) : T.freeLeft(Math.ceil(left / 60), n);
 }
-// The quick tip's words: "Tip Longy ₿", and under it, small, what one tap pays ("2,100 sats").
+// The quick tip's words, the amount in them (Rajesh 15 Nov, late: beside "Tip custom amount", so a newcomer sees it's
+// one of two ways): "Tip Frankie 2,100 sats". The artist's own words from Plan gig, else "Tip" and their name.
 function tipLabel(amount) {
   const el = (tag, className, textContent) => Object.assign(document.createElement(tag), { className, textContent });
-  $('tip').replaceChildren(el('span', 'tip-top', `Tip ${show.artist || ''} ₿`.replace('  ', ' ')), el('small', 'tip-amt', amount));
+  const words = (show.tip.label || `Tip ${show.artist || ''}`).trim();
+  $('tip').replaceChildren(el('span', 'tip-top', `${words} ${amount}`));
   $('ov-tip').textContent = `Tip ${show.artist || ''} · ${amount}`.replace('  ', ' ');
 }
 tipLabel(sats(show.tip.price || 0));
