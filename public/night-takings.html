@@ -84,6 +84,10 @@
     .past-row .acts { display: flex; gap: 6px; flex: none; }
     .past-row .btn { height: 38px; padding: 0 12px; font-size: 16px; }
     .past-row .del { color: var(--smoke); }
+    .recs { border-color: rgb(217 149 58 / .55); }
+    .recs .note { margin: 0; font-size: 13px; line-height: 1.45; color: var(--smoke); }
+    .recs .past-row:last-child { border-bottom: 1px solid rgb(239 227 200 / .1); }
+    .recs .none { margin: 0; font-size: 15px; color: var(--cream); }
     .keep-line { margin: 0; font-size: 13px; line-height: 1.45; color: var(--smoke); }
     /* The ending (session 29, Ending 2 redrawn 15 Nov): everything moved, the till receipt; Finish gig folds it. */
     .wrap-head { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; justify-content: space-between; max-width: 680px; }
@@ -262,6 +266,12 @@
     </div>
 
     <div class="side">
+    <!-- Your recordings (session 30): each broadcast Stream recorded, to download as an MP4 or delete; gone after 7 days. -->
+    <section class="box recs" id="recs" aria-labelledby="recs-h">
+      <h2 id="recs-h">Your recordings</h2>
+      <div id="recs-list"></div>
+      <p class="note" id="recs-note">Stream records every time you go live. Each recording is kept 7 days, then deleted for good.</p>
+    </section>
     <section class="box card-box" aria-labelledby="card-h">
       <div class="box-head" style="align-items: center;">
         <h2 id="card-h">Card · soon</h2>
@@ -275,7 +285,7 @@
       <h2 id="past-h">Past gigs</h2>
       <div id="past-list"></div>
     </section>
-    <p class="keep-line">Tickets, chat and messages are deleted 7 days after the night. Your money never is.</p>
+    <p class="keep-line" id="keep-line">Tickets, chat and messages are deleted 7 days after the night. Your money never is.</p>
     </div>
 
     <div hidden>

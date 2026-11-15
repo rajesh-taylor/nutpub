@@ -27,7 +27,13 @@ try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = fals
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
-const onSetlist = await api('GET', '/api/admin/setlist').then((r) => r.setlist || false).catch(() => false); // a stage's example gigs (setlist.js); .only: a judge's one-gig stage
+const setlistReply = await api('GET', '/api/admin/setlist').catch(() => null);
+const onSetlist = setlistReply?.setlist || false;
+// A practice stage closes 7 days after it's made (stages.js), test sats not moved with it: Takings says when.
+if (setlistReply?.closes) {
+  const day = new Date(setlistReply.closes).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+  $('keep-line').textContent = `Practice stages close 7 days after they’re made: this one on ${day}. Move your sats before then.`;
+} // a stage's example gigs (setlist.js); .only: a judge's one-gig stage
 // The three gig cards, on thenutpub.com (a stage's address without its first part).
 const judgePage = `${location.protocol}//${location.host.split('.').slice(1).join('.')}/judge`;
 const artist = await openWallet(health.mint.url, 'nutpub-takings');
@@ -469,6 +475,46 @@ function drawWrap(view, s) {
 // ---- Past gigs: one line each, with Receipt (printed: the phone's own Save as PDF) and Delete (asks first).
 const gigWhen = (g) => [shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ');
 let pastList = [];
+// ---- Your recordings: Stream's copy of each broadcast. Download asks Stream for an MP4 (made once, a few minutes for
+// a long set: the button counts the percent), then opens the signed link; Delete asks first.
+const day = (iso) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+async function recordings() {
+  const list = await api('GET', '/api/admin/recordings').catch(() => null);
+  if (!Array.isArray(list)) { $('recs').hidden = true; return; } // Stream not set up here
+  $('recs-list').replaceChildren(...(list.length ? list.map((v) => {
+    const row = el('div', 'past-row');
+    const p = el('p');
+    p.append(`${day(v.created)} · ${v.minutes} min`, document.createElement('br'),
+      el('span', '', v.recording ? 'Recording now' : `From Larix · gone ${day(v.gone)}`));
+    const acts = el('span', 'acts');
+    const get = Object.assign(el('button', 'btn quiet', 'Download'), { type: 'button', disabled: v.recording });
+    const del = Object.assign(el('button', 'btn quiet del', 'Delete'), { type: 'button', disabled: v.recording });
+    get.onclick = () => fetchMp4(v, get);
+    del.onclick = async () => {
+      if (!confirm(`Delete the recording from ${day(v.created)}? It can't be brought back.`)) return;
+      del.disabled = get.disabled = true;
+      await api('POST', `/api/admin/recordings/${v.uid}/delete`).catch((e) => alert(e.message));
+      recordings();
+    };
+    acts.append(get, del);
+    row.append(p, acts);
+    return row;
+  }) : [el('p', 'none', 'None yet: go live from Larix and the set is recorded here.')]));
+}
+async function fetchMp4(v, btn) {
+  btn.disabled = true;
+  for (let i = 0; i < 200; i += 1) { // up to about 10 minutes
+    let r;
+    try { r = await api('POST', `/api/admin/recordings/${v.uid}/download`); } catch (e) { btn.textContent = 'Download'; btn.disabled = false; alert(e.message); return; }
+    if (r.status === 'ready' && r.url) { btn.textContent = 'Download'; btn.disabled = false; location.href = r.url; return; }
+    btn.textContent = `Preparing ${r.percent || 0}%`;
+    await new Promise((ok) => setTimeout(ok, 3000));
+  }
+  btn.textContent = 'Download';
+  btn.disabled = false;
+}
+recordings();
+
 async function pastGigs() {
   const gigs = await api('GET', '/api/admin/gigs');
   pastList = gigs;

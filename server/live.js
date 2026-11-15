@@ -12,6 +12,7 @@ import { artistKey } from './takings.js';
 import { hasTicket } from './door.js';
 import { modOf } from './mods.js';
 import { json } from './http.js';
+import { closesAt } from './stages.js';
 
 let ACCOUNT = '';
 let TOKEN = '';
@@ -57,6 +58,19 @@ export async function recordings() {
   return out;
 }
 export const deleteRecording = (uid) => stream('DELETE', `/${uid}`);
+
+// A stage closing for good (stages.js): every recording, then the live input itself, so Stream keeps nothing of it.
+export async function closeStream() {
+  if (!ACCOUNT || !TOKEN) return;
+  for (const r of await all("SELECT value FROM kv WHERE key LIKE 'live:%'")) {
+    const uid = JSON.parse(r.value);
+    if (!uid) continue;
+    try {
+      for (const v of await stream('GET', `/live_inputs/${uid}/videos`)) await deleteRecording(v.uid);
+      await stream('DELETE', `/live_inputs/${uid}`);
+    } catch (e) { if (e.status !== 404) throw e; }
+  }
+}
 
 // Practice stages (every <id>.thenutpub.com) stop a stream 20 minutes after it first comes on air in a gig: Stream bills
 // by the minute, and a phone left streaming for hours would run up the bill. The input is switched off (Stream refuses
@@ -118,10 +132,10 @@ export const larixLink = ({ server, key }, name) => 'larix://set/v1?'
 const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 const utf8 = new TextEncoder();
 let signer = null;
-export async function signToken(sub, exp) {
+export async function signToken(sub, exp, extra = {}) {
   signer ??= crypto.subtle.importKey('jwk', JSON.parse(atob(KEY_JWK)), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
   const part = (o) => b64url(utf8.encode(JSON.stringify(o)));
-  const signed = `${part({ alg: 'RS256', kid: KEY_ID })}.${part({ sub, kid: KEY_ID, exp })}`;
+  const signed = `${part({ alg: 'RS256', kid: KEY_ID })}.${part({ sub, kid: KEY_ID, exp, ...extra })}`;
   const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', await signer, utf8.encode(signed));
   return `${signed}.${b64url(new Uint8Array(sig))}`;
 }
@@ -178,7 +192,49 @@ export async function freeUntil(show, stage, live) {
   return from ? from + mins * 60 : null;
 }
 
+// ---- Your recordings (Takings): Stream records every broadcast; the artist downloads it as an MP4 or deletes it.
+// Kept 7 days after it was made (closing.js), or until the stage closes, whichever is first. A download is made once
+// on Stream's side (a few minutes for a long set), then fetched through a link signed for an hour with
+// "downloadable": the recordings refuse plain links (requireSignedURLs).
+const DAY = 86_400_000;
+const mine = async (uid) => (await recordings()).find((v) => v.uid === uid) || null;
+export async function recordingList(closes = null) {
+  if (!ACCOUNT || !TOKEN) return [];
+  return (await recordings()).sort((a, b) => (a.created < b.created ? 1 : -1)).map((v) => {
+    const gone = new Date(Date.parse(v.created) + 7 * DAY).toISOString();
+    return { uid: v.uid, created: v.created, minutes: Math.max(1, Math.round((v.duration || 0) / 60)),
+      recording: v.status?.state === 'live-inprogress', gone: closes && closes < gone ? closes : gone };
+  });
+}
+async function download(uid, name) {
+  let d = (await stream('GET', `/${uid}/downloads`))?.default;
+  if (!d) d = (await stream('POST', `/${uid}/downloads`))?.default;
+  if (d?.status !== 'ready') return { status: d?.status || 'inprogress', percent: Math.round(d?.percentComplete || 0) };
+  const token = await signToken(uid, seconds() + 60 * MINUTE, { downloadable: true });
+  return { status: 'ready', url: `${d.url.replace(uid, token)}?filename=${encodeURIComponent(name)}` };
+}
+
 export function mountLive(route, admin, pass) {
+  route('GET', '/api/admin/recordings', admin, async () => {
+    try { return json(await recordingList(closesAt(stageDb()?.made))); } catch (e) { return json({ error: String(e.message || e) }, 502); }
+  });
+  // Download: the first ask starts the MP4; the page asks again every few seconds until it's ready, then opens the link.
+  route('POST', /^\/api\/admin\/recordings\/(?<uid>[a-f0-9]{32})\/download$/, admin, async (c) => {
+    const v = await mine(c.params.uid);
+    if (!v) return json({ error: 'not_found' }, 404);
+    if (v.status?.state === 'live-inprogress') return json({ error: 'recording', detail: 'Still recording: End the stream first.' }, 409);
+    const { show } = await current(c);
+    const name = `${show.page || 'gig'}-${v.created.slice(0, 10)}-${v.uid.slice(0, 6)}`.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 100);
+    try { return json(await download(v.uid, name)); } catch (e) { return json({ error: String(e.message || e) }, 502); }
+  });
+  route('POST', /^\/api\/admin\/recordings\/(?<uid>[a-f0-9]{32})\/delete$/, admin, async (c) => {
+    const v = await mine(c.params.uid);
+    if (!v) return json({ error: 'not_found' }, 404);
+    if (v.status?.state === 'live-inprogress') return json({ error: 'recording', detail: 'Still recording: End the stream first.' }, 409);
+    await deleteRecording(v.uid);
+    return json({ deleted: v.uid });
+  });
+
   route('GET', '/api/live/token', pass,
     async (c) => {
       const show = await showOf(c);
