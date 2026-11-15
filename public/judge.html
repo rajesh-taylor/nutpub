@@ -23,11 +23,12 @@
     .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 8px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: grid; gap: 8px; font-size: 16px; white-space: nowrap; }
     .nut-menu a { color: var(--amber); }
     .judge h1 { margin: 0; padding-right: 56px; font: 400 clamp(42px, 7vw, 62px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
-    .lines { display: grid; gap: 8px; }
-    .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
-    .lines b { color: var(--cream); font-weight: 400; }
+    /* Write-up B (Rajesh 15 Nov, late): plain words up top, the Cashu and Nostr specs on each poster's small print. */
+    .lines { display: grid; gap: 10px; max-width: 65ch; }
+    .lines p { margin: 0; font: 17px/1.55 var(--body); color: var(--smoke); }
+    .lines b { color: var(--cream); font-weight: 600; }
+    .lines .n { color: #e8a845; font: 400 20px/1 var(--poster); letter-spacing: .06em; }
     .lines .key b { color: #e8a845; }
-    @media (min-width: 901px) { .lines .one { white-space: nowrap; } }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 18px; align-items: start; }
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
     .poster { position: relative; display: grid; min-width: 0; border-radius: 2px; color: #1a1408;
@@ -76,10 +77,10 @@
     </details>
     <h1>Judge for yourself</h1>
     <div class="lines">
-      <p>Video comes in <b>10-second pieces</b>. Each one answers <b>402</b> until your browser pays for it in <b>Cashu ecash</b>, locked to the artist's key. NutPub never holds a sat.</p>
-      <p class="one">Have your phone ready: the doormen and bar scan with it. No phone? Press <b>Let in by hand</b> or <b>Pour by hand</b>.</p>
-      <p>Gigs 1 and 2 stream: a flat online ticket, then <b>pay as you watch</b>. Gig 3 is <b>at the venue</b>: no stream, just the ticket, the door and the bar.</p>
-      <p class="key">Every gig ends at <b>Takings</b>: move the sats to <b>Cashu.me</b>.</p>
+      <p><b>Three gigs, three ways an artist gets paid.</b> Test sats only: NutPub never holds a sat.</p>
+      <p><span class="n">1</span> · Pay once to watch online. <span class="n">2</span> · Pay by the minute. <span class="n">3</span> · Pay at the door, watch free at home. Number 3 is how most artists like Longy and Frankie work today.</p>
+      <p>Have your phone ready for the door and the bar, or press <b>Let in by hand</b> and <b>Pour by hand</b>.</p>
+      <p class="key">Every gig ends on <b>Takings</b>: move your sats to <b>Cashu.me</b>.</p>
     </div>
 
     <div class="wall">
@@ -93,7 +94,7 @@
           <dl><dt>Venue</dt><dd>–</dd><dt>Online</dt><dd>£20</dd></dl>
           <p class="does">Buy the online ticket, say hello in the chat, then tip with a comment and watch the stretch goal move.</p>
           <div class="btns"></div>
-          <p class="small-print">Watch online is one 402; each tip is another. Every payment is ecash locked to Longy's key (NUT-11): the server checks it, and can't spend it.</p>
+          <p class="small-print">Watch online is one 402 (NUT-24); each tip is another, or a Nutzap signed with your Nostr key (NIP-61). Every payment is ecash locked to Longy's key (NUT-11): the server checks it, and can't spend it.</p>
         </div>
       </article>
 

@@ -1232,3 +1232,14 @@ body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.o
 
 /* No stream (gig 3, at the venue): the photo and its line stay; no play button, no player bar. */
 body.no-stream .big-play, body.no-stream .player .bar { display: none !important; }
+
+/* Whose wallet this is (Rajesh 15 Nov, late): one person can be an artist one day, a pub the next, a fan the rest of the
+   week. A word and a colour each, never the colour alone: fan cream, artist amber, bar teal. */
+.role { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 28px; padding: 6px 12px 4px; border: 1.5px solid currentColor; border-radius: 999px; font: 400 17px/1 var(--poster); letter-spacing: .16em; }
+.role::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; margin-top: -2px; }
+.role.fan { color: var(--cream); }
+.role.artist { color: var(--amber); }
+.role.bar { color: #5cc2b4; }
+.role small { font: inherit; letter-spacing: .08em; opacity: .75; }
+body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-left: auto; margin-right: auto; }
+.board-head .role { margin: 0; font-size: 15px; padding: 5px 10px 3px; }

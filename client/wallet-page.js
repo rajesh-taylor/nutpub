@@ -14,10 +14,17 @@ $('where').textContent = location.host;
 try { const from = new URL(document.referrer); if (from.origin === location.origin && from.pathname !== location.pathname) $('back').href = from.pathname + from.search; } catch {}
 
 // Watching at home and in the room are two wallets: the page that sent us here says which (?as=home).
-const wallet = await openWallet(health.mint.url, new URLSearchParams(location.search).get('as') === 'home' ? 'nutpub-home' : 'nutpub');
+const HOME = new URLSearchParams(location.search).get('as') === 'home';
+const wallet = await openWallet(health.mint.url, HOME ? 'nutpub-home' : 'nutpub');
+// Whose wallet: a fan's, and for which ticket and gig (each ticket keeps its own wallet in this browser).
+fetch('/api/show').then((r) => r.json()).then(({ show }) => {
+  const small = document.createElement('small');
+  small.textContent = ` · ${HOME ? 'watching online' : 'venue ticket'}${show?.artist ? ` · ${show.artist}` : ''}`;
+  $('role').append(small);
+}).catch(() => {});
 const show = async () => {
   const n = await wallet.balance();
-  $('balance').textContent = n;
+  $('balance').textContent = n.toLocaleString('en-GB');
   $('cashu-me').disabled = !n && !$('token').value; // nothing here, and no note out waiting to be moved
 };
 await show();
