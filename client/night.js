@@ -137,7 +137,7 @@ async function refresh() {
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
     // Anything still to move, wherever it's locked (another browser too); drinks locked to the bar are the bar's.
     left: locked.waiting.filter((p) => p.kind !== 'drink' || p.pubkey === pubkey).reduce((t, p) => t + p.sats, 0),
-    over: !!takings.over, homeN: count('piece'),
+    over: !!takings.over, homeN: count('piece'), sold: takings.sold || {}, poured: poured.length, drinksAll: drinks.length,
   };
   paint();
 
@@ -189,7 +189,16 @@ function paint() {
   const k = kept();
   const allMoved = !k && s.came > 0 && !s.left && !s.held;
   const done = allMoved || (!k && !s.came && !s.left && !s.held && s.over);
-  $('in-wallet').hidden = !allMoved;
+  // The ending: the till receipt once everything's moved; after Finish gig, folded and stamped (until something new comes in).
+  if (finishedLine && (s.came || k)) finishedLine = null;
+  const view = finishedLine ? 'finished' : allMoved ? 'wrap' : null;
+  document.body.classList.toggle('wrapped', !!view);
+  $('wrap').hidden = !view;
+  $('btc').hidden = !!view || !!k;
+  for (const id of ['big', 'unit', 'in-wallet']) if (view) $(id).hidden = true;
+  if (!view) { $('big').hidden = false; $('unit').hidden = false; }
+  if (view) drawWrap(view, s);
+  $('in-wallet').hidden = !allMoved || !!view;
   if (done) $('key-warn').hidden = true; // nothing left behind in another browser: no warning
   $('btc-done').hidden = !done;
   $('btc-done-word').textContent = allMoved ? 'In your wallet' : 'Nothing came in';
@@ -312,7 +321,7 @@ let watching = null;
 function showKept() {
   const k = kept();
   $('moved').hidden = !k;
-  $('btc').hidden = !!k;
+  $('btc').hidden = !!k || !sums || !$('wrap').hidden; // drawn once the numbers are in (no empty board while loading)
   clearInterval(watching);
   if (!k) return;
   $('moved-amount').replaceChildren(k.amount == null ? 'Your code' : n(k.amount), ...(k.amount == null ? [] : [' ', Object.assign(document.createElement('small'), { textContent: 'sats' })]));
@@ -352,32 +361,117 @@ $('bar-home').onclick = async () => {
     $('bar-status').textContent = `${sats(out.amount)} as one token: copied.`;
   } catch (e) { $('bar-status').textContent = e.message; }
 };
-// ---- Finish gig (was Next gig on Plan gig): keeps the gig's one-line totals, clears it, same settings.
-$('finish-go').onclick = async () => {
-  $('finish-go').disabled = true;
+// ---- Finish gig (was Next gig on Plan gig): keeps the gig's one-line totals, clears it, same settings. What Move took
+// out goes with it, for the receipt.
+let finishedLine = null; // the gig just finished: its receipt, folded and stamped
+let finishedNext = null; // what comes next (the status line's words)
+async function finishGig(btn) {
+  btn.disabled = true;
   try {
-    const out = await api('POST', '/api/admin/next-gig');
+    const out = await api('POST', '/api/admin/next-gig', { moved: lastMoved() });
     try { localStorage.removeItem(MOVED); } catch {}
-    await Promise.all([refresh(), pastGigs()]);
+    const wrapped = !$('wrap').hidden;
+    await pastGigs();
+    if (wrapped) finishedLine = pastList[0] || null;
+    await refresh();
     // On a stage the gig ticks off the setlist, and the next one is ready there.
     // Rajesh 14 Nov: "Done. Open 1 · Plan your gig: Frankie Peroni's gig is waiting."
     const link = (href, textContent) => Object.assign(document.createElement('a'), { href, textContent });
     const list = out?.setlist;
     const next = list && !list.done.includes(list.at) && { longy: 'Longy\u2019s gig', frankie: 'Frankie Peroni\u2019s gig', yours: 'your gig' }[list.at];
-    $('artist-status').replaceChildren(...(list?.only
-      ? ['Done. ', link(judgePage, 'Back to the three gigs'), '.']
-      : next
-      ? ['Done. Open ', link('/setup', '1 · Plan your gig'), `: ${next[0].toUpperCase()}${next.slice(1)} is waiting.`]
+    finishedNext = list?.only ? null
+      : next ? ['Done. Open ', link('/setup', '1 · Plan your gig'), `: ${next[0].toUpperCase()}${next.slice(1)} is waiting.`]
       : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']
-      : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.']));
-  } catch (e) { $('artist-status').textContent = `Not done: ${e.message}`; }
-  finally { $('finish-go').disabled = false; }
+      : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.'];
+    if (finishedLine) paint();
+    $('artist-status').replaceChildren(...(list?.only ? ['Done. ', link(judgePage, 'Back to the three gigs'), '.'] : finishedNext));
+  } catch (e) { $(btn === $('wrap-finish') ? 'wrap-status' : 'artist-status').textContent = `Not done: ${e.message}`; }
+  finally { btn.disabled = false; }
+}
+$('finish-go').onclick = () => finishGig($('finish-go'));
+$('wrap-finish').onclick = () => finishGig($('wrap-finish'));
+$('wrap-save').onclick = () => printSlip(liveLine());
+
+// ---- The till receipt (Ending 2): one slip for the screen, Save receipt and a past gig's Receipt. Always in sats.
+const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text ?? '' });
+const ln = (what, v, cls = '', muted = false) => {
+  const d = el('div', `ln ${cls}`);
+  d.append(el('span', '', what), el('span', muted ? 'm' : '', v));
+  return d;
 };
+// The gig as Takings sees it now, in the shape of a past gig's line (closing.js, keepGigLine).
+function liveLine() {
+  const s = sums;
+  const { show } = info;
+  return { artist: show.artist, date: show.date, venue: (show.venue || '').split(',')[0].trim(),
+    tickets: { room: s.sold.room?.count || 0, home: s.sold.home?.count || 0, inside: s.sold.room?.inside || 0, sats: s.tickets, roomSats: s.sold.room?.sats ?? null },
+    tips: s.tips, tipsN: s.tipsN, home: s.home, drinks: s.drinks, drinksN: s.drinksN, poured: s.poured, drinksAll: s.drinksAll,
+    sats: s.came, feePercent: s.feePercent, moved: lastMoved() || true };
+}
+function slip(g, { folded = false } = {}) {
+  const out = [el('p', 'mark', 'THE NUTPUB')];
+  if (g.artist) out.push(el('p', '', folded ? [g.artist, shortDay(g.date)].filter(Boolean).join(' · ') : g.artist));
+  if (!folded) out.push(el('p', '', [shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ')));
+  out.push(el('div', 'rule'));
+  const t = g.tickets || {};
+  if (!folded) {
+    const room = t.room || 0, home = t.home || 0;
+    if (room) out.push(ln(`${n(room)} × venue ticket`, t.roomSats == null ? (home ? '' : n(t.sats)) : n(t.roomSats)));
+    if (room) out.push(ln('Let in at the door', `${n(t.inside || 0)} of ${n(room)}`, '', true));
+    if (home) out.push(ln(`${n(home)} × online ticket`, t.roomSats == null ? (room ? '' : n(t.sats)) : n((t.sats || 0) - t.roomSats)));
+    if (!room && !home && t.sats) out.push(ln('Tickets', n(t.sats)));
+    if (g.home) out.push(ln('Watching online', n(g.home)));
+    if (g.tips) out.push(ln(g.tipsN ? `${n(g.tipsN)} × tip` : 'Tips', n(g.tips)));
+    if (g.drinksAll || g.poured) out.push(ln('Free first drink', g.drinksAll ? `${n(g.poured || 0)} of ${n(g.drinksAll)} poured` : `${n(g.poured)} poured`, '', true));
+    if (g.drinks) out.push(ln(g.drinksN ? `${n(g.drinksN)} × unpoured drink` : 'Unpoured drinks', n(g.drinks)));
+    out.push(el('div', 'rule'));
+  }
+  out.push(ln('YOURS', sats(g.sats), 'tot'));
+  if (!folded) {
+    const pct = g.feePercent ?? 5;
+    out.push(ln(`The NutPub's ${pct}%`, `(${n(Math.round(((g.sats || 0) * pct) / 100))})`));
+    out.push(el('p', 'small', 'not taken on the test mint'));
+    out.push(el('div', 'rule'));
+  }
+  const m = g.moved;
+  if (m?.amount) {
+    out.push(ln('Moved to your own wallet', n(m.amount)));
+    if (!folded && m.fee) out.push(ln('Mint fees', n(m.fee)));
+  } else if (m) out.push(ln('Moved to your own wallet', '✓'));
+  out.push(el('div', 'rule'));
+  if (folded) out.push(el('p', '', 'Thank you for sharing the night with us.'));
+  else if (health.mint?.test !== false) out.push(el('p', 'test', '*** TEST SATS. NO REAL MONEY. ***'));
+  return out;
+}
+function printSlip(g) {
+  $('r-slip').replaceChildren(...slip(g));
+  print();
+}
+function drawWrap(view, s) {
+  const fin = view === 'finished';
+  $('wrap-tag').textContent = fin ? 'Finished' : 'In your wallet';
+  $('slip').replaceChildren(...slip(fin ? finishedLine : liveLine(), { folded: fin }));
+  $('stamp').hidden = !fin;
+  $('slip').classList.toggle('folded', fin);
+  $('wrap-acts').hidden = fin;
+  $('wrap-after').hidden = !fin;
+  $('wrap-finish').hidden = !s.over;
+  $('wrap-finish-note').textContent = s.over ? (onSetlist?.only ? 'Done with this gig? The receipt stays under Past gigs.' : onSetlist ? 'Done with this gig? It ticks off your setlist. The receipt stays under Past gigs.' : 'Done with this gig? Plan gig opens for the next one. The receipt stays under Past gigs.') : 'Finish gig comes once the night’s over: End night on Show Time.';
+  if (fin) {
+    // Judges get one way on (Rajesh 15 Nov): back to the three gig cards.
+    $('wrap-after').replaceChildren(onSetlist?.only
+      ? Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })
+      : Object.assign(el('p', 'wrap-next'), {}));
+    if (!onSetlist?.only) $('wrap-after').firstChild.append(...(finishedNext || []));
+  }
+}
 
 // ---- Past gigs: one line each, with Receipt (printed: the phone's own Save as PDF) and Delete (asks first).
 const gigWhen = (g) => [shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ');
+let pastList = [];
 async function pastGigs() {
   const gigs = await api('GET', '/api/admin/gigs');
+  pastList = gigs;
   $('past').hidden = !gigs.length;
   $('past-list').replaceChildren(...gigs.map((g) => {
     const row = document.createElement('div');
@@ -395,27 +489,7 @@ async function pastGigs() {
     return row;
   }));
 }
-function receipt(g) {
-  const row = (what, v, cls) => {
-    const tr = document.createElement('tr');
-    if (cls) tr.className = cls;
-    tr.append(Object.assign(document.createElement('td'), { textContent: what }), Object.assign(document.createElement('td'), { textContent: v }));
-    return tr;
-  };
-  const t = g.tickets || {};
-  const fee = Math.round(((g.sats || 0) * (g.feePercent ?? 5)) / 100);
-  $('r-gig').textContent = [g.artist, shortDay(g.date), g.venue || g.page].filter(Boolean).join(' · ');
-  $('r-rows').replaceChildren(
-    row(`Tickets · ${n(t.room || 0)} in the room${t.home ? `, ${n(t.home)} online` : ''}`, t.sats == null ? '' : sats(t.sats)),
-    row(`Tips${g.tipsN ? ` · ${n(g.tipsN)}` : ''}`, sats(g.tips || 0)),
-    ...(g.home == null ? [] : [row('Watching from home', sats(g.home))]),
-    ...(g.drinks ? [row('Drinks not poured', sats(g.drinks))] : []),
-    row('Total', sats(g.sats), 'total'),
-    row(`The NutPub's ${g.feePercent ?? 5}% · not taken on the test mint`, `(${sats(fee)})`),
-  );
-  $('r-note').textContent = `Paid in bitcoin, each payment locked to the artist's own key. Printed ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} from thenutpub.com.`;
-  print();
-}
+const receipt = (g) => printSlip(g);
 let deleting = null;
 function askDelete(g) {
   deleting = g;
@@ -435,6 +509,7 @@ $('del-go').onclick = async () => {
 
 showKept();
 
+await pastGigs().catch(() => {});
+if (onSetlist?.only && onSetlist.done?.includes(onSetlist.at) && pastList[0]) finishedLine = pastList[0];
 await refresh();
-pastGigs().catch(() => {});
 setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 60_000); // each refresh is 4 requests

@@ -85,20 +85,43 @@
     .past-row .btn { height: 38px; padding: 0 12px; font-size: 16px; }
     .past-row .del { color: var(--smoke); }
     .keep-line { margin: 0; font-size: 13px; line-height: 1.45; color: var(--smoke); }
+    /* The ending (session 29, Ending 2 redrawn 15 Nov): everything moved, the till receipt; Finish gig folds it. */
+    .wrap-head { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; justify-content: space-between; max-width: 680px; }
+    .wrap-head h2 { margin: 0; font: 400 64px/.95 var(--poster); letter-spacing: .06em; color: #e8a845; }
+    .wrap-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; }
+    .wrap-row { display: flex; gap: 28px; align-items: flex-start; margin-top: 18px; }
+    .wrap-acts { display: flex; flex-direction: column; gap: 12px; width: 300px; padding-top: 6px; }
+    .wrap-acts .btn { height: 52px; font-size: 21px; }
+    .wrap-acts .note { margin-top: -4px; }
+    .slip-box { position: relative; flex: none; }
+    .slip { width: 340px; box-sizing: border-box; padding: 18px 20px 28px; background: #fbf8ef; color: #1a1408; font: 13px/1.6 var(--mono);
+      box-shadow: 0 12px 28px rgb(0 0 0 / .55);
+      -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 0 0 / 16px 100% repeat-x;
+      mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 0 0 / 16px 100% repeat-x; }
+    .slip p { margin: 0; text-align: center; }
+    .slip .mark { font-weight: 700; letter-spacing: .14em; }
+    .slip .ln { display: flex; justify-content: space-between; gap: 8px; text-align: left; }
+    .slip .ln .m { color: #6b604a; }
+    .slip .ln.tot { font-weight: 700; font-size: 16px; }
+    body.wrapped .keep-line { display: none; }
+    .slip .small { font-size: 11px; color: #6b604a; text-align: left; }
+    .slip .rule { border-top: 1px dashed #8a7d63; margin: 6px 0; }
+    .slip .test { margin-top: 6px; letter-spacing: .06em; }
+    .slip.folded { padding-bottom: 76px; }
+    .stamp { position: absolute; right: 16px; bottom: 24px; transform: rotate(-12deg); border: 3px solid #b23a2a; border-radius: 4px; padding: 2px 10px;
+      color: #b23a2a; font: 400 26px/1.1 var(--poster); letter-spacing: .12em; opacity: .85; pointer-events: none; }
+    #wrap-after { width: auto; flex: 1 1 260px; }
+    .judges-on { display: flex; align-items: center; justify-content: center; height: 54px; padding: 0 22px; font-size: 22px; text-decoration: none; white-space: nowrap; }
+    .wrap-next { margin: 0; font-size: 15px; line-height: 1.45; }
+    .wrap-next a { color: #e8a845; }
     #receipt { display: none; }
     @media print {
       @page { margin: 0; } /* no browser date, title, link or page number in the corners (Rajesh 13 Nov) */
       #receipt { padding: 18mm 0; }
       body.board { background: #fff; color: #000; }
       body > :not(#receipt) { display: none !important; }
-      #receipt { display: block !important; font: 12pt/1.5 Georgia, serif; color: #000; max-width: 160mm; margin: 0 auto; }
-      #receipt h1 { font: 400 28pt/1 var(--poster); letter-spacing: .08em; margin: 4pt 0 12pt; }
-      #receipt .r-mark { margin: 0; font: 400 16pt/1 var(--poster); letter-spacing: .1em; }
-      #receipt table { width: 100%; border-collapse: collapse; margin: 12pt 0; }
-      #receipt td { padding: 5pt 0; border-bottom: .5pt solid #bbb; }
-      #receipt td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
-      #receipt tr.total td { font-weight: 700; border-bottom: 1.5pt solid #000; }
-      #receipt .r-note { font-size: 10pt; color: #444; }
+      #receipt { display: block !important; }
+      #receipt .slip { margin: 0 auto; width: 90mm; padding: 0; background: none; color: #000; box-shadow: none; -webkit-mask: none; mask: none; font-size: 10.5pt; }
     }
     @media (max-width: 1000px) {
       .page { grid-template-columns: minmax(0, 1fr); padding: 14px 16px 32px; gap: 14px; }
@@ -116,6 +139,18 @@
       .tile .s { font-size: 11px; }
       .move { width: 100%; height: 50px; font-size: 20px; padding: 0; }
       .card-box { min-height: 240px; }
+      body.wrapped .gig-line { display: none; }
+      body.wrapped .card-box { display: none; }
+      .wrap-head h2 { font-size: 38px; }
+      .wrap-tag { font-size: 14px; }
+      .wrap-head { margin-top: 14px; }
+      .wrap-row { flex-direction: column; align-items: stretch; gap: 16px; }
+      .slip-box { align-self: center; }
+      .slip { width: min(306px, calc(100vw - 48px)); padding: 16px 16px 24px; font-size: 12.5px; }
+      .wrap-acts { width: auto; flex-direction: row; padding: 0; }
+      .wrap-acts .btn { flex: 1; height: 48px; font-size: 19px; }
+      .wrap-acts .note { display: none; }
+      .wrap-acts #wrap-finish { order: 2; }
       .card-box img { height: 34px; }
     }
   </style>
@@ -147,7 +182,7 @@
         <p class="gig-line" id="gig-line"></p>
         <div class="big-row">
           <p class="big" id="big"></p>
-          <div class="seg" id="unit" role="group" aria-label="Show in">
+          <div class="seg" id="unit" role="group" aria-label="Show in" hidden>
             <button type="button" data-unit="btc" aria-pressed="true" aria-label="Sats">₿</button>
             <button type="button" data-unit="gbp" aria-pressed="false" aria-label="Pounds">£</button>
             <button type="button" data-unit="usd" aria-pressed="false" aria-label="Dollars">$</button>
@@ -161,7 +196,7 @@
       <p class="key-warn" id="key-warn" hidden></p>
 
       <!-- Before Move: what came in, one button. -->
-      <section class="box" id="btc" aria-labelledby="btc-h">
+      <section class="box" id="btc" aria-labelledby="btc-h" hidden>
         <div class="box-head">
           <h2 id="btc-h">Bitcoin <span class="nb" aria-hidden="true">₿</span></h2>
           <span class="came" id="came"></span>
@@ -202,6 +237,25 @@
         <p class="note">In your wallet app (Minibits, Cashu.me, Macadamia): <strong style="color: var(--cream);">Receive</strong>, then paste.</p>
         <p class="waiting-line" role="status" id="moved-wait"><i></i><span>Waiting for your wallet.</span></p>
         <p class="note">The code stays here until your wallet has it. Anyone with the code can take the money: keep it to yourself.</p>
+      </section>
+
+      <!-- The ending: everything moved, the till receipt; Finish gig folds it and stamps it PAID OUT. -->
+      <section id="wrap" aria-labelledby="wrap-h" hidden>
+        <div class="wrap-head">
+          <h2 id="wrap-h">That's a wrap</h2>
+          <span class="wrap-tag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d9953a" stroke-width="2.4" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span id="wrap-tag">In your wallet</span></span>
+        </div>
+        <div class="wrap-row">
+          <div class="slip-box"><div class="slip" id="slip" aria-label="Receipt"></div><span class="stamp" id="stamp" aria-hidden="true" hidden>PAID OUT</span></div>
+          <div class="wrap-acts" id="wrap-acts">
+            <button type="button" class="btn primary" id="wrap-finish">Finish gig</button>
+            <p class="note" id="wrap-finish-note"></p>
+            <button type="button" class="btn quiet" id="wrap-save">Save receipt</button>
+            <p class="note">As a PDF, from your browser's own Print.</p>
+          </div>
+          <div class="wrap-acts" id="wrap-after" hidden></div>
+        </div>
+        <p class="status" id="wrap-status" role="status"></p>
       </section>
     </div>
 
@@ -276,13 +330,7 @@
     <button type="button" class="btn quiet last" id="del-go">Delete for good</button>
   </dialog>
   <!-- A past gig's receipt: only ever printed (the phone's own Save as PDF). -->
-  <section id="receipt" aria-hidden="true">
-    <p class="r-mark">THE NUTPUB</p>
-    <h1>Receipt</h1>
-    <p id="r-gig"></p>
-    <table><tbody id="r-rows"></tbody></table>
-    <p class="r-note" id="r-note"></p>
-  </section>
+  <section id="receipt" aria-hidden="true"><div class="slip" id="r-slip"></div></section>
   <script type="module" src="/js/night.js"></script>
 </body>
 </html>

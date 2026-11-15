@@ -21,6 +21,7 @@ import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor } from './stages.js';
 import { setlist, finished, again, cue, cueTimes } from './setlist.js';
+import { keepMoved } from './closing.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
@@ -93,7 +94,9 @@ route('GET', '/api/show/qr.svg', async (c) => {
 });
 route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
 // Finish gig. On a stage it also ticks the gig off the setlist and opens the next one (setlist.js).
-route('POST', '/api/admin/next-gig', admin, attempt(async (c) => { const out = await nextGig(); const list = await finished(c.env); return list ? { ...(await current({})), setlist: list } : out; }));
+// The page sends what its Move took out (the amount and the mint's fee), for the gig's receipt; it's only kept on the
+// gig's line (closing.js), never checked: the money already left.
+route('POST', '/api/admin/next-gig', admin, attempt(async (c) => { await keepMoved((await body(c))?.moved); const out = await nextGig(); const list = await finished(c.env); return list ? { ...(await current({})), setlist: list } : out; }));
 route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
   const step = String((await body(c))?.step || '');
   const list = await again(step, c.env);
