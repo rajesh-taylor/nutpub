@@ -1088,6 +1088,38 @@ body[data-as="room"] .welcome figcaption { position: static; padding: 10px 4px 0
 .tt-meter[hidden] { display: none; }
 .tt-card .btn.wide, .tab-ticket .btn.wide { margin: 4px 0 0; }
 .tt-card .hint { margin: 0; font-size: 14px; }
+/* The judge's to-do box (15 Nov): under the box's own line, a hairline between; each line ticks itself. */
+.todo { display: grid; gap: 9px; margin-top: 4px; padding-top: 12px; border-top: 1px solid rgb(239 227 200 / .12); }
+.todo[hidden] { display: none; }
+.tt-todo .todo { margin: 0; padding: 0; border: 0; }
+.todo-k { font-size: 14px; color: var(--smoke); }
+.todo.done .todo-k { color: var(--amber); }
+.todo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.todo-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.35; color: var(--cream); }
+.todo-list svg { vertical-align: -2px; color: var(--amber); }
+.todo-list li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 1px; box-sizing: border-box; border: 1.5px solid rgb(239 227 200 / .55); border-radius: 4px; }
+.todo-list li.done { color: var(--smoke); }
+.todo-list li.done::before { border: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9953a' stroke-width='3'%3E%3Cpath d='M4 12l5 5L20 6'/%3E%3C/svg%3E") center / contain no-repeat; }
+.todo-next { margin: 0; font-size: 15px; line-height: 1.4; color: var(--amber); }
+.todo-next[hidden] { display: none; }
+/* Full screen: the list's next step on the picture, top centre, between Live and Test mint. */
+.todo-now { display: none; }
+body.one.full .todo-now:not([hidden]) { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 12px; position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: min(64vw, 760px); margin: 0; padding: 8px 14px 7px; border: 1px solid var(--amber); border-radius: 8px; background: rgb(5 9 20 / .85); color: var(--cream); font-size: 16px; line-height: 1.3; text-align: center; pointer-events: none; }
+.todo-now b { font: 400 15px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); white-space: nowrap; }
+/* A laptop: the wallet card in the cards' row, over the stretch goals; one row tall where there's room. */
+@media (min-width: 900px) {
+  body.one .tab-ticket > .bottom { order: 98; grid-column: 1 / -1; grid-row: auto; min-width: 0; }
+  body.one .tab-ticket > .bottom .purse { margin: 0; }
+}
+@media (min-width: 1200px) {
+  body.one .tab-ticket > .bottom .purse { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "sum meter actions" "status status status"; align-items: center; gap: 6px 32px; padding: 10px 16px 8px; }
+  body.one .tab-ticket > .bottom .purse-meter { padding: 0; border: 0; }
+  body.one .tab-ticket > .bottom .purse-actions .btn { font-size: 16px; padding: 10px 16px 8px; }
+}
+/* On a laptop the list's card is two cards wide, so its lines don't wrap. */
+@media (min-width: 1100px) { body.one .tab-ticket > .tt-card:has(.todo:not([hidden])) { grid-column: span 2; } }
+/* The venue's page: the list is a row of its own over the ticket, the door QR and the drink. */
+body.one .tab-ticket > #tt-todo { grid-column: 1 / -1; }
 .tab-ticket { display: grid; gap: 12px; align-content: start; }
 .tab-ticket > .card, .tab-ticket > section.card { margin: 0; background: var(--midnight); }
 body.one .tab-ticket .door { padding: 16px; }

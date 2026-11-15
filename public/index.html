@@ -88,6 +88,8 @@
       <p class="doors-sign" id="doors-sign" hidden>Doors · chat open</p>
       <p class="ov-mark" aria-hidden="true">The NutPu<span class="nb">₿</span></p>
       <span class="live-badge" id="live-badge" hidden>Live</span>
+      <!-- Full screen on a judge's stage: the to-do box's next step, on the picture (the box itself is off screen). -->
+      <p class="todo-now" id="todo-now" hidden><b id="todo-now-k"></b><span id="todo-now-text"></span></p>
       <div class="countdown" id="countdown" role="timer" hidden>
         <p class="cd-label" id="cd-label">Live in</p>
         <div class="cd-digits" id="cd-digits"></div>
@@ -142,6 +144,12 @@
         <p class="tt-k" id="tt-online-k">Watching online</p>
         <p class="tt-meter" id="tt-meter"></p>
         <p class="tt-line" id="tt-online-line"></p>
+        <!-- A judge's stage only (15 Nov): what to try on this gig, ticked off as they do it; then back to the stage tab. -->
+        <div class="todo" id="todo" hidden>
+          <p class="tt-k todo-k" id="todo-k"></p>
+          <ul class="todo-list" id="todo-list"></ul>
+          <p class="todo-next" id="todo-next" hidden>Now back to your stage tab: step 3, End night.</p>
+        </div>
       </div>
       <div class="card tt-card" id="tt-venue" hidden>
         <p class="tt-k" id="tt-venue-k"></p>

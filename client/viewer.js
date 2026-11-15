@@ -175,8 +175,31 @@ const meter = () => {
   $('try-venue').hidden = !(!ONE && judge && AS === 'home' && show.ticket.on && show.drinks && given > 0);
 };
 // A tip went through: the server says this browser's new total.
-const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { tippedHere = j.total; meter(); } }).catch(() => {});
+const tipped = (res) => res.clone().json().then((j) => { if (j.total != null) { const was = tippedHere; tippedHere = j.total; meter(); todoTip(j.total - was); } }).catch(() => {});
 meter();
+
+// ---- The judge's to-do box (Rajesh 15 Nov): on a judge's stage, the Ticket tab's box lists what to try on this gig and
+// ticks each off as it's done (easier than remembering), then sends them back to the stage tab for End night. What only
+// this browser knows (went full screen, said hello, played, stopped) is kept here with the pass; tips, the ticket, the
+// door and the drink come from the server. Never on a real gig, never in the artist's previews.
+const TODO = judge && top === self && !MOD;
+const TODO_KEY = `nutpub-todo${KEEP}`;
+let todo = { pass };
+let todoReady = false; // the first render: the door's state is known
+try { const t = JSON.parse(localStorage.getItem(TODO_KEY) || 'null'); if (t?.pass === pass) todo = t; } catch {}
+function todoMark(key) {
+  if (!TODO || todo[key]) return;
+  todo = { ...todo, pass, [key]: true };
+  try { localStorage.setItem(TODO_KEY, JSON.stringify(todo)); } catch {}
+  todoDraw();
+}
+// A tip went through: in full screen or out of it (Longy's list asks for one of each).
+function todoTip(n) {
+  const key = document.body.classList.contains('full') ? 'tipFull' : 'tipDesk';
+  if (TODO && !todo[key]) todo[`${key}Sats`] = n;
+  todoMark(key);
+  todoDraw();
+}
 
 // ---- The wallet (Coco, in this browser).
 // Opened in the background: a browser with a long history can take seconds, and the page needn't wait for it.
@@ -330,6 +353,7 @@ function backdrop(on) {
 backdrop(false);
 
 function controls(on) {
+  if (on) todoMark(todo.stopped ? 'again' : 'played'); else if (playing) todoMark('stopped');
   playing = on;
   if (on) say(''); // playing again: the "Stopped" line goes
   backdrop(on);
@@ -580,6 +604,7 @@ function fullMoves(full) {
 const layout = () => {
   const full = wantFull || (sideways.matches && !sidewaysOut);
   fullMoves(full);
+  if (full) todoMark('full');
   document.body.classList.toggle('full', full);
   document.body.classList.toggle('sideways', sideways.matches);
   $('full').setAttribute('aria-label', full ? T.exitFull : T.full);
@@ -804,8 +829,12 @@ if (WALLET_CARD) {
 // The Tip card: the stretch goal and the tip button. On a phone it's the Tip tab; on a laptop a card in the row under
 // the picture, after the ticket's cards (Rajesh 15 Nov: with no tip button there, tipping hid in the comment box).
 const PHONE = matchMedia('(max-width: 899px)');
+const bottomSpot = document.createComment('bottom');
+document.querySelector('.bottom').before(bottomSpot);
 function phoneMoves() {
   if (!ONE) return;
+  // A laptop: the wallet card sits over the stretch goals (Rajesh 15 Nov: what I have, the goal, then the tip buttons).
+  if (PHONE.matches) bottomSpot.after(document.querySelector('.bottom')); else $('tab-ticket').append(document.querySelector('.bottom'));
   $('tab-tip').prepend($('goal'));
   $('tip-btns').prepend($('tip'));
   $('tip-btns').append($('card-tip'));
@@ -1108,8 +1137,70 @@ function render() {
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
   if (ONE) ticketTab({ room, ticket, closed, s, confirmed });
+  todoReady = true;
+  todoDraw();
 }
 
+// The judge's list for this page: by what the gig sells, not by its name. { done, text, did }; `now` is the line on the
+// picture in full screen, for the steps that can be done there (the rest wait for "leave full screen").
+const FULL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" role="img" aria-label="the full screen button"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+function todoItems() {
+  const s = split();
+  const full = { done: !!todo.full, html: `Go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture`, did: 'Went full screen' };
+  const tip = { done: tippedHere > 0, text: 'Tip with a comment', did: `Tipped ${sats(tippedHere)}`, now: 'Now tip with a comment: the box below' };
+  const hello = { done: !!todo.hello, text: 'Say hello in the chat', did: 'Said hello in the chat', now: 'Say hello: the comment box below' };
+  if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
+    if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
+    return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket' },
+      show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door' },
+      s.drink && { done: !!door.drink?.poured, text: 'Get your drink poured: the bar scans it, or Pour by hand on Show Time', did: 'Drink poured' },
+      free ? { ...tip, text: 'Tip: the stream is free here' } : tip].filter(Boolean);
+  }
+  // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
+  // under the stretch goal, to watch it move.
+  if (show.stream.mode === 'ticket') {
+    if (!door.ticket) return [];
+    const again = show.tip?.price ? `press ${show.tip.label || 'Tip'} ${sats(show.tip.price)}` : 'tip again';
+    return [hello, full,
+      { done: !!todo.tipFull, text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
+        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right' },
+      { done: !!todo.tipDesk, text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved' }];
+  }
+  if (show.stream.mode === 'pay') return [
+    { done: !!todo.played || spentHere > 0, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left' },
+    { done: !!todo.again, text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left' },
+    full, tip];
+  return [];
+}
+function todoDraw() {
+  if (!TODO || !todoReady) return;
+  const items = stage === 'closed' ? [] : todoItems();
+  const box = $('todo');
+  if (AS === 'room' && !$('tt-todo')) { // the venue's page has no Watching online box: a card of its own, first on the tab
+    const card = Object.assign(document.createElement('div'), { className: 'card tt-card tt-todo', id: 'tt-todo' });
+    card.append(box);
+    $('tab-ticket').prepend(card);
+  }
+  box.hidden = !items.length;
+  if ($('tt-todo')) $('tt-todo').hidden = box.hidden;
+  $('todo-now').hidden = box.hidden;
+  if (box.hidden) return;
+  const n = items.filter((i) => i.done).length;
+  const all = n === items.length;
+  // In full screen: the next step that can be done there; none left, the way out (the rest is on the page).
+  $('todo-now-k').textContent = all ? 'Judges · all done' : `Judges · ${n} of ${items.length}`;
+  $('todo-now-text').textContent = items.find((i) => !i.done && i.now)?.now || 'Now leave full screen: the button, bottom right';
+  box.classList.toggle('done', all);
+  $('todo-k').textContent = all ? 'Judges: all done' : `Judges: try this${n ? ` · ${n} of ${items.length}` : ''}`;
+  $('todo-list').replaceChildren(...items.map((i) => {
+    const li = Object.assign(document.createElement('li'), { className: i.done ? 'done' : '' });
+    const words = document.createElement('span');
+    if (i.done || !i.html) words.textContent = i.done ? i.did : i.text; else words.innerHTML = i.html; // our own words and icon only
+    li.append(words);
+    return li;
+  }));
+  $('todo-next').hidden = !all;
+}
 // The Ticket tab when watching online: how this page watches, and the venue ticket on the venue's page beside it.
 // (The venue's page shows its own ticket box, door QR and drink there, with "Watch online instead".)
 function ticketTab({ room, ticket, closed, s, confirmed }) {
@@ -1547,6 +1638,7 @@ function said() {
   return text ? { 'X-Message': encodeURIComponent(text) } : {};
 }
 function sent() {
+  if ($('say-text').value.trim()) todoMark('hello');
   $('say-text').value = '';
   setTimeout(() => tick().catch(() => {}), 300);
 }
@@ -1572,7 +1664,7 @@ $('say').onsubmit = async (e) => {
   const text = $('say-text').value.trim();
   if (!text) { if (show.comments === false) box.focus(); return; }
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-  if (r.ok) { $('say-text').value = ''; tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
+  if (r.ok) { $('say-text').value = ''; todoMark('hello'); tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
 };
 
 // ---- Nostr sign-in for the chat, a purple button in the Live chat header for every fan (not mods: they have their own

@@ -9,7 +9,7 @@
   <style>
     /* Welcome 3 ("Gig Page Phone Options"): the setlist taped to the stage, the stage's home page. */
     body.stage { background: var(--deep) repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 48px); }
-    .stage main { max-width: 420px; min-height: calc(100dvh - 60px); display: flex; flex-direction: column; padding: 28px 4px 8px; }
+    .stage main { max-width: 560px; min-height: calc(100dvh - 60px); display: flex; flex-direction: column; padding: 28px 4px 8px; }
     .nut-menu { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 44px); right: clamp(16px, 4vw, 64px); z-index: 5; text-align: right; }
     .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }
     .nut-menu summary::-webkit-details-marker { display: none; }
@@ -54,7 +54,7 @@
     /* Two short lines, each with room, then the buttons; the way back well below them (Rajesh 14 Nov). */
     .stage .one-how { list-style: none; margin: 22px 0 36px; padding: 0; display: grid; gap: 14px; text-align: left; font-size: 17px; line-height: 1.45; color: var(--cream); }
     /* Two lines each, not the list's full width (Rajesh 15 Nov, late). */
-    .stage .one-how .go { width: min(100%, 320px); margin-top: 12px; padding: 12px 16px 9px; box-sizing: border-box; text-align: center; font-size: 22px; line-height: 1.1; }
+    .stage .one-how .go { width: 100%; margin-top: 12px; padding: 12px 16px 9px; box-sizing: border-box; text-align: center; font-size: 22px; line-height: 1.1; }
     .stage .one-how .go.fan { margin-top: 12px; font-size: 20px; }
     .stage .one-how b { display: block; font: 400 19px/1.1 var(--poster); letter-spacing: .1em; color: #e8a845; margin-bottom: 2px; }
     .stage .back-cards { margin: 40px 0 0; font-size: 16px; }
@@ -143,9 +143,9 @@
       // End night, which sends every fan's page to Cheers.
       const name = { longy: 'Longy', frankie: 'Frankie', yours: 'Frankie' }[list.at];
       const fan = {
-        longy: 'Buy the Watch online ticket, say hello in the chat, and tip Longy: watch his stretch goal move.',
-        frankie: 'Watch for 2 minutes at 60 sats a minute: pay as you watch, stop any time. Tip Frankie with a comment.',
-        yours: 'Buy the venue ticket, get let in at the door, then get your free first drink at the bar. No phone to scan with? Let in by hand and Pour by hand are on Show Time. At home the stream is free: tip Frankie.',
+        longy: 'Buy the ticket, then follow the Judges list.',
+        frankie: 'Follow the Judges list under the video.',
+        yours: 'Follow the Judges list. No phone? Let in by hand and Pour by hand are on Show Time.',
       }[list.at];
       document.getElementById('ready').textContent = { longy: 'Longy\u2019s gig is ready', frankie: 'Frankie\u2019s gig is ready', yours: 'The venue night is ready' }[list.at];
       const how = document.getElementById('one-how');
@@ -153,8 +153,9 @@
       const two = (a, b) => [a, document.createElement('br'), b];
       const go = Object.assign(document.getElementById('go'), { target: '_blank', rel: 'noopener' });
       go.replaceChildren(...two('Open \u201cPlan your gig\u201d', `as ${name} in a 2nd tab`));
-      const fanBtn = Object.assign(document.getElementById('fan'), { href: r.fan || r.path });
-      fanBtn.replaceChildren(...two('Enter as a fan', 'in a 3rd tab'));
+      // The fan's tab opens from Show Time's own Fan's page button (Rajesh 15 Nov): the judge is there already, after
+      // Start show, so there's no trip back to this page.
+      document.getElementById('fan').style.display = 'none';
       const step = (n, head, text, btn) => {
         const li = document.createElement('li');
         li.append(Object.assign(document.createElement('b'), { textContent: `${n} \u00b7 ${head}` }), text);
@@ -162,13 +163,15 @@
         return li;
       };
       how.replaceChildren(
-        step(1, `As ${name}`, 'See the prices on Plan your gig, then press Start show on the Show Time page.', go),
-        step(2, 'As a fan', fan, fanBtn),
+        step(1, `As ${name}`, 'Look at Plan your gig, then press Start show on Show Time.', go),
+        step(2, 'As a fan', `On Show Time, press Fan\u2019s page \u2197 (top right). ${fan}`),
         step(3, `Back as ${name}`, 'Press End night on Show Time.'),
-        step(4, 'On Takings', 'Move the sats to your own Cashu wallet.'));
+        step(4, 'On Takings', 'Move the sats to Cashu.me.'),
+        // The way on: a real button under the steps (Rajesh 15 Nov: the small link there was missed).
+        Object.assign(document.createElement('li'), { className: 'on' }));
+      how.lastElementChild.append(Object.assign(document.createElement('a'), { className: 'go', href: `${front}/judge`, textContent: 'Back to the three gigs \u2192' }));
       how.hidden = false;
       document.getElementById('board').hidden = document.getElementById('how').hidden = true;
-      document.getElementById('back-cards').hidden = false;
       import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
     } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
