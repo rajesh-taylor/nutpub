@@ -1201,6 +1201,7 @@ function todoDraw() {
     return li;
   }));
   $('todo-next').hidden = !all;
+  if (all) todoMark('all'); // Show Time's line reads it (judge-line.js): End night comes next
 }
 // The Ticket tab when watching online: how this page watches, and the venue ticket on the venue's page beside it.
 // (The venue's page shows its own ticket box, door QR and drink there, with "Watch online instead".)

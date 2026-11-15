@@ -139,40 +139,13 @@
     const list = r?.setlist;
     // One gig (a card on /judge, 14 Nov): no setlist, no Repeat gig; what to do, the two buttons, the way back.
     if (list?.only) {
-      // One list in the order things happen, each button at its step (Rajesh 15 Nov, late): the fan's tab opens before
-      // End night, which sends every fan's page to Cheers.
-      const name = { longy: 'Longy', frankie: 'Frankie', yours: 'Frankie' }[list.at];
-      const fan = {
-        longy: 'Buy the ticket, then follow the Judges list.',
-        frankie: 'Follow the Judges list under the video.',
-        yours: 'Follow the Judges list. No phone? Let in by hand and Pour by hand are on Show Time.',
-      }[list.at];
-      document.getElementById('ready').textContent = { longy: 'Longy\u2019s gig is ready', frankie: 'Frankie\u2019s gig is ready', yours: 'The venue night is ready' }[list.at];
-      const how = document.getElementById('one-how');
-      // Each in a tab of its own (Rajesh 15 Nov, late): this page stays open as the guide.
-      const two = (a, b) => [a, document.createElement('br'), b];
-      const go = Object.assign(document.getElementById('go'), { target: '_blank', rel: 'noopener' });
-      go.replaceChildren(...two('Open \u201cPlan your gig\u201d', `as ${name} in a 2nd tab`));
-      // The fan's tab opens from Show Time's own Fan's page button (Rajesh 15 Nov): the judge is there already, after
-      // Start show, so there's no trip back to this page.
-      document.getElementById('fan').style.display = 'none';
-      const step = (n, head, text, btn) => {
-        const li = document.createElement('li');
-        li.append(Object.assign(document.createElement('b'), { textContent: `${n} \u00b7 ${head}` }), text);
-        if (btn) li.append(btn);
-        return li;
-      };
-      how.replaceChildren(
-        step(1, `As ${name}`, 'Look at Plan your gig, then press Start show on Show Time.', go),
-        step(2, 'As a fan', `On Show Time, press Fan\u2019s page \u2197 (top right). ${fan}`),
-        step(3, `Back as ${name}`, 'Press End night on Show Time.'),
-        step(4, 'On Takings', 'Move the sats to Cashu.me.'),
-        // The way on: a real button under the steps (Rajesh 15 Nov: the small link there was missed).
-        Object.assign(document.createElement('li'), { className: 'on' }));
-      how.lastElementChild.append(Object.assign(document.createElement('a'), { className: 'go', href: `${front}/judge`, textContent: 'Back to the three gigs \u2192' }));
-      how.hidden = false;
-      document.getElementById('board').hidden = document.getElementById('how').hidden = true;
-      import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
+      // A judge's stage (a gig card on /judge) has no page of its own (Rajesh 15 Nov): the poster's button lands here,
+      // signed in, and goes straight to the artist's pages, where one line a page says what's next (judge-line.js).
+      // Open again comes back to where they were: Plan gig, Show Time once the show's on, Takings once the night's over.
+      document.getElementById('mine').hidden = true;
+      await import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
+      const st = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
+      location.replace(st?.stage === 'closed' ? '/takings' : st?.stage === 'on' ? '/show' : '/setup');
     } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
         li.classList.toggle('done', list.done.includes(li.dataset.step));
