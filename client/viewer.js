@@ -18,8 +18,9 @@ const KEEP = AS === 'home' ? '-home' : '';
 // One screen for every fan (15 Nov, design B): the gig page on its own looks the same with a venue ticket and watching
 // online (the four tabs on a phone; the picture, the chat beside it and the cards under it on a laptop). Only the
 // Ticket tab differs. AS still says which ticket and wallet this page holds (the venue's, or watching online's).
-// Inside a host page (The show, the setup page's phone) the old room and home views stay for now.
-const ONE = top === self;
+// Inside a host page too (Show Time's two previews, Plan gig's phone), since 15 Nov: the artist sees exactly what fans
+// see. The old room and home views (the !ONE branches below) are no longer reached; to clear out after 27 Nov.
+const ONE = true;
 const BUY_AHEAD = 3; // seconds before a piece starts that it's bought
 const PIECE = 10;
 const TOP_UP = 150_000; // test sats in every wallet: a ticket, a drink and plenty of tips
@@ -109,7 +110,7 @@ document.body.dataset.rows = [5, 10].includes(show.chatRows) ? show.chatRows : 3
 // A stream-only gig (no venue tickets): the show's link opens the home view.
 // The setup page's phone (view=ticket) follows the same rule, and turns back when venue tickets are switched on again.
 const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
-if (AS === 'room' && homeOnly && (top === self || TICKET_VIEW)) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
+if (AS === 'room' && homeOnly) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
 if (AS === 'home' && TICKET_VIEW && !homeOnly) location.replace(`${location.pathname}?view=ticket`);
 // Free shows: no price and no "This set" (there's nothing to count).
 // Free, then paid: the price says how long is left free; it's redrawn on every tick.
@@ -791,7 +792,7 @@ $('tabs').hidden = !ONE;
 $('tab-tip').hidden = $('tab-ticket').hidden = !ONE;
 if (top !== self) { // inside a host page: it has its own way out, and its own test strip
   $('back-link').remove();
-  body.classList.add('framed');
+  body.classList.add('in-frame');
   document.querySelector('.test-banner')?.remove();
 }
 // At home the stretch goal sits under the money buttons, in a box of its own (board 2); the chat keeps the messages.
@@ -1096,7 +1097,7 @@ function render() {
   // ticket left the page blank under the video, the Save button hidden with the rest).
   body.classList.toggle('ticket-steps', !ONE && room && (keepFirst || (passOn && !door.checkedAt)));
   // The first render picks the tab: the Ticket tab while the venue's page has no ticket or its door QR is still to show.
-  if (ONE && tab === null) showTab(confirmed || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
+  if (ONE && tab === null) showTab(TICKET_VIEW || confirmed || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
   if (ONE && confirmed && tab !== 'ticket') showTab('ticket'); // bought ahead: the receipt is the page
   $('door-pass').classList.toggle('in', !!door.checkedAt);
   // Under Show at the door: where this page lives, so it's easy to find again on the night.
