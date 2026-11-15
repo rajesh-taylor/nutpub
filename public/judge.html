@@ -31,6 +31,7 @@
     .lines { display: grid; gap: 8px; }
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
     .lines b { color: var(--cream); font-weight: 400; }
+    .lines .lead { font-size: 18px; line-height: 1.4; } /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; }
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
@@ -84,7 +85,8 @@
     .sm .txt { position: absolute; inset: 24% 14%; display: flex; pointer-events: none; align-items: center; justify-content: center; }
     .sm b { font: 400 calc(var(--lw) * .135)/1 var(--poster); letter-spacing: .03em; color: var(--cream); white-space: nowrap; }
     .sm.next { opacity: .55; }
-    a.sm:hover b, a.sm:focus-visible b { color: #e8a845; }
+    a.sm:hover b, a.sm:focus-visible b, .big:hover .n, .big:focus-visible .n { color: #e8a845; }
+    .big:focus-visible { outline: 2px solid #c4521a; outline-offset: 2px; border-radius: 50%; }
     a.sm:focus-visible { outline: 2px solid #c4521a; outline-offset: 2px; border-radius: 50%; }
     .wreath-s { display: none; }
     @media (max-width: 860px) {
@@ -163,7 +165,7 @@
     </details>
     <h1>Judge for yourself</h1>
     <div class="lines">
-      <p><b>Three gigs, three separate ways artists get paid with Cashu ecash over HTTP 402.</b></p>
+      <p class="lead"><b>Three gigs, three separate ways artists get paid with Cashu ecash over HTTP 402.</b></p>
       <p>Have your phone ready for the doormen and the bar staff (or press <b>Let in by hand</b> and <b>Pour by hand</b>) and end every gig on <b class="key">Takings</b>, moving your sats to <b class="key">Cashu.me</b>.</p>
     </div>
 
@@ -227,7 +229,7 @@
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/11.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-10·11 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-10·11</b></span></a>
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/18.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-18 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-18</b></span></a>
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/24.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-24 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-24</b></span></a>
-        <div class="sm next"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b></div></div>
       </div>
       </div>
       </div>

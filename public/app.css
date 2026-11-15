@@ -109,6 +109,7 @@ body.wallet textarea {
 .status { min-height: 1.5em; color: var(--cream); }
 
 /* ---- The TEST banner: on every page while the show runs on the test mint (added by the server) */
+@media (max-width: 699px) { .test-banner .wide-only { display: none; } } /* the home page's line: the name and Test mint on a phone */
 .test-banner {
   margin: 0 -16px; padding: 6px 16px calc(5px);
   padding-top: calc(6px + env(safe-area-inset-top));
