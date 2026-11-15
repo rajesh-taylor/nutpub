@@ -36,7 +36,7 @@ export function siteUrl(c) {
 // A Durable Object's SQLite (ctx.storage.sql), dressed as D1: the same first/all/run/batch and the same results, so no
 // query changes. Its calls are synchronous; `batch` runs inside one transaction.
 const value = (v) => (v === undefined ? null : v === true ? 1 : v === false ? 0 : v);
-export function sqliteStage(storage, { id, adminKey: key = '' }) {
+export function sqliteStage(storage, { id, adminKey: key = '', made = null }) {
   const exec = (text, args) => storage.sql.exec(text, ...args.map(value));
   const runNow = (text, args) => {
     const results = exec(text, args).toArray();
@@ -51,7 +51,7 @@ export function sqliteStage(storage, { id, adminKey: key = '' }) {
     run: async () => runNow(text, args),
   });
   return {
-    id, adminKey: key, prefix: `${id}:`,
+    id, adminKey: key, made, prefix: `${id}:`, // made: when the stage was made (it closes STAGE_DAYS later)
     prepare: (text) => statement(text),
     batch: async (list) => storage.transactionSync(() => list.map((st) => runNow(st.text, st.args))),
     alarmAt: (ms) => storage.setAlarm(ms), // the stage's own alarm (stage.js): the practice stream's 20 minutes

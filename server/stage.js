@@ -7,7 +7,7 @@ import { configure, SITE_URL } from './config.js';
 import { sqliteStage, withStage } from './db.js';
 import { randomHex } from './http.js';
 import { serve } from './app.js';
-import { useStream, stopPractice } from './live.js';
+import { useStream, stopPractice, closeStream } from './live.js';
 import { makeHandoff } from './handoff.js';
 import { closeNights } from './closing.js';
 import { setlist } from './setlist.js';
@@ -36,7 +36,7 @@ export class Stage extends DurableObject {
       });
     }
     sql.exec(schema); // tables added since it was made (every statement is IF NOT EXISTS)
-    return (this.db = sqliteStage(this.ctx.storage, { id: self.id, adminKey: self.adminKey }));
+    return (this.db = sqliteStage(this.ctx.storage, { id: self.id, adminKey: self.adminKey, made: self.made || null }));
   }
   ready() { configure(this.env); useStream(this.env); return this.open(); }
 
@@ -60,6 +60,15 @@ export class Stage extends DurableObject {
   async close(at) {
     const db = this.ready();
     return db ? withStage(db, () => closeNights(at)) : null;
+  }
+  // Closed for good, 7 days after it was made (stages.js): Stream's recordings and input, then every row and the alarm.
+  // Its address then goes to the home page, as an address that was never a stage does.
+  async shut() {
+    const db = this.ready();
+    if (db) await withStage(db, () => closeStream());
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
+    this.db = null;
   }
   // The practice stream's 20 minutes are up (live.js).
   async alarm() {

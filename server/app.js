@@ -19,7 +19,7 @@ import { mountPasskeys } from './passkey.js';
 import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
-import { mountStageDoor } from './stages.js';
+import { mountStageDoor, closesAt } from './stages.js';
 import { setlist, finished, again, cue, cueTimes } from './setlist.js';
 import { keepMoved } from './closing.js';
 import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
@@ -46,7 +46,8 @@ const page = (file) => async (c) => {
 route('GET', '/pocket.html', redirect('/wallet.html')); // its name before 6 Oct
 route('GET', '/takings.html', redirect('/takings')); // the artist-only page, before 3 · Takings
 // The home page; on an artist's own stage (<id>.thenutpub.com) its setlist, the stage's home.
-route('GET', '/', (c) => page(stageDb().id ? 'stage.html' : 'home.html')(c));
+// thenutpub.com opens on Judge for yourself (Rajesh 15 Nov: one way in for judges); home.html waits for Put on a gig.
+route('GET', '/', (c) => page(stageDb().id ? 'stage.html' : 'judge.html')(c));
 route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
@@ -110,7 +111,7 @@ route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((awai
 route('GET', '/api/admin/setlist', admin, attempt(async (c) => {
   const list = await setlist(c.env);
   const { path } = await current(c);
-  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path };
+  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path, closes: closesAt(stageDb()?.made) };
 }));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));

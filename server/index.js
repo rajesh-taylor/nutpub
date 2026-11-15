@@ -7,7 +7,7 @@ import { withStage, d1Stage } from './db.js';
 import { serve } from './app.js';
 import { useStream } from './live.js';
 import { closeNights } from './closing.js';
-import { stageIdOf, stageStub } from './stages.js';
+import { stageIdOf, stageStub, closeOldStages } from './stages.js';
 
 export { Stage } from './stage.js';
 
@@ -30,6 +30,7 @@ export default {
     const log = (who) => (e) => console.log(`closing ${who}: ${String(e.stack || e).slice(0, 300)}`);
     ctx.waitUntil((async () => {
       await withStage(d1Stage(env.DB), () => closeNights(event.scheduledTime)).catch(log('longy'));
+      await closeOldStages(env, event.scheduledTime).catch(log('stages')); // 7 days after they're made
       const { results } = await env.DB.prepare('SELECT id FROM stages').all();
       for (const { id } of results) await stageStub(env, id).close(event.scheduledTime).catch(log(id));
     })());

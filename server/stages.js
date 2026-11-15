@@ -27,6 +27,24 @@ export function stageIdOf(hostname, site = SITE_URL) {
 }
 export const stageStub = (env, id) => env.STAGES.get(env.STAGES.idFromName(id));
 
+// Practice stages close themselves (Rajesh 15 Nov): 7 days after they're made, whatever's on them, test sats not moved
+// included. Takings says when. The daily cron (index.js) closes them; a judge's Start fresh leaves the old one to this.
+export const STAGE_DAYS = 7;
+const DAY = 86_400_000;
+export const closesAt = (made) => (made ? new Date(Date.parse(made) + STAGE_DAYS * DAY).toISOString() : null);
+export async function closeOldStages(env, at = Date.now(), stub = stageStub) {
+  const cutoff = new Date(at - STAGE_DAYS * DAY).toISOString();
+  const { results } = await env.DB.prepare('SELECT id FROM stages WHERE created < ?').bind(cutoff).all();
+  const closed = [];
+  for (const { id } of results) {
+    try { await stub(env, id).shut(); } catch (e) { console.log(`stage ${id} not closed: ${String(e.message || e).slice(0, 200)}`); continue; }
+    await env.DB.batch([env.DB.prepare('DELETE FROM stage_keys WHERE stage = ?').bind(id), env.DB.prepare('DELETE FROM stages WHERE id = ?').bind(id)]);
+    closed.push(id);
+  }
+  if (closed.length) console.log(`stages closed: ${closed.join(', ')}`);
+  return closed;
+}
+
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
 const ALNUM = `${LETTERS}0123456789`;
 export function newStageId() {
@@ -77,6 +95,14 @@ export function mountStageDoor(route) {
     const code = await stageStub(c.env, id).setup(id, gig);
     console.log(`judge stage made: ${id} (${gig})`);
     return json({ stage: id, url: stageLink(c, id, code) });
+  });
+
+  // /judge's cards: which of this browser's stages are still open (closed ones offer Start only).
+  route('GET', '/api/stages/open', front, async (c) => {
+    const ids = String(c.url.searchParams.get('ids') || '').split(',').filter((id) => STAGE_ID.test(id)).slice(0, 10);
+    const open = [];
+    for (const id of ids) if (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) open.push(id);
+    return json({ open });
   });
 
   // Back to your stage: the passkey check, then a one-time sign-in link to it.

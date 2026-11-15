@@ -29,7 +29,12 @@ async function stream(method, path, data) {
     method, headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
     body: data ? JSON.stringify(data) : undefined, signal: AbortSignal.timeout(10000),
   });
-  const out = await res.json().catch(() => ({}));
+  // A delete comes back 200 with no body at all (15 Nov: Delete on Takings said server_error, and closing.js's daily
+  // deletes had been failing the same way since 2 Nov): an empty 2xx is a success.
+  const text = await res.text();
+  if (res.ok && !text.trim()) return null;
+  let out = {};
+  try { out = JSON.parse(text); } catch {}
   if (!out.success) throw Object.assign(new Error(out.errors?.[0]?.message || `Stream said ${res.status}`), { status: res.status });
   return out.result;
 }

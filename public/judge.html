@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050914">
-  <title>Judge for yourself · The NutPub</title>
+  <title>The NutPub · Judge for yourself</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* Judge for yourself (Rajesh 14 Nov, "NutPub Gig Cards" v3): three gig posters taped to the stage wall, as the home
@@ -60,16 +60,95 @@
     .judge footer p { margin: 0; padding-top: 16px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .judge footer a { color: var(--smoke); text-decoration: none; }
     .judge footer a:hover { color: var(--cream); text-decoration: underline; }
+    /* Supporting acts (from the old home page, 15 Nov): the laurels in the posters' colours, paper and rust, not gold. */
+    .billing { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 18px/1 var(--poster); letter-spacing: .3em; color: #e8a845; }
+    .billing::before, .billing::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgb(239 227 200 / .35)); }
+    .billing::after { transform: scaleX(-1); }
+    /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
+    .lineup { text-align: center; margin-top: 64px; min-width: 0; }
+    .lineup .billing { margin-bottom: 32px; }
+    .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 72px) / 9), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
+    .heads, .rows, .smalls { display: contents; }
+    .big:nth-child(2) { order: 2; }
+    .sm { order: 1; }
+    .big, .sm { position: relative; display: block; aspect-ratio: 1; flex: 0 0 var(--lw); width: var(--lw); text-decoration: none; }
+    .big svg, .sm svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 2px 0 rgb(0 0 0 / .6)); }
+    .big .txt { position: absolute; inset: 22% 14%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+    .big .k { font: 600 calc(var(--lw) * .05)/1.25 Georgia, "Times New Roman", serif; letter-spacing: .14em; text-transform: uppercase; color: #c9b48a; }
+    .big .n { font: 700 calc(var(--lw) * .155)/1 Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .02em; color: var(--cream); text-shadow: 0 1px 0 rgb(0 0 0 / .6); white-space: nowrap; }
+    .big .n.long { font-size: calc(var(--lw) * .115); }
+    .sm .txt { position: absolute; inset: 24% 14%; display: flex; align-items: center; justify-content: center; }
+    .sm b { font: 400 calc(var(--lw) * .135)/1 var(--poster); letter-spacing: .03em; color: var(--cream); white-space: nowrap; }
+    .sm.next { opacity: .55; }
+    .wreath-s { display: none; }
+    @media (max-width: 860px) {
+      .acts { --lw: min(28vw, 150px); flex-wrap: wrap; justify-content: center; }
+      .wreath-l { display: none; } .wreath-s { display: inline; }
+    @media (max-width: 760px) { .lineup { display: none; } }
     @media (max-width: 900px) { .wall { grid-template-columns: minmax(0, 1fr); max-width: 420px; gap: 40px; } .poster img { aspect-ratio: 4 / 5; } }
   </style>
 </head>
 <body class="judge">
+  <!-- The laurel, drawn once: a leaf, a pair of leaves, a branch of pairs, two mirrored branches. -->
+  <svg width="0" height="0" style="position: absolute;" aria-hidden="true">
+    <defs>
+      <linearGradient id="paper" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stop-color="#fbf4e2"/><stop offset="0.5" stop-color="#efe3c8"/><stop offset="1" stop-color="#a8956c"/>
+      </linearGradient>
+      <path id="leaf" d="M0 0 C5 -7 15 -8 25 -1 C16 5 6 6 0 0Z"/>
+      <g id="sprig"><use href="#leaf" transform="rotate(146)" fill="url(#paper)"/><use href="#leaf" transform="rotate(214)" fill="url(#paper)"/></g>
+      <!-- Wear: small specks knocked out, like old paint. Remove the filter="url(#worn)" attributes to go back to clean. -->
+      <filter id="worn" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 9 -1.5" result="m"/>
+        <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      </filter>
+      <filter id="worn-sign" filterUnits="userSpaceOnUse" x="-20" y="-20" width="840" height="240">
+        <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 9 -1.5" result="m"/>
+        <feComposite in="SourceGraphic" in2="m" operator="in"/>
+      </filter>
+      <path id="star" d="M0 -6 L1.8 -1.9 L6 -1.9 L2.6 0.8 L3.9 5 L0 2.4 L-3.9 5 L-2.6 0.8 L-6 -1.9 L-1.8 -1.9Z"/>
+      <g id="branch">
+        <path d="M94 181 A80 80 0 0 1 55 34" fill="none" stroke="url(#paper)" stroke-width="2.4" stroke-linecap="round"/>
+        <use href="#sprig" transform="rotate(10 100 100) translate(100 180)"/>
+        <use href="#sprig" transform="rotate(24 100 100) translate(100 180)"/>
+        <use href="#sprig" transform="rotate(38 100 100) translate(100 180) scale(.97)"/>
+        <use href="#sprig" transform="rotate(52 100 100) translate(100 180) scale(.94)"/>
+        <use href="#sprig" transform="rotate(66 100 100) translate(100 180) scale(.9)"/>
+        <use href="#sprig" transform="rotate(80 100 100) translate(100 180) scale(.86)"/>
+        <use href="#sprig" transform="rotate(94 100 100) translate(100 180) scale(.82)"/>
+        <use href="#sprig" transform="rotate(108 100 100) translate(100 180) scale(.77)"/>
+        <use href="#sprig" transform="rotate(122 100 100) translate(100 180) scale(.72)"/>
+        <use href="#sprig" transform="rotate(136 100 100) translate(100 180) scale(.66)"/>
+        <use href="#leaf" transform="rotate(147 100 100) translate(100 180) rotate(180) scale(.7)" fill="url(#paper)"/>
+      </g>
+      <g id="wreath">
+        <use href="#branch"/><use href="#branch" transform="translate(200 0) scale(-1 1)"/>
+        <path d="M93 181 L109 195 M107 181 L91 195" stroke="url(#paper)" stroke-width="2.6" stroke-linecap="round"/>
+      </g>
+      <!-- Phone width: fewer, bigger leaves, so a small laurel still reads. -->
+      <g id="branchS">
+        <path d="M94 181 A80 80 0 0 1 60 30" fill="none" stroke="url(#paper)" stroke-width="5" stroke-linecap="round"/>
+        <use href="#sprig" transform="rotate(14 100 100) translate(100 180) scale(1.5)"/>
+        <use href="#sprig" transform="rotate(42 100 100) translate(100 180) scale(1.45)"/>
+        <use href="#sprig" transform="rotate(70 100 100) translate(100 180) scale(1.35)"/>
+        <use href="#sprig" transform="rotate(98 100 100) translate(100 180) scale(1.2)"/>
+        <use href="#sprig" transform="rotate(126 100 100) translate(100 180) scale(1.05)"/>
+      </g>
+      <g id="wreathS"><use href="#branchS"/><use href="#branchS" transform="translate(200 0) scale(-1 1)"/></g>
+      <g id="stars">
+        <use href="#star" transform="translate(84 18) scale(.8)" fill="#c4521a"/>
+        <use href="#star" transform="translate(100 13)" fill="#c4521a"/>
+        <use href="#star" transform="translate(116 18) scale(.8)" fill="#c4521a"/>
+      </g>
+    </defs>
+  </svg>
   <main>
     <!-- Icon: peanut-outline, from Material Design Icons (Apache 2.0). -->
     <details class="nut-menu">
       <summary aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 23c-.47 0-.93-.05-1.39-.15c-3.51-.75-5.74-4.21-4.99-7.72c.25-1.18.83-2.26 1.66-3.13a.93.93 0 0 0 0-1.28c-2.08-2.58-1.68-6.36.9-8.44s6.36-1.673 8.44.91c1.77 2.19 1.77 5.31 0 7.53c-.29.41-.25.98.1 1.34c2.45 2.62 2.32 6.74-.31 9.19A6.44 6.44 0 0 1 12 23m0-20c-.91 0-1.8.31-2.5.89a3.98 3.98 0 0 0-.62 5.61c.96 1.14.89 2.83-.15 3.91c-1.7 1.81-1.6 4.66.21 6.36s4.66 1.61 6.36-.21a4.5 4.5 0 0 0 0-6.15a3 3 0 0 1-.18-4a4 4 0 0 0-.62-5.62c-.5-.38-1.03-.65-1.62-.79zm0 3c0 .55.45 1 1 1s1-.45 1-1s-.45-1-1-1s-1 .45-1 1m2 13c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1m-1-3c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1m-2 2c.55 0 1-.45 1-1s-.45-1-1-1s-1 .45-1 1s.45 1 1 1"/></svg></summary>
       <ul>
-        <li><a href="/">Home</a></li>
         <li><a href="/menu">Pub Menu</a></li>
         <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub</a></li>
       </ul>
@@ -123,6 +202,28 @@
         </div>
       </article>
     </div>
+    <section class="lineup" aria-label="Built with">
+      <p class="billing">Supporting Acts</p>
+      <div class="acts">
+      <div class="heads">
+        <a class="big" href="https://github.com/cashubtc/coco"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="n">Coco</span></span></a>
+        <a class="big" href="https://github.com/cashubtc/cashu-ts"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="n long">cashu-ts</span></span></a>
+      </div>
+      <div class="rows">
+      <div class="smalls">
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-00–03</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-04</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-07</b></div></div>
+        </div>
+      <div class="smalls">
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-10·11</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-18</b></div></div>
+        <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NUT-24</b></div></div>
+        <div class="sm next"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b></div></div>
+      </div>
+      </div>
+      </div>
+    </section>
   </main>
   <footer><p><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p></footer>
   <script type="module">
@@ -171,6 +272,16 @@
       }
     }
     draw();
+    // Stages close 7 days after they're made (Rajesh 15 Nov): a closed one is forgotten, and its card offers Start again.
+    (async () => {
+      const ids = Object.values(read()).filter((id) => /^[a-z][a-z0-9]{5}$/.test(id));
+      if (!ids.length) return;
+      const r = await fetch(`/api/stages/open?ids=${ids.join(',')}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+      if (!r) return;
+      const kept = Object.fromEntries(Object.entries(read()).filter(([, id]) => r.open.includes(id)));
+      try { localStorage.setItem(KEEP, JSON.stringify(kept)); } catch {}
+      draw();
+    })();
     addEventListener('pageshow', (e) => { if (e.persisted) draw(); });
   </script>
 </body>

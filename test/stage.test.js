@@ -96,3 +96,28 @@ test('only <id>.thenutpub.com is a stage', () => {
   }
   for (let i = 0; i < 200; i++) assert.match(newStageId(), STAGE_ID);
 });
+
+// Practice stages close themselves 7 days after they're made (Rajesh 15 Nov): the stage is shut (its Stream recordings,
+// its rows), then dropped from the front door's list, its passkey too. Younger stages stay; one that won't shut stays.
+test('stages close 7 days after they are made', async () => {
+  const { closeOldStages, closesAt } = await import('../server/stages.js');
+  const db = new DatabaseSync(':memory:');
+  db.exec(schema);
+  const stmt = (text) => ({ bind: (...args) => ({ all: async () => ({ results: db.prepare(text).all(...args) }), run: async () => db.prepare(text).run(...args) }) });
+  const env = { DB: { prepare: stmt, batch: (list) => Promise.all(list.map((s) => s.run())) } };
+  const day = 86_400_000;
+  const now = Date.parse('2026-11-22T04:00:00Z');
+  const made = (d) => new Date(now - d * day).toISOString();
+  for (const [id, d] of [['a1aaaa', 8], ['b2bbbb', 7.1], ['c3cccc', 6], ['d4dddd', 9]]) {
+    db.prepare('INSERT INTO stages (id, created) VALUES (?, ?)').run(id, made(d));
+    db.prepare('INSERT INTO stage_keys (id, stage, pubkey, alg, created) VALUES (?, ?, ?, ?, ?)').run(`k-${id}`, id, 'pk', -7, made(d));
+  }
+  const shut = [];
+  const stub = (_, id) => ({ shut: async () => { if (id === 'd4dddd') throw new Error('busy'); shut.push(id); } });
+  assert.deepEqual(await closeOldStages(env, now, stub), ['a1aaaa', 'b2bbbb']);
+  assert.deepEqual(shut, ['a1aaaa', 'b2bbbb']);
+  assert.deepEqual(db.prepare('SELECT id FROM stages ORDER BY id').all().map((r) => r.id), ['c3cccc', 'd4dddd']);
+  assert.deepEqual(db.prepare('SELECT stage FROM stage_keys ORDER BY stage').all().map((r) => r.stage), ['c3cccc', 'd4dddd']);
+  assert.equal(closesAt('2026-11-15T18:00:00.000Z'), '2026-11-22T18:00:00.000Z');
+  assert.equal(closesAt(null), null);
+});
