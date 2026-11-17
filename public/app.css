@@ -246,6 +246,27 @@ body[data-as="home"]:not(.wallet-card) .when { display: none; }
 .welcome figcaption:empty { display: none; }
 .drink { display: flex; gap: 14px; align-items: center; border-color: rgb(217 149 58 / .6); }
 .drink img { flex: none; border-radius: 3px; background: var(--cream); }
+/* The drink as the coin itself (gig 3, 17 Nov, look B): the QR inside a pint glass; client/pint.js draws both. The code's
+   square sits at 13.5% from the left and 21% from the top of a 100 × 128 glass, 73% wide. */
+.pint { position: relative; flex: none; width: min(240px, 70vw); aspect-ratio: 100 / 128; margin: 0 auto; }
+.pint .pint-glass { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.pint .pint-code { position: absolute; left: 13.5%; top: 21%; width: 73%; aspect-ratio: 1; display: block; background: var(--cream); image-rendering: pixelated; }
+.pint .pint-side { stroke: #d9953a; }
+.pint .pint-foam { fill: var(--cream); }
+.pint .pint-cheers, .pint .pint-mark { font-family: var(--poster); }
+.pint .pint-cheers { fill: var(--midnight, #050914); }
+.pint .pint-mark { fill: var(--cream); }
+.pint.empty .pint-code { background: none; border: 1.5px dashed rgb(239 227 200 / .3); display: grid; place-items: center; padding: 10%; text-align: center; }
+.pint.empty .pint-code span { font: 400 19px/1.15 var(--poster); letter-spacing: .06em; color: rgb(239 227 200 / .55); }
+.pint.empty .pint-side { stroke: rgb(239 227 200 / .3); stroke-dasharray: 4 3; }
+.pint.empty .pint-foam { fill: rgb(239 227 200 / .14); }
+.pint.empty .pint-cheers { fill: rgb(239 227 200 / .6); }
+.pint.empty .pint-mark { fill: rgb(239 227 200 / .6); }
+.drink-soon { display: grid; gap: 12px; justify-items: center; margin-top: 14px; }
+.drink-soon .pint { width: min(180px, 50vw); }
+.drink-gets { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; justify-self: stretch; }
+.drink-gets li::before { content: "✓ "; color: var(--amber, #d9953a); }
+.drink-coin { flex: none; }
 .doors-sign { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 30px/1 var(--poster); letter-spacing: .14em; color: var(--cream); background: rgb(5 9 20 / .55); z-index: 1; }
 body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-stage="doors"] .bar { display: none; }
 .soon { font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 3px 6px 2px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; }

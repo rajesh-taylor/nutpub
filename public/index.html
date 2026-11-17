@@ -23,6 +23,8 @@
       <h2 class="card-title" id="door-title">Ticket</h2>
       <p class="door-wallet">Your wallet: <b id="door-balance">…</b> test sats <button type="button" class="linkish" id="door-topup" hidden>Add 150,000 test sats</button></p>
       <button class="btn primary wide" id="buy">Pay</button>
+      <!-- Gig 3 (17 Nov): before buying, the empty pint the drink will fill, and what the ticket holds. -->
+      <div class="drink-soon" id="drink-soon" hidden></div>
       <!-- Find my ticket: the passkey made with it brings it back (cleared browser, new phone). Under the tips at home. -->
       <button type="button" class="btn wide" id="find" hidden>Find my ticket in Passkeys</button>
       <a class="btn wide" id="door-home" hidden>Watch from home</a>
@@ -73,6 +75,8 @@
       </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">
+        <!-- Gig 3 (17 Nov): the drink as the coin itself, an animated QR in a pint glass (client/pint.js). -->
+        <div class="drink-coin" id="drink-coin" hidden></div>
         <div>
           <h2 class="card-title" id="drink-title">Get your free drink</h2>
           <p class="hint" id="drink-note"></p>

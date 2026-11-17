@@ -50,6 +50,7 @@ export const blank = () => ({
   door: { on: false },                  // door check: the ticket page's QR (new every 30 s) is scanned once at the door (off by default)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
   drinks: false,                        // the first drink may be on: until after 27 Nov only on a judge's practice gig (setlist.js)
+  drinkCoin: false,                     // the drink travels as the coin itself, an animated NUT-16 QR the bar's camera reads (gig 3, 17 Nov)
   goals: [{ label: '', at: null }, { label: '', at: null }], // up to 2 stretch goals, fed by tips (Rajesh 13 Nov: two at most)
   nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '⚡' }, { sats: 2100, emoji: '⚡' }], // up to 3 one-tap Nutzaps under the comment box; no amount: no button
   goalsThanks: '',                      // the artist's message once the last goal is met (written before the night)
@@ -116,6 +117,7 @@ export function clean(input = {}) {
     // comes back it should lock once a gig's first ticket sells, as the artist's name does. Judges' practice gigs
     // (Frankie's and Your gig, 13–14 Nov) have it: `drinks`, set when the gig opens (setlist.js).
     drinks: on(input.drinks),
+    drinkCoin: on(input.drinks) && on(input.drinkCoin),
     drink: { price: sats(input.drink?.price), mode: DRINK_LATER && !on(input.drinks) ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),

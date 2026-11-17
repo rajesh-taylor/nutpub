@@ -183,6 +183,16 @@ export function mountDoor(route, admin, pass) {
   };
   route('GET', '/api/door/me', pass, async (c) => json({ ...(await heldBy(c.pass)), soldOut: await roomFull(c) }));
 
+  // The drink as the coin itself (gig 3, 17 Nov): this phone's own drink, the locked token it paid, for its animated
+  // NUT-16 QR. It's locked to the bar's key (and to the artist's after last orders), so showing it to the phone that
+  // paid it gives nothing away: only the bar can spend it. Poured: no token, just that.
+  route('GET', '/api/door/drink/coin', pass, async (c) => {
+    if (!(await showOf(c)).drinkCoin) return json({ error: 'no_coin' }, 404);
+    const d = await one(`${DRINK} WHERE d.pass = ?`, c.pass);
+    if (!d) return json({ error: 'no_drink' }, 404);
+    return json({ id: d.id, sats: d.sats, poured: !!d.collected_at, token: d.collected_at ? null : d.token });
+  });
+
   // The drink's QR: the bar's page with the drink's number only (the token never leaves the server's sealed list).
   route('GET', '/api/door/drink-qr.svg', async (c) => {
     const id = Number(c.url.searchParams.get('id'));

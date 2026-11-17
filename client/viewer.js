@@ -6,6 +6,7 @@ import { money, satsFrom } from '../server/money.js';
 import { totp, stepAt } from '../server/totp.js';
 import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
 import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
+import { pintGlass, playCoin } from './pint.js';
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -1140,9 +1141,50 @@ function render() {
     $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
+  coinDrink(drinkWaits);
+  soonDrink(room && show.ticket.on && !ticket && !closed && !$('door').hidden);
   if (ONE) ticketTab({ room, ticket, closed, s, confirmed });
   todoReady = true;
   todoDraw();
+}
+
+// Gig 3 (17 Nov): the drink as the coin itself. Once bought, the Ticket tab plays this phone's own locked drink token
+// as an animated NUT-16 QR inside a pint glass, for the bar's camera; poured, it says so. Before buying, the empty glass
+// and what the ticket holds fill the space under the buy button (Rajesh 17 Nov).
+let coin = { id: null, player: null };
+function coinDrink(waits) {
+  const on = !!show.drinkCoin && !!door.drink && !waits;
+  if (show.drinkCoin) $('drink-qr').hidden = true;
+  $('drink-coin').hidden = !on || !!door.drink?.poured;
+  if (!on) return;
+  if (door.drink.poured) {
+    coin.player?.stop(); coin = { id: null, player: null };
+    $('drink-title').textContent = 'Enjoy your pint, cheers!';
+    $('drink-note').textContent = 'The bar has your drink. One per ticket.';
+    return;
+  }
+  $('drink-title').textContent = 'Your first drink';
+  $('drink-note').textContent = coin.failed ? 'This drink’s QR didn’t load: reload the page.'
+    : `Hold it up to the bar’s camera. Locked to the bar until ${show.lastOrders || 'last orders'}; not poured by then, it goes back to ${show.artist || 'the artist'}.`;
+  if (coin.id === door.drink.id) return;
+  coin = { id: door.drink.id, player: null };
+  const glass = pintGlass({ artist: show.artist });
+  $('drink-coin').replaceChildren(glass);
+  const failed = () => { coin.failed = true; $('drink-note').textContent = 'This drink’s QR didn’t load: reload the page.'; };
+  fetch('/api/door/drink/coin', { headers: { 'X-Pass': pass } }).then((r) => r.json()).then(async (c) => {
+    if (coin.id !== c.id || !c.token) return;
+    coin.player = await playCoin(glass, c.token, { onError: failed });
+  }).catch(failed);
+}
+function soonDrink(open) {
+  const box = $('drink-soon');
+  box.hidden = !open || !show.drinkCoin;
+  if (box.hidden || box.childElementCount) return;
+  const gets = document.createElement('ul');
+  gets.className = 'drink-gets';
+  for (const t of [`Entry to ${venueName() || 'the gig'}`, `Your first drink, on ${show.artist || 'the artist'}`, 'The stream, free'])
+    gets.append(Object.assign(document.createElement('li'), { textContent: t }));
+  box.replaceChildren(pintGlass({ artist: show.artist, empty: true }), gets);
 }
 
 // The judge's list for this page: by what the gig sells, not by its name. { done, text, did }; `now` is the line on the

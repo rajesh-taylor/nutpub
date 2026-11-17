@@ -62,7 +62,7 @@ const GIGS = {
     show: {
       artist: 'Longy', page: 'longy', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
       ticket: { on: true, price: null, fiat: 30, locked: false }, door: { on: false },
-      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
+      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5, drinkCoin: true, // the drink as the coin itself (NUT-16)
       set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
       goals: [{ label: '', at: null }, { label: '', at: null }],
       tip: { label: 'Tip Longy', price: 2100 },
