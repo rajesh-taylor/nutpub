@@ -819,7 +819,8 @@ if (WALLET_CARD) {
   // The Ticket tab (a card of its own on a laptop): the venue's ticket box and the night's door and drink, or how this
   // page watches online: the Watch online ticket (a flat fee), the price a minute and the limit.
   $('whole').classList.add('primary', 'wide');
-  $('tab-ticket').prepend($('door'), $('inside'));
+  $('tab-ticket').prepend($('door'), $('at-home'), $('inside'));
+  $('at-home').append($('door-home'));
   $('tt-online').insertBefore($('whole'), $('tt-meter'));
   $('tt-meter').append($('price-box'), $('budget-box'));
   $('door-home').textContent = 'Watch online instead';
@@ -1060,6 +1061,7 @@ function render() {
     if (room && door.soldOut) { $('buy').textContent = 'Sold out'; $('buy').disabled = true; }
     $('door-home').hidden = !room || show.stream.mode === 'off';
     $('door-home').href = `${location.pathname}?as=home`;
+    $('at-home-line').textContent = free ? 'The stream is free, with tips.' : show.stream.mode === 'ticket' ? 'One price for the whole show.' : 'Pay only for the minutes you watch.';
   } else {
     $('door-home').hidden = true;
     $('door-title').textContent = 'Your first drink';
@@ -1141,6 +1143,7 @@ function render() {
     $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
+  $('at-home').hidden = !ONE || $('door').hidden || $('door-home').hidden;
   coinDrink(drinkWaits);
   soonDrink(room && show.ticket.on && !ticket && !closed && !$('door').hidden);
   if (ONE) ticketTab({ room, ticket, closed, s, confirmed });
@@ -1184,7 +1187,7 @@ function soonDrink(open) {
   gets.className = 'drink-gets';
   for (const t of [`Entry to ${venueName() || 'the gig'}`, `Your first drink, on ${show.artist || 'the artist'}`, 'The stream, free'])
     gets.append(Object.assign(document.createElement('li'), { textContent: t }));
-  box.replaceChildren(pintGlass({ artist: show.artist, empty: true }), gets);
+  box.replaceChildren(gets); // no glass before buying (Rajesh 17 Nov): "Your first drink, on Longy" says it
 }
 
 // The judge's list for this page: by what the gig sells, not by its name. { done, text, did }; `now` is the line on the

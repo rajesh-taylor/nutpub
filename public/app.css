@@ -261,9 +261,15 @@ body[data-as="home"]:not(.wallet-card) .when { display: none; }
 .pint.empty .pint-foam { fill: rgb(239 227 200 / .14); }
 .pint.empty .pint-mark { display: none; }
 /* Before buying, compact (Rajesh 17 Nov: it must fit Plan gig's phone under the tall photo): a small glass, the lines beside. */
-.drink-soon { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 8px; }
-.drink-soon .pint { width: 48px; margin: 0; }
-.drink-gets { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px; line-height: 1.3; }
+.drink-soon { margin-top: 10px; }
+.drink-gets { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 14px; line-height: 1.35; }
+/* At home? Watch online instead, a card of its own (17 Nov). The card's own spacing keeps it apart from the ticket. */
+.at-home .btn { margin-top: 10px; }
+@media (min-width: 900px) { body.one .tab-ticket > .at-home { order: 3; grid-column: 2; align-self: stretch; display: flex; flex-direction: column; } body.one .tab-ticket > .at-home .btn { margin-top: auto; } }
+/* The drink playing: glass and words side by side when there's room, the words under the glass when there isn't. */
+.drink:has(#drink-coin:not([hidden])) { flex-wrap: wrap; justify-content: center; }
+.drink:has(#drink-coin:not([hidden])) > div:not(.drink-coin) { flex: 1 1 200px; }
+@media (min-width: 900px) { body.one .tab-ticket > .inside > .drink:has(#drink-coin:not([hidden])) { grid-column: 1 / -1; } }
 .drink-gets li::before { content: "✓ "; color: var(--amber, #d9953a); }
 .drink-coin { flex: none; }
 .doors-sign { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 30px/1 var(--poster); letter-spacing: .14em; color: var(--cream); background: rgb(5 9 20 / .55); z-index: 1; }
