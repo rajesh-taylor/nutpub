@@ -12,7 +12,7 @@
        Cashu line for devs is each poster's small print. */
     @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
     body.judge { text-align: left; padding: 0; overflow-x: clip; background: var(--deep) repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 48px); }
-    .judge main, .judge footer { max-width: 1100px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .judge main, .judge footer { max-width: 1360px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
     .judge main { position: relative; padding-block: 28px 40px; display: grid; gap: 22px; }
     .nut-menu { position: absolute; top: 24px; right: max(16px, env(safe-area-inset-right, 0px)); z-index: 5; text-align: right; }
     .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }
@@ -44,11 +44,11 @@
     .poster:nth-child(3) { transform: rotate(-.8deg); }
     .poster:nth-child(4) { transform: rotate(1.3deg); }
     .tape { position: absolute; top: -12px; width: 80px; height: 24px; background: rgb(239 227 200 / .4); z-index: 1; }
-    .poster img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px 2px 0 0; }
+    .poster img { display: block; width: calc(100% + 2px); max-width: none; margin: -1px -1px 0; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 3px 3px 0 0; } /* a pixel past the paper: the tilted poster's cream no longer shows as a pale line round the photo (17 Nov) */
     .inner { padding: 16px 18px 18px; display: grid; gap: 10px; }
     .poster p { margin: 0; }
-    .kicker { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: #7a4a12; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 8px; flex-wrap: wrap; }
-    .kicker .dev { font-size: 13px; letter-spacing: .12em; color: #1a1408; border: 1px solid rgb(26 20 8 / .6); padding: 3px 6px 2px; white-space: nowrap; } /* Laptop, or Laptop + phone (16 Nov) */
+    .kicker { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: #7a4a12; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .kicker .dev { font-size: 13px; letter-spacing: .12em; color: #1a1408; border: 1px solid rgb(26 20 8 / .6); padding: 3px 6px 2px; white-space: nowrap; } /* Laptop, or Laptop + phone (16 Nov): under the kicker on every poster, so the four line up */
     .kicker .here { color: #c4521a; }
     .who { margin: -2px 0 0; font: 400 46px/.9 var(--poster); letter-spacing: .03em; }
     .where { margin-top: -4px !important; font-size: 14px; color: #4a3a1c; }
@@ -73,7 +73,7 @@
     .billing::before, .billing::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgb(239 227 200 / .35)); }
     .billing::after { transform: scaleX(-1); }
     /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
-    .lineup { text-align: center; margin-top: 64px; min-width: 0; }
+    .lineup { text-align: center; margin-top: 64px; min-width: 0; width: 100%; max-width: 1068px; justify-self: center; } /* the laurels keep their width as the posters widen */
     .lineup .billing { margin-bottom: 32px; }
     .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 80px) / 10), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
     .heads, .rows, .smalls { display: contents; }
@@ -171,7 +171,7 @@
     <h1>Judge for yourself</h1>
     <div class="lines">
       <p class="lead"><b>Four gigs. Four ways to get paid in Cashu over HTTP 402.</b></p>
-      <p>For artists, producers and venues. Card payments by Stripe, coming soon. Finish each gig on <b class="key">Your takings</b> and move the test sats to a Cashu wallet.</p>
+      <p>For artists, producers and venues. Finish each gig on <b class="key">Your takings</b> and move the test sats to a Cashu wallet.</p>
     </div>
 
     <div class="wall">
