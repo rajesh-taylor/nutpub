@@ -56,7 +56,7 @@ All three: ecash from a Cashu mint (NUT-00 to 04), each payment locked to the ar
 ## Coming before 27 Nov
 
 - Tickets the NutPub can't link to their buyer (blind-signed).
-- A guide to pricing for each kind of streamer.
+- The first drink as the coin itself: on the venue night, the fan's phone shows the drink, locked to the bar, as a loop of small QR codes (NUT-16's proposed fountain format), and the bar's camera takes it.
 
 ## Known limits
 
