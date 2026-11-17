@@ -1168,7 +1168,7 @@ function coinDrink(waits) {
   }
   $('drink-title').textContent = 'Your first drink';
   $('drink-note').textContent = coin.failed ? 'This drink’s QR didn’t load: reload the page.'
-    : `Hold it up to the bar’s camera. Locked to the bar until ${show.lastOrders || 'last orders'}; not poured by then, it goes back to ${show.artist || 'the artist'}.`;
+    : `Show it at the bar. Locked to the bar until ${show.lastOrders || 'last orders'}; not poured by then, it goes back to ${show.artist || 'the artist'}.`;
   if (coin.id === door.drink.id) return;
   coin = { id: door.drink.id, player: null };
   const glass = pintGlass({ artist: show.artist });

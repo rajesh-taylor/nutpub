@@ -4,7 +4,6 @@
 // shows the pint (NUT-07). A second pour finds it spent: "Already poured, mate".
 import { openWallet } from './wallet.js';
 import { unlockAudio, trombone, clink } from './sound.js';
-import { till } from './till.js';
 
 const $ = (id) => document.getElementById(id);
 const sats = (v) => `${Number(v || 0).toLocaleString('en-GB')} sats`;
@@ -54,11 +53,8 @@ async function refresh() {
     return b;
   }));
   $('bar-strip').hidden = !drinks.length;
-  // Gig 3: the till first; Pour by hand stays, quieter, for a laptop with no camera.
-  const coin = (await showNow()).drinkCoin;
-  $('till-open').hidden = !coin || !drinks.some((d) => !d.poured && d.collected_by !== 'artist') || !$('till').hidden;
-  if (coin) for (const b of $('bar-drinks').children) b.className = 'btn quiet';
-  if (coin) $('bar-say').textContent = 'Open the till, then hold the phone’s drink up to this laptop’s camera. No camera? Pour by hand.';
+  // Gig 3: the drink is a coin on the fan's phone and the bar pours it here (no camera, Rajesh 17 Nov).
+  if (!$('bar-say').textContent.startsWith('Drink') && (await showNow()).drinkCoin) $('bar-say').textContent = 'The fan’s phone shows the drink as a coin. Pour by hand takes it at the mint with the bar’s key.';
 }
 let shown = null;
 const showNow = async () => (shown ||= await fetch('/api/show').then((r) => r.json()).then((s) => s.show));
@@ -83,6 +79,5 @@ async function doorList() {
   $('door-strip').hidden = !list.length;
 }
 
-till({ api, bar, mintUrl: health.mint.url, done: () => refresh().catch(() => {}), sounds: { clink, trombone } });
 await Promise.all([refresh(), doorList()]);
 setInterval(() => { if (!document.hidden) { refresh().catch(() => {}); doorList().catch(() => {}); } }, 10_000);

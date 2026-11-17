@@ -27,7 +27,6 @@
     "fflate": "0.8.2",
     "hls.js": "1.6.19",
     "nostr-tools": "2.25.4",
-    "qr-scanner": "1.4.2",
     "qrcode": "1.5.4"
   },
   "devDependencies": {
