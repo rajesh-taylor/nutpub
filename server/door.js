@@ -193,6 +193,13 @@ export function mountDoor(route, admin, pass) {
     return json({ id: d.id, sats: d.sats, poured: !!d.collected_at, token: d.collected_at ? null : d.token });
   });
 
+  // Gig 3 (17 Nov): the fan's page as a QR, in Show Time's Judges line, so the judge's phone becomes the fan. A plain link
+  // (the phone's camera app opens it); the page is public anyway.
+  route('GET', '/api/fan-qr.svg', async (c) => {
+    const page = (await showOf(c)).page;
+    return svg(await QRCode.toString(`${siteOf(c)}/${page}`, { type: 'svg', margin: 1, color: { dark: '#050914', light: '#efe3c8' } }));
+  });
+
   // The drink's QR: the bar's page with the drink's number only (the token never leaves the server's sealed list).
   route('GET', '/api/door/drink-qr.svg', async (c) => {
     const id = Number(c.url.searchParams.get('id'));

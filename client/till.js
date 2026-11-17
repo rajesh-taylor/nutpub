@@ -28,20 +28,21 @@ export function till({ api, bar, mintUrl, done, sounds }) {
     try {
       const keysets = await ids();
       const coin = getDecodedTokenBinary(bytes, keysets);
-      // Which of tonight's drinks it is: the same coin the fan paid (the server keeps a copy, locked to the bar).
-      const drinks = await api('GET', '/api/admin/drinks');
+      // The hand-over needs no server (Rajesh 17 Nov): the coin says which key it's locked to (NUT-11), and the bar takes
+      // it at the mint with that key, held here. Only then is the server told, so Show Time's list and the phone follow.
+      const lock = (() => { try { const [kind, s] = JSON.parse(coin.proofs[0].secret); return kind === 'P2PK' ? s.data : null; } catch { return null; } })();
+      if (!lock || !(await bar.coco.keyring.getKeyPair(lock))) throw new Error('That coin isn’t locked to this bar’s key.');
+      const total = coin.proofs.reduce((a, p) => a + Number(p.amount), 0);
+      let spent = false;
+      try { await bar.collect(getEncodedToken(coin), lock); }
+      catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
+      // Which of tonight's drinks it was, for the list: the same coin the fan paid (the server keeps a locked copy).
       const same = (d) => { try { return getDecodedToken(d.token, keysets).proofs.some((p) => p.secret === coin.proofs[0]?.secret); } catch { return false; } };
-      const d = drinks.find(same);
-      if (!d) throw new Error('That coin isn’t one of tonight’s drinks.');
-      if (d.collected_by === 'artist') throw new Error(`Drink ${d.id} went back to the artist at last orders.`);
-      let spent = d.poured;
-      if (!spent) {
-        try { await bar.collect(getEncodedToken(coin), d.pubkey); }
-        catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
-        await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
-      }
-      if (spent) { sounds.trombone(); say(`Drink ${d.id}: already poured, mate. The mint says it’s spent.`); }
-      else { sounds.clink(); say(`Poured ✓ · drink ${d.id} · ${sats(d.sats)}: the coin is the bar’s now. Watch the phone.`, true); }
+      const d = (await api('GET', '/api/admin/drinks')).find(same);
+      if (d && !spent) await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' }).catch(() => {});
+      if (spent) { sounds.trombone(); say(`${d ? `Drink ${d.id}` : 'That drink'}: already poured, mate. The mint says it’s spent.`); }
+      else { sounds.clink(); say(`Poured ✓ · ${sats(total)}: the coin is the bar’s now. Watch the phone.`, true); }
+      setTimeout(() => { $('till').hidden = true; }, 5000); // the Judges line says it from here
       stop();
       done();
     } catch (e) {
@@ -73,5 +74,6 @@ export function till({ api, bar, mintUrl, done, sounds }) {
   }
   function stop() { scanner?.stop(); scanner?.destroy(); scanner = null; }
   $('till-open').onclick = open;
+  if (/(^|\.)localhost$/.test(location.hostname)) window.nutpubTillRead = read; // local testing only: feed it frames without a camera
   $('till-close').onclick = () => { stop(); $('till').hidden = true; done(); };
 }
