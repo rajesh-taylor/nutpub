@@ -51,7 +51,7 @@ async function artistKeyHere(pubkey) {
   const here = await holds(artist, pubkey);
   $('key-warn').hidden = here;
   if (!here) {
-    $('key-warn').replaceChildren('Your bitcoin is locked to another web browser: open Takings there to move it. ');
+    $('key-warn').replaceChildren('Your bitcoin is locked to another web browser: open Your takings there to move it. ');
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'btn quiet';

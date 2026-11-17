@@ -109,7 +109,7 @@
       </div>
       <a class="go" id="go" href="/setup">Plan gig</a>
       <a class="go fan" id="fan" href="/" target="_blank" rel="noopener">Open the gig as a fan in a 2nd tab</a>
-      <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Takings: Move, then Finish gig.</p>
+      <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Your takings: Move, then Finish gig.</p>
       <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the three gigs</a></p>
     </div>
     <div id="theirs" class="out" hidden>
@@ -171,7 +171,7 @@
         tag.querySelector('.tick').setAttribute('aria-label', 'Done');
         li.append(tag);
         btn.onclick = async () => {
-          const now = ` It clears ${title[list.at]} (its tickets and chat). Sats waiting on Takings stay there.`;
+          const now = ` It clears ${title[list.at]} (its tickets and chat). Sats waiting on Your takings stay there.`;
           if (!confirm(`Open ${title[li.dataset.step]} again?${now}`)) return;
           const out = await fetch('/api/admin/setlist/again', { method: 'POST', headers: { 'X-Admin': key, 'Content-Type': 'application/json' }, body: JSON.stringify({ step: li.dataset.step }) })
             .then((x) => x.json()).catch(() => ({ error: 'No answer: try again.' }));

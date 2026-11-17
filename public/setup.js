@@ -251,7 +251,7 @@ function saved(res) {
   const todo = res.problems.map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
   if ('artistKey' in res) artistReady = !!res.artistKey;
-  if (!artistReady) todo.push('open 3 · Takings once (it makes the key payments lock to; nothing can be sold until then)');
+  if (!artistReady) todo.push('open 3 · Your takings once (it makes the key payments lock to; nothing can be sold until then)');
   status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
   // The box under the page's title says the same, where the artist starts.

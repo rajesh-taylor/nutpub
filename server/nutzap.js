@@ -88,7 +88,7 @@ export function mountNutzaps(route, admin, artistKey) {
   route('PUT', '/api/admin/nutzap-info', admin, async (c) => {
     const ev = (await body(c))?.event;
     const key = await artistKey();
-    if (!key) return json({ error: 'not_ready', detail: 'Open Takings once first: it makes the key your tips are locked to.' }, 409);
+    if (!key) return json({ error: 'not_ready', detail: 'Open Your takings once first: it makes the key your tips are locked to.' }, 409);
     const why = await checkInfo(ev, key);
     if (why) return json({ error: why, detail: 'That “Nutzap me here” note didn’t check out.' }, 400);
     await saveInfo(ev);

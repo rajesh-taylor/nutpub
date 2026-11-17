@@ -29,7 +29,7 @@ export async function judgeLine(r, page) {
     const on = s.stage === 'on';
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change.`, 'On to Show Time →', '/show');
     else if (page === 'show') {
-      if (closed) say(5, 'The night’s over.', 'On to Takings →', '/takings');
+      if (closed) say(5, 'The night’s over.', 'On to Your takings →', '/takings');
       else if (!on) say(2, 'Press Start show, the green button below.');
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the list there. Then come back here.');
       else say(4, 'The fan’s list is all ticked: press End night, the purple button below.');
