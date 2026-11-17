@@ -72,7 +72,9 @@ test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then the ve
     assert.equal(show.drinks, false); // no drink, no door: those are gig 3's
     assert.equal(show.door.on, false);
     assert.deepEqual([...photos.keys()].sort(), ['k3f9x2:photo', 'k3f9x2:photo-wide1']); // Longy's wide photo gone
-    assert.deepEqual(await finish(), { at: 'yours', done: ['longy', 'frankie'] });
+    assert.deepEqual(await finish(), { at: 'pickle', done: ['longy', 'frankie'] });
+    assert.equal((await currentShow()).show.set, 'longy-2'); // gig 3: Longy at The Fickle Pickle
+    assert.deepEqual(await finish(), { at: 'yours', done: ['longy', 'frankie', 'pickle'] });
     assert.equal((await currentShow()).show.stream.mode, 'free'); // at the venue: the stream free, with tips
     assert.equal(photos.size, 0);
   });
@@ -105,12 +107,12 @@ test('Longy’s own stage has no setlist', async () => {
 test('a crossed-off gig opens again; Your gig keeps its settings; finishing it skips ahead', async () => {
   await withStage(st, async () => {
     await setlist(env);
-    await finish(); await finish(); // on Your gig
+    await finish(); await finish(); await finish(); // on Your gig
     const mine = (await currentShow()).show;
     await run("UPDATE shows SET settings = ? WHERE id = 'current'", JSON.stringify({ ...mine, artist: 'Ann' }));
-    assert.deepEqual(await again('longy', env), { at: 'longy', done: ['frankie'] });
+    assert.deepEqual(await again('longy', env), { at: 'longy', done: ['frankie', 'pickle'] });
     assert.equal((await currentShow()).show.artist, 'Longy');
-    assert.deepEqual(await finish(), { at: 'yours', done: ['frankie', 'longy'] }); // straight back to Your gig
+    assert.deepEqual(await finish(), { at: 'yours', done: ['frankie', 'pickle', 'longy'] }); // straight back to Your gig
     assert.equal((await currentShow()).show.artist, 'Ann');
     assert.equal(await again('nobody', env), null);
   });
@@ -141,7 +143,24 @@ test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his ques
   });
 });
 
-test('the venue night (gig 3): £30 at the door with the first drink in it, the door on, the stream free, last orders set', async () => {
+test('Longy at The Fickle Pickle (gig 3): £35 with the first drink in it, no door check, the stream free, his 1080p clip', async () => {
+  await withStage(st, async () => {
+    await setlist(env, 'pickle');
+    const { show, problems } = await currentShow();
+    assert.deepEqual(problems, []);
+    assert.equal(show.artist, 'Longy');
+    assert.equal(show.venue, 'The Fickle Pickle, Westcliff-on-Sea');
+    assert.equal(show.drinks, true);
+    assert.ok(show.drink.price > 0 && show.ticket.price > show.drink.price);
+    assert.match(show.lastOrders, /^\d\d:\d\d$/);
+    assert.equal(show.door.on, false);
+    assert.equal(show.stream.mode, 'free');
+    assert.equal(show.set, 'longy-2');
+    assert.ok(show.goals.every((g) => !g.label)); // the judge types his two stretch goals
+  });
+});
+
+test('the venue night (gig 4): £30 at the door with the first drink in it, the door on, the stream free, last orders set', async () => {
   await withStage(st, async () => {
     await setlist(env, 'yours');
     const { show, problems } = await currentShow();

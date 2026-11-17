@@ -110,7 +110,7 @@
       <a class="go" id="go" href="/setup">Plan gig</a>
       <a class="go fan" id="fan" href="/" target="_blank" rel="noopener">Open the gig as a fan in a 2nd tab</a>
       <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Your takings: Move, then Finish gig.</p>
-      <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the three gigs</a></p>
+      <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the four gigs</a></p>
     </div>
     <div id="theirs" class="out" hidden>
       <h1>An artist's stage</h1>
@@ -137,8 +137,8 @@
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
     // A judge's stage opened in another browser: its key is in the browser that made it. No passkey to find it with.
     if (!r && (await fetch('/api/show').then((x) => x.json()).catch(() => ({}))).judge) {
-      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the three gigs.';
-      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The three gigs' });
+      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the four gigs.';
+      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The four gigs' });
     }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
     const list = r?.setlist;
@@ -156,13 +156,13 @@
         li.classList.toggle('done', list.done.includes(li.dataset.step));
         li.classList.toggle('now', li.dataset.step === list.at && !list.done.includes(list.at));
       }
-      const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s', yours: 'Frankie\u2019s' }[list.at];
+      const name = { longy: 'Longy\u2019s', frankie: 'Frankie\u2019s', pickle: 'Longy\u2019s', yours: 'Frankie\u2019s' }[list.at];
       // Two buttons, two people (Rajesh 15 Nov): the artist's pages, then the fan's page in a tab of its own.
       document.getElementById('go').textContent = name ? `Open ${name} gig as ${name.replace('\u2019s', '')}` : 'Plan your gig';
       document.getElementById('fan').textContent = name ? `Open ${name} gig as a fan in a 2nd tab` : 'Open your gig as a fan in a 2nd tab';
       document.getElementById('fan').href = r.fan || r.path;
       document.getElementById('how').hidden = !name;
-      const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', yours: 'the venue night' };
+      const title = { longy: 'Longy\u2019s gig', frankie: 'Frankie\u2019s gig', pickle: 'Longy at The Fickle Pickle', yours: 'the venue night' };
       for (const li of document.querySelectorAll('[data-step].done')) {
         const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'repeat', textContent: '\u21bb Repeat gig' });
         btn.setAttribute('aria-label', `Repeat ${title[li.dataset.step]}`);

@@ -3,7 +3,7 @@
 #   media/set/audio/seg-NNN.wav  sound: 44.1 kHz stereo PCM, sample-exact, so the pieces play back gaplessly
 #   media/set/video/seg-NNN.mp4  picture: H.264, no sound, a keyframe at the start of each piece
 # The last piece is padded to a full 10 s (silence, last frame held).
-# Usage: scripts/cut-set.sh <video file> [name]
+# Usage: [WIDTH=1920] scripts/cut-set.sh <video file> [name]   (WIDTH: the picture's width, 1280 unless given; 1920 is 1080p)
 #   no name: media/set, the default set (Longy's clip); a name: media/sets/<name>, a gig's own (show.set, e.g. frankie-1)
 set -e
 [ -n "$1" ] || { echo "usage: $0 <video file> [name]"; exit 1; }
@@ -16,7 +16,7 @@ i=0
 while [ "$i" -lt "$n" ]; do
   f=$(printf 'seg-%03d' "$i")
   ffmpeg -loglevel error -y -ss "$((i * 10))" -t 10 -i "$1" -vn -af apad -t 10 -ac 2 -ar 44100 -c:a pcm_s16le "$out/audio/$f.wav"
-  ffmpeg -loglevel error -y -ss "$((i * 10))" -t 10 -i "$1" -an -vf "tpad=stop_mode=clone:stop_duration=10,scale=1280:-2" -t 10 \
+  ffmpeg -loglevel error -y -ss "$((i * 10))" -t 10 -i "$1" -an -vf "tpad=stop_mode=clone:stop_duration=10,scale=${WIDTH:-1280}:-2" -t 10 \
     -c:v libx264 -preset veryfast -crf 24 -pix_fmt yuv420p -movflags +faststart "$out/video/$f.mp4"
   i=$((i + 1))
 done

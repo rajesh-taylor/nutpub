@@ -33,7 +33,8 @@
     .lines b { color: var(--cream); font-weight: 400; }
     .lines .lead { font-size: 18px; line-height: 1.4; } /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
-    .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; }
+    .wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 34px 22px; padding-top: 34px; align-items: start; } /* four in a row, the order of a night (Rajesh 17 Nov) */
+    @media (max-width: 1200px) { .wall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; } } /* two by two on smaller laptops */
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
     .poster { position: relative; display: grid; min-width: 0; border-radius: 2px; color: #1a1408;
       background: var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -41,11 +42,13 @@
     .poster:nth-child(1) { transform: rotate(-1.6deg); }
     .poster:nth-child(2) { transform: rotate(1.1deg); }
     .poster:nth-child(3) { transform: rotate(-.8deg); }
+    .poster:nth-child(4) { transform: rotate(1.3deg); }
     .tape { position: absolute; top: -12px; width: 80px; height: 24px; background: rgb(239 227 200 / .4); z-index: 1; }
     .poster img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px 2px 0 0; }
     .inner { padding: 16px 18px 18px; display: grid; gap: 10px; }
     .poster p { margin: 0; }
-    .kicker { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: #7a4a12; }
+    .kicker { font: 400 16px/1 var(--poster); letter-spacing: .3em; color: #7a4a12; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 8px; flex-wrap: wrap; }
+    .kicker .dev { font-size: 13px; letter-spacing: .12em; color: #1a1408; border: 1px solid rgb(26 20 8 / .6); padding: 3px 6px 2px; white-space: nowrap; } /* Laptop, or Laptop + phone (16 Nov) */
     .kicker .here { color: #c4521a; }
     .who { margin: -2px 0 0; font: 400 46px/.9 var(--poster); letter-spacing: .03em; }
     .where { margin-top: -4px !important; font-size: 14px; color: #4a3a1c; }
@@ -72,7 +75,7 @@
     /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
     .lineup { text-align: center; margin-top: 64px; min-width: 0; }
     .lineup .billing { margin-bottom: 32px; }
-    .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 72px) / 9), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
+    .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 80px) / 10), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
     .heads, .rows, .smalls { display: contents; }
     .big:nth-child(2) { order: 2; }
     .sm { order: 1; }
@@ -85,6 +88,8 @@
     .sm .txt { position: absolute; inset: 24% 14%; display: flex; pointer-events: none; align-items: center; justify-content: center; }
     .sm b { font: 400 calc(var(--lw) * .135)/1 var(--poster); letter-spacing: .03em; color: var(--cream); white-space: nowrap; }
     .sm.next { opacity: .55; }
+    .sm .txt:has(small) { flex-direction: column; gap: 3px; }
+    .sm small { font: 500 max(9px, calc(var(--lw) * .085))/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #c9b48a; } /* NUT-16: proposed, not merged */
     a.sm:hover b, a.sm:focus-visible b, .big:hover .n, .big:focus-visible .n { color: #e8a845; }
     .big:focus-visible { outline: 2px solid #c4521a; outline-offset: 2px; border-radius: 50%; }
     a.sm:focus-visible { outline: 2px solid #c4521a; outline-offset: 2px; border-radius: 50%; }
@@ -174,7 +179,7 @@
         <span class="tape" style="left: 22px; transform: rotate(-8deg);" aria-hidden="true"></span><span class="tape" style="right: 22px; transform: rotate(7deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-longy-tall.jpg"><img src="/img/card-longy-wide.jpg" alt="Longy playing at Peggy Sue's Music Bar"></picture>
         <div class="inner">
-          <p class="kicker">1 · <span class="here">Start here</span></p>
+          <p class="kicker"><span>1 · <span class="here">Start here</span></span><span class="dev">Laptop</span></p>
           <h2 class="who">Longy</h2>
           <p class="where">Peggy Sue’s Music Bar</p>
           <dl><dt>Venue</dt><dd>–</dd><dt>Online</dt><dd>£20</dd></dl>
@@ -188,7 +193,7 @@
         <span class="tape" style="left: 26px; transform: rotate(6deg);" aria-hidden="true"></span><span class="tape" style="right: 18px; transform: rotate(-9deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-frankie-tall.jpg"><img src="/img/card-frankie-wide.jpg" alt="Frankie Peroni on stage at The Fickle Pickle"></picture>
         <div class="inner">
-          <p class="kicker">2</p>
+          <p class="kicker"><span>2</span><span class="dev">Laptop</span></p>
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">The Devils Train · The Fickle Pickle</p>
           <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
@@ -198,11 +203,25 @@
         </div>
       </article>
 
+      <article class="poster" data-gig="pickle">
+        <span class="tape" style="left: 20px; transform: rotate(-7deg);" aria-hidden="true"></span><span class="tape" style="right: 20px; transform: rotate(6deg);" aria-hidden="true"></span>
+        <picture><source media="(max-width: 900px)" srcset="/img/card-pickle-tall.jpg"><img src="/img/card-pickle-wide.jpg" alt="Longy playing a red guitar at The Fickle Pickle"></picture>
+        <div class="inner">
+          <p class="kicker"><span>3 · The fan’s night</span><span class="dev">Laptop + phone</span></p>
+          <h2 class="who">Longy</h2>
+          <p class="where">The Fickle Pickle</p>
+          <dl><dt>Venue</dt><dd>£35, first drink in it</dd><dt>Online</dt><dd>Free, tips welcome</dd></dl>
+          <p class="does">On your phone: buy the venue ticket from the gig poster’s QR, weeks ahead. On the night, your first drink plays on your phone as a coin on a QR: hold it up to the laptop’s camera, the bar’s till.</p>
+          <div class="btns"></div>
+          <p class="small-print">The ticket is a 402 (NUT-24). The drink is the coin itself: ecash locked to the bar’s key (NUT-11), passed to the bar’s camera as a loop of QR codes (NUT-16, proposed). Not poured by last orders, it goes back to Longy.</p>
+        </div>
+      </article>
+
       <article class="poster" data-gig="yours">
         <span class="tape" style="left: 18px; transform: rotate(-5deg);" aria-hidden="true"></span><span class="tape" style="right: 24px; transform: rotate(8deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-yours-tall.jpg"><img src="/img/card-yours-wide.jpg" alt="Frankie Peroni and a fiddler on stage at The Fickle Pickle"></picture>
         <div class="inner">
-          <p class="kicker">3 · At the venue</p>
+          <p class="kicker"><span>4 · At the venue</span><span class="dev">Laptop + phone</span></p>
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">Second night · The Fickle Pickle</p>
           <dl><dt>Venue</dt><dd>£30, first drink free</dd><dt>Online</dt><dd>Free, tips welcome</dd></dl>
@@ -227,6 +246,7 @@
         </div>
       <div class="smalls">
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/11.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-10·11 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-10·11</b></span></a>
+        <a class="sm" href="https://github.com/cashubtc/nuts/pull/456" target="_blank" rel="noreferrer noopener" aria-label="NUT-16, proposed: the open spec on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-16</b><small>proposed</small></span></a>
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/18.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-18 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-18</b></span></a>
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/24.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-24 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-24</b></span></a>
         <div class="sm"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><div class="txt"><b>NIP-61</b></div></div>
@@ -242,7 +262,7 @@
     const KEEP = 'nutpub-judge-stages';
     const read = () => { try { return JSON.parse(localStorage.getItem(KEEP) || '{}') || {}; } catch { return {}; } };
     const keep = (gig, id) => { try { localStorage.setItem(KEEP, JSON.stringify({ ...read(), [gig]: id })); } catch {} };
-    const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', yours: 'Start the venue night' };
+    const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', pickle: 'Start Longy at The Fickle Pickle', yours: 'Start the venue night' };
     const el = (tag, props) => Object.assign(document.createElement(tag), props);
 
     async function start(gig, card) {

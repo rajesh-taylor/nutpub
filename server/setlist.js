@@ -54,7 +54,23 @@ const GIGS = {
     // A guest's line half a minute in: a quiet nod to the btc++ Berlin talk on federated mints.
     cues: [{ after: 30, text: 'Federated Cashu mints could go a long way in helping decentralised music...' }],
   },
-  // Gig 3, at the venue (Rajesh 15 Nov, late; the step keeps its old name, 'yours'): Frankie's second night at The
+  // Gig 3, Longy at The Fickle Pickle: the fan's night (agreed 16 Nov). Bought weeks ahead on the fan's phone from the
+  // gig poster's QR: a £35 venue ticket, £5 of it the first drink (locked to the bar's key until last orders, then
+  // Longy's). No door check. The stream is free with tips (the venue ticket plays it too). The judge types Longy's two
+  // stretch goals on Plan gig, so they start empty. His 1080p clip from the night (media/sets/longy-2).
+  pickle: { photos: { tall1: '/img/pickle-tall.jpg', wide1: '/img/pickle-wide.jpg', wide2: '/img/pickle-cheers.jpg' },
+    show: {
+      artist: 'Longy', page: 'longy', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
+      ticket: { on: true, price: null, fiat: 30, locked: false }, door: { on: false },
+      drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
+      set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
+      goals: [{ label: '', at: null }, { label: '', at: null }],
+      tip: { label: 'Tip Longy', price: 2100 },
+      nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
+    },
+    pin: 'At The Fickle Pickle: your first drink is on Longy. At home the stream is free: tips welcome.' },
+  // Gig 4 (was gig 3; to be reshaped as the staff's night, agreed 16 Nov). At the venue (Rajesh 15 Nov, late; the step
+  // keeps its old name, 'yours'): Frankie's second night at The
   // Fickle Pickle, ready-made, the stream free with tips: how most artists, Longy and Frankie among them, work today,
   // so not everything here is a 402. Ticketing with the venue: £30 at the door with the first drink in it, £25 to
   // Frankie and £5 locked to the bar's key until last orders, then Frankie's if it's not poured; the door scans the
@@ -69,7 +85,7 @@ const GIGS = {
     },
     pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
 };
-export const STEPS = ['longy', 'frankie', 'yours'];
+export const STEPS = ['longy', 'frankie', 'pickle', 'yours'];
 
 // Puts a gig on the stage as its current show: today's date, the stream open from now, its own photos.
 // Your gig comes back as the artist left it (kept aside while an example is done again).

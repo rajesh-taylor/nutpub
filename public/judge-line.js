@@ -7,9 +7,9 @@ export async function judgeLine(r, page) {
   if (!list?.only) return;
   const judge = `${location.protocol}//${location.host.split('.').slice(1).join('.')}/judge`;
   const back = document.querySelector('.head-back');
-  if (back) Object.assign(back, { href: judge, textContent: '← The three gigs' });
+  if (back) Object.assign(back, { href: judge, textContent: '← The four gigs' });
   if (page === 'takings') document.getElementById('head-fan')?.remove(); // the night's over: nothing left on the fan's page
-  const name = { longy: 'Longy', frankie: 'Frankie', yours: 'Frankie' }[list.at] || 'the artist';
+  const name = { longy: 'Longy', frankie: 'Frankie', pickle: 'Longy', yours: 'Frankie' }[list.at] || 'the artist';
   const line = Object.assign(document.createElement('p'), { className: 'judge-line' });
   line.setAttribute('role', 'status');
   document.querySelector('header').after(line);
