@@ -1,0 +1,77 @@
+// The bar's till (gig 3, 17 Nov): this laptop's camera reads the drink the fan's phone plays as an animated NUT-16 QR
+// (client/pint.js), a small pint filling as the pieces arrive. Once the coin is whole, the bar takes that scanned coin at
+// the mint with its own key, which lives in this browser's 'nutpub-bar' wallet. No server in between: the server is only
+// told afterwards, so Show Time's list and the fan's page follow. At a real bar a phone or handheld does this.
+// The camera: qr-scanner (MIT), the browser's own reader where there is one. The frames: cashu-ts's own decoder,
+// copied unchanged from its pull request #1309 (vendor/cashu-ts-nut16).
+import QrScanner from 'qr-scanner';
+import { getDecodedToken, getDecodedTokenBinary, getEncodedToken } from '@cashu/cashu-ts';
+import { FountainDecoder } from '../vendor/cashu-ts-nut16/src/utils/fountain.ts';
+
+const $ = (id) => document.getElementById(id);
+const sats = (v) => `${Number(v || 0).toLocaleString('en-GB')} sats`;
+
+// api: Show Time's admin fetch; bar: the bar's wallet; mintUrl: the gig's mint; done(): the strip refreshes.
+export function till({ api, bar, mintUrl, done, sounds }) {
+  let scanner = null, decoder = new FountainDecoder(), busy = false;
+  const say = (t, ok = false) => { $('till-say').textContent = t; $('till-say').classList.toggle('ok', ok); };
+  const fill = (k) => {
+    const h = 80 * Math.min(1, k);
+    $('till-beer').setAttribute('y', 90 - h); $('till-beer').setAttribute('height', h);
+    $('till-head').setAttribute('y', 90 - h - (k > 0 ? 6 : 0)); $('till-head').setAttribute('height', k > 0 ? 6 : 0);
+  };
+  const ids = async () => (await (await fetch(`${mintUrl.replace(/\/$/, '')}/v1/keysets`)).json()).keysets.map((k) => k.id);
+
+  async function take(bytes) {
+    busy = true;
+    say('Taking the coin at the mint…');
+    try {
+      const keysets = await ids();
+      const coin = getDecodedTokenBinary(bytes, keysets);
+      // Which of tonight's drinks it is: the same coin the fan paid (the server keeps a copy, locked to the bar).
+      const drinks = await api('GET', '/api/admin/drinks');
+      const same = (d) => { try { return getDecodedToken(d.token, keysets).proofs.some((p) => p.secret === coin.proofs[0]?.secret); } catch { return false; } };
+      const d = drinks.find(same);
+      if (!d) throw new Error('That coin isn’t one of tonight’s drinks.');
+      if (d.collected_by === 'artist') throw new Error(`Drink ${d.id} went back to the artist at last orders.`);
+      let spent = d.poured;
+      if (!spent) {
+        try { await bar.collect(getEncodedToken(coin), d.pubkey); }
+        catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
+        await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
+      }
+      if (spent) { sounds.trombone(); say(`Drink ${d.id}: already poured, mate. The mint says it’s spent.`); }
+      else { sounds.clink(); say(`Poured ✓ · drink ${d.id} · ${sats(d.sats)}: the coin is the bar’s now. Watch the phone.`, true); }
+      stop();
+      done();
+    } catch (e) {
+      say(e.message);
+      decoder.reset(); fill(0);
+    } finally { busy = false; }
+  }
+
+  function read(text) {
+    if (busy || !FountainDecoder.isFrame(text)) return;
+    try {
+      if (!decoder.receive(text)) return;
+    } catch { decoder.reset(); return; } // a frame from another coin: start again on this one
+    fill(decoder.progress);
+    say(`Reading the drink · ${Math.round(decoder.progress * 100)}%`);
+    if (decoder.isComplete) take(decoder.result);
+  }
+
+  async function open() {
+    $('till').hidden = false; $('till-open').hidden = true;
+    decoder = new FountainDecoder(); fill(0);
+    say('Hold the phone’s drink up to this laptop’s camera.');
+    try {
+      scanner = new QrScanner($('till-cam'), (r) => read(r.data), { returnDetailedScanResult: true, maxScansPerSecond: 20, preferredCamera: 'user' });
+      await scanner.start();
+    } catch {
+      say('The camera didn’t open: allow it in the browser’s address bar, or use Pour by hand.');
+    }
+  }
+  function stop() { scanner?.stop(); scanner?.destroy(); scanner = null; }
+  $('till-open').onclick = open;
+  $('till-close').onclick = () => { stop(); $('till').hidden = true; done(); };
+}

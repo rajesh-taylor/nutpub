@@ -256,16 +256,14 @@ body[data-as="home"]:not(.wallet-card) .when { display: none; }
 .pint .pint-cheers, .pint .pint-mark { font-family: var(--poster); }
 .pint .pint-cheers { fill: var(--midnight, #050914); }
 .pint .pint-mark { fill: var(--cream); }
-.pint.empty .pint-code { background: none; border: 1.5px dashed rgb(239 227 200 / .3); display: grid; place-items: center; padding: 10%; text-align: center; }
-.pint.empty .pint-code span { font: 400 12px/1.15 var(--poster); letter-spacing: .06em; color: rgb(239 227 200 / .55); }
+.pint.empty .pint-code { background: none; border: 1.5px dashed rgb(239 227 200 / .3); }
 .pint.empty .pint-side { stroke: rgb(239 227 200 / .3); stroke-dasharray: 4 3; }
 .pint.empty .pint-foam { fill: rgb(239 227 200 / .14); }
-.pint.empty .pint-cheers { fill: rgb(239 227 200 / .6); }
-.pint.empty .pint-mark { fill: rgb(239 227 200 / .6); }
+.pint.empty .pint-mark { display: none; }
 /* Before buying, compact (Rajesh 17 Nov: it must fit Plan gig's phone under the tall photo): a small glass, the lines beside. */
-.drink-soon { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 14px; }
-.drink-soon .pint { width: 96px; margin: 0; }
-.drink-gets { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.drink-soon { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 8px; }
+.drink-soon .pint { width: 48px; margin: 0; }
+.drink-gets { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px; line-height: 1.3; }
 .drink-gets li::before { content: "✓ "; color: var(--amber, #d9953a); }
 .drink-coin { flex: none; }
 .doors-sign { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 30px/1 var(--poster); letter-spacing: .14em; color: var(--cream); background: rgb(5 9 20 / .55); z-index: 1; }

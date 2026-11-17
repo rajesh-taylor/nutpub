@@ -14,15 +14,15 @@ const NS = 'http://www.w3.org/2000/svg';
 const esc = (t) => t.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
 // The glass, on a 100 × 128 grid: the code's square is 73 wide from y 27 to 100; the foot's inner line is at y 124.
-// empty: before the ticket's bought, a small dashed outline with "Your drink" (the lines beside it say the rest).
+// empty: before the ticket's bought, a small dashed outline, no words (Rajesh 17 Nov: the lines beside it say it all).
 export function pintGlass({ artist = '', empty = false } = {}) {
   const box = document.createElement('div');
   box.className = `pint${empty ? ' empty' : ''}`;
   const code = empty
-    ? Object.assign(document.createElement('div'), { className: 'pint-code', innerHTML: '<span>Your drink</span>' })
+    ? Object.assign(document.createElement('div'), { className: 'pint-code' })
     : Object.assign(document.createElement('canvas'), { className: 'pint-code', width: 1, height: 1 });
   if (!empty) code.setAttribute('aria-label', 'Your first drink: an animated QR code for the bar');
-  const foam = empty ? (artist ? `ON ${artist}` : '') : `CHEERS FROM ${artist || 'THE ARTIST'}`;
+  const foam = empty ? '' : `CHEERS FROM ${artist || 'THE ARTIST'}`;
   box.innerHTML = `<svg class="pint-glass" viewBox="0 0 100 128" aria-hidden="true">
     <path class="pint-side" d="M8 22 L13 120 Q13 125 18 125 L82 125 Q87 125 87 120 L92 22" fill="none" stroke-width="2.4"/>
     <path class="pint-foam" d="M6 22 Q10 6 26 10 Q34 0 48 6 Q60 -1 70 8 Q88 4 94 22 Z"/>
