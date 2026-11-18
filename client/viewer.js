@@ -793,11 +793,14 @@ function showTab(t) {
   if (t === 'ticket') $('tabs').querySelector('.nudge')?.classList.remove('nudge');
   todoPlace();
 }
-// The judges' box (Rajesh 18 Nov): at the bottom of the Tip tab too, so the tip step needs no trip back to Ticket.
+// The judges' box (Rajesh 18 Nov): at the bottom of the Tip tab too, and in the Chat tab, so the tip step needs no trip back to Ticket.
 function todoPlace() {
   const card = $('tt-todo');
   if (!card) return;
-  if (tab === 'tip' && matchMedia('(max-width: 899px)').matches) { if (card.parentElement !== $('tab-tip')) $('tab-tip').append(card); }
+  const phone = matchMedia('(max-width: 899px)').matches;
+  if (tab === 'tip' && phone) { if (card.parentElement !== $('tab-tip')) $('tab-tip').append(card); }
+  // And in the Chat tab, under the pinned message (Rajesh 18 Nov): say hello without a trip back to Ticket.
+  else if (tab === 'chat' && phone) { if (card.parentElement !== $('chat')) $('chat').querySelector('.chat-top').after(card); }
   else if (card.parentElement !== $('tab-ticket')) $('tab-ticket').prepend(card);
 }
 $('tabs').onclick = (e) => { const b = e.target.closest('button[data-tab]'); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
@@ -1228,7 +1231,8 @@ function todoItems() {
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
-      s.drink && { ...hello, text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
+      // A hello in Show Time's desktop view counts too: either way the clip plays on (Rajesh 18 Nov).
+      s.drink && { ...hello, done: !!todo.hello || (IN_SHOW && homeHello()), text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
       free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
@@ -1249,6 +1253,10 @@ function todoItems() {
     full, tip];
   return [];
 }
+// The desktop view's fan (Show Time's other frame) said hello: its list, kept beside this one.
+// Only tonight's: the list's pass is the desktop view's pass now (an earlier gig's hello on this stage doesn't count).
+const homeHello = () => { try { const t = JSON.parse(localStorage.getItem('nutpub-todo-home') || 'null'); return !!t?.hello && t.pass === localStorage.getItem('nutpub-pass-home'); } catch { return false; } };
+if (IN_SHOW && !KEEP) addEventListener('storage', (e) => { if (e.key === 'nutpub-todo-home') todoDraw(); });
 function todoDraw() {
   if (!TODO || !todoReady) return;
   const items = stage === 'closed' ? [] : todoItems();

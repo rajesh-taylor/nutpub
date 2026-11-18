@@ -70,13 +70,16 @@ export async function judgeLine(r, page) {
       if (!on) return say(3, 'Press Start show, the green button below.', '', '', { story: STORY[3] });
       if (!d.some((x) => x.poured)) return say(4, 'Press Pour by hand: that’s the bar scanning it. Then watch the phone.', '', '', { story: STORY[4], extra: pourBtn() });
       // Rajesh 18 Nov: hello in the chat first, so the clip plays a while; the fan's list (this browser) says when it's said.
-      const hello = (() => { try { return !!JSON.parse(localStorage.getItem('nutpub-todo') || 'null')?.hello; } catch { return false; } })();
+      // Either chat counts: the fan's phone or the desktop view below (Rajesh 18 Nov).
+      // Only tonight's: each list's pass is that fan's pass now, so a hello from an earlier gig on this stage doesn't count.
+      const hello = ['', '-home'].some((k) => { try { const t = JSON.parse(localStorage.getItem(`nutpub-todo${k}`) || 'null'); return !!t?.hello && t.pass === localStorage.getItem(`nutpub-pass${k}`); } catch { return false; } });
       return say(5, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab. Then press End night, the purple button below.'
-        : 'On the fan’s phone: press play, then say hello in the Chat tab.', '', '', { story: STORY[5] });
+        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[5] });
     }
-    if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change.`, 'On to Show Time →', '/show');
+    // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
+    if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change. Then click 2 · Show Time, at the top.`);
     else if (page === 'show') {
-      if (closed) say(5, 'The night’s over.', 'On to Your takings →', '/takings');
+      if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.');
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the list there. Then come back here.');
       else say(4, 'The fan’s list is all ticked: press End night, the purple button below.');

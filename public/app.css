@@ -944,6 +944,7 @@ body[data-as="room"] .chat > .goal { order: 1; }
 body[data-as="room"] .chat > .mod-bar { order: 2; }
 body[data-as="room"] .chat > .slow-note { order: 3; }
 body[data-as="room"] .chat > .chat-top { order: 4; }
+body[data-as="room"] .chat > .tt-todo { order: 4; margin: 0 0 8px; } /* the judges' box in the Chat tab, under the pin */
 body[data-as="room"] .chat > .feed { order: 5; }
 body[data-as="room"] .chat > .say { order: 6; }
 
