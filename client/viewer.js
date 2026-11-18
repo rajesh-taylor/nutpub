@@ -184,7 +184,9 @@ meter();
 // ticks each off as it's done (easier than remembering), then sends them back to the stage tab for End night. What only
 // this browser knows (went full screen, said hello, played, stopped) is kept here with the pass; tips, the ticket, the
 // door and the drink come from the server. Never on a real gig, never in the artist's previews.
-const TODO = judge && top === self && !MOD;
+// Show Time's phone frame is the judges' fan's phone (Rajesh 18 Nov): the judges' box shows there too.
+const IN_SHOW = (() => { try { return top !== self && top.location.pathname === '/show'; } catch { return false; } })();
+const TODO = judge && (top === self || IN_SHOW) && !MOD;
 const TODO_KEY = `nutpub-todo${KEEP}`;
 let todo = { pass };
 let todoReady = false; // the first render: the door's state is known
@@ -1224,7 +1226,7 @@ function todoItems() {
     return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
       show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
-      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)', did: 'Drink poured', short: 'Get your drink poured' },
+      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
@@ -1280,6 +1282,7 @@ function todoDraw() {
     return li;
   }));
   $('todo-next').hidden = !all;
+  if (IN_SHOW) $('todo-next').textContent = 'Now press End night, on the left.';
   if (all) todoMark('all'); // Show Time's line reads it (judge-line.js): End night comes next
 }
 // The Ticket tab when watching online: how this page watches, and the venue ticket on the venue's page beside it.
@@ -1855,7 +1858,8 @@ async function tick() {
     let had = false;
     try { if (left) localStorage.setItem(HAD, '1'); had = !!localStorage.getItem(HAD); } catch {}
     $('change').textContent = left ? `You have ${sats(left)} left in your browser wallet. Move them into your own Cashu or Lightning wallet now: this browser forgets them after 7 days, for good.`
-      : had ? (TODO ? `All done: your sats are in your own wallet. Now back to Show Time on the laptop: ${show.artist || 'the artist'} takes the night’s earnings home next.` // a judge (Rajesh 18 Nov)
+      : had ? (IN_SHOW ? `All done: your sats are in your own wallet. Next, ${show.artist || 'the artist'} takes the night’s earnings home: 3 · Your takings, at the top.`
+        : TODO ? `All done: your sats are in your own wallet. Now back to Show Time on the laptop: ${show.artist || 'the artist'} takes the night’s earnings home next.` // a judge (Rajesh 18 Nov)
         : 'All done: your sats are in your own wallet. You can close this tab.') : '';
     $('change').classList.toggle('all-done', !left && had);
     $('take-home').hidden = !left;

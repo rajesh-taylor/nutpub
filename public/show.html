@@ -33,6 +33,7 @@
     .frame-box { width: 100%; overflow: hidden; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--deep); }
     .frame { width: 1280px; height: 800px; border: 0; display: block; transform-origin: 0 0; }
     aside { flex: 0 0 390px; margin: 0 auto; }
+    @media (min-width: 1150px) { aside { position: sticky; top: 16px; } } /* beside the controls: the fan's phone stays in sight (Rajesh 18 Nov) */
     .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
     .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
     .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
@@ -130,7 +131,6 @@
         <span class="label">The bar staff</span>
         <span id="bar-drinks" class="bar-drinks"></span>
         <span class="count" id="bar-say">The bar staff’s phone scans the drink’s QR. No phone? Pour by hand.</span>
-      </div>
       </div>
       <p class="cap">Watching at home · the desktop view</p>
       <div class="frame-box" id="home-box"><iframe class="frame" id="home" title="Watching at home"></iframe></div>

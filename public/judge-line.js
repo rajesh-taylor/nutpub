@@ -2,7 +2,7 @@
 // one line under its header, the one next thing to do. It replaces the stage page's list of steps: the poster's button
 // opens Plan gig, and the lines lead through Show Time, the fan's page and Takings. Never on an artist's own stage.
 // Gig 3 (Rajesh 17 Nov) runs from Show Time: each step a line of story, then the one thing to do, with the fan's QR (for
-// the judge's phone; no phone, Fan's page ↗) and Pour by hand right in the line. No camera on the laptop.
+// the judge's own phone) and Pour by hand right in the line; the fan's phone sits on Show Time itself (Rajesh 18 Nov). No camera on the laptop.
 // r: /api/admin/setlist's answer; page: 'setup', 'show' or 'takings'.
 export async function judgeLine(r, page) {
   const list = r?.setlist;
@@ -11,7 +11,6 @@ export async function judgeLine(r, page) {
   const back = document.querySelector('.head-back');
   if (back) Object.assign(back, { href: judge, textContent: '← The four gigs' });
   if (page === 'takings') document.getElementById('head-fan')?.remove(); // the night's over: nothing left on the fan's page
-  else fanBeside();
   // No gig poster on a judge's stage (Rajesh 17 Nov): never part of the demo. Hidden, not removed: Plan gig still fills it.
   document.getElementById('poster-panel')?.style.setProperty('display', 'none');
   const name = { longy: 'Longy', frankie: 'Frankie', pickle: 'Longy', yours: 'Frankie' }[list.at] || 'the artist';
@@ -65,12 +64,12 @@ export async function judgeLine(r, page) {
       if (page === 'takings') return say(closed ? 7 : 5, closed ? 'Flick through ₿ £ $ €. Then press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
         closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[7] : '' });
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
-      if (closed) return say(6, 'On your phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[6] });
+      if (closed) return say(6, 'On the fan’s phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[6] });
       const d = await drinks();
-      if (!d.length) return say(2, 'Scan this with your phone’s camera, then buy the venue ticket from there. No phone? Press Fan’s page ↗, top right.', '', '', { story: STORY[2], extra: fanQr() });
+      if (!d.length) return say(2, 'On the fan’s phone, on the right: buy the venue ticket. Or use your own phone: scan this.', '', '', { story: STORY[2], extra: fanQr() });
       if (!on) return say(3, 'Press Start show, the green button below.', '', '', { story: STORY[3] });
       if (!d.some((x) => x.poured)) return say(4, 'Press Pour by hand: that’s the bar scanning it. Then watch the phone.', '', '', { story: STORY[4], extra: pourBtn() });
-      return say(5, 'Press play on the video if you like. On your phone: Tip tab, tap 2,100 sats. Then press End night, the purple button below.', '', '', { story: STORY[5] });
+      return say(5, 'Press play on the video if you like. On the fan’s phone: Tip tab, tap 2,100 sats. Then press End night, the purple button below.', '', '', { story: STORY[5] });
     }
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change.`, 'On to Show Time →', '/show');
     else if (page === 'show') {
@@ -91,31 +90,3 @@ export async function judgeLine(r, page) {
   }
 }
 
-// No phone (Rajesh 18 Nov): on a laptop, Fan's page ↗ opens a phone-sized window at the screen's right edge, beside
-// Show Time, so a judge sees the pint pour while pressing Pour by hand, with no tabs to switch. The artist's page moves
-// over while it's open, so nothing sits under it. On a phone, or a narrow window, it stays a plain new tab.
-function fanBeside() {
-  const a = document.getElementById('head-fan');
-  if (!a) return;
-  const W = 400, GAP = 12;
-  let fan = null, watch = null;
-  const room = () => {
-    const open = fan && !fan.closed;
-    const right = (screen.availLeft || 0) + screen.availWidth - W - GAP; // where the fan's window starts
-    const over = open ? Math.max(0, window.screenX + window.outerWidth - right) : 0;
-    document.body.style.paddingRight = over && window.innerWidth - over > 700 ? `${over}px` : '';
-    if (!open) clearInterval(watch);
-  };
-  a.addEventListener('click', (e) => {
-    if (window.innerWidth < 900 || matchMedia('(pointer: coarse)').matches) return;
-    e.preventDefault();
-    const h = Math.min(860, screen.availHeight - 40);
-    const left = (screen.availLeft || 0) + screen.availWidth - W - GAP, top = (screen.availTop || 0) + 20;
-    fan = window.open(a.href, 'nutpub-fan', `popup,width=${W},height=${h},left=${left},top=${top}`);
-    if (!fan) { window.open(a.href, '_blank'); return; } // a popup blocker: a tab, as before
-    fan.focus();
-    clearInterval(watch);
-    watch = setInterval(room, 1000);
-    room();
-  });
-}
