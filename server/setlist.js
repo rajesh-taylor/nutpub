@@ -36,7 +36,9 @@ const GIGS = {
     mods: [{ name: 'Aaron of Essex', icon: '🎤' }],
     cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' },
       // The answers, one at a time over the next ten seconds, each from a different guest (Rajesh 14 Nov).
-      { after: 8, text: 'London' }, { after: 10.5, text: 'Texas' }, { after: 13, text: 'Berlin' }, { after: 15.5, text: 'Well that\u2019s private...' }],
+      { after: 8, text: 'London' }, { after: 10.5, text: 'Texas' }, { after: 13, text: 'Berlin' },
+      // Rajesh 18 Nov: a big Nutzap from a Nostr name, a nod to who made it all possible.
+      { after: 16, text: 'I approve', sats: 210000, nostr: 'Satoshi 💎🙌', nutzap: true }],
   },
   frankie: {
     photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },
@@ -52,7 +54,10 @@ const GIGS = {
     },
     pin: '60 sats a minute: pay as you watch, stop any time. Tip with a comment: sats in the box on the right.',
     // A guest's line half a minute in: a quiet nod to the btc++ Berlin talk on federated mints.
-    cues: [{ after: 30, text: 'Federated Cashu mints could go a long way in helping decentralised music...' }],
+    // Rajesh 18 Nov: a big tip half a minute in, then two Nutzaps from Nostr names, 2 s and 5 s after it.
+    cues: [{ after: 30, text: 'Real music, real singer songwriters 🇬🇧', sats: 50000 },
+      { after: 32, text: 'What a voice ⚡', sats: 21, nostr: 'southend_sam', nutzap: true },
+      { after: 37, text: 'Encore! 🎸', sats: 2100, nostr: 'westcliff_jo', nutzap: true }],
   },
   // Gig 3, Longy at The Fickle Pickle: the fan's night (agreed 16 Nov). Bought weeks ahead on the fan's phone from the
   // gig poster's QR: a £35 venue ticket, £5 of it the first drink (locked to the bar's key until last orders, then
@@ -125,7 +130,11 @@ export async function cue(n) {
   const done = await kv.get('cued', []);
   if (!c || done.includes(n) || !(await currentShow()).show.comments) return false;
   await kv.set('cued', [...done, n]);
-  await addMessage(randomHex(16), c.text, 0, c.mod || null); // a pass of its own: in the chat as a mod, or as 'guest 3f9a'
+  // A pass of its own: in the chat as a mod, a Nostr name or 'guest 3f9a'. A scripted tip shows in the chat only:
+  // no coins move, so it never reaches Takings or the stretch goal (both count locked coins).
+  const id = await addMessage(randomHex(16), c.text, c.sats || 0, c.mod || null, c.nostr || null);
+  // Its Nutzap tag: a row keyed by minus the message's id, so it never meets a real coin's (Takings joins on those).
+  if (id && c.nutzap) await run('INSERT INTO nutzaps (locked, message, pubkey, name, event, at) VALUES (?, ?, ?, ?, ?, ?)', -id, id, '', c.nostr || null, '{}', new Date().toISOString());
   return true;
 }
 

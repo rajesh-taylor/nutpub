@@ -400,8 +400,16 @@ body.counting .big-play, body.counting .live-badge { display: none; }
 .bar textarea { width: 100%; font: 12px/1.4 var(--mono); color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; padding: 8px; word-break: break-all; }
 .pint-screen { position: fixed; inset: 0; z-index: 10; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 16px; }
 .pint-screen p { margin: 0; }
-#pint-line { font: 400 44px/1 var(--poster); letter-spacing: .06em; color: var(--amber); }
-.pint-screen .pint { width: min(52vw, 40vh, 240px); height: auto; overflow: visible; }
+.pint-sign { position: absolute; top: max(20px, 4vh); left: 50%; transform: translateX(-50%); width: min(44vw, 170px); line-height: 0; opacity: .9; }
+.pint-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pint-sign .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold-p); }
+.pint-sign .btc { fill: #f7931a; }
+.pint-sign .shine { position: absolute; inset: 0; height: 100%; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: pint-shine 3.5s .8s linear infinite; }
+.pint-sign .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
+@keyframes pint-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 57% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 57.01%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
+@media (prefers-reduced-motion: reduce) { .pint-sign .shine { display: none; } }
+#pint-line { font: 400 42px/1.02 var(--poster); letter-spacing: .06em; color: var(--amber); white-space: pre-line; } /* one word a line */
+.pint-screen .pint { width: min(66vw, 32vh, 300px); height: auto; overflow: visible; }
 .pint-screen .fill { animation: pour 2.6s cubic-bezier(.3,.7,.4,1) forwards; transform: translateY(250px); }
 .pint-screen .bubbles circle { animation: rise 2.2s linear infinite; }
 .pint-screen .head { transform-origin: 100px 48px; transform: scaleY(0); animation: head .5s 2.4s ease-out forwards; }

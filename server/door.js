@@ -23,10 +23,10 @@ const siteOf = (c) => siteUrl(c);
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
 const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 140);
-export async function addMessage(pass, text, sats = 0, mod = null) {
+export async function addMessage(pass, text, sats = 0, mod = null, as = null) {
   const t = clip(text);
   if (!t && !sats) return null;
-  const nostr = mod ? null : handle(await nostrOf(pass)); // signed in with Nostr: their name goes with the message
+  const nostr = mod ? null : as || handle(await nostrOf(pass)); // signed in with Nostr: their name goes with the message (as: a scripted line's)
   return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr) VALUES (?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.

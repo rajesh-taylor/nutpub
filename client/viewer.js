@@ -1151,7 +1151,7 @@ function render() {
     $('drink-note').textContent = 'Its QR shows here once you’re in.';
   } else if (door.drink) {
     $('drink-qr').src = `/api/door/drink-qr.svg?id=${door.drink.id}`;
-    $('drink-title').textContent = door.drink.poured ? 'Enjoy your pint, cheers!' : 'Get your free drink';
+    $('drink-title').textContent = door.drink.poured ? `Cheers from ${show.artist || 'the artist'}!` : 'Get your free drink';
     $('drink-note').textContent = door.drink.poured ? 'One drink per ticket.'
       : `Show this at the bar. ${sats(s.drink)}, locked to the bar’s key.${show.lastOrders ? ` Not poured by ${show.lastOrders}? It goes to ${show.artist || 'the artist'}.` : ''}`;
   }
@@ -1174,7 +1174,7 @@ function coinDrink(waits) {
   if (!on) return;
   if (door.drink.poured) {
     coin.player?.stop(); coin = { id: null, player: null };
-    $('drink-title').textContent = 'Enjoy your pint, cheers!';
+    $('drink-title').textContent = `Cheers from ${show.artist || 'the artist'}!`; // Rajesh 18 Nov
     $('drink-note').textContent = 'The bar has your drink. One per ticket.';
     return;
   }
@@ -1227,6 +1227,8 @@ function todoItems() {
       show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
+      // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
+      s.drink && { ...hello, text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
       free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
@@ -1409,6 +1411,7 @@ function pint() {
     document.addEventListener('visibilitychange', back);
     return;
   }
+  $('pint-line').textContent = `Cheers\nfrom\n${(show.artist || 'the artist').split(' ')[0]}!`; // one word a line (Rajesh 18 Nov)
   $('pint-screen').hidden = false;
   setTimeout(() => { $('pint-screen').hidden = true; }, 7000);
 }
@@ -1858,8 +1861,7 @@ async function tick() {
     let had = false;
     try { if (left) localStorage.setItem(HAD, '1'); had = !!localStorage.getItem(HAD); } catch {}
     $('change').textContent = left ? `You have ${sats(left)} left in your browser wallet. Move them into your own Cashu or Lightning wallet now: this browser forgets them after 7 days, for good.`
-      : had ? (IN_SHOW ? `All done: your sats are in your own wallet. Next, ${show.artist || 'the artist'} takes the night’s earnings home: 3 · Your takings, at the top.`
-        : TODO ? `All done: your sats are in your own wallet. Now back to Show Time on the laptop: ${show.artist || 'the artist'} takes the night’s earnings home next.` // a judge (Rajesh 18 Nov)
+      : had ? (TODO ? `All done. Close the Cashu.me tab now: ${show.artist || 'the artist'} needs it next.` // a judge (Rajesh 18 Nov): one Cashu.me at a time // a judge (Rajesh 18 Nov)
         : 'All done: your sats are in your own wallet. You can close this tab.') : '';
     $('change').classList.toggle('all-done', !left && had);
     $('take-home').hidden = !left;
