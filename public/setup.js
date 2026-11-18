@@ -206,15 +206,15 @@ function refresh() {
   $('mini-when').textContent = [d, show.streams].filter(Boolean).join(' · ');
   const n = (v) => Number(v || 0).toLocaleString('en-GB');
   $('tip-preview').textContent = `Tip ${show.artist || 'the artist'} · ${n(show.tip.price)} sats`;
-  // Who gets what from each ticket: the same split as the server's (server/shows.js ticketSplit).
   const drink = show.drink?.mode === 'artist' ? show.drink.price || 0 : 0;
-  const artist = show.ticket?.price || 0;
   // The drink's price stays in sight; it only counts (and can only be typed) when the free drink is on.
-  $('drink-price').querySelector('input').disabled = show.drink?.mode !== 'artist';
+  for (const box of $('drink-price').querySelectorAll('input')) box.disabled = show.drink?.mode !== 'artist';
   $('drink-on').checked = show.drink?.mode === 'artist';
-  $('split').textContent = !artist ? '' : drink
-    ? `Ticket: ${n(artist + drink)} sats. ${n(artist)} locked to ${show.artist || 'the artist'}’s key, ${n(drink)} locked to the bar’s for the first drink. Not poured by ${show.lastOrders || 'last orders'}? It goes to ${show.artist || 'the artist'}.`
-    : `Ticket: ${n(artist)} sats, locked to ${show.artist || 'the artist'}’s key.`;
+  // When its QR reaches the phone (Rajesh 18 Nov): no time, when the show starts.
+  for (const r of form.querySelectorAll('[name="drink-when"]')) r.checked = r.value === (show.drink?.at ? 'time' : 'show');
+  $('drink-at').hidden = !show.drink?.at;
+  // Short (Rajesh 18 Nov): the rest is the judges' story line.
+  $('split').textContent = drink ? `Added to the ticket. Not poured by ${show.lastOrders || 'the end'}? It goes to ${show.artist || 'the artist'}.` : '';
 }
 
 function status(text, kind = '') {
@@ -304,6 +304,7 @@ function dateWarning() {
 form.addEventListener('input', (e) => {
   if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
   if (e.target.name === 'night') applyNight(e.target.value);
+  if (e.target.name === 'drink-when') $('drink-at').value = e.target.value === 'time' ? (show.drink?.at || show.streams || '20:00') : '';
   if (e.target.id === 'drink-on') for (const r of form.querySelectorAll('[name="drink"]')) r.checked = r.value === (e.target.checked ? 'artist' : 'off');
   priceRow(e);
   read();

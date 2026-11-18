@@ -1133,12 +1133,16 @@ body[data-as="room"] .welcome figcaption { position: static; padding: 10px 4px 0
 body.poster-view .player { aspect-ratio: 3 / 4; height: auto; background-position: center top !important; }
 body.poster-view .player > :not(.live-badge) { display: none !important; }
 /* The judge's line on the artist's three pages (judge-line.js): one next thing to do, under the header. */
+/* Finished (Rajesh 18 Nov): the folded receipt and "Judges: on to the next gig" say it all, so the line goes. */
+body:has(#stamp:not([hidden])) .judge-line { display: none; }
 .judge-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 14px clamp(12px, 3vw, 40px) 0; padding: 10px 16px; border: 1px solid var(--amber); border-radius: 8px; background: rgb(217 149 58 / .1); color: var(--cream); font-size: 17px; line-height: 1.35; }
 .judge-line b { font: 400 16px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); white-space: nowrap; }
 .judge-line .btn { margin: 0 0 0 auto; font-size: 18px; padding: 9px 16px 7px; white-space: nowrap; }
 /* Gig 3 (17 Nov): a line of the story above the thing to do; the fan's QR for the judge's phone, in the line. */
 .judge-line .jl-say { flex: 1 1 320px; min-width: 0; display: grid; gap: 4px; }
-.judge-line .jl-story { font-size: 15px; color: var(--smoke); }
+.judge-line .jl-say > span:last-child { font-weight: 500; letter-spacing: -.005em; }
+/* The story (Rajesh 18 Nov: more professional): upright, not italic, a step smaller and grey; the action under it, cream. */
+.judge-line .jl-story { font-size: 15px; line-height: 1.45; color: var(--smoke); font-weight: 400; }
 .judge-line .jl-qr { flex: none; width: 112px; height: 112px; margin-left: auto; padding: 6px; box-sizing: border-box; border-radius: 6px; background: var(--cream); }
 .judge-line .btn + .jl-qr, .judge-line .jl-qr + .btn { margin-left: 0; }
 /* Full screen: the list's next step on the picture, top centre, between Live and Test mint. */
@@ -1347,3 +1351,7 @@ body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-le
 @media (min-width: 1100px) { .two-up { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .two-up > div + div { padding-left: 32px; border-left: 1px solid rgb(239 227 200 / .14); } }
 .panel .sub-note { margin: -2px 0 12px; font-size: 15px; color: var(--smoke); }
 #goal-2[hidden] { display: none; }
+/* Plan gig's drink (Rajesh 18 Nov): when its QR reaches the fan's phone, the time beside "At a time". */
+.drink-when { display: grid; gap: 6px; }
+.drink-when .choice b { white-space: nowrap; }
+.drink-when input[type="time"] { margin-left: 10px; width: 8.5em; }

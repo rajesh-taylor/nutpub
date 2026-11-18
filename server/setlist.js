@@ -68,7 +68,7 @@ const GIGS = {
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
     },
-    pin: 'At The Fickle Pickle: your first drink is on Longy. At home the stream is free: tips welcome.' },
+    pin: 'At The Fickle Pickle: your ticket includes a drink on Longy. At home the stream is free: tips welcome.' },
   // Gig 4 (was gig 3; to be reshaped as the staff's night, agreed 16 Nov). At the venue (Rajesh 15 Nov, late; the step
   // keeps its old name, 'yours'): Frankie's second night at The
   // Fickle Pickle, ready-made, the stream free with tips: how most artists, Longy and Frankie among them, work today,
@@ -95,7 +95,7 @@ async function open(step, env) {
   // The examples' prices are in pounds: their sats come from today's rate when the gig opens.
   const { gbp } = await getRate();
   for (const p of [gig.ticket, gig.online]) if (p && p.fiat && !p.locked) p.price = satsFrom(p.fiat, gbp);
-  if (gig.drinkFiat) gig.drink.price = satsFrom(gig.drinkFiat, gbp);
+  if (gig.drinkFiat) Object.assign(gig.drink, { price: satsFrom(gig.drinkFiat, gbp), fiat: gig.drinkFiat });
   (gig.goalsFiat || []).forEach((f, i) => { if (gig.goals?.[i] && f) gig.goals[i].at = satsFrom(f, gbp); });
   // Last orders (an unpoured drink goes to the artist then): three hours from now, by midnight at the latest.
   const lastOrders = gig.drinks && !gig.lastOrders ? lastOrdersIn(3) : gig.lastOrders;

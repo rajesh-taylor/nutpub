@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 import { one, all, run, sql, batch, kv, siteUrl } from './db.js';
 import { cashuGate } from './gate.js';
 import { totpOk } from './totp.js';
-import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver } from './shows.js';
+import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver, drinkOpen } from './shows.js';
 import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
@@ -187,9 +187,12 @@ export function mountDoor(route, admin, pass) {
   // NUT-16 QR. It's locked to the bar's key (and to the artist's after last orders), so showing it to the phone that
   // paid it gives nothing away: only the bar can spend it. Poured: no token, just that.
   route('GET', '/api/door/drink/coin', pass, async (c) => {
-    if (!(await showOf(c)).drinkCoin) return json({ error: 'no_coin' }, 404);
+    const show = await showOf(c);
+    if (!show.drinkCoin) return json({ error: 'no_coin' }, 404);
     const d = await one(`${DRINK} WHERE d.pass = ?`, c.pass);
     if (!d) return json({ error: 'no_drink' }, 404);
+    // Paid and locked at the ticket; it reaches the phone when the show starts (or at the artist's time).
+    if (!d.collected_at && !drinkOpen(show, await stageNow(show))) return json({ error: 'not_yet', id: d.id }, 425);
     return json({ id: d.id, sats: d.sats, poured: !!d.collected_at, token: d.collected_at ? null : d.token });
   });
 

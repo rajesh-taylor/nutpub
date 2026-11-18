@@ -252,7 +252,8 @@ async function fill() {
   for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
   await balance();
 }
-fill().catch(() => {});
+// (Called once the stage is known, below: after the night, an emptied wallet stays empty. Rajesh 18 Nov: it refilled
+// to 150,000 when the fan came back from Cashu.me.)
 if (!show.wallet.on) { $('wallet-link').removeAttribute('href'); $('wallet-page').hidden = true; } // balance only
 $('topup').hidden = !health.mint.test;
 $('wallet-page').parentElement.classList.toggle('solo', !health.mint.test);
@@ -964,6 +965,7 @@ function takeStage(s) {
 }
 const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
 let stage = takeStage(firstStage);
+if (stage !== 'closed') fill().catch(() => {});
 liveOn = !!firstStage.live && (opened || !!MOD); // a sound check before the start time is live only for the mods
 whenLine();
 priceLine();
@@ -1064,7 +1066,7 @@ function render() {
     $('at-home-line').textContent = free ? 'The stream is free, with tips.' : show.stream.mode === 'ticket' ? 'One price for the whole show.' : 'Pay only for the minutes you watch.';
   } else {
     $('door-home').hidden = true;
-    $('door-title').textContent = 'Your first drink';
+    $('door-title').textContent = 'Your drink';
     $('ticket-note').textContent = 'The ticket went through; the drink didn’t.';
     $('buy').textContent = `Pay for the drink · ${sats(s.drink)}`;
   }
@@ -1166,9 +1168,17 @@ function coinDrink(waits) {
     $('drink-note').textContent = 'The bar has your drink. One per ticket.';
     return;
   }
-  $('drink-title').textContent = 'Your first drink';
+  // Bought days ahead (Rajesh 18 Nov): paid and locked to the bar at the ticket, but its QR waits for the show to start
+  // (or the artist's time): an empty glass until then.
+  if (!drinkReady()) {
+    $('drink-title').textContent = 'Your drink';
+    $('drink-note').textContent = `Paid for and locked to the bar. It reaches your phone ${show.drink?.at ? `at ${show.drink.at}` : 'when the show starts'}.`;
+    if (coin.id !== 'soon') { coin.player?.stop(); coin = { id: 'soon', player: null }; $('drink-coin').replaceChildren(pintGlass({ empty: true })); }
+    return;
+  }
+  $('drink-title').textContent = 'Your drink';
   $('drink-note').textContent = coin.failed ? 'This drink’s QR didn’t load: reload the page.'
-    : `Show it at the bar. Locked to the bar until ${show.lastOrders || 'last orders'}; not poured by then, it goes back to ${show.artist || 'the artist'}.`;
+    : `Show it at the bar. Locked to the bar until ${show.lastOrders || 'last orders'}; if it’s not poured by then, it goes back to ${show.artist || 'the artist'}.`;
   if (coin.id === door.drink.id) return;
   coin = { id: door.drink.id, player: null };
   const glass = pintGlass({ artist: show.artist });
@@ -1179,15 +1189,17 @@ function coinDrink(waits) {
     coin.player = await playCoin(glass, c.token, { onError: failed });
   }).catch(failed);
 }
+// When the drink's QR reaches the phone: the same rule as the server's (server/shows.js drinkOpen).
+const drinkReady = () => stage === 'on' || stage === 'closed' || (!!show.drink?.at && !!show.date && ukNow() >= `${show.date}T${show.drink.at}`);
 function soonDrink(open) {
   const box = $('drink-soon');
   box.hidden = !open || !show.drinkCoin;
   if (box.hidden || box.childElementCount) return;
   const gets = document.createElement('ul');
   gets.className = 'drink-gets';
-  for (const t of [`Entry to ${venueName() || 'the gig'}`, `Your first drink, on ${show.artist || 'the artist'}`, 'The stream, free'])
+  for (const t of [`Entry to ${venueName() || 'the gig'}`, `A drink from the bar, on ${show.artist || 'the artist'}`, 'The stream, free'])
     gets.append(Object.assign(document.createElement('li'), { textContent: t }));
-  box.replaceChildren(gets); // no glass before buying (Rajesh 17 Nov): "Your first drink, on Longy" says it
+  box.replaceChildren(gets); // no glass before buying (Rajesh 17 Nov): "A drink from the bar, on Longy" says it
 }
 
 // The judge's list for this page: by what the gig sells, not by its name. { done, text, did }; `now` is the line on the
@@ -1203,8 +1215,9 @@ function todoItems() {
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
     return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
       show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
-      s.drink && { done: !!door.drink?.poured, text: 'Get your drink poured: the bar scans it, or Pour by hand on Show Time', did: 'Drink poured', short: 'Get your drink poured' },
-      free ? { ...tip, text: 'Tip: the stream is free here', short: 'Tip: the stream is free' } : tip].filter(Boolean);
+      // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
+      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? 'Get your drink: it arrives when the show starts (Start show, on the laptop)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)', did: 'Drink poured', short: 'Get your drink poured' },
+      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab, then come back here`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
   // under the stretch goal, to watch it move.
@@ -1378,6 +1391,12 @@ $('buy').onclick = async () => {
 
 // ---- The Pint Signal: the bar never talks to this phone; the phone sees its drink spent at the mint and lights up.
 function pint() {
+  // Poured while this page was out of sight (another tab): the pour waits until it's back, so nobody misses it (Rajesh 18 Nov).
+  if (document.hidden) {
+    const back = () => { if (document.hidden) return; document.removeEventListener('visibilitychange', back); pint(); };
+    document.addEventListener('visibilitychange', back);
+    return;
+  }
   $('pint-screen').hidden = false;
   setTimeout(() => { $('pint-screen').hidden = true; }, 7000);
 }
@@ -1819,10 +1838,18 @@ async function tick() {
     if (door.drink?.poured && !pouredBefore) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player
+  if (stage !== 'closed' && !CLOSING_VIEW) { try { localStorage.removeItem(`nutpub-had${KEEP}`); } catch {} } // a new night
   if (stage === 'closed' || CLOSING_VIEW) {
     const left = await wallet.balance();
-    $('change').textContent = left ? `You have ${sats(left)} left in this temp browser wallet. Move them into your Cashu/Lightning wallet. Best done now: this browser will forget them after 7 days. Permanently.` : '';
+    // Moved out (Rajesh 18 Nov): the last thing the fan sees says they're done, so they know their sats are safe.
+    const HAD = `nutpub-had${KEEP}`;
+    let had = false;
+    try { if (left) localStorage.setItem(HAD, '1'); had = !!localStorage.getItem(HAD); } catch {}
+    $('change').textContent = left ? `You have ${sats(left)} left in your browser wallet. Move them into your own Cashu or Lightning wallet now: this browser forgets them after 7 days, for good.`
+      : had ? 'All done: your sats are in your own wallet. You can close this tab.' : '';
+    $('change').classList.toggle('all-done', !left && had);
     $('take-home').hidden = !left;
+    $('forget').hidden = !!$('change').textContent; // a fan with sats reads only about their sats (Rajesh 18 Nov)
   }
   render();
   chat(now);

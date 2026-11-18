@@ -122,6 +122,7 @@
     .board .ticket-split .half { min-width: 0; }
     .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
     .board .half-head { margin: 0 0 10px; font: 400 15px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); }
+    .board .drink-when input[type="time"] { width: 7.5em; flex: none; margin: 0 0 0 12px; padding: 6px 8px; } /* the drink QR's time, beside its words */
     @media (max-width: 700px) {
       .board .ticket-split { grid-template-columns: 1fr; }
       .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
@@ -374,14 +375,29 @@
                     <div class="door-qr-row"><img id="door-link-qr" class="door-link-qr" alt="The door scanner's QR: point the door phone's camera at it" hidden><p class="switch-note door-keep">Keep private. A new QR code stops the old one immediately.</p></div>
                   </div>
                 </div>
+                <!-- The drink, on judges' practice gigs only until after 27 Nov (show.drinks; server/shows.js). Rajesh 18 Nov:
+                     in the room's column (the fan pays for it in the venue ticket; home fans never get one), with when
+                     its QR reaches the fan's phone. -->
+                <div class="door-step drink-step" data-when="drinks">
+                  <p class="half-head">Collaborations with small businesses</p>
+                  <label class="choice room-switch"><b>Drink at bar</b><input type="checkbox" role="switch" id="drink-on" aria-label="Drink at bar"></label>
+                  <input type="radio" name="drink" data-path="drink.mode" value="off" hidden><input type="radio" name="drink" data-path="drink.mode" value="artist" hidden>
+                  <div class="drink-more" data-when="drink.mode=artist">
+                    <div class="price-row" id="drink-price" data-price="drink">
+                      <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="drink.fiat" aria-label="The drink in pounds"></label>
+                      <span class="about" aria-hidden="true">≈</span>
+                      <div class="field sats-field"><label for="drink-sats">Bitcoin price in Sats</label>
+                        <span class="sats-box"><input id="drink-sats" type="number" min="1" step="1" inputmode="numeric" data-path="drink.price">
+                          <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="drink.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
+                    </div>
+                    <div class="drink-when">
+                      <label class="choice"><input type="radio" name="drink-when" value="show"> <span><b>QR when the show starts</b></span></label>
+                      <label class="choice"><input type="radio" name="drink-when" value="time"> <span><b>QR at a time</b></span> <input type="time" id="drink-at" data-path="drink.at" aria-label="The time the drink’s QR reaches the phone"></label>
+                    </div>
+                    <p class="switch-note" id="split"></p>
+                  </div>
+                </div>
               </div>
-            </div>
-            <!-- The first drink, on judges' practice gigs only until after 27 Nov (show.drinks; server/shows.js). -->
-            <div class="door-step drink-step" data-when="drinks">
-              <label class="choice room-switch"><b>First drink free with the ticket</b><input type="checkbox" role="switch" id="drink-on" aria-label="First drink free with the ticket"></label>
-              <input type="radio" name="drink" data-path="drink.mode" value="off" hidden><input type="radio" name="drink" data-path="drink.mode" value="artist" hidden>
-              <label class="field" id="drink-price" data-when="drink.mode=artist">Drink, in sats, added to the ticket<input type="number" min="1" step="1" inputmode="numeric" data-path="drink.price"></label>
-              <p class="switch-note" id="split"></p>
             </div>
             <p class="rate-line" id="rate-line"></p>
           </section>

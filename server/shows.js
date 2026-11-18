@@ -49,6 +49,8 @@ export const blank = () => ({
   ticket: { on: false, price: null, fiat: null, locked: false }, // the venue ticket in sats; fiat: £, the card price, which fills the sats unless locked
   door: { on: false },                  // door check: the ticket page's QR (new every 30 s) is scanned once at the door (off by default)
   drink: { price: null, mode: 'off' },  // 'off', or 'artist': the artist adds a first drink to the ticket price
+  // drink.at: '' (its QR reaches the fan's phone when the show starts) or HH:MM on the gig day (Rajesh 18 Nov: bought
+  // days ahead, the drink waits for the night; the coin is paid and locked to the bar's key at the ticket either way).
   drinks: false,                        // the first drink may be on: until after 27 Nov only on a judge's practice gig (setlist.js)
   drinkCoin: false,                     // the drink travels as the coin itself, an animated NUT-16 QR the bar's camera reads (gig 3, 17 Nov)
   goals: [{ label: '', at: null }, { label: '', at: null }], // up to 2 stretch goals, fed by tips (Rajesh 13 Nov: two at most)
@@ -118,7 +120,7 @@ export function clean(input = {}) {
     // (Frankie's and Your gig, 13–14 Nov) have it: `drinks`, set when the gig opens (setlist.js).
     drinks: on(input.drinks),
     drinkCoin: on(input.drinks) && on(input.drinkCoin),
-    drink: { price: sats(input.drink?.price), mode: DRINK_LATER && !on(input.drinks) ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
+    drink: { at: TIME.test(input.drink?.at) ? input.drink.at : '', price: sats(input.drink?.price), fiat: pounds(input.drink?.fiat), locked: on(input.drink?.locked), mode: DRINK_LATER && !on(input.drinks) ? 'off' : ['artist', 'venue'].includes(input.drink?.mode) ? 'artist' : 'off' }, // 'venue': before 29 Oct
     goalsThanks: text(input.goalsThanks, 140),
     goals: [0, 1].map((i) => ({ label: text(input.goals?.[i]?.label, 60), at: sats(input.goals?.[i]?.at) })),
     // Shows saved before 13 Nov have none: the three defaults. 21 sats or more each (as a tip), an emoji from the list.
@@ -246,6 +248,8 @@ function ukAt(date, hhmm) {
   const hours = Number(tz.replace('GMT', '') || 0);
   return Math.floor(guess.getTime() / 1000) - hours * 3600;
 }
+// When the drink's QR reaches the fan's phone: when the show starts, or at the artist's time on the gig day.
+export const drinkOpen = (show, stage) => stage === 'on' || stage === 'closed' || (() => { const at = ukAt(show.date, show.drink?.at); return !!at && Date.now() / 1000 >= at; })();
 // Last orders: an unpoured drink's lock opens for the artist then.
 export const lastOrdersAt = (show) => ukAt(show.date, show.lastOrders);
 // The one start time: the stream opens to the public then, by itself, unless the artist opened it early.
