@@ -789,6 +789,14 @@ function showTab(t) {
   body.dataset.tab = t;
   for (const b of $('tabs').querySelectorAll('button')) b.setAttribute('aria-pressed', b.dataset.tab === t);
   if (t === 'ticket') $('tabs').querySelector('.nudge')?.classList.remove('nudge');
+  todoPlace();
+}
+// The judges' box (Rajesh 18 Nov): at the bottom of the Tip tab too, so the tip step needs no trip back to Ticket.
+function todoPlace() {
+  const card = $('tt-todo');
+  if (!card) return;
+  if (tab === 'tip' && matchMedia('(max-width: 899px)').matches) { if (card.parentElement !== $('tab-tip')) $('tab-tip').append(card); }
+  else if (card.parentElement !== $('tab-ticket')) $('tab-ticket').prepend(card);
 }
 $('tabs').onclick = (e) => { const b = e.target.closest('button[data-tab]'); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
 $('tabs').hidden = !ONE;
@@ -1216,8 +1224,8 @@ function todoItems() {
     return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
       show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
-      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? 'Get your drink: it arrives when the show starts (Start show, on the laptop)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)', did: 'Drink poured', short: 'Get your drink poured' },
-      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab, then come back here`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
+      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)', did: 'Drink poured', short: 'Get your drink poured' },
+      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
   // under the stretch goal, to watch it move.
@@ -1245,6 +1253,7 @@ function todoDraw() {
     const card = Object.assign(document.createElement('div'), { className: 'card tt-card tt-todo', id: 'tt-todo' });
     card.append(box);
     $('tab-ticket').prepend(card);
+    todoPlace();
   }
   box.hidden = !items.length;
   if ($('tt-todo')) $('tt-todo').hidden = box.hidden;
@@ -1846,7 +1855,8 @@ async function tick() {
     let had = false;
     try { if (left) localStorage.setItem(HAD, '1'); had = !!localStorage.getItem(HAD); } catch {}
     $('change').textContent = left ? `You have ${sats(left)} left in your browser wallet. Move them into your own Cashu or Lightning wallet now: this browser forgets them after 7 days, for good.`
-      : had ? 'All done: your sats are in your own wallet. You can close this tab.' : '';
+      : had ? (TODO ? `All done: your sats are in your own wallet. Now back to Show Time on the laptop: ${show.artist || 'the artist'} takes the night’s earnings home next.` // a judge (Rajesh 18 Nov)
+        : 'All done: your sats are in your own wallet. You can close this tab.') : '';
     $('change').classList.toggle('all-done', !left && had);
     $('take-home').hidden = !left;
     $('forget').hidden = !!$('change').textContent; // a fan with sats reads only about their sats (Rajesh 18 Nov)

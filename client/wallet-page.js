@@ -30,6 +30,12 @@ const show = async () => {
 await show();
 wallet.on('proofs:saved', show);
 $('home').hidden = $('receive').hidden = $('where-note').hidden = $('move').hidden = false;
+// The night's over (Rajesh 18 Nov): sats only go out now, never in, and there's no set to go back to.
+fetch('/api/stage').then((r) => r.json()).then(({ stage }) => {
+  if (stage !== 'closed') return;
+  $('receive').hidden = $('paste').hidden = true;
+  $('back').textContent = '← Back';
+}).catch(() => {});
 $('receive').addEventListener('click', () => {
   $('paste').hidden = !$('paste').hidden;
   if (!$('paste').hidden) { $('takeout').hidden = true; $('paste-token').focus(); }

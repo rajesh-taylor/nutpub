@@ -62,14 +62,15 @@ export async function judgeLine(r, page) {
     const on = s.stage === 'on';
     if (pickle) {
       if (page === 'setup') return say(1, 'Then click 2 · Show Time, at the top.', '', '', { story: STORY[1] });
-      if (page === 'takings') return say(closed ? 7 : 5, closed ? 'Move to Cashu.me, then Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
+      if (page === 'takings') return say(closed ? 7 : 5, closed ? 'Flick through ₿ £ $ €. Then press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
         closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[7] : '' });
-      if (closed) return say(6, 'On your phone: press Move my sats and take them to Cashu.me. Then on to Your takings.', 'On to Your takings →', '/takings', { story: STORY[6] });
+      // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
+      if (closed) return say(6, 'On your phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[6] });
       const d = await drinks();
       if (!d.length) return say(2, 'Scan this with your phone’s camera, then buy the venue ticket from there. No phone? Press Fan’s page ↗, top right.', '', '', { story: STORY[2], extra: fanQr() });
       if (!on) return say(3, 'Press Start show, the green button below.', '', '', { story: STORY[3] });
       if (!d.some((x) => x.poured)) return say(4, 'Press Pour by hand: that’s the bar scanning it. Then watch the phone.', '', '', { story: STORY[4], extra: pourBtn() });
-      return say(5, 'On your phone: tip Longy 2,100 sats. Then press End night, the purple button below.', '', '', { story: STORY[5] });
+      return say(5, 'Press play on the video if you like. On your phone: Tip tab, tap 2,100 sats. Then press End night, the purple button below.', '', '', { story: STORY[5] });
     }
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change.`, 'On to Show Time →', '/show');
     else if (page === 'show') {
