@@ -119,13 +119,17 @@
     .board .door-qr-row .door-link-qr { margin: 0; flex: none; }
     .board .door-keep { flex: 1 1 12em; margin: 0; font-size: 13px; color: var(--smoke); }
     .board .door-pass { flex: none; width: 200px; }
+    /* The £ inside the box (Rajesh 19 Nov): no "with card". */
+    .board .field.fiat .gbp { position: relative; display: block; }
+    .board .field.fiat .gbp > span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--cream); pointer-events: none; }
+    .board .field.fiat .gbp input { padding-left: 28px; }
     .board .door-strap { display: block; width: 110px; height: 40px; margin: 0 auto -6px; }
     .board .door-lam { border-radius: 12px; background: var(--cream); color: #1a1408; display: flex; flex-direction: column; align-items: center; overflow: hidden; box-shadow: 0 10px 24px rgb(0 0 0 / .55); }
-    .board .door-lam .hole { width: 34px; height: 8px; margin-top: 10px; border-radius: 4px; background: var(--deep); }
-    .board .door-lam .k { margin-top: 8px; font: 400 12px/1 var(--poster); letter-spacing: .3em; }
-    .board .door-lam .role { width: 100%; margin-top: 6px; padding: 6px 0 2px; font: 400 48px/1 var(--poster); letter-spacing: .05em; text-align: center; background: var(--amber); }
+    .board .door-lam .lam-hole { width: 34px; height: 8px; margin-top: 10px; border-radius: 4px; background: var(--deep); }
+    .board .door-lam .lam-k { margin-top: 8px; font: 400 12px/1 var(--poster); letter-spacing: .3em; }
+    .board .door-lam .lam-role { width: 100%; margin-top: 6px; padding: 6px 0 2px; font: 400 48px/1 var(--poster); letter-spacing: .05em; text-align: center; background: var(--amber); }
     .board .door-lam .door-link-qr { width: 150px; height: 150px; margin: 12px auto 6px; background: #fff; }
-    .board .door-lam .job { margin: 0 14px 12px; font-size: 12px; line-height: 1.4; text-align: center; }
+    .board .door-lam .lam-job { margin: 0 14px 12px; font-size: 12px; line-height: 1.4; text-align: center; }
     .board .ticket-split .price-row { max-width: 30em; } .board .ticket-split .half > .step-head { font-size: 22px; color: var(--cream); } /* Room only: the £ and sats stay together, not across the card */
     .board .ticket-split .half { min-width: 0; }
     .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 1px solid rgb(239 227 200 / .14); margin-left: 24px; padding-left: 24px; }
@@ -363,7 +367,7 @@
                 <div class="home-choices">
             <label class="choice"><input type="radio" name="home" data-path="stream.mode" value="ticket"> <span><b>Watch online</b></span></label>
                 <div class="price-row online-row" data-price="online" data-when="stream.mode=ticket">
-                  <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="online.fiat" aria-label="Watch online price in pounds, by card"></label>
+                  <label class="field fiat">Price<span class="gbp"><span aria-hidden="true">£</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="online.fiat" aria-label="Watch online price in pounds"></span></label>
                   <span class="about" aria-hidden="true">≈</span>
                   <div class="field sats-field"><label for="online-sats">Bitcoin price in Sats</label>
                     <span class="sats-box"><input id="online-sats" type="number" min="1" step="1" inputmode="numeric" data-path="online.price">
@@ -379,7 +383,7 @@
                 <h3 class="step-head">In the room</h3>
                 <p class="half-head">Venue ticket</p>
                 <div class="price-row" data-price="ticket" data-when="ticket.on">
-              <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds, by card"></label>
+              <label class="field fiat">Price<span class="gbp"><span aria-hidden="true">£</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="ticket.fiat" aria-label="Ticket price in pounds"></span></label>
               <span class="about" aria-hidden="true">≈</span>
               <div class="field sats-field"><label for="ticket-sats">Bitcoin price in Sats</label>
                 <span class="sats-box"><input id="ticket-sats" type="number" min="1" step="1" inputmode="numeric" data-path="ticket.price">
@@ -395,14 +399,14 @@
                   </ol>
                   <div class="door-phone" data-when="door.on">
                     <input id="door-link" class="door-link-url" readonly aria-label="The door scanner's link">
-                    <span class="key-row"><button type="button" class="btn quiet" id="qr-door" aria-expanded="false">Show QR</button><button type="button" class="btn quiet" id="copy-door">Copy link</button><button type="button" class="btn quiet" id="new-door">Make it</button></span>
+                    <span class="key-row"><button type="button" class="btn quiet" id="new-door">Make it</button><button type="button" class="btn quiet" id="qr-door" aria-expanded="false">Show QR</button><button type="button" class="btn quiet" id="copy-door">Copy link</button></span>
                     <!-- The DOOR pass (Rajesh 16 Nov, "Crew 2" on Gig Page Phone Options; the door one only): a laminate on a
                          lanyard holding the door scanner's QR. -->
                     <div class="door-qr-row"><div class="door-pass" id="door-pass-card" hidden>
                       <svg class="door-strap" viewBox="0 0 120 44" aria-hidden="true"><path d="M14 0 L52 40 M106 0 L68 40" stroke="#c4521a" stroke-width="11"/><rect x="48" y="34" width="24" height="10" rx="2" fill="#9aa0ab"/></svg>
-                      <div class="door-lam"><span class="hole" aria-hidden="true"></span><span class="k">Staff · tonight only</span><span class="role">Door</span>
+                      <div class="door-lam"><span class="lam-hole" aria-hidden="true"></span><span class="lam-k">Staff · tonight only</span><span class="lam-role">Door</span>
                         <img id="door-link-qr" class="door-link-qr" alt="The door scanner's QR: point the door phone's camera at it" hidden>
-                        <span class="job">Point the door phone’s camera here.</span></div>
+                        <span class="lam-job">Point the door phone’s camera here.</span></div>
                     </div><p class="switch-note door-keep">Keep private. A new QR code stops the old one immediately.</p></div>
                   </div>
                 </div>
@@ -415,7 +419,7 @@
                   <input type="radio" name="drink" data-path="drink.mode" value="off" hidden><input type="radio" name="drink" data-path="drink.mode" value="artist" hidden>
                   <div class="drink-more" data-when="drink.mode=artist">
                     <div class="price-row" id="drink-price" data-price="drink">
-                      <label class="field fiat">£ with card<input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="drink.fiat" aria-label="The drink in pounds"></label>
+                      <label class="field fiat">Price<span class="gbp"><span aria-hidden="true">£</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-path="drink.fiat" aria-label="The drink in pounds"></span></label>
                       <span class="about" aria-hidden="true">≈</span>
                       <div class="field sats-field"><label for="drink-sats">Bitcoin price in Sats</label>
                         <span class="sats-box"><input id="drink-sats" type="number" min="1" step="1" inputmode="numeric" data-path="drink.price">
@@ -444,7 +448,7 @@
               <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="on"> <span><b>One price for the replay</b></span></label>
               <div class="replay-more" data-when="replay.mode=on">
                 <div class="price-row" id="replay-price" data-price="replay">
-                  <label class="field fiat">£ with card<input id="replay-fiat" type="number" min="0.01" step="0.01" inputmode="decimal" data-path="replay.fiat" aria-label="The replay's price in pounds, by card"></label>
+                  <label class="field fiat">Price<span class="gbp"><span aria-hidden="true">£</span><input id="replay-fiat" type="number" min="0.01" step="0.01" inputmode="decimal" data-path="replay.fiat" aria-label="The replay’s price in pounds"></span></label>
                   <span class="about" aria-hidden="true">≈</span>
                   <div class="field sats-field"><label for="replay-sats">Bitcoin price in Sats</label>
                     <span class="sats-box"><input id="replay-sats" type="number" min="1" step="1" inputmode="numeric" data-path="replay.price">

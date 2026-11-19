@@ -60,7 +60,7 @@ test('a free stream never stops for running late (session 35)', async () => {
 });
 
 test('a free stream is full at the most viewers paid for; those watching carry on', async () => {
-  configure({ MINT_URL: 'https://mint.test', MINT_TEST: '0' });
+  configure({ MINT_URL: 'https://mint.test', MINT_TEST: '0', UPFRONT: '1' });
   const show = { stream: { mode: 'free' }, free: { viewers: 3 } };
   await fill(show, 3);
   const res = await takeSeat(asks('late', 'a'), show, false);

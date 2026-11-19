@@ -68,8 +68,8 @@ const GIGS = {
   pickle: { photos: { tall1: '/img/pickle-tall.jpg', wide1: '/img/pickle-wide.jpg', wide2: '/img/pickle-cheers.jpg' },
     show: {
       artist: 'Longy', page: 'longy', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
-      // Gigs 3 and 4 folded into one (Rajesh 19 Nov): the night at the venue. The judge types Longy's part of the ticket
-      // (exactly £30; the £5 drink on top makes it £35) and turns on Scan tickets at the door, so both start empty and off.
+      // Gigs 3 and 4 folded into one (Rajesh 19 Nov): the night at the venue. The judge types the ticket's price, exactly
+      // £35, with a pint (£5 at the venue) included in it, and turns on Scan tickets at the door: both start empty and off.
       ticket: { on: true, price: null, fiat: null, locked: false }, door: { on: false },
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5, drinkCoin: true, // the drink as the coin itself (NUT-16)
       set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },

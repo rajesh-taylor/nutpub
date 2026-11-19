@@ -14,6 +14,10 @@ export let ASSETS;
 export let PRICING = { replayHour: 0, replayMin: 0, viewerHour: 0 };
 // The NutPub's own public key (a secret, NUTPUB_KEY): what the artist pays up front is locked to it (NUT-11).
 export let NUTPUB_KEY = '';
+// Free to watch, paid up front (session 35): kept, but off for NutNovember (Rajesh 19 Nov: too much for judges); to be
+// rethought in December. Off: nothing to pay, no Free to watch card, the test mint's viewer limit as before. The var
+// UPFRONT=1 turns it on (the tests do).
+export let UPFRONT = false;
 // The wallet card: our Apple Pass Type ID, the team it belongs to, and its key and certificate (secrets, PEM).
 export let PASS_TYPE = '';
 export let PASS_TEAM = '';
@@ -43,6 +47,7 @@ export function configure(env) {
     const n = (v) => Math.max(0, Number(v) || 0);
     return { replayHour: n(p.replayHour), replayMin: n(p.replayMin), viewerHour: n(p.viewerHour) };
   })();
+  UPFRONT = env.UPFRONT === '1';
   NUTPUB_KEY = /^0[23][0-9a-f]{64}$/.test(String(env.NUTPUB_KEY || '').toLowerCase()) ? env.NUTPUB_KEY.toLowerCase() : '';
   PASS_TYPE = env.PASS_TYPE || '';
   PASS_TEAM = env.PASS_TEAM || '';

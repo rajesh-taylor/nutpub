@@ -2,7 +2,7 @@
 // plus named templates to start the next one from. Both live in D1.
 import { one, all, run, sql, batch, kv, stageDb } from './db.js';
 import { keepGigLine } from './closing.js';
-import { PRICING } from './config.js';
+import { PRICING, UPFRONT } from './config.js';
 import { getRate } from './rate.js';
 import { endReplay } from './replay.js';
 
@@ -163,11 +163,12 @@ export function clean(input = {}) {
   if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');
   // Any streamed gig needs its length (session 35): the replay's lowest price and a free stream's cost count hours.
   if (show.stream.mode !== 'off' && !(show.streams && show.lastOrders && showMinutes(show))) problems.push('streamEnds');
-  if (show.stream.mode === 'free' && !show.free.viewers) problems.push('free.viewers');
+  if (UPFRONT && show.stream.mode === 'free' && !show.free.viewers) problems.push('free.viewers');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
   if (show.stream.mode === 'ticket' && !show.online.price) problems.push('online.price');
   if (show.drink.mode === 'artist' && !show.drink.price) problems.push('drink.price');
+  if (show.drink.mode === 'artist' && show.drink.price && show.ticket.on && show.ticket.price && show.drink.price >= show.ticket.price) problems.push('drink.over'); // the drink comes out of the ticket
   if (show.drink.mode === 'artist' && !(show.date && show.lastOrders)) problems.push('lastOrders');
   return { show, problems };
 }
@@ -286,21 +287,22 @@ export async function replayPrice(show) {
 
 // A free stream's price, paid up front by the artist: one viewer-hour's cost × the most viewers at once × the show's
 // hours plus the spare hour, to the minute, rounded up to the penny.
-export const freePence = (show, p = PRICING) => (show.stream.mode === 'free' && show.free.viewers && showMinutes(show)
+export const freePence = (show, p = PRICING) => (UPFRONT && show.stream.mode === 'free' && show.free.viewers && showMinutes(show)
   ? Math.ceil((p.viewerHour * show.free.viewers * (showMinutes(show) + SPARE_HOURS * 60)) / 60) : 0);
 // What's paid so far (kv freePaid, kept until the gig is cleared) and what's still due, in pence and in sats today.
 export async function freeStatus(show) {
   const paid = await kv.get('freePaid', null);
   const pence = freePence(show);
   const due = Math.max(0, pence - (paid?.pence || 0));
-  return { pence, due, dueSats: satsOf(due, (await getRate()).gbp), paid, covered: show.stream.mode !== 'free' || due === 0, viewers: show.free.viewers, minutes: showMinutes(show) };
+  return { pence, due, dueSats: satsOf(due, (await getRate()).gbp), paid, covered: show.stream.mode !== 'free' || due === 0, viewers: show.free.viewers, minutes: showMinutes(show), upfront: UPFRONT };
 }
 
-// What a ticket costs and who gets what: the artist's price, plus the first drink if the artist added one.
+// What a ticket costs and who gets what (Rajesh 19 Nov): the ticket's price is what the fan pays; a first drink the
+// artist includes comes out of it, locked to the bar; the rest is the artist's.
 export function ticketSplit(show) {
-  const drink = show.drink.mode === 'artist' ? show.drink.price || 0 : 0;
-  const artist = show.ticket.price || 0;
-  return { artist, drink, total: artist + drink };
+  const total = show.ticket.price || 0;
+  const drink = show.drink.mode === 'artist' ? Math.min(show.drink.price || 0, total) : 0;
+  return { artist: total - drink, drink, total };
 }
 
 // A UK time on the gig's date as Unix seconds. The offset is read for that date, so summer time works too.

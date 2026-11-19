@@ -3,7 +3,7 @@ import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
   artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', streamEnds: 'the stream\u2019s end time (Ends at)', 'free.viewers': 'the most viewers at once (Free to watch)', unpaid: 'pay for the free stream (Free to watch)',
-  date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', lastOrders: 'date and last orders',
+  date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', 'drink.over': 'a drink price below the ticket price (the drink is included in it)', lastOrders: 'date and last orders',
 };
 
 // The admin key comes after the # (so it never reaches a server log), then is kept on this computer only.
@@ -217,7 +217,7 @@ function refresh() {
   replayCard();
   freeCard();
   $('ends-note').hidden = show.stream.mode === 'off';
-  $('split').textContent = drink ? `Added to the ticket. Not poured by ${show.lastOrders || 'the end'}? It goes to ${show.artist || 'the artist'}.` : '';
+  $('split').textContent = drink ? `Included in the ticket price. Not poured by ${show.lastOrders || 'the end'}? It goes to ${show.artist || 'the artist'}.` : '';
 }
 
 // The show's length as people say it: "a 2-hour show", "a 2 h 10 show".
@@ -268,7 +268,7 @@ for (const id of ['replay-fiat', 'replay-sats']) $(id).addEventListener('change'
 // hour) and one Pay, from the artist's own wallet in this browser (client/upfront.js), locked to the NutPub's key.
 let freeNow = null;
 function freeCard() {
-  const on = show.stream.mode === 'free';
+  const on = show.stream.mode === 'free' && !!freeNow?.upfront; // off for NutNovember (server/config.js UPFRONT)
   $('free-card').hidden = !on;
   if (!on || !freeNow) return;
   const f = freeNow;

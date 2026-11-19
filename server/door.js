@@ -56,8 +56,7 @@ async function paidFor(show, code) {
   if (!t) return {};
   const split = ticketSplit(show);
   const drink = t.drink && split.drink ? split.drink : 0; // the first drink is paid beside the ticket, locked to the bar
-  const fiat = (show.ticket.fiat || 0) + (drink && show.drink.fiat ? show.drink.fiat : 0);
-  const pence = show.ticket.fiat && t.sats === split.artist ? Math.round(fiat * 100) : 0;
+  const pence = show.ticket.fiat && t.sats === split.artist ? Math.round(show.ticket.fiat * 100) : 0; // the drink is in the ticket's price
   return { n: t.n, sats: t.sats + drink, pence, paidAt: t.at };
 }
 
@@ -87,7 +86,7 @@ export function mountDoor(route, admin, pass) {
     const t = await one('SELECT kind, checked_at, secret FROM tickets WHERE code = ?', code);
     if (!t) return json({ result: 'unknown' });
     if (t.kind !== 'room') return json({ result: 'online' });
-    if (t.checked_at) return json({ result: 'already', at: t.checked_at });
+    if (t.checked_at) return json({ result: 'already', at: t.checked_at, ...(await paidFor(show, code)) });
     if (!(await totpOk(t.secret, otp))) return json({ result: 'stale' });
     if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in', ...(await paidFor(show, code)) });
     const again = await one('SELECT checked_at FROM tickets WHERE code = ?', code);

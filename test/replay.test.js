@@ -3,6 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { clean, blank, showMinutes, replayMinPence, replayPriceAt, freePence } from '../server/shows.js';
+import { configure } from '../server/config.js';
+
+configure({ UPFRONT: '1' }); // Free to watch, paid up front: off for NutNovember, on for its tests
 
 const P = { replayHour: 100, replayMin: 250, viewerHour: 7 }; // pence; made up for the tests
 const GBP = 50_000; // £ a bitcoin: £1 = 2,000 sats

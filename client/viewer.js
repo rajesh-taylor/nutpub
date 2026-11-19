@@ -963,9 +963,9 @@ let shownAt = null;
 
 // The same split as the server's (server/shows.js ticketSplit): with the venue, the drink comes out of the price.
 const split = () => {
-  const drink = show.drink.mode === 'artist' ? show.drink.price || 0 : 0;
-  const artist = show.ticket.price || 0;
-  return { artist, drink, total: artist + drink };
+  const total = show.ticket.price || 0;
+  const drink = show.drink.mode === 'artist' ? Math.min(show.drink.price || 0, total) : 0;
+  return { artist: total - drink, drink, total };
 };
 // The drink failed at the door after the ticket went through: remembered in this browser, so the phone offers it again.
 const DUE = `nutpub-drink-due${KEEP}`;

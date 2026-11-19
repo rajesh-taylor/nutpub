@@ -4,7 +4,7 @@
 // after it was made (Stream's own setting can't go below 30 days, kept as a backstop).
 import QRCode from 'qrcode';
 import { kv, stageDb } from './db.js';
-import { MINT_TEST } from './config.js';
+import { MINT_TEST, UPFRONT } from './config.js';
 import { current, showOf, saveShow, stageNow, freeStatus } from './shows.js';
 import { one, all, run } from './db.js';
 import { cashuGate } from './gate.js';
@@ -175,7 +175,7 @@ export async function takeSeat(c, show, ticketed) {
   }
   if (!mine && (free || MINT_TEST)) {
     const { n } = await one('SELECT COUNT(*) AS n FROM watchers WHERE until > ?', t);
-    const cap = free ? (MINT_TEST ? Math.min(show.free?.viewers || VIEWER_LIMIT, VIEWER_LIMIT) : show.free?.viewers || 0) : VIEWER_LIMIT;
+    const cap = free && UPFRONT ? (MINT_TEST ? Math.min(show.free?.viewers || VIEWER_LIMIT, VIEWER_LIMIT) : show.free?.viewers || 0) : VIEWER_LIMIT;
     if (n >= cap) return json({ error: 'full', detail: `Full. Up to ${cap} watch at once: try again in a minute.` }, 409);
   }
   await run(`INSERT INTO watchers (pass, screen, until) VALUES (?, ?, ?)

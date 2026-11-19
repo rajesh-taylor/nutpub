@@ -11,6 +11,7 @@ export async function judgeLine(r, page) {
   const back = document.querySelector('.head-back');
   if (back) Object.assign(back, { href: judge, textContent: '← The three gigs' });
   if (page === 'takings') document.getElementById('head-fan')?.remove(); // the night's over: nothing left on the fan's page
+  document.getElementById('after')?.style.setProperty('display', 'none'); // Show Time's night-over words (Stop your stream…): not on a judge's stage (Rajesh 19 Nov)
   // No gig poster on a judge's stage (Rajesh 17 Nov): never part of the demo. Hidden, not removed: Plan gig still fills it.
   document.getElementById('poster-panel')?.style.setProperty('display', 'none');
   const name = { longy: 'Longy', frankie: 'Frankie', pickle: 'Longy', yours: 'Frankie' }[list.at] || 'the artist';
@@ -25,7 +26,7 @@ export async function judgeLine(r, page) {
   const replay = list.at === 'frankie'; // gig 2 shows the replay (session 34): a step of its own after End night
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
-  const steps = pickle ? 11 : replay ? 6 : 5;
+  const steps = pickle ? 9 : replay ? 6 : 5;
   const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
     if (said === n + story + text) return;
     said = n + story + text;
@@ -39,17 +40,15 @@ export async function judgeLine(r, page) {
   // Gig 3's story, one line a step (Rajesh's words, 19 Nov). No laptop camera: the judge's own phone, if any, is the
   // doormen's; the fan is the phone beside Show Time; the bar pours by hand.
   const STORY = {
-    1: 'Longy’s playing The Fickle Pickle tonight. This time the doormen are checking every ticket.',
-    2: 'A ticket’s only as good as the door that checks it.',
-    3: 'Fans at home watch free, with no ads. Longy pays for the stream before the gig, from his own wallet.',
-    4: 'Paid, locked to the NutPub’s key. Nobody in between held it.',
-    5: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
-    6: 'Ticket bought, with the first drink in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
-    7: 'Let them in. The door saw an authorised ticket and the price paid, never a name.',
-    8: 'The fan’s phone now holds the first drink: a real coin, locked to the bar.',
-    9: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
-    10: 'The night’s over. The fan’s change is still in their browser wallet.',
-    11: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the drink money went to the bar.',
+    1: 'Longy’s playing The Fickle Pickle tonight. He’s included a pint (worth £5 at the venue) in the £35 ticket, and the doormen are checking every ticket.',
+    2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
+    3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
+    4: 'Ticket bought, with the pint in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
+    5: 'Let them in. The door saw an authorised ticket and the price paid, never a name. The pint reaches the fan’s phone when the show starts.',
+    6: 'The fan’s phone now holds the pint: a real coin, locked to the bar.',
+    7: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
+    8: 'The night’s over. The fan’s change is still in their browser wallet.',
+    9: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the pint’s £5 went to the bar.',
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
   const TOLD = list.at === 'longy' ? {
@@ -66,15 +65,6 @@ export async function judgeLine(r, page) {
     replay: 'The night’s over, but Frankie’s replay runs for 7 days.',
     takings: 'That’s two ways to get paid. Gig 3 gets NUT-heavy: a door that checks a 30-second code, and a first drink that’s a coin on a QR.',
   } : {};
-  // The free stream's price and whether it's paid (upfront.js), for steps 1 and 2.
-  const freeStream = () => fetch('/api/admin/free-stream', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-  const pounds = (p) => `£${(p / 100).toFixed(2).replace(/\.00$/, '')}`;
-  // Pay, right in the line: it presses Plan gig's own Pay button (setup.js), on the Free to watch card.
-  const payBtn = (f) => {
-    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: `Pay ${pounds(f.due)}` });
-    b.onclick = () => { const own = document.getElementById('free-pay'); own?.scrollIntoView({ block: 'center', behavior: 'smooth' }); own?.click(); b.disabled = true; b.textContent = 'Paying…'; };
-    return b;
-  };
   let key = '';
   try { key = localStorage.getItem('nutpub-admin') || ''; } catch {}
   const admin = (path) => fetch(path, { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
@@ -100,38 +90,33 @@ export async function judgeLine(r, page) {
     const closed = s.stage === 'closed';
     const on = s.stage === 'on';
     if (pickle) {
-      if (page === 'takings') return say(closed ? 11 : 9, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
-        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[11] : '' });
+      if (page === 'takings') return say(closed ? 9 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
+        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[9] : '' });
       const show = (await admin('/api/show'))?.show;
-      const f = await freeStream();
       if (!show) return;
-      // Steps 1 to 4 on Plan gig: the price, exactly £30 (Longy's part; the drink's £5 on top), the door, the payment.
-      const priced = Number(show.ticket?.fiat) === 30;
-      const doorOn = !!show.door?.on;
-      const paid = !(f && !f.covered && f.pence);
-      if (!priced || !doorOn || !paid) {
-        if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket, the door and the free stream first.', 'Back to Plan gig →', '/setup');
-        if (!priced) return say(1, 'Type Longy’s part of the venue ticket: exactly £30. The first drink’s £5 goes on top, so fans pay £35.', '', '', { story: STORY[1] });
-        if (!doorOn) return say(2, 'Turn on Scan tickets at the door, just below the price.', '', '', { story: STORY[2] });
-        return say(3, 'On your phone: scan the DOOR pass with the camera, if you like. Then press Pay.', '', '', { story: STORY[3], extra: payBtn(f) });
+      // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
+      const ready = Number(show.ticket?.fiat) === 35 && !!show.door?.on;
+      if (!ready) {
+        if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket’s price and the door first.', 'Back to Plan gig →', '/setup');
+        return say(1, 'Type £35 for the venue ticket, then turn on Scan tickets at the door. The drink at the bar is set at £5, just below.', '', '', { story: STORY[1] });
       }
-      if (page === 'setup') return say(4, 'Then click 2 · Show Time, at the top.', '', '', { story: STORY[4] });
+      if (page === 'setup') return say(2, 'On your phone: scan the DOOR pass with the camera, if you like. Then click 2 · Show Time, at the top.', '', '', { story: STORY[2] });
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
-      if (closed) return say(10, 'On the fan’s phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[10] });
+      if (closed) return say(8, 'On the fan’s phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[8] });
       const tickets = (await admin('/api/admin/door')) || [];
-      if (!tickets.length) return say(5, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[5] });
-      if (!tickets.some((t) => t.checked_at)) return say(6, 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Let in by hand.', '', '',
-        { story: STORY[6], extra: pressBtn('Let in by hand', '#door-tickets button', /^Let in by hand/, 'Letting in…') });
-      if (!on) return say(7, 'Press Start show, the green button below.', '', '', { story: STORY[7] });
+      if (!tickets.length) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
+      if (!tickets.some((t) => t.checked_at)) return say(4, 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Let in by hand.', '', '',
+        { story: STORY[4], extra: pressBtn('Let in by hand', '#door-tickets button', /^Let in by hand/, 'Letting in…') });
+      if (!on) return say(5, 'Press Start show, the green button below.', '', '', { story: STORY[5] });
       const d = await drinks();
-      if (!d.some((x) => x.poured)) return say(8, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
-        { story: STORY[8], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
+      if (!d.some((x) => x.poured)) return say(6, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
+        { story: STORY[6], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
       // Rajesh 18 Nov: hello in the chat first, so the clip plays a while; the fan's list (this browser) says when it's said.
       // Either chat counts: the fan's phone or the desktop view below (Rajesh 18 Nov).
       // Only tonight's: each list's pass is that fan's pass now, so a hello from an earlier gig on this stage doesn't count.
       const hello = ['', '-home'].some((k) => { try { const t = JSON.parse(localStorage.getItem(`nutpub-todo${k}`) || 'null'); return !!t?.hello && t.pass === localStorage.getItem(`nutpub-pass${k}`); } catch { return false; } });
-      return say(9, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab. Then press End night, the purple button below.'
-        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[9] });
+      return say(7, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab. Then press End night, the purple button below.'
+        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[7] });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change. Then click 2 · Show Time, at the top.`, '', '', { story: TOLD.setup });
@@ -146,7 +131,7 @@ export async function judgeLine(r, page) {
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.
-  if (page === 'show' || (pickle && page === 'setup')) { // gig 3's Plan gig: the price, the door and Pay move it on (sessions 35-36)
+  if (page === 'show' || (pickle && page === 'setup')) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);
     addEventListener('focus', draw);
