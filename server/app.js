@@ -36,11 +36,8 @@ const page = (file) => async (c) => {
   if (!res.ok) return null;
   let html = await res.text();
   html = html.replace(/(["'])(\/(?:app\.css|(?:js\/)?[a-z-]+\.js))\1/g, `$1$2?v=${VERSION}$1`);
-  // The gig page's strip carries the name too (its masthead has only the artist and the date).
-  // The home page (Rajesh 15 Nov): the name and the line, then Test mint; a phone keeps the name and Test mint. Where fans
-  // pay (every other page) "no real value" stays: a fan from a shared link may not know what a test mint is.
-  const strip = file === 'index.html' ? '<b>The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></b> · Test mint · no real value'
-    : file === 'judge.html' ? 'The NutPub<span class="wide-only"> · Pay by the minute. Leave when it gets bad.</span> · Test mint' : 'Test mint · no real value';
+  // Rajesh 18 Nov: one strip on every page, the same short words; no name or line on the home page.
+  const strip = 'Test mint · test sats';
   if (MINT_TEST) html = html.replace(/<body[^>]*>/, `$&\n  <div class="test-banner" role="note" data-t="test.banner">${strip}</div>`
     // Inside the setup page's frames the page already says so: only the phone keeps its own.
     + '<script>if (top !== self && !/^\\/[a-z0-9-]+$/.test(location.pathname)) document.currentScript.previousElementSibling.remove();</script>');

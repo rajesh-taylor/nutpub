@@ -1238,9 +1238,10 @@ function todoItems() {
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
   // under the stretch goal, to watch it move.
   if (show.stream.mode === 'ticket') {
-    if (!door.ticket) return [];
     const again = show.tip?.price ? `press ${show.tip.label || 'Tip'} ${sats(show.tip.price)}` : 'tip again';
-    return [hello, full,
+    // Rajesh 18 Nov: the ticket is the first step, so the strip at the top says so before anything else.
+    return [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket' },
+      { ...hello, text: 'Say hello in the chat, on the right' }, full,
       { done: !!todo.tipFull, text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
         did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right',
         short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
@@ -1257,9 +1258,24 @@ function todoItems() {
 // Only tonight's: the list's pass is the desktop view's pass now (an earlier gig's hello on this stage doesn't count).
 const homeHello = () => { try { const t = JSON.parse(localStorage.getItem('nutpub-todo-home') || 'null'); return !!t?.hello && t.pass === localStorage.getItem('nutpub-pass-home'); } catch { return false; } };
 if (IN_SHOW && !KEEP) addEventListener('storage', (e) => { if (e.key === 'nutpub-todo-home') todoDraw(); });
+// The strip at the top (gigs 1 and 2, the page of its own): the one next thing, or the way back to Show Time.
+const FAN_STRIP = TODO && AS !== 'room' && top === self;
+function fanStrip(items) {
+  if (!FAN_STRIP) return;
+  body.classList.toggle('fan-strip', items.length > 0);
+  $('fan-line').hidden = !items.length;
+  if (!items.length) return;
+  const at = items.findIndex((i) => !i.done);
+  $('fan-line-k').textContent = at < 0 ? 'Judges · all done' : `Judges · ${at + 1} of ${items.length}`;
+  const next = items[at];
+  if (!next) $('fan-line-text').textContent = 'Now go back to the Show Time tab and press End night.';
+  else if (next.html) $('fan-line-text').innerHTML = next.html; // our own words and icon only
+  else $('fan-line-text').textContent = `${next.text}.`;
+}
 function todoDraw() {
   if (!TODO || !todoReady) return;
   const items = stage === 'closed' ? [] : todoItems();
+  fanStrip(items);
   const box = $('todo');
   if (AS === 'room' && !$('tt-todo')) { // the venue's page has no Watching online box: a card of its own, first on the tab
     const card = Object.assign(document.createElement('div'), { className: 'card tt-card tt-todo', id: 'tt-todo' });
