@@ -1279,8 +1279,8 @@ function todoItems() {
     return [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket', story: 'One 402 buys the ticket, paid from the wallet in this browser.' },
       { ...hello, text: 'Say hello in the chat, on the right', story: 'Aaron of Essex, Longy’s moderator, wants to know where you’re watching from.' },
       { ...full, story: 'In full screen the chat lands on the picture.' },
-      { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
-        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right',
+      { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type a comment in the wide box, put 30,000 in the sats box beside it, then press the yellow ➤ button on the right',
+        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Type a comment, put 30,000 in the sats box beside it, then press the yellow ➤ button',
         short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
       { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goals. An artist can set several, for anything: here, his next gig streamed in HD.', text: show.tip?.price ? `Out of full screen, press the yellow ${show.tip.label || 'Tip'} ${sats(show.tip.price)} button under the player, two or three times: watch the stretch goal fill` : `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];

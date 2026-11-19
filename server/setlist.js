@@ -37,7 +37,7 @@ const GIGS = {
     mods: [{ name: 'Aaron of Essex', icon: '🎤' }],
     cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' },
       // The answers, one at a time over the next ten seconds, each from a different guest (Rajesh 14 Nov).
-      { after: 8, text: 'London' }, { after: 10.5, text: 'Texas' }, { after: 13, text: 'Berlin' },
+      { after: 8, text: 'London 🇬🇧' }, { after: 10.5, text: 'Texas 🇺🇸' }, { after: 13, text: 'Berlin 🇩🇪' }, // flags (Rajesh 19 Nov)
       // Rajesh 18 Nov: a big Nutzap from a Nostr name, a nod to who made it all possible.
       { after: 16, text: 'I approve', sats: 210000, nostr: 'Satoshi 💎🙌', nutzap: true }],
   },
