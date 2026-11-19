@@ -947,7 +947,7 @@ No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86
 - **Gigs 1 and 2:** no On to… buttons (judges press the artist's own tabs, at the top). The fan's page has a **Judges strip at the top** with the one next step (gig 1 starts with "Buy the ticket: press Watch online, below the video"), in place of the list under the video.
 - **Scripted chat:** Longy's first gig: Satoshi 💎🙌 Nutzaps 210,000 sats, "I approve" ("Well that's private" gone). Frankie's: "Real music, real singer songwriters 🇬🇧" with 50,000, then Nutzaps of 21 (southend_sam) and 2,100 (westcliff_jo). Scripted tips show in the chat and on Big Time Charlies only, never in Takings or the stretch goal. Cues reach newly started gigs only.
 - **Every page's strip:** "Test mint · test sats" (no name or line on the home page).
-- **Snag session before 25 Nov** (a list Claude keeps): the Unpoured drinks tile "0 · 0 not poured by last orders"; "Your recordings: None yet" on an example gig; no line explaining the ~2-sat mint fee; the subtle custom tip; the Minibits sweep.
+- **Snag session before 25 Nov** (a list Claude keeps): the Unpoured drinks tile "0 · 0 not poured by last orders"; "Your recordings: None yet" on an example gig; no line explaining the mint’s fee; the subtle custom tip; the Minibits sweep.
 - **Not done:** gig 4; story lines for gigs 1, 2 and 4 (gig 1's strip is ready to carry them); gig 2's last line about gigs 3 and 4; the curved sign above "Judge for yourself".
 
 **After 27 Nov: splits, BOLT12 and two mints (agreed 17 Nov, Rajesh asked for it written up).**

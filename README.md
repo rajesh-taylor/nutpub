@@ -4,7 +4,7 @@
 
 **Live demo:** https://thenutpub.com
 
-> **Test sats only.** The demo uses the public Cashu test mint (testnut.cashu.space). Its sats have no value.
+> **Test mint · test sats.** The demo uses the public Cashu test mint (testnut.cashu.space). Its sats have no value.
 
 ## What it does
 
@@ -38,11 +38,11 @@ thenutpub.com opens on **Judge for yourself**: four gig posters, four ways to ge
 
 Each poster makes a stage of its own, at its own address (`<id>.thenutpub.com`) with its own database, holding just that gig, and opens it on **1 · Plan your gig** as the artist. No passkeys and no account: this browser remembers the stage, so the poster then says **Open again** (back where you left off) or **Start fresh**. Stages close themselves 7 days after they're made; Your takings says when.
 
-**Follow the Judges line.** Each of the artist's pages has one line at the top saying the next thing to do (Judges · 1 of 5 to 5 of 5): look at Plan gig, press Start show, open **Fan's page ↗**, End night once the fan's list is done, then Move and Finish gig on Your takings. On gig 3 each step also tells a line of the story, and the line moves on by itself as the phone buys and the bar pours. The fan's page has its own **Judges** list that ticks itself as you go; in full screen the next step sits on the picture.
+**Follow the Judges line.** Each of the artist's pages has one line at the top saying the next thing to do (Judges · 1 of 5), and you press the artist's own buttons and tabs: look at Plan gig, click 2 · Show Time, press Start show, open **Fan's page ↗**, End night once the fan's steps are done, then 3 · Your takings, Move and Finish gig. The fan's page has its own **Judges** strip at the top with the one next step; in full screen the next step sits on the picture. On gig 3 each step also tells a line of the story, and the fan's phone sits right beside Show Time.
 
 1. **Longy** (start here): online only, one £20 ticket. Say hello in the chat (Aaron of Essex, his moderator, asks where everyone's watching from), go full screen and tip 30,000 sats there, then tip again under his stretch goal and watch it move.
 2. **Frankie Peroni**: pay as you watch, 60 sats a minute (The Devils Train from The Fickle Pickle). Play, stop, play again, tip: you pay only for the minutes you watch. A £30 venue ticket is on sale too.
-3. **Longy at The Fickle Pickle** (laptop + phone): the fan's night. Show Time's Judges line shows a QR: scan it with your phone's camera and you're the fan. Buy the £35 venue ticket; your first drink, on Longy, plays on the phone's Ticket tab as the coin itself, an animated QR inside a pint glass. Back on the laptop, **Pour by hand**: the bar takes the coin at the mint with its own key, and the phone says "Enjoy your pint, cheers!". No phone? **Fan's page ↗** does the same on the laptop. The stream is free, with tips.
+3. **Longy at The Fickle Pickle** (laptop, phone optional): the fan's night, in seven steps from Show Time, with the fan's phone beside it. Buy the £35 venue ticket on that phone (or scan the QR with your own). Press Start show: your first drink, on Longy, arrives on the phone as the coin itself, an animated QR inside a pint glass. **Pour by hand** in the Judges line: the bar takes the coin at the mint with its own key, and the glass fills: "Cheers from Longy!". Press play and say hello in the Chat tab, tip 2,100 sats in the Tip tab, End night, then move the fan's leftover sats to Cashu.me. The stream is free, with tips.
 4. **At the venue** (laptop + phone): Frankie's second night. A £30 venue ticket; the doormen's phone scans the ticket at the door. Being rebuilt as the staff's night before 27 Nov.
 
 Every gig ends the same way: **End night** on Show Time, then **Your takings**, **Move to Cashu.me** (it asks to add the test mint once: say yes). Your takings then shows the night as a till receipt (each kind of takings, the 5%, what moved and the mint's fee); **Finish gig** stamps it PAID OUT and keeps it under Past gigs, and **Save receipt** prints it. Fans move their own leftover sats to Cashu.me from their wallet page. Each wallet page says whose it is: fan (and for which ticket), artist or bar. The clips play through the site's own player: nothing to install. Practice sets and streams stop after 20 minutes. Up to 50 stages at once until Sat 21 Nov, then 15.
