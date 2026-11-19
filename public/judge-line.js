@@ -26,7 +26,10 @@ export async function judgeLine(r, page) {
   const replay = list.at === 'frankie'; // gig 2 shows the replay (session 34): a step of its own after End night
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
-  const steps = pickle ? 8 : replay ? 6 : 5;
+  const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at the venue's TV page (Chat & Big Time Charlies) before End night
+  const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
+  document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
+  const steps = pickle ? 8 : replay || tv ? 6 : 5;
   const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
     if (said === n + story + text) return;
     said = n + story + text;
@@ -120,15 +123,16 @@ export async function judgeLine(r, page) {
         : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[7] });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
-    if (page === 'setup') say(1, `This is where ${name} sets prices, kinds of tickets, mods, show splits and more. Scroll down to look; nothing needs changing. Then click 2 · Show Time, at the top.`, '', '', { story: TOLD.setup });
+    if (page === 'setup') say(1, `This is where ${name} sets prices, ticketing, comments & mods, show splits and more. Scroll down to view; nothing needs changing. Then click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
       if (closed && replay) say(5, 'Back on the fan’s page: press play to watch the replay, which is kept for playback before deletion in 7 days. Then move the fan’s sats to Cashu.me and close that tab. Then click 3 · Your takings, at the top.', '', '', { story: TOLD.replay });
-      else if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');
+      else if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
-      else say(4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
-    } else if (!closed) say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-    else say(replay ? 6 : 5, `${replay ? 'The replay has its own tile. ' : ''}Press Move to Cashu.me, then Finish gig.`, '', '', { story: TOLD.takings });
+      else if (tv && !tvSeen()) say(4, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
+      else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
+    } else if (!closed) say(tv ? 5 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+    else say(replay || tv ? 6 : 5, `${replay ? 'The replay has its own tile. ' : ''}Press Move to Cashu.me, then close the Cashu.me tab, come back here and press Finish gig.`, '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

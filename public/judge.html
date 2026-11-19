@@ -24,12 +24,19 @@
     .nut-menu summary:hover .menu-btn svg, .nut-menu[open] .menu-btn svg { transform: rotate(-10deg); }
     .nut-menu summary:hover .menu-btn, .nut-menu[open] .menu-btn { border-color: #e8a845; }
     .nut-menu summary:focus-visible { outline: 2px solid var(--amber); border-radius: 4px; }
-    .nut-menu ul { list-style: none; margin: 6px 0 0; padding: 10px 14px; background: var(--deep); border: 1px solid rgb(232 163 61 / .5); border-radius: 4px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; font-size: 16px; white-space: nowrap; box-shadow: 0 10px 24px rgb(0 0 0 / .6); }
-    .nut-menu a { color: var(--amber); }
-    .judge h1 { margin: 0; padding-right: 0; font: 400 clamp(26px, 3.4vw, 34px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
+    /* The list (Rajesh 19 Nov: it looked broken): a card under the button, one row per place, its name and what's there. */
+    .nut-menu ul { position: absolute; right: 4px; top: calc(100% + 6px); min-width: 230px; list-style: none; margin: 0; padding: 6px; background: var(--deep); border: 1px solid rgb(232 163 61 / .55); border-radius: 8px; display: grid; gap: 2px; text-align: left; box-shadow: 0 14px 30px rgb(0 0 0 / .65); }
+    .nut-menu li + li { border-top: 1px solid rgb(239 227 200 / .1); padding-top: 2px; }
+    .nut-menu a { display: grid; gap: 3px; padding: 10px 12px; border-radius: 6px; text-decoration: none; }
+    .nut-menu a b { font: 400 19px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: #e8a845; }
+    .nut-menu a small { font: 13px/1.3 "IBM Plex Sans", var(--body); color: var(--smoke); }
+    .nut-menu a:hover, .nut-menu a:focus-visible { background: rgb(232 168 69 / .12); outline: none; }
+    .nut-menu a:hover b, .nut-menu a:focus-visible b { color: var(--cream); }
+    .judge h1 { margin: 0; padding-right: 0; font: 400 clamp(24px, 3vw, 30px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
     /* Two lines (Rajesh 15 Nov, late): the posters say the rest; the specs are on each poster's small print. */
     /* The curved sign (Rajesh 19 Nov), as on the pint screen: gold, worn, a shimmer every few seconds. */
-    .home-sign { position: relative; justify-self: center; width: min(640px, 84vw); margin: 8px 0 10px; line-height: 0; }
+    .home-sign { position: relative; justify-self: center; width: min(720px, 88vw); margin: -12px 0 0; line-height: 0; }
+    .home-byline { justify-self: center; margin: -8px 0 12px; font: 400 12px/1 var(--poster); letter-spacing: .32em; text-transform: uppercase; color: rgb(217 149 58 / .7); text-align: center; } /* the sign's byline, back (Rajesh 19 Nov) */
     .home-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
     .home-sign text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold-h); }
     .home-sign .btc { fill: #f7931a; }
@@ -177,8 +184,8 @@
         <svg class="pint" viewBox="0 0 40 56" aria-hidden="true"><path d="M7.5 16 H32.5 L30.5 50 H9.5 Z" fill="#d9953a" opacity=".6"/><path d="M6 6 H34 L31 52 H9 Z" fill="none" stroke="#e8a845" stroke-width="2.8" stroke-linejoin="round"/><path d="M6 7 Q9 1 15 4 Q20 0 25 4 Q31 1 34 7 Z" fill="#efe3c8"/></svg>
         <b>Menu</b></span></summary>
       <ul>
-        <li><a href="/menu">Pub Menu</a></li>
-        <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub</a></li>
+        <li><a href="/menu"><b>Pub Menu</b><small>What each part of the night is made of</small></a></li>
+        <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener"><b>GitHub ↗</b><small>The code, Apache-2.0</small></a></li>
       </ul>
     </details>
     <!-- Rajesh 19 Nov: the curved sign with its shimmer back on top (no tagline), then the new title and lines. -->
@@ -196,9 +203,10 @@
       </svg>
       <svg class="shine" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6">THENUTPU</text></svg>
     </div>
+    <p class="home-byline">Pay by the minute. Leave when it gets bad.</p>
     <h1>Last orders for the middlemen</h1>
     <div class="lines">
-      <p class="lead"><b>For fans who’d rather keep their bank card in their pocket<span class="not-phone">, and artists who’d rather not keep a spreadsheet of their fans</span>: a whole night out in Cashu, from the ticket and the door to the first round, the stream, the tips and the replay.</b></p>
+      <p class="lead"><b>For fans who’d rather keep their bank card in their pocket<span class="not-phone">, and artists who’d rather not keep a spreadsheet of their fans</span>: a whole night out in Cashu, from the ticket, the door, the first round, the stream, the tips and the takings back to your own wallet.</b></p>
     </div>
 
     <div class="wall">

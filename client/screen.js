@@ -11,6 +11,19 @@ const feed = [];
 const sats = (n) => `${n.toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 const cell = (cls, text) => Object.assign(document.createElement('span'), { className: cls, textContent: text });
 
+// Only the lines that fit whole (Rajesh 19 Nov): the latest at the bottom was cut in half by the stretch goals.
+function fit() {
+  const box = document.querySelector('.screen-main');
+  const list = $('feed');
+  if (!box || !list) return;
+  const bottom = box.getBoundingClientRect().bottom;
+  while (list.children.length > 1 && list.lastElementChild.getBoundingClientRect().bottom > bottom) list.lastElementChild.remove();
+}
+addEventListener('resize', () => draw(new Set()));
+
+// On a judge's stage, a note on what this page is for (Rajesh 19 Nov).
+fetch('/api/show').then((r) => r.json()).then((s) => { if (s.judge) $('screen-judge').hidden = false; }).catch(() => {});
+
 function draw(fresh, top) {
   $('feed-box').hidden = !feed.length;
   $('feed').replaceChildren(...feed.slice(0, SHOWN).map((m) => {
@@ -22,6 +35,7 @@ function draw(fresh, top) {
     if (m.text) li.append(cell('words', m.text));
     return li;
   }));
+  fit();
   if (!top) return;
   $('top-box').hidden = !top.length;
   $('top').replaceChildren(...top.map((t, i) => {

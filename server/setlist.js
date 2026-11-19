@@ -27,7 +27,7 @@ const GIGS = {
       ticket: { on: false, price: null, fiat: null, locked: false },
       stream: { mode: 'ticket', perMinute: null, freeMinutes: null },
       online: { price: null, fiat: 20, locked: false }, hours: 2, // the show's length: every streamed gig has one (session 35)
-      goals: [{ label: 'Longy’s next gig streamed in HD', at: null }, { label: '', at: null }], goalsFiat: [50],
+      goals: [{ label: 'Longy’s next gig streamed in HD', at: null }, { label: '', at: null }], goalsFiat: [16], // £16: the judge's tips fill it (Rajesh 19 Nov)
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
       languages: ['en', 'de', 'es', 'fr', 'pt'],

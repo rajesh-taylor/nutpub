@@ -603,7 +603,7 @@ function stop(why) {
   vids[0].muted = true;
   controls(false);
   document.body.classList.remove('live-video');
-  say(why || (free ? '' : wasLive && pays() ? T.paused : T.stopped));
+  say(why || (!pays() ? '' : wasLive ? T.paused : T.stopped)); // Rajesh 19 Nov: not with a ticket that covers the show
 }
 
 // The venue's page with no ticket yet: the video comes with the venue ticket, or with watching online (the other page).
@@ -1282,7 +1282,7 @@ function todoItems() {
       { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
         did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right',
         short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
-      { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goal: his next gig streamed in HD.', text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
+      { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goals. An artist can set several, for anything: here, his next gig streamed in HD.', text: show.tip?.price ? `Out of full screen, press the yellow ${show.tip.label || 'Tip'} ${sats(show.tip.price)} button under the player, two or three times: watch the stretch goal fill` : `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
   if (show.stream.mode === 'pay') return [
