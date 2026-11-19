@@ -143,15 +143,15 @@ test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his ques
   });
 });
 
-test('Longy at The Fickle Pickle (gig 3): £35 with the first drink in it, no door check, the stream free, his 1080p clip', async () => {
+test('the night at the venue (gig 3): Longy’s price left for the judge to type, the drink in it, the door off, the stream free, his 1080p clip', async () => {
   await withStage(st, async () => {
     await setlist(env, 'pickle');
     const { show, problems } = await currentShow();
-    assert.deepEqual(problems, []);
+    assert.deepEqual(problems, ['ticket.price']); // the judge types £30, the drink's £5 on top (Rajesh 19 Nov)
     assert.equal(show.artist, 'Longy');
     assert.equal(show.venue, 'The Fickle Pickle, Westcliff-on-Sea');
     assert.equal(show.drinks, true);
-    assert.ok(show.drink.price > 0 && show.ticket.price > show.drink.price);
+    assert.ok(show.drink.price > 0 && !show.ticket.price && !show.ticket.fiat);
     assert.match(show.lastOrders, /^\d\d:\d\d$/);
     assert.equal(show.door.on, false);
     assert.equal(show.stream.mode, 'free');

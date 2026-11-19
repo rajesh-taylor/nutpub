@@ -68,7 +68,9 @@ const GIGS = {
   pickle: { photos: { tall1: '/img/pickle-tall.jpg', wide1: '/img/pickle-wide.jpg', wide2: '/img/pickle-cheers.jpg' },
     show: {
       artist: 'Longy', page: 'longy', venue: 'The Fickle Pickle, Westcliff-on-Sea', capacity: 120,
-      ticket: { on: true, price: null, fiat: 30, locked: false }, door: { on: false },
+      // Gigs 3 and 4 folded into one (Rajesh 19 Nov): the night at the venue. The judge types Longy's part of the ticket
+      // (exactly £30; the £5 drink on top makes it £35) and turns on Scan tickets at the door, so both start empty and off.
+      ticket: { on: true, price: null, fiat: null, locked: false }, door: { on: false },
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5, drinkCoin: true, // the drink as the coin itself (NUT-16)
       set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
       free: { viewers: 30 }, hours: 3, // free to watch, paid up front by Longy: a step of its own for judges (session 35)
@@ -94,6 +96,8 @@ const GIGS = {
     },
     pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
 };
+// The home page offers three gigs (Rajesh 19 Nov: gig 4 folded into gig 3; stages.js JUDGE_GIGS). `yours` stays last on
+// an artist's own setlist (Put on a gig, parked until after 27 Nov).
 export const STEPS = ['longy', 'frankie', 'pickle', 'yours'];
 
 // Puts a gig on the stage as its current show: today's date, the stream open from now, its own photos.

@@ -19,26 +19,36 @@ async function api(method, path, body) {
   if (!r.ok) throw Object.assign(new Error(data.detail || r.statusText), { status: r.status });
   return data;
 }
+// The Doorman's List (agreed 17 Nov): green Let them in, Authorised ticket., then what was paid; never a name.
 const WORDS = {
-  in: ['In', 'Venue ticket. Let them through.'],
+  in: ['Let them in', 'Authorised ticket.'],
   already: ['Already in', ''],
   online: ['Watch online', 'For watching online, not for the venue.'],
   unknown: ['Not a ticket', 'Not for this gig.'],
   stale: ['Old QR', 'The ticket’s QR changes every 30 seconds. Ask them to open the ticket page, then scan again.'],
   off: ['Door check off', 'The artist hasn’t turned the door check on for this gig.'],
 };
-function show(state, big, small) {
+function show(state, big, small, paid = '') {
   $('result').dataset.state = state;
   $('big').textContent = big;
   $('small').textContent = small;
+  $('paid').textContent = paid;
+  $('paid').hidden = !paid;
 }
+// "Ticket 1 · paid £35 (72,262 sats) on 19 Nov"
+const paidLine = (o) => {
+  if (!o?.n) return '';
+  const sats = `${Number(o.sats).toLocaleString('en-GB')} sats`;
+  const day = o.paidAt ? ` on ${new Date(o.paidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '';
+  return `Ticket ${o.n} · paid ${o.pence ? `£${(o.pence / 100).toFixed(2).replace(/\.00$/, '')} (${sats})` : sats}${day}`;
+};
 const count = async () => { const c = await api('GET', '/api/door/count'); $('inside').textContent = c.inside; $('sold').textContent = c.sold; return c; };
 
 async function scan(code, otp = '') {
   try {
     const out = await api('POST', '/api/door/scan', { code, otp });
     const [big, small] = WORDS[out.result];
-    show(out.result, big, out.result === 'already' ? `Scanned at ${new Date(out.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.` : small);
+    show(out.result, big, out.result === 'already' ? `Scanned at ${new Date(out.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.` : small, paidLine(out));
     await count();
   } catch (e) { show('unknown', 'Try again', e.message); }
 }

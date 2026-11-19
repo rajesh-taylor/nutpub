@@ -227,7 +227,7 @@ function paint() {
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
   $('finish').hidden = !done;
   $('finish-go').hidden = !s.over;
-  $('finish-note').textContent = s.over ? (onSetlist?.only ? 'Then back to the four gigs.' : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
+  $('finish-note').textContent = s.over ? (onSetlist?.only ? 'Then back to the three gigs.' : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held;
   $('move').disabled = !toMove;
@@ -403,7 +403,7 @@ async function finishGig(btn) {
       : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']
       : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.'];
     if (finishedLine) paint();
-    $('artist-status').replaceChildren(...(list?.only ? ['Done. ', link(judgePage, 'Back to the four gigs'), '.'] : finishedNext));
+    $('artist-status').replaceChildren(...(list?.only ? ['Done. ', link(judgePage, 'Back to the three gigs'), '.'] : finishedNext));
   } catch (e) { $(btn === $('wrap-finish') ? 'wrap-status' : 'artist-status').textContent = `Not done: ${e.message}`; }
   finally { btn.disabled = false; }
 }

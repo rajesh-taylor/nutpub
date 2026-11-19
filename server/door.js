@@ -48,6 +48,19 @@ const doorOn = async (c) => { const show = await showOf(c); return show.ticket.o
 
 const svg = (text) => new Response(text, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 
+// What the doorman's phone shows of a scanned ticket (agreed 17 Nov): its number in the order bought, the sats paid and
+// when, and the pounds when they're the gig's own price (a ticket bought before a price change shows sats only).
+// Never who bought it: the ticket holds no name.
+async function paidFor(show, code) {
+  const t = await one("SELECT t.sats, t.at, (SELECT COUNT(*) FROM tickets u WHERE u.kind = 'room' AND u.at <= t.at) AS n, (SELECT COUNT(*) FROM drinks d WHERE d.pass = t.pass) AS drink FROM tickets t WHERE t.code = ?", code);
+  if (!t) return {};
+  const split = ticketSplit(show);
+  const drink = t.drink && split.drink ? split.drink : 0; // the first drink is paid beside the ticket, locked to the bar
+  const fiat = (show.ticket.fiat || 0) + (drink && show.drink.fiat ? show.drink.fiat : 0);
+  const pence = show.ticket.fiat && t.sats === split.artist ? Math.round(fiat * 100) : 0;
+  return { n: t.n, sats: t.sats + drink, pence, paidAt: t.at };
+}
+
 export function mountDoor(route, admin, pass) {
   const doorman = async (c) => {
     const k = c.req.headers.get('X-Door') || '';
@@ -76,9 +89,9 @@ export function mountDoor(route, admin, pass) {
     if (t.kind !== 'room') return json({ result: 'online' });
     if (t.checked_at) return json({ result: 'already', at: t.checked_at });
     if (!(await totpOk(t.secret, otp))) return json({ result: 'stale' });
-    if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in' });
+    if (await one("UPDATE tickets SET checked_at = ? WHERE code = ? AND checked_at IS NULL AND kind = 'room' RETURNING sats", now(), code)) return json({ result: 'in', ...(await paidFor(show, code)) });
     const again = await one('SELECT checked_at FROM tickets WHERE code = ?', code);
-    return json({ result: 'already', at: again?.checked_at });
+    return json({ result: 'already', at: again?.checked_at, ...(await paidFor(show, code)) });
   });
   // Let in by hand (Rajesh 14 Nov: "I don't have my phone on me"): the artist, on Show Time, lets a venue ticket in
   // without a scan. The list is the room's tickets in the order bought; the same once-only mark as a scan.

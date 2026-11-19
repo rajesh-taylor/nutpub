@@ -6,18 +6,19 @@
   <meta name="theme-color" content="#050914">
   <meta name="robots" content="noindex">
   <meta name="referrer" content="no-referrer">
-  <title>The door · The NutPub</title>
+  <title>The Doorman’s List · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body class="setup takings door-page">
   <main>
     <h1 class="wordmark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></h1>
-    <p class="tag">The door</p>
+    <h2 class="door-list">The Doorman’s List</h2>
     <p class="locked" id="locked" hidden>This phone isn’t the door scanner yet. Point its camera at the artist’s Show QR (Plan gig, Door scanner), or open the link they send, in this phone’s usual browser.</p>
     <div id="page" hidden>
       <section class="panel door-result" id="result" data-state="wait">
         <p class="door-big" id="big">Ready</p>
         <p id="small">Scan a ticket's QR with this phone's camera.</p>
+        <p class="door-paid" id="paid" hidden></p>
       </section>
       <section class="panel"><p class="amount">In: <b id="inside">…</b> of <b id="sold">…</b> venue tickets</p></section>
     </div>

@@ -110,7 +110,7 @@
       <a class="go" id="go" href="/setup">Plan gig</a>
       <a class="go fan" id="fan" href="/" target="_blank" rel="noopener">Open the gig as a fan in a 2nd tab</a>
       <p class="how" id="how">As the fan: buy a ticket, then watch. As the artist: End night on Show Time, then Your takings: Move, then Finish gig.</p>
-      <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the four gigs</a></p>
+      <p class="back-cards" id="back-cards" hidden><a class="to-cards" href="/">← Back to the three gigs</a></p>
     </div>
     <div id="theirs" class="out" hidden>
       <h1>An artist's stage</h1>
@@ -137,8 +137,8 @@
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
     // A judge's stage opened in another browser: its key is in the browser that made it. No passkey to find it with.
     if (!r && (await fetch('/api/show').then((x) => x.json()).catch(() => ({}))).judge) {
-      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the four gigs.';
-      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The four gigs' });
+      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the three gigs.';
+      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The three gigs' });
     }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
     const list = r?.setlist;

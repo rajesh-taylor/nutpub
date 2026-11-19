@@ -921,6 +921,10 @@ body.wallet-card .show-line .status.shine, .status.shine { color: transparent; b
 .door-result[data-state="in"] .door-big { color: #5fd38a; }
 .door-result[data-state="already"] .door-big, .door-result[data-state="unknown"] .door-big, .door-result[data-state="online"] .door-big { color: #ff7a6b; }
 .door-result[data-state="off"] .door-big { color: var(--smoke); }
+/* The Doorman's List (session 36): the heading under the sign, and what the scanned ticket paid. */
+.door-page .door-list { margin: 4px 0 14px; text-align: center; font: 400 30px/1 var(--poster); letter-spacing: .06em; color: var(--amber); }
+.door-result[data-state="in"] #small { font-weight: 600; color: var(--cream); }
+.door-paid { margin: 8px 0 0; font: 15px/1.4 var(--body); color: var(--cream); font-variant-numeric: tabular-nums; }
 
 /* The ticket at the door (10 Nov): one slim line under the photo; the QR opens full screen, cream on midnight.
    A pattern like Luma's "My ticket", in our own colours; the look is for the design sessions. */

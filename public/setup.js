@@ -592,7 +592,16 @@ async function drawMods() {
 }
 // Scan at the door needs the venue's yes: turning it on asks first (a click that's cancelled leaves it off, unsaved).
 $('door-on').addEventListener('click', (e) => {
-  if ($('door-on').checked && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
+  if ($('door-on').checked && !judgeStage && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
+});
+
+// A judge's stage (session 36): turning the door on makes the door scanner at once and shows its DOOR pass, so the
+// judge's phone can scan it straight away. No venue to ask there.
+let judgeStage = false;
+$('door-on').addEventListener('change', async () => {
+  if (!judgeStage || !$('door-on').checked) return;
+  if ($('copy-door').disabled) await $('new-door').onclick();
+  drawDoorQr(true);
 });
 
 // ---- The door link: a key of its own, which opens the door page only. Kept in this browser, like the mod links.
@@ -609,6 +618,7 @@ function doorLink(made) {
 async function drawDoorQr(show = !$('door-link-qr').hidden) {
   const link = $('copy-door').disabled ? '' : $('door-link').value;
   $('door-link-qr').hidden = !(show && link);
+  $('door-pass-card').hidden = $('door-link-qr').hidden; // the QR sits on the DOOR pass
   $('qr-door').setAttribute('aria-expanded', String(show && !!link));
   $('qr-door').textContent = show && link ? 'Hide QR' : 'Show QR';
   if (show && link) {
@@ -664,6 +674,7 @@ try {
   await templates();
   const first = await api('GET', '/api/show');
   saved(first);
+  judgeStage = !!first.judge;
   photos(first.photos);
   const sold = await api('GET', '/api/admin/sold');
   fixAfterSale((sold.room || 0) + (sold.home || 0));
@@ -680,7 +691,7 @@ try {
   setInterval(goalPreview, 5000);
   $('phone-in-row').hidden = false;
   drawMods().catch(() => {});
-  api('GET', '/api/admin/door-link').then((d) => doorLink(d.made)).catch(() => {});
+  api('GET', '/api/admin/door-link').then((d) => { doorLink(d.made); if (judgeStage && $('door-on').checked && !$('copy-door').disabled) drawDoorQr(true); }).catch(() => {});
 } catch (err) {
   $('locked').hidden = false;
   if (err.status !== 403) $('signin-note').textContent = `Couldn't reach the server: ${err.message}`;

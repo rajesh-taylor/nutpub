@@ -607,9 +607,10 @@ function stop(why) {
 }
 
 // The venue's page with no ticket yet: the video comes with the venue ticket, or with watching online (the other page).
-const needsVenue = () => ONE && AS === 'room' && !door.ticket && !MOD && !free;
+// A free stream plays on the venue's page too, unless the door's checking tickets (session 36): then Play waits for one.
+const needsVenue = () => ONE && AS === 'room' && !door.ticket && !MOD && (!free || !!show.door?.on);
 const toggle = () => (playing ? stop() : replaying() ? play() : needsTicket() ? askTicket()
-  : needsVenue() ? (showTab('ticket'), say('A venue ticket plays the show here. Or watch online.')) : play());
+  : needsVenue() ? (showTab('ticket'), say(free ? 'At the venue? Venue ticket first. At home? Watch online instead: free.' : 'A venue ticket plays the show here. Or watch online.')) : play());
 $('play').onclick = toggle;
 $('big-play').onclick = toggle;
 
@@ -1261,7 +1262,7 @@ function todoItems() {
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
     return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
-      show.door?.on && { done: !!door.checkedAt, text: 'Get let in: the door scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
+      show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or press Let in by hand, on the left' : 'Get let in: the doormen’s phone scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
@@ -1274,18 +1275,20 @@ function todoItems() {
   if (show.stream.mode === 'ticket') {
     const again = show.tip?.price ? `press ${show.tip.label || 'Tip'} ${sats(show.tip.price)}` : 'tip again';
     // Rajesh 18 Nov: the ticket is the first step, so the strip at the top says so before anything else.
-    return [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket' },
-      { ...hello, text: 'Say hello in the chat, on the right' }, full,
-      { done: !!todo.tipFull, text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
+    // Rajesh 19 Nov: a line of story above each step in the strip at the top, as gig 3's Judges line has.
+    return [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket', story: 'One 402 buys the ticket, paid from the wallet in this browser.' },
+      { ...hello, text: 'Say hello in the chat, on the right', story: 'Aaron of Essex, Longy’s moderator, wants to know where you’re watching from.' },
+      { ...full, story: 'In full screen the chat lands on the picture.' },
+      { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, tip 30,000 sats: the tip box, bottom right, with a comment if you like',
         did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Now tip 30,000 sats: the tip box, bottom right',
         short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
-      { done: !!todo.tipDesk, text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
+      { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goal: his next gig streamed in HD.', text: `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
   if (show.stream.mode === 'pay') return [
-    { done: !!todo.played || spentHere > 0, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
-    { done: !!todo.again, text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
-    full, tip];
+    { done: !!todo.played || spentHere > 0, story: `Each piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it.`, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
+    { done: !!todo.again, story: 'Stop, and the payments stop.', text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
+    { ...full, story: 'Full screen, then a tip, as at Longy’s.' }, { ...tip, story: 'A tip is another 402, with your words beside it.' }];
   return [];
 }
 // The desktop view's fan (Show Time's other frame) said hello: its list, kept beside this one.
@@ -1324,8 +1327,10 @@ function replayStrip() {
   body.classList.add('fan-strip');
   $('fan-line').hidden = false;
   $('fan-line-k').textContent = 'Judges · replay';
+  $('fan-line-story').textContent = 'The night’s over, but the replay runs for 7 days.';
+  $('fan-line-story').hidden = !!replay.bought;
   $('fan-line-text').textContent = replay.bought ? 'Bought: the replay plays twice through. Then back to Show Time.'
-    : `The night’s over, but ${show.artist?.split(' ')[0] || 'the artist'}’s replay runs for 7 days: press play. One 402 of ${replayPrice()} opens it, twice through. Then back to Show Time.`;
+    : `Press play: one 402 of ${replayPrice()} opens it, twice through. Then back to Show Time.`;
   return true;
 }
 function fanStrip(items) {
@@ -1336,6 +1341,8 @@ function fanStrip(items) {
   const at = items.findIndex((i) => !i.done);
   $('fan-line-k').textContent = at < 0 ? 'Judges · all done' : `Judges · ${at + 1} of ${items.length}`;
   const next = items[at];
+  $('fan-line-story').textContent = next?.story || '';
+  $('fan-line-story').hidden = !next?.story;
   if (!next) $('fan-line-text').textContent = 'Now go back to the Show Time tab and press End night.';
   else if (next.html) $('fan-line-text').innerHTML = next.html; // our own words and icon only
   else $('fan-line-text').textContent = `${next.text}.`;

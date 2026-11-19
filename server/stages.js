@@ -14,7 +14,7 @@ export const maxStages = (at = Date.now()) => (at < Date.parse('2026-11-22T00:00
 const full = async () => (await one('SELECT COUNT(*) AS n FROM stages')).n >= maxStages();
 const FULL = () => json({ error: 'full', detail: 'Every stage is taken for now: try again tomorrow.' }, 409);
 // Judge for yourself (/judge): the three gig cards, each a stage of its own holding just that gig (setlist.js).
-export const JUDGE_GIGS = ['longy', 'frankie', 'pickle', 'yours'];
+export const JUDGE_GIGS = ['longy', 'frankie', 'pickle']; // three gigs (Rajesh 19 Nov): gig 4 folded into gig 3
 
 // <id>.thenutpub.com (or <id>.localhost in development): a stage's id is a letter, then five letters or digits with at
 // least one digit, so www and other words are never a stage.
