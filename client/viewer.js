@@ -1286,8 +1286,8 @@ function todoItems() {
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
   if (show.stream.mode === 'pay') return [
-    { done: !!todo.played || spentHere > 0, story: `Each piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it.`, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
-    { done: !!todo.again, story: 'Stop, and the payments stop.', text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
+    { done: !!todo.played || spentHere > 0, story: `Each 10-second piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it. Want to see them? Open your browser’s developer tools (⌥⌘I in Chrome) on the Network tab first.`, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
+    { done: !!todo.again, story: 'Stop, and the payments stop. In the Network tab each piece shows a 402, then the paid 200.', text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
     { ...full, story: 'Full screen, then a tip, as at Longy’s.' }, { ...tip, story: 'A tip is another 402, with your words beside it.' }];
   return [];
 }
@@ -1329,8 +1329,8 @@ function replayStrip() {
   $('fan-line-k').textContent = 'Judges · replay';
   $('fan-line-story').textContent = 'The night’s over, but the replay runs for 7 days.';
   $('fan-line-story').hidden = !!replay.bought;
-  $('fan-line-text').textContent = replay.bought ? 'Bought: the replay plays twice through. Then back to Show Time.'
-    : `Press play: one 402 of ${replayPrice()} opens it, twice through. Then back to Show Time.`;
+  $('fan-line-text').textContent = replay.bought ? 'Now press Move my sats: the rest is yours, take it home to Cashu.me, then close that tab. Then back to Show Time.'
+    : `Press play to watch it: ${replayPrice()}, paid once.`;
   return true;
 }
 function fanStrip(items) {

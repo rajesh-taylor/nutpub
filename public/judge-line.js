@@ -26,7 +26,7 @@ export async function judgeLine(r, page) {
   const replay = list.at === 'frankie'; // gig 2 shows the replay (session 34): a step of its own after End night
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
-  const steps = pickle ? 9 : replay ? 6 : 5;
+  const steps = pickle ? 8 : replay ? 6 : 5;
   const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
     if (said === n + story + text) return;
     said = n + story + text;
@@ -39,16 +39,16 @@ export async function judgeLine(r, page) {
   };
   // Gig 3's story, one line a step (Rajesh's words, 19 Nov). No laptop camera: the judge's own phone, if any, is the
   // doormen's; the fan is the phone beside Show Time; the bar pours by hand.
+  // Rajesh 19 Nov (late): Longy's deal with the venue, a beer token in the ticket; Drink at bar is off a judge's Plan gig.
   const STORY = {
-    1: 'Longy’s playing The Fickle Pickle tonight. He’s included a pint (worth £5 at the venue) in the £35 ticket, and the doormen are checking every ticket.',
+    1: 'Longy’s agreed a deal with the venue: his £35 ticket includes a free beer token worth £5. The bar takes it from the fan’s phone, and the doormen check every ticket.',
     2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
-    4: 'Ticket bought, with the pint in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
-    5: 'Let them in. The door saw an authorised ticket and the price paid, never a name. The pint reaches the fan’s phone when the show starts.',
-    6: 'The fan’s phone now holds the pint: a real coin, locked to the bar.',
+    4: 'Ticket bought, with the beer token in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
+    5: 'Let them in. The door saw an authorised ticket and the price paid, never a name. The beer token reaches the fan’s phone when the show starts.',
+    6: 'The fan’s phone now holds the beer token: a real coin, locked to the bar.',
     7: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
-    8: 'The night’s over. The fan’s change is still in their browser wallet.',
-    9: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the pint’s £5 went to the bar.',
+    8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the token’s £5 went to the bar.',
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
   const TOLD = list.at === 'longy' ? {
@@ -90,19 +90,20 @@ export async function judgeLine(r, page) {
     const closed = s.stage === 'closed';
     const on = s.stage === 'on';
     if (pickle) {
-      if (page === 'takings') return say(closed ? 9 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
-        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[9] : '' });
+      if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
+        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[8] : '' });
       const show = (await admin('/api/show'))?.show;
       if (!show) return;
       // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
       const ready = Number(show.ticket?.fiat) === 35 && !!show.door?.on;
       if (!ready) {
         if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket’s price and the door first.', 'Back to Plan gig →', '/setup');
-        return say(1, 'Type £35 for the venue ticket, then turn on Scan tickets at the door. The drink at the bar is set at £5, just below.', '', '', { story: STORY[1] });
+        return say(1, 'Type £35 for the venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
       }
       if (page === 'setup') return say(2, 'On your phone: scan the DOOR pass with the camera, if you like. Then click 2 · Show Time, at the top.', '', '', { story: STORY[2] });
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
-      if (closed) return say(8, 'On the fan’s phone: press Move my sats and take them to Cashu.me. Then click 3 · Your takings, at the top.', '', '', { story: STORY[8] });
+      // The fan's sats home is gig 2's step now (Rajesh 19 Nov): here the night's over, on to Your takings.
+      if (closed) return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
       const tickets = (await admin('/api/admin/door')) || [];
       if (!tickets.length) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
       if (!tickets.some((t) => t.checked_at)) return say(4, 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Let in by hand.', '', '',
@@ -121,7 +122,7 @@ export async function judgeLine(r, page) {
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change. Then click 2 · Show Time, at the top.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
-      if (closed && replay) say(5, `Back on the fan’s page, press play: one 402 for the whole replay, twice through. Then click 3 · Your takings, at the top.`, '', '', { story: TOLD.replay });
+      if (closed && replay) say(5, 'Back on the fan’s page: press play to watch the replay, then Move my sats to Cashu.me and close that tab. Then click 3 · Your takings, at the top.', '', '', { story: TOLD.replay });
       else if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });

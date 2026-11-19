@@ -675,6 +675,9 @@ try {
   const first = await api('GET', '/api/show');
   saved(first);
   judgeStage = !!first.judge;
+  // Rajesh 19 Nov: on a judge's stage the drink is Longy's deal with the venue, already in the ticket: no Drink at bar card.
+  // An artist's own stage keeps it (venue deals: Refueler Pass, after 27 Nov).
+  if (judgeStage) document.querySelector('.drink-step')?.style.setProperty('display', 'none');
   photos(first.photos);
   const sold = await api('GET', '/api/admin/sold');
   fixAfterSale((sold.room || 0) + (sold.home || 0));
