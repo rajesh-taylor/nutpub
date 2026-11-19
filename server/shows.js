@@ -47,7 +47,7 @@ export const blank = () => ({
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
-  chatRows: 3,                          // over the picture, the newest 3, 5 or 10 lines of the chat (Rajesh 14 Nov)
+  chatRows: 5,                          // over the picture, the newest 3, 5 or 10 lines of the chat (Rajesh 14 Nov; 5 from 19 Nov: at 3, lines went by while typing)
   stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (a Watch online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
   replay: { mode: 'off', price: null, fiat: null, locked: false }, // after End night the gig page plays the recording (sessions 34-35): 'off' or 'on', one price for the whole replay (sats; fiat: £, which fills the sats unless locked), never below the minimum for the show's length
   free: { viewers: null },              // a free stream (tips only): the most viewers at once, which the artist pays for up front (session 35)
