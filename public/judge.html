@@ -36,12 +36,12 @@
     .home-sign .shine { position: absolute; inset: 0; height: 100%; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: pint-shine 3.5s .8s linear infinite; }
     .home-sign .shine text { fill: #fff3d0; }
     @media (prefers-reduced-motion: reduce) { .home-sign .shine { display: none; } }
-    @media (max-width: 700px) { .nut-menu { top: 20px; } .home-sign { margin-top: 52px; } .lines .lead { font-size: 15px; } } /* below the Menu button on a phone */
+    @media (max-width: 700px) { .nut-menu { top: 20px; } .home-sign { margin-top: 52px; } .lines .lead { font-size: 16px; } .not-phone { display: none; } } /* below the Menu button on a phone */
     .lines { display: grid; gap: 8px; }
     .judge main > h1, .judge main > .lines { width: 100%; max-width: 1200px; justify-self: center; } /* as wide as the three posters (Rajesh 19 Nov) */
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
     .lines b { color: var(--cream); font-weight: 400; }
-    .lines .lead { font-size: 18px; line-height: 1.4; } /* the line the eye lands on first (Rajesh 15 Nov) */
+    .lines .lead { font: 400 19px/1.5 "IBM Plex Sans", var(--body); letter-spacing: 0; } /* Rajesh 19 Nov: a reading face, not the code one */ /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; max-width: 1200px; width: 100%; justify-self: center; } /* three in a row (Rajesh 19 Nov: gigs 3 and 4 folded together) */
     @media (max-width: 1000px) { .wall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; } } /* two and one on smaller laptops */
@@ -198,7 +198,7 @@
     </div>
     <h1>Last orders for the middlemen</h1>
     <div class="lines">
-      <p class="lead"><b>For fans who’d rather keep their bank card in their pocket, and artists who’d rather not keep a spreadsheet of their fans: a whole night out in Cashu, from the ticket and the door to the first round, the stream, the tips and the replay.</b></p>
+      <p class="lead"><b>For fans who’d rather keep their bank card in their pocket<span class="not-phone">, and artists who’d rather not keep a spreadsheet of their fans</span>: a whole night out in Cashu, from the ticket and the door to the first round, the stream, the tips and the replay.</b></p>
     </div>
 
     <div class="wall">
