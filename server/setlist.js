@@ -4,6 +4,7 @@
 // current show; Finish gig on Takings ticks it off and opens the next. They're examples: nothing is sold until the
 // artist, as a fan in another tab, buys it. Longy's own stage (thenutpub.com) has no setlist.
 // A stage made by a gig card on /judge (Rajesh 14 Nov) holds one gig only: { at, done, only: true }, no next gig.
+import { endReplay } from './replay.js';
 import { kv, run, one, stageDb } from './db.js';
 import { blank, clean, currentShow, clearGig } from './shows.js';
 import { usePhotos } from './photo.js';
@@ -50,6 +51,7 @@ const GIGS = {
       // ticket is on sale, with no door check and no drink: those are gig 3's.
       ticket: { on: true, price: null, fiat: 30, locked: false },
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
+      replay: { mode: '50', perMinute: null }, // the replay at half price: gig 2 shows it to judges (session 34)
       tip: { label: 'Tip Frankie', price: 2100 },
     },
     pin: '60 sats a minute: pay as you watch, stop any time. Tip with a comment: sats in the box on the right.',
@@ -95,6 +97,7 @@ export const STEPS = ['longy', 'frankie', 'pickle', 'yours'];
 // Puts a gig on the stage as its current show: today's date, the stream open from now, its own photos.
 // Your gig comes back as the artist left it (kept aside while an example is done again).
 async function open(step, env) {
+  await endReplay(); // another gig on the stage: the last one's replay ends
   const kept = step === 'yours' ? await kv.get('yourGig', null) : null;
   const gig = structuredClone(kept || GIGS[step].show);
   // The examples' prices are in pounds: their sats come from today's rate when the gig opens.

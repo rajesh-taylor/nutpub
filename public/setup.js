@@ -2,7 +2,7 @@
 import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
-  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price',
+  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', 'replay.perMinute': 'the replay\u2019s price a minute',
   date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
@@ -214,7 +214,28 @@ function refresh() {
   for (const r of form.querySelectorAll('[name="drink-when"]')) r.checked = r.value === (show.drink?.at ? 'time' : 'show');
   $('drink-at').hidden = !show.drink?.at;
   // Short (Rajesh 18 Nov): the rest is the judges' story line.
+  replayCard();
   $('split').textContent = drink ? `Added to the ticket. Not poured by ${show.lastOrders || 'the end'}? It goes to ${show.artist || 'the artist'}.` : '';
+}
+
+// The Replay card (session 34): the price a minute each choice comes to, never below the floor (/api/show's
+// replay.floor, server/shows.js replayRate). A free stream has no replay; Watch online has no 25% or 50%.
+let replayFloor = 0;
+function replayCard() {
+  const mode = show.stream.mode;
+  const paid = mode === 'pay' || mode === 'ticket';
+  $('replay-card').hidden = mode === 'off';
+  for (const el of $('replay-choices').querySelectorAll('input')) el.disabled = !paid;
+  $('replay-choices').classList.toggle('off', !paid);
+  for (const el of form.querySelectorAll('[data-replay-pct]')) el.hidden = mode === 'ticket';
+  const at = (n) => (n ? `${Math.max(n, replayFloor).toLocaleString('en-GB')} sats a minute${n < replayFloor ? ' (the minimum)' : ''}` : '');
+  const live = mode === 'pay' ? show.stream.perMinute : 0;
+  $('replay-eq-25').textContent = at(live && Math.ceil(live / 4));
+  $('replay-eq-50').textContent = at(live && Math.ceil(live / 2));
+  $('replay-eq-own').textContent = show.replay?.perMinute < replayFloor ? at(show.replay.perMinute) : '';
+  $('replay-note').textContent = !paid ? 'A free stream has no replay.'
+    : show.replay?.mode === 'off' ? 'Off: after End night the page says Cheers, as now.'
+      : `Ticket holders watch free. Everyone else pays by the minute.${mode === 'pay' ? ' Minutes paid live don\u2019t count towards the replay.' : ''}`;
 }
 
 function status(text, kind = '') {
@@ -569,6 +590,7 @@ try {
   site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
   await templates();
   const first = await api('GET', '/api/show');
+  replayFloor = first.replay?.floor || 0;
   saved(first);
   photos(first.photos);
   const sold = await api('GET', '/api/admin/sold');

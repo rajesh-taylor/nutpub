@@ -11,6 +11,7 @@ import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
+import { mountReplay } from './replay.js';
 import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
@@ -22,7 +23,7 @@ import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor, closesAt } from './stages.js';
 import { setlist, finished, again, cue, cueTimes } from './setlist.js';
 import { keepMoved } from './closing.js';
-import { current, publicShow, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
+import { current, publicShow, replayPrice, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
 // route(method, '/exact/path' or /regex with (?<named>) groups/, ...steps)
@@ -85,7 +86,7 @@ route('GET', '/api/show', async (c) => {
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
   // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
   const judge = !!(stageDb().id && (await kv.get('setlist', null))?.only);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes() });
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes(), replay: await replayPrice(now.show) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -125,6 +126,7 @@ mountDoor(route, admin, pass);
 mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
 mountLive(route, admin, pass);
+mountReplay(route, pass);
 mountRate(route);
 mountMods(route, admin);
 mountWallet(route);

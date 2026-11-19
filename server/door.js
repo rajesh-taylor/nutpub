@@ -2,6 +2,13 @@
 // and the live chat. A ticket is two locked payments from the phone: the artist's part to the artist's key, and the
 // drink to the bar's key with a locktime at last orders and a refund to the artist's key (NUT-11), so an unpoured
 // drink becomes the artist's and the mint, not this server, enforces it. Nothing here holds a sat.
+import { startReplay, endReplay, replayNow, replayFree } from './replay.js';
+// The replay as the gig page needs it: and whether this pass watches it free (a ticket at End night).
+const replayFor = async (show, c) => {
+  const r = await replayNow(show);
+  const pass = c.req.headers.get('X-Pass');
+  return r && { ...r, free: !!pass && (await replayFree(pass)) };
+};
 import QRCode from 'qrcode';
 import { one, all, run, sql, batch, kv, siteUrl } from './db.js';
 import { cashuGate } from './gate.js';
@@ -97,9 +104,10 @@ export function mountDoor(route, admin, pass) {
   route('GET', '/api/stage', async (c) => {
     const show = await showOf(c);
     const [stage, live, times, reached] = await Promise.all([stageNow(show), liveNow(show.page), kv.get('stageTimes', {}), kv.get('reachedAt')]);
+    const replay = await replayFor(show, c);
     // When the artist's stream first reached us this gig (Stream records, and bills, from then): Show Time's clock.
     const reachedAt = reached ?? (live ? await kv.set('reachedAt', now()) : null);
-    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), times, reachedAt });
+    return json({ stage, live, replay, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), times, reachedAt });
   });
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
@@ -113,7 +121,10 @@ export function mountDoor(route, admin, pass) {
     // End night starts the 7 days the night's records are kept (closing.js); opening it again stops the clock.
     if (stage === 'closed') { if (!(await kv.get('endedAt'))) await kv.set('endedAt', now()); }
     else await run("DELETE FROM kv WHERE key = 'endedAt'");
-    return json({ stage: await kv.set('stage', stage) });
+    const out = await kv.set('stage', stage);
+    // End night starts the replay (if the gig has one, replay.js); opening the night again ends it.
+    if (stage === 'closed') await startReplay(); else await endReplay();
+    return json({ stage: out });
   });
 
   // Tickets sold since the last New night: New night cancels them, and the artist should see that before pressing it.
@@ -265,7 +276,7 @@ export function mountDoor(route, admin, pass) {
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
       q.get('top') ? topTippers() : null,
     ]);
-    return json({ stage, live, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top } : {}) });
+    return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top } : {}) });
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

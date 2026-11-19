@@ -13,6 +13,7 @@ import { hasTicket } from './door.js';
 import { modOf } from './mods.js';
 import { json } from './http.js';
 import { closesAt } from './stages.js';
+import { recordingDeleted } from './replay.js';
 
 let ACCOUNT = '';
 let TOKEN = '';
@@ -237,6 +238,7 @@ export function mountLive(route, admin, pass) {
     if (!v) return json({ error: 'not_found' }, 404);
     if (v.status?.state === 'live-inprogress') return json({ error: 'recording', detail: 'Still recording: End the stream first.' }, 409);
     await deleteRecording(v.uid);
+    await recordingDeleted(v.created); // the replay ends now, and fans' pages say so
     return json({ deleted: v.uid });
   });
 

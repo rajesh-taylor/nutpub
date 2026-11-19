@@ -1,6 +1,7 @@
 // The artist's takings: every payment the gate accepted, locked to its owner's key and kept here as the token
 // itself. Only Takings (/takings), in the browser that holds the key, can collect them. The server only ever learns
 // the public key, and marks a payment collected only when the mint says it's spent.
+import { replayNow } from './replay.js';
 import { getDecodedToken } from '@cashu/cashu-ts';
 import { one, all, run, kv } from './db.js';
 import { keysetIds, proofStates } from './gate.js';
@@ -65,7 +66,7 @@ export function mountTakings(route, admin) {
 
   // The night's takings by kind, since the last New night.
   route('GET', '/api/admin/takings', admin, async (c) => {
-    const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
+    const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink', 'replay'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
     const rows = await all(`SELECT kind, collected_at IS NOT NULL AS collected, COALESCE(SUM(sats), 0) AS sats, COUNT(*) AS n
                             FROM locked WHERE at >= ? GROUP BY kind, collected`, await kv.get('nightStart', ''));
     for (const r of rows) {
@@ -87,6 +88,7 @@ export function mountTakings(route, admin) {
       nutzaps: { sats: zaps.s, count: zaps.n }, // of the tips, those that came as Nutzaps
       feePercent: FEE_PERCENT, // shown as its own line; not taken yet (needs each payment split)
       over: await gigOver(await current(c)), // Finish gig shows once the gig is over
+      replay: await replayNow(await showOf(c)), // the replay's days left, for its tile (session 34)
     });
   });
 

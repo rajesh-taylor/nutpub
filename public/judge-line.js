@@ -22,7 +22,8 @@ export async function judgeLine(r, page) {
   const fanDone = () => ['nutpub-todo', 'nutpub-todo-home'].some((k) => { try { return !!JSON.parse(localStorage.getItem(k) || 'null')?.all; } catch { return false; } });
   let said = '';
   // n: the step; text: the one thing to do; story: gig 3's line of the story, before it; extra: a QR or a button.
-  const steps = pickle ? 7 : 5; // gig 3 (Rajesh 18 Nov): the ticket before Start show, and the fan's sats home, are steps of their own
+  const replay = list.at === 'frankie'; // gig 2 shows the replay (session 34): a step of its own after End night
+  const steps = pickle ? 7 : replay ? 6 : 5; // gig 3 (Rajesh 18 Nov): the ticket before Start show, and the fan's sats home, are steps of their own
   const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
     if (said === n + story + text) return;
     said = n + story + text;
@@ -79,12 +80,13 @@ export async function judgeLine(r, page) {
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change. Then click 2 · Show Time, at the top.`);
     else if (page === 'show') {
-      if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');
+      if (closed && replay) say(5, `The night’s over, but ${name}’s replay runs for 7 days. Back on the fan’s page, press play: a 402 again, at the replay’s price. Then click 3 · Your takings, at the top.`);
+      else if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.');
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the list there. Then come back here.');
       else say(4, 'The fan’s list is all ticked: press End night, the purple button below.');
     } else if (!closed) say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-    else say(5, 'Press Move to Cashu.me, then Finish gig. That takes you to the next gig.');
+    else say(replay ? 6 : 5, `${replay ? 'The replay has its own tile. ' : ''}Press Move to Cashu.me, then Finish gig. That takes you to the next gig.`);
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

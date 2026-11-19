@@ -6,6 +6,7 @@ import { one, run, sql, batch, kv } from './db.js';
 import { currentShow, gigOver } from './shows.js';
 import { recordings, deleteRecording } from './live.js';
 import { FEE_PERCENT } from './config.js';
+import { closeReplay } from './replay.js';
 
 export const KEEP_DAYS = 7;
 const DAY = 86_400_000;
@@ -29,17 +30,18 @@ export async function keepGigLine(ended = new Date().toISOString()) {
     (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'tip' AND at >= ?1) AS tips,
     (SELECT COUNT(*) FROM locked WHERE kind = 'tip' AND at >= ?1) AS tipsN,
     (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'piece' AND at >= ?1) AS homeSats,
+    (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'replay' AND at >= ?1) AS replaySats,
     (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'drink' AND collected_by = 'artist' AND at >= ?1) AS drinks,
     (SELECT COUNT(*) FROM locked WHERE kind = 'drink' AND collected_by = 'artist' AND at >= ?1) AS drinksN,
     (SELECT COUNT(*) FROM locked WHERE kind = 'drink' AND collected_by = 'bar' AND at >= ?1) AS poured,
     (SELECT COUNT(*) FROM locked WHERE kind = 'drink' AND at >= ?1) AS drinksAll`, start);
-  const sats = t.ticketSats + t.tips + t.homeSats + t.drinks; // the artist's: drinks poured are the bar's
+  const sats = t.ticketSats + t.tips + t.homeSats + t.replaySats + t.drinks; // the artist's: drinks poured are the bar's
   if (!sats && !t.room && !t.home) return null; // nothing happened: no line
   // Stream's minutes for budgeting: how long this gig's recordings run (Stream bills storage by the minute).
   const recorded = await recordings().then((vs) => vs.filter((v) => !start || v.created >= start)
     .reduce((m, v) => m + Math.max(0, v.duration || 0) / 60, 0)).catch(() => null);
   const line = { start, ended, date: show.date, page: show.page, artist: show.artist, venue: (show.venue || '').split(',')[0].trim(),
-    tickets: { room: t.room, home: t.home, inside: t.inside, sats: t.ticketSats, roomSats: t.roomSats }, tips: t.tips, tipsN: t.tipsN, home: t.homeSats,
+    tickets: { room: t.room, home: t.home, inside: t.inside, sats: t.ticketSats, roomSats: t.roomSats }, tips: t.tips, tipsN: t.tipsN, home: t.homeSats, replay: t.replaySats,
     drinks: t.drinks, drinksN: t.drinksN, poured: t.poured, drinksAll: t.drinksAll, sats, feePercent: FEE_PERCENT,
     moved: await kv.get('moved', null), recordedMinutes: recorded === null ? null : Math.round(recorded) };
   await kv.set('gigs', [...gigs, line]);
@@ -76,6 +78,7 @@ export async function closeNights(at = Date.now()) {
     await batch([sql('DELETE FROM messages WHERE at < ?', old), sql('DELETE FROM tips WHERE at < ?', old),
       sql('DELETE FROM paid WHERE at < ?', old), sql('DELETE FROM locked WHERE collected_at IS NOT NULL AND at < ?', old)]);
   }
+  await closeReplay(at);
   // The recordings: each one 7 days after it was made. One that's still recording is left alone.
   try {
     for (const v of await recordings()) {

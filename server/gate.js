@@ -82,7 +82,7 @@ async function record(token, proofs, sats, kind, pubkey) {
 
 // price(c) -> sats; label(c) -> the request's description; lockTo(c) -> the owner's pubkey (null until their
 // takings page has been opened once); tags(c) -> extra NUT-11 tags the lock must carry (default none); kind: 'piece' |
-// 'tip' | 'ticket' | 'drink'. On success: c.paid = sats locked to the owner, c.lockedId = the payment's id.
+// 'tip' | 'ticket' | 'drink' | 'replay' (or a function of c). On success: c.paid = sats locked to the owner, c.lockedId = the payment's id.
 export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner = async (c) => (await showOf(c)).artist || 'the artist' }) {
   return async (c) => {
     const amount = await price(c);
@@ -132,9 +132,10 @@ export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner =
     if (states.some((s) => s !== 'UNSPENT')) return refuse(c, 400, 'reused', 'spent (or being spent) at the mint');
 
     const sats = Number(sumProofs(proofs));
-    const id = await record(token, proofs, sats, kind, pubkey);
+    const what = typeof kind === 'function' ? kind(c) : kind; // 'piece' or 'replay' on the set's sound (session 34)
+    const id = await record(token, proofs, sats, what, pubkey);
     if (!id) return refuse(c, 400, 'reused', 'token already used here');
-    log(c, `paid ${sats} sats (${kind})`);
+    log(c, `paid ${sats} sats (${what})`);
     c.paid = sats;
     c.lockedId = id;
     return null;

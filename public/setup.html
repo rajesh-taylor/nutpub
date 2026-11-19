@@ -164,6 +164,11 @@
     .ready-box .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--amber); flex: none; }
     .ready-box.ok .dot { background: #1e7a3c; box-shadow: 0 0 0 4px rgb(30 122 60 / .25); } /* a solid dark green: ready */
     .ready-text { font-size: 15px; color: var(--smoke); }
+    .board .replay-sub { margin: -4px 0 14px; font-size: 15px; color: var(--smoke); }
+    .board .replay-choices .choice { align-items: center; min-height: 36px; margin-bottom: 4px; }
+    .board .replay-choices.off { opacity: .45; }
+    @media (max-width: 600px) { .board .replay-choices .choice { flex-wrap: wrap; row-gap: 2px; } .board .replay-eq { flex-basis: 100%; margin-left: 28px; padding-left: 0; } }
+    .board .replay-eq { margin-left: auto; padding-left: 12px; font-size: 14px; color: var(--smoke); white-space: nowrap; font-variant-numeric: tabular-nums; }
     .board .choice[hidden] { display: none !important; } /* e.g. Scan at the door, while Venue tickets is off */
     .board .choice input { accent-color: var(--amber); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
     .board .choice input.inline-sats { box-sizing: border-box; width: 3.6em; -moz-appearance: textfield; appearance: textfield; height: auto; margin: 0 4px; padding: 3px 6px; font: inherit; color: var(--cream); background: var(--deep); border: 1px solid rgb(239 227 200 / .25); border-radius: 3px; }
@@ -400,6 +405,20 @@
               </div>
             </div>
             <p class="rate-line" id="rate-line"></p>
+          </section>
+
+          <!-- Replay (session 34): after End night the gig page plays the recording until it's deleted, 7 days after the
+               broadcast. Paid streams only; Watch online has no price a minute, so only Off or the artist's own price. -->
+          <section class="panel wide" id="replay-card">
+            <h2>Replay</h2>
+            <p class="replay-sub">After End night your gig page plays the recording until it's deleted, 7 days after the broadcast.</p>
+            <div class="replay-choices" id="replay-choices">
+              <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="off"> <span><b>Off</b></span></label>
+              <label class="choice" data-replay-pct><input type="radio" name="replay" data-path="replay.mode" value="25"> <span><b>25% of the live price</b></span><span class="replay-eq" id="replay-eq-25"></span></label>
+              <label class="choice" data-replay-pct><input type="radio" name="replay" data-path="replay.mode" value="50"> <span><b>50% of the live price</b></span><span class="replay-eq" id="replay-eq-50"></span></label>
+              <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="own"> <span><b>My own price:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="replay.perMinute" aria-label="The replay's sats a minute" placeholder="40"> sats a minute</span><span class="replay-eq" id="replay-eq-own"></span></label>
+            </div>
+            <p class="switch-note" id="replay-note"></p>
           </section>
 
           <section class="panel wide">

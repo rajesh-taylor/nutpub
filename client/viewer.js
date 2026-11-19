@@ -311,6 +311,7 @@ let sources = [];
 let playing = false;
 let run = 0;
 let next = resumeAt; // the next piece to buy (the set loops on the server: piece n is file n % pieces)
+const nextPiece = (n) => { next = n; }; // the replay starts the clip from its own place (tick)
 const vids = [$('vid-a'), $('vid-b')];
 // The picture's shape comes from the video itself: however the artist holds the phone, nothing is cropped.
 const fit = ({ target: { videoWidth: w, videoHeight: h } }) => {
@@ -378,7 +379,9 @@ let hls = null;
 let liveToken = '';
 let liveSpent = liveSpentSoFar;
 const readyLive = () => { if (liveOn && !Hls) import('hls.js').then((m) => { Hls = m.default; }).catch(() => {}); };
-const withToken = (url) => url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/, `$1${liveToken}$2`);
+const withToken = (url) => (replaying()
+  ? url.replace(/^(https:\/\/[^/]+\/)[\w-]+\.[\w-]+\.[\w-]+(\/)/, `$1${liveToken}$2`) // the recording: every link carries the token
+  : url.replace(/^(https:\/\/[^/]+\/)[^/]+(\/manifest\/)/, `$1${liveToken}$2`));
 
 // The viewer's limit for the night, kept in this browser. Tickets and free shows pay nothing, so have none.
 const pays = () => !free && !online && !door.ticket && !MOD; // a mod watches free
@@ -389,22 +392,29 @@ $('budget').oninput = () => { try { localStorage.setItem(`nutpub-budget${KEEP}`,
 
 const SCREEN = Math.random().toString(36).slice(2); // this page, this time: a ticket opens one screen at a time
 // One token: free for a ticket or a free show, otherwise a 402. Returns its reply, or null with the picture stopped.
-async function renew(mine, first) {
-  if (pays() && !agreed && freeUntil && freeLeft() <= 0) { freeOver(); return null; } // nobody starts paying without saying so
-  if (pays() && agreed && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
-  const res = await paidFetch(`/api/live/token${first ? '?start=1' : ''}`, { 'X-Screen': SCREEN, ...(pays() && !agreed ? { 'X-Free-Only': '1' } : {}) });
+async function renew(mine, first, rp = false) {
+  if (!rp && pays() && !agreed && freeUntil && freeLeft() <= 0) { freeOver(); return null; } // nobody starts paying without saying so
+  if (!rp && pays() && agreed && liveSpent + liveFees + show.stream.perMinute > budget()) { stop(T.budget(liveSpent + liveFees)); return null; }
+  const res = await paidFetch(rp ? '/api/replay/token' : `/api/live/token${first ? '?start=1' : ''}`, rp ? {} : { 'X-Screen': SCREEN, ...(pays() && !agreed ? { 'X-Free-Only': '1' } : {}) });
   if (res.paidWith) {
     liveFees += wallet.lastFee;
     try { localStorage.setItem(`nutpub-fees${KEEP}`, liveFees); } catch {}
   }
   if (mine !== run) return null; // paused while it was on its way
   const why = res.status === 409 ? (await res.clone().json()).error : '';
-  if (why === 'not_live') return { off: true };
+  if (rp && res.status === 410) { // the recording has gone, or the artist deleted it: the page says which
+    replay = { ...replay, state: (await res.json().catch(() => ({}))).error === 'deleted' ? 'deleted' : 'gone' };
+    stop(' '); render(); return null;
+  }
+  if (!rp && why === 'not_live') return { off: true };
   if (why === 'free_over') { freeUntil = (await res.json()).freeUntil || freeUntil; freeOver(); return null; }
   if (!res.ok) { stop(await refusal(res)); return null; }
   const reply = await res.json();
-  if (reply.freeUntil) freeUntil = reply.freeUntil;
-  if (reply.spent != null) { spentHere += reply.spent - liveSpent; liveSpent = reply.spent; meter(); balance(); }
+  if (rp) { if (reply.paid) { spentHere += reply.paid; meter(); balance(); } }
+  else {
+    if (reply.freeUntil) freeUntil = reply.freeUntil;
+    if (reply.spent != null) { spentHere += reply.spent - liveSpent; liveSpent = reply.spent; meter(); balance(); }
+  }
   liveToken = new URL(reply.url).pathname.split('/')[1];
   return reply;
 }
@@ -434,7 +444,7 @@ $('keep-watching').onclick = () => {
   agreed = true; playLive();
 };
 
-async function playLive() {
+async function playLive(rp = false) {
   if (freeLeft() <= 0) agreed = true; // Play with the free part over (or none) is a yes, as before free minutes
   $('free-over').hidden = true;
   const v = vids[0];
@@ -452,7 +462,7 @@ async function playLive() {
     const at = Date.now();
     let reply = null;
     try {
-      reply = await renew(mine, !started);
+      reply = await renew(mine, !started, rp);
       if (!reply) break;
       off = reply.off ? off + 1 : 0;
       if (off >= 3) { stop(T.liveEnded); break; } // the artist has stopped
@@ -473,7 +483,8 @@ async function playLive() {
 }
 
 async function play() {
-  if (liveOn) return playLive();
+  if (replaying() && replay.recorded) return playLive(true);
+  if (liveOn && !replaying()) return playLive();
   const ac = unlockAudio();
   const mine = ++run;
   controls(true);
@@ -497,7 +508,7 @@ async function play() {
       break;
     }
     if (!res.ok) { stop(await refusal(res)); break; }
-    if (res.paidWith) { spentHere += Math.ceil(show.stream.perMinute / 6); meter(); balance(); }
+    if (res.paidWith) { spentHere += Math.ceil((replaying() ? replay.rate : show.stream.perMinute) / 6); meter(); balance(); }
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
     if (!playing || mine !== run) break; // stopped while it was on its way: don't start it
     if (startAt < ac.currentTime) startAt = ac.currentTime + 0.05; // fell behind (slow network): start now
@@ -580,7 +591,7 @@ function stop(why) {
 
 // The venue's page with no ticket yet: the video comes with the venue ticket, or with watching online (the other page).
 const needsVenue = () => ONE && AS === 'room' && !door.ticket && !MOD && !free;
-const toggle = () => (playing ? stop() : needsTicket() ? askTicket()
+const toggle = () => (playing ? stop() : replaying() ? play() : needsTicket() ? askTicket()
   : needsVenue() ? (showTab('ticket'), say('A venue ticket plays the show here. Or watch online.')) : play());
 $('play').onclick = toggle;
 $('big-play').onclick = toggle;
@@ -976,8 +987,13 @@ function takeStage(s) {
   if (s.freeUntil !== undefined) freeUntil = s.freeUntil;
   return s.stage === 'open' ? 'doors' : s.stage || 'doors';
 }
-const firstStage = await fetch('/api/stage').then((r) => r.json()).catch(() => ({}));
+const firstStage = await fetch('/api/stage', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => ({}));
 let stage = takeStage(firstStage);
+// The replay (session 34): after End night the page plays the night again until the recording is deleted, 7 days on.
+// { state: 'on' | 'gone' | 'deleted', rate (sats a minute), days (left), recorded (Stream's recording, or the clip), free }.
+let replay = firstStage.replay || null;
+let replaySynced = false; // the clip's replay starts from the top: where this pass's replay got to, asked once
+const replaying = () => stage === 'closed' && replay?.state === 'on' && !TICKET_VIEW && !CLOSING_VIEW;
 if (stage !== 'closed') fill().catch(() => {});
 liveOn = !!firstStage.live && (opened || !!MOD); // a sound check before the start time is live only for the mods
 whenLine();
@@ -1042,12 +1058,13 @@ function render() {
   body.classList.toggle('test-mint', !!health.mint.test);
   if (body.classList.contains('at-door')) { if (!doorShown) scrollTo(0, 0); doorShown = true; doorTop(); }
   body.classList.toggle('inside-doors', !$('inside').hidden);
-  $('player').hidden = closed || (!ONE && room && (!ticket || stage !== 'on' || atDoor));
+  $('player').hidden = (closed && !replaying()) || (!ONE && room && (!ticket || stage !== 'on' || atDoor));
+  replayLines(closed);
   $('money').hidden = closed || (room && !ticket);
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink. One screen: always.
   $('chat').hidden = closed || (!ONE && room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start show.
-  const live = AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on';
+  const live = replaying() || (AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on');
   const counting = AS === 'home' && !closed && !confirmed && !opened && !TICKET_VIEW && !MOD;
   $('countdown').hidden = !counting;
   body.classList.toggle('counting', counting);
@@ -1260,8 +1277,37 @@ const homeHello = () => { try { const t = JSON.parse(localStorage.getItem('nutpu
 if (IN_SHOW && !KEEP) addEventListener('storage', (e) => { if (e.key === 'nutpub-todo-home') todoDraw(); });
 // The strip at the top (gigs 1 and 2, the page of its own): the one next thing, or the way back to Show Time.
 const FAN_STRIP = TODO && AS !== 'room' && top === self;
+// The replay's badge on the picture and its line on the closing card: free with a ticket, else the rate; or why it's gone.
+function replayLines(closed) {
+  const on = replaying();
+  body.classList.toggle('replaying', on);
+  // In the page under the picture while the replay's on (it's a screen of its own otherwise).
+  if (on && !closingSpot.isConnected) { $('closing').before(closingSpot); $('when').after($('closing')); }
+  if (!on && closingSpot.isConnected) closingSpot.replaceWith($('closing'));
+  $('replay-badge').hidden = !on;
+  if (on) $('replay-badge').textContent = `Replay · ${replay.days === 1 ? 'last day' : `${replay.days} days left`}`;
+  const gone = closed && !TICKET_VIEW && replay && replay.state !== 'on';
+  const line = $('replay-line');
+  line.hidden = !on && !gone;
+  line.classList.toggle('gone', !!gone);
+  const who = show.artist?.split(' ')[0] || 'The artist';
+  line.textContent = gone ? (replay.state === 'deleted' ? `${who} deleted the recording.` : 'The recording has gone. Recordings are kept for 7 days after the gig.')
+    : !on ? '' : replay.free || door.ticket ? 'Your ticket plays the replay free: press play.'
+      : `Watch the replay: ${T.spent(replay.rate)} a minute. Stop any time.${show.stream.mode === 'pay' ? ' Minutes paid live don’t carry over.' : ''}`;
+  replayStrip();
+}
+const closingSpot = document.createComment('closing');
+// Gig 2's judges (session 34): one line for the replay, in the fan's strip at the top.
+function replayStrip() {
+  if (!FAN_STRIP || !replaying() || replay.free || door.ticket) return false;
+  body.classList.add('fan-strip');
+  $('fan-line').hidden = false;
+  $('fan-line-k').textContent = 'Judges · replay';
+  $('fan-line-text').textContent = `The night’s over, but ${show.artist?.split(' ')[0] || 'the artist'}’s replay runs for 7 days: press play. Without a ticket it’s ${T.spent(replay.rate)} a minute, a 402 again. Then back to Show Time.`;
+  return true;
+}
 function fanStrip(items) {
-  if (!FAN_STRIP) return;
+  if (!FAN_STRIP || replayStrip()) return;
   body.classList.toggle('fan-strip', items.length > 0);
   $('fan-line').hidden = !items.length;
   if (!items.length) return;
@@ -1876,7 +1922,13 @@ async function tick() {
     door = withSecret({ ...door, ...now.door, secret: now.door.secret || door.secret });
     if (door.drink?.poured && !pouredBefore) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
-  if (stage === 'closed' && playing) stop(''); // the night is over: nobody goes on paying for a hidden player
+  replay = now.replay || null;
+  if (stage === 'closed' && playing && !replaying()) stop(''); // the night is over: nobody goes on paying for a hidden player
+  if (replaying() && !replay.recorded && !replaySynced) { // the clip's replay: from the top, live pieces don't count
+    replaySynced = true;
+    const m = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).catch(() => null);
+    if (m?.next != null && !playing) nextPiece(m.next);
+  }
   if (stage !== 'closed' && !CLOSING_VIEW) { try { localStorage.removeItem(`nutpub-had${KEEP}`); } catch {} } // a new night
   if (stage === 'closed' || CLOSING_VIEW) {
     const left = await wallet.balance();

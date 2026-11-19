@@ -135,9 +135,9 @@ async function refresh() {
   const drinkSum = [...toArtist, ...unpouredLate].reduce((s, d) => s + d.sats, 0);
   const drinkOn = show.drink?.mode === 'artist' || drinks.length > 0;
   const zaps = takings.nutzaps?.count || 0;
-  const came = all('ticket') + all('tip') + all('piece') + drinkSum;
+  const came = all('ticket') + all('tip') + all('piece') + all('replay') + drinkSum;
   sums = {
-    tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'),
+    tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'), replay: all('replay'), replayOn: takings.replay,
     drinks: drinkSum, drinksN: toArtist.length + unpouredLate.length, drinkOn, came,
     fee: Math.round((came * (takings.feePercent ?? 5)) / 100), feePercent: takings.feePercent ?? 5,
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
@@ -188,6 +188,11 @@ function paint() {
   $('s-tips').textContent = `${n(s.tipsN)} tip${s.tipsN === 1 ? '' : 's'}${s.zaps ? ` · ${n(s.zaps)} Nutzap${s.zaps === 1 ? '' : 's'}` : ''}`;
   $('v-home').textContent = fig(s.home);
   $('s-home').textContent = s.stream === 'ticket' ? 'Watch online' : s.stream === 'free' ? 'Free to watch' : 'Pay as you watch';
+  // Replays (session 34): their own tile, once the gig has a replay or replay sats came in.
+  $('t-replay').hidden = !s.replay && !s.replayOn;
+  $('v-replay').textContent = fig(s.replay);
+  $('s-replay').textContent = s.replayOn?.state === 'on' ? `${n(s.replayOn.days)} day${s.replayOn.days === 1 ? '' : 's'} left`
+    : s.replayOn?.state === 'deleted' ? 'Recording deleted' : 'Replay over';
   $('t-drinks').classList.toggle('later', !s.drinkOn);
   $('v-drinks').textContent = s.drinkOn ? fig(s.drinks) : '—';
   $('s-drinks').textContent = s.drinkOn ? `${n(s.drinksN)} not poured by last orders` : 'With the first drink';
@@ -213,7 +218,7 @@ function paint() {
   $('move-row').hidden = done;
   $('done-counts').hidden = !allMoved;
   $('done-counts').textContent = [s.ticketsN && `${n(s.ticketsN)} ticket${s.ticketsN === 1 ? '' : 's'}`, s.tipsN && `${n(s.tipsN)} tip${s.tipsN === 1 ? '' : 's'}`,
-    s.home && 'watching from home', s.drinksN && `${n(s.drinksN)} unpoured drink${s.drinksN === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+    s.home && 'watching from home', s.replay && 'replays', s.drinksN && `${n(s.drinksN)} unpoured drink${s.drinksN === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
   const last = lastMoved();
   $('done-moved').hidden = !allMoved;
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
@@ -416,7 +421,7 @@ function liveLine() {
   const { show } = info;
   return { artist: show.artist, date: show.date, venue: (show.venue || '').split(',')[0].trim(),
     tickets: { room: s.sold.room?.count || 0, home: s.sold.home?.count || 0, inside: s.sold.room?.inside || 0, sats: s.tickets, roomSats: s.sold.room?.sats ?? null },
-    tips: s.tips, tipsN: s.tipsN, home: s.home, drinks: s.drinks, drinksN: s.drinksN, poured: s.poured, drinksAll: s.drinksAll,
+    tips: s.tips, tipsN: s.tipsN, home: s.home, replay: s.replay, drinks: s.drinks, drinksN: s.drinksN, poured: s.poured, drinksAll: s.drinksAll,
     sats: s.came, feePercent: s.feePercent, moved: lastMoved() || true };
 }
 function slip(g, { folded = false } = {}) {
@@ -432,6 +437,7 @@ function slip(g, { folded = false } = {}) {
     if (home) out.push(ln(`${n(home)} × online ticket`, t.roomSats == null ? (room ? '' : n(t.sats)) : n((t.sats || 0) - t.roomSats)));
     if (!room && !home && t.sats) out.push(ln('Tickets', n(t.sats)));
     if (g.home) out.push(ln('Watching online', n(g.home)));
+    if (g.replay) out.push(ln('Replays', n(g.replay)));
     if (g.tips) out.push(ln(g.tipsN ? `${n(g.tipsN)} × tip` : 'Tips', n(g.tips)));
     if (g.drinksAll || g.poured) out.push(ln('Free first drink', g.drinksAll ? `${n(g.poured || 0)} of ${n(g.drinksAll)} poured` : `${n(g.poured)} poured`, '', true));
     if (g.drinks) out.push(ln(g.drinksN ? `${n(g.drinksN)} × unpoured drink` : 'Unpoured drinks', n(g.drinks)));

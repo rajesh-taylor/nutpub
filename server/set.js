@@ -13,6 +13,7 @@ import { modOf, hasLink } from './mods.js';
 import { nostrOf, handle } from './nostr.js';
 import { nutzapInfo, checkNutzap, tokenProofs, recordNutzap, WHY } from './nutzap.js';
 import { json, body, randomHex, now } from './http.js';
+import { replayPlaying, replayFree, replayPiecePaid, replayPieceNext, replayPieceKeep, replaySpent } from './replay.js';
 
 const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
@@ -72,7 +73,10 @@ export function mountSet(route) {
       one('SELECT COALESCE(MAX(piece) + 1, 0) AS n FROM paid WHERE pass = ?', c.pass),
       one('SELECT COALESCE(SUM(sats), 0) AS sats FROM live_paid WHERE pass = ?', c.pass),
     ]);
-    return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n });
+    // The replay (session 34) starts again from the top, and counts its own pieces: live ones don't carry over.
+    const replay = await replayPlaying(c);
+    if (replay && !replay.recorded) return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: await replayPieceNext(c.pass), replaySpent: await replaySpent(c.pass) });
+    return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n, ...(replay ? { replaySpent: await replaySpent(c.pass) } : {}) });
   });
 
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).
@@ -80,21 +84,35 @@ export function mountSet(route) {
     async (c) => {
       const { stream } = await showOf(c);
       if (stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
+      // After End night, the replay: free with a ticket, otherwise each piece at the replay rate (a sixth of a minute).
+      const replay = await replayPlaying(c);
+      if (replay) {
+        if (replay.recorded) return json({ error: 'replay_recorded', detail: 'The replay is the night’s recording.' }, 409);
+        if ((await replayFree(c.pass)) || (await replayPiecePaid(c.pass, c.piece))) return send(c, 'audio');
+        c.replay = replay;
+        return null;
+      }
       if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
       if (stream.mode === 'ticket') return json({ error: 'ticket_needed', detail: 'Buy Watch online first: one price for the whole show.' }, 403);
       if (!stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
     },
-    cashuGate(async (c) => piecePrice(await showOf(c)), async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds`,
-      { lockTo: artistKey, kind: 'piece' }),
+    cashuGate(async (c) => (c.replay ? Math.ceil(c.replay.rate / 6) : piecePrice(await showOf(c))),
+      async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds${c.replay ? ' of the replay' : ''}`,
+      { lockTo: artistKey, kind: (c) => (c.replay ? 'replay' : 'piece') }),
     async (c) => {
-      await run('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)', c.pass, c.piece, c.paid, now());
+      if (c.replay) await replayPieceKeep(c.pass, c.piece, c.paid);
+      else await run('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)', c.pass, c.piece, c.paid, now());
       return send(c, 'audio');
     });
 
   // The picture for piece n: only for a pass that paid for that piece's sound.
   route('GET', /^\/api\/set\/video\/(?<n>\d+)$/, pass, piece, async (c) => {
     if ((await showOf(c)).stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
+    if (await replayPlaying(c)) {
+      if (!(await replayFree(c.pass)) && !(await replayPiecePaid(c.pass, c.piece))) return json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' }, 403);
+      return send(c, 'video');
+    }
     if (!(await free(c)) && !(await hasTicket(c.pass)) && !(await hasPaid(c.pass, c.piece))) {
       return json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' }, 403);
     }

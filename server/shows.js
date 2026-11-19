@@ -2,6 +2,9 @@
 // plus named templates to start the next one from. Both live in D1.
 import { one, all, run, sql, batch, kv, stageDb } from './db.js';
 import { keepGigLine } from './closing.js';
+import { REPLAY_FLOOR } from './config.js';
+import { getRate } from './rate.js';
+import { endReplay } from './replay.js';
 
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
@@ -43,6 +46,7 @@ export const blank = () => ({
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
   chatRows: 3,                          // over the picture, the newest 3, 5 or 10 lines of the chat (Rajesh 14 Nov)
   stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (a Watch online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
+  replay: { mode: 'off', perMinute: null }, // after End night the gig page plays the recording (session 34): 'off', '25' or '50' (% of the live price a minute, Pay as you watch only), or 'own' (perMinute)
   online: { price: null, fiat: null, locked: false }, // the Watch online ticket, in sats; fiat: £ by card, which fills the sats unless locked
   tip: { label: '', price: null },      // always on
   goal: { on: false, amount: null, minutes: 30 }, // all or nothing; refunds itself if missed
@@ -100,6 +104,11 @@ export function clean(input = {}) {
       perMinute: sats(input.stream?.perMinute) ?? sats(input.stream?.price * 6), // `price`: per 10 s, in shows saved before 3 Nov
       freeMinutes: Number.isInteger(Number(input.stream?.freeMinutes)) && Number(input.stream.freeMinutes) >= 1 ? Math.min(30, Number(input.stream.freeMinutes)) : null, // 30 at most: it's on our Stream bill
     },
+    // A paid stream only: a free stream with tips has no replay, and Watch online has no price a minute to take 25% of.
+    replay: (() => {
+      const mode = ['ticket', 'pay'].includes(input.stream?.mode) && ['off', '25', '50', 'own'].includes(input.replay?.mode) ? input.replay.mode : 'off';
+      return { mode: input.stream?.mode === 'ticket' && mode !== 'own' ? 'off' : mode, perMinute: sats(input.replay?.perMinute) };
+    })(),
     online: { price: sats(input.online?.price), fiat: pounds(input.online?.fiat), locked: on(input.online?.locked) },
     tip: { label: text(input.tip?.label, 40), price: sats(input.tip?.price) },
     goal: {
@@ -144,6 +153,7 @@ export function clean(input = {}) {
   if (!show.date) problems.push('date');
   else if (show.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })) problems.push('date.past');
   if (show.stream.mode === 'pay' && !show.stream.perMinute) problems.push('stream.perMinute');
+  if (show.replay.mode === 'own' && !show.replay.perMinute) problems.push('replay.perMinute');
   if (show.goal.on && !show.goal.amount) problems.push('goal.amount');
   if (show.ticket.on && !show.ticket.price) problems.push('ticket.price');
   if (show.stream.mode === 'ticket' && !show.online.price) problems.push('online.price');
@@ -195,6 +205,8 @@ export async function saveShow(input) {
   const was = await currentShow();
   // A new date on a gig that hasn't happened is a postponement: its tickets stand.
   if (show.date && show.date !== was.show.date && !problems.includes('date.past') && (await gigOver(was))) await clearGig();
+  // A new date ends the last gig's replay: the page is the next gig's now (Finish gig alone keeps it, session 34).
+  if (show.date && show.date !== was.show.date && (await kv.get('replay', null))) await endReplay();
   // Once a ticket has sold the name and the address are fixed until New night: posters and saved links depend on them.
   if ((await one('SELECT 1 AS x FROM tickets LIMIT 1'))) {
     const before = (await currentShow()).show;
@@ -231,6 +243,21 @@ export async function deleteTemplate(name) {
 
 // A 10-second piece of the recorded set, at the show's rate a minute.
 export const piecePrice = (show) => Math.ceil(show.stream.perMinute / 6);
+
+// The replay's price a minute, in sats (0: no replay). Never below `floor` (sats a minute, replayFloor): the lowest
+// price the replay may have, a Worker setting kept out of the repo (config.js, REPLAY_FLOOR).
+export function replayRate(show, floor = 0) {
+  const r = show.replay;
+  if (!r || r.mode === 'off' || !['ticket', 'pay'].includes(show.stream.mode)) return 0;
+  const raw = r.mode === 'own' ? r.perMinute : show.stream.mode === 'pay' && show.stream.perMinute ? Math.ceil(show.stream.perMinute * Number(r.mode) / 100) : 0;
+  return raw ? Math.max(raw, floor) : 0;
+}
+// REPLAY_FLOOR (pence an hour) in sats a minute at today's rate (£ a bitcoin). Unset: no floor.
+export async function replayPrice(show) {
+  const floor = replayFloor(REPLAY_FLOOR, (await getRate()).gbp);
+  return { rate: replayRate(show, floor), floor };
+}
+export const replayFloor = (pence, gbp) => (pence > 0 && gbp > 0 ? Math.ceil((pence / 100) * (1e8 / gbp) / 60) : 0);
 
 // What a ticket costs and who gets what: the artist's price, plus the first drink if the artist added one.
 export function ticketSplit(show) {

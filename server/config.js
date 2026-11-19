@@ -7,6 +7,9 @@ export let VERSION = '0';
 // The NutPub's share of what fans pay, in percent (wrangler.jsonc FEE_PERCENT). Shown on Takings; not taken yet.
 export let FEE_PERCENT = 5;
 export let ASSETS;
+// The replay's lowest price, in pence an hour: a Worker secret (npx wrangler secret put REPLAY_FLOOR), never in the
+// repo. Unset: no floor. shows.js turns it into sats a minute at the day's rate.
+export let REPLAY_FLOOR = 0;
 // The wallet card: our Apple Pass Type ID, the team it belongs to, and its key and certificate (secrets, PEM).
 export let PASS_TYPE = '';
 export let PASS_TEAM = '';
@@ -30,6 +33,7 @@ export function configure(env) {
   VERSION = env.VERSION || '0';
   FEE_PERCENT = Number.isFinite(Number(env.FEE_PERCENT)) && env.FEE_PERCENT !== '' ? Math.min(Math.max(Number(env.FEE_PERCENT), 0), 50) : 5;
   ASSETS = env.ASSETS;
+  REPLAY_FLOOR = Math.max(0, Math.floor(Number(env.REPLAY_FLOOR)) || 0);
   PASS_TYPE = env.PASS_TYPE || '';
   PASS_TEAM = env.PASS_TEAM || '';
   PASS_KEY = env.PASS_KEY || '';
