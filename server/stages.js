@@ -8,9 +8,9 @@ import { one, run, sql, batch, stageDb } from './db.js';
 import { json, body, now } from './http.js';
 import { checkCreate, checkGet, challengeOk, spend, site } from './passkey.js';
 
-// While the stages run on the test mint (and the free plan), at most this many at once: 50 to Sat 21 Nov, while every
-// judge makes one per gig card (Rajesh 14 Nov), then 15.
-export const maxStages = (at = Date.now()) => (at < Date.parse('2026-11-22T00:00:00Z') ? 50 : 15);
+// While the stages run on the test mint (and the free plan), at most this many at once: 50 until NutNovember's judging
+// is over (Rajesh 19 Nov: the drop to 15 on 22 Nov would have shut judges out), then 15.
+export const maxStages = (at = Date.now()) => (at < Date.parse('2026-12-01T00:00:00Z') ? 50 : 15);
 const full = async () => (await one('SELECT COUNT(*) AS n FROM stages')).n >= maxStages();
 const FULL = () => json({ error: 'full', detail: 'Every stage is taken for now: try again tomorrow.' }, 409);
 // Judge for yourself (/judge): the three gig cards, each a stage of its own holding just that gig (setlist.js).
@@ -44,6 +44,17 @@ export async function closeOldStages(env, at = Date.now(), stub = stageStub) {
   if (closed.length) console.log(`stages closed: ${closed.join(', ')}`);
   return closed;
 }
+// Every stage taken (Rajesh 19 Nov: our own testing filled all 50): the oldest one made over an hour ago closes to make
+// room, as it would at 7 days. Never one made in the last hour, so a judge mid-run keeps theirs.
+export async function makeRoom(env, at = Date.now(), stub = stageStub) {
+  const hourAgo = new Date(at - 3_600_000).toISOString();
+  const oldest = await env.DB.prepare('SELECT id FROM stages WHERE created < ? ORDER BY created LIMIT 1').bind(hourAgo).first();
+  if (!oldest) return false;
+  try { await stub(env, oldest.id).shut(); } catch (e) { console.log(`stage ${oldest.id} not closed: ${String(e.message || e).slice(0, 200)}`); return false; }
+  await env.DB.batch([env.DB.prepare('DELETE FROM stage_keys WHERE stage = ?').bind(oldest.id), env.DB.prepare('DELETE FROM stages WHERE id = ?').bind(oldest.id)]);
+  console.log(`stage closed to make room: ${oldest.id}`);
+  return true;
+}
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
 const ALNUM = `${LETTERS}0123456789`;
@@ -69,7 +80,7 @@ export function mountStageDoor(route) {
     if (!(await challengeOk(b?.challenge))) return old();
     let k;
     try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
-    if (await full()) return FULL();
+    if ((await full()) && !(await makeRoom(c.env))) return FULL();
     if (!(await spend(b.challenge))) return old();
     let id = newStageId();
     while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
@@ -88,7 +99,7 @@ export function mountStageDoor(route) {
   route('POST', '/api/stages/judge', front, async (c) => {
     const gig = String((await body(c))?.gig || '');
     if (!JUDGE_GIGS.includes(gig)) return json({ error: 'no_gig' }, 400);
-    if (await full()) return FULL();
+    if ((await full()) && !(await makeRoom(c.env))) return FULL();
     let id = newStageId();
     while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
     await run('INSERT INTO stages (id, created) VALUES (?, ?)', id, now());

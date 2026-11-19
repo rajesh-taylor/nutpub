@@ -121,3 +121,23 @@ test('stages close 7 days after they are made', async () => {
   assert.equal(closesAt('2026-11-15T18:00:00.000Z'), '2026-11-22T18:00:00.000Z');
   assert.equal(closesAt(null), null);
 });
+
+// Every stage taken (Rajesh 19 Nov): the oldest made over an hour ago closes to make room; one made in the last hour
+// never does, so nobody mid-run loses theirs.
+test('a full front door closes the oldest stage, never one made in the last hour', async () => {
+  const { makeRoom } = await import('../server/stages.js');
+  const db = new DatabaseSync(':memory:');
+  db.exec(schema);
+  const stmt = (text) => ({ bind: (...args) => ({ first: async () => db.prepare(text).get(...args) ?? null, run: async () => db.prepare(text).run(...args) }) });
+  const env = { DB: { prepare: stmt, batch: (list) => Promise.all(list.map((s) => s.run())) } };
+  const now = Date.parse('2026-11-20T09:00:00Z');
+  const made = (mins) => new Date(now - mins * 60_000).toISOString();
+  for (const [id, m] of [['a1aaaa', 30], ['b2bbbb', 300], ['c3cccc', 90]]) db.prepare('INSERT INTO stages (id, created) VALUES (?, ?)').run(id, made(m));
+  const shut = [];
+  const stub = (_, id) => ({ shut: async () => { shut.push(id); } });
+  assert.equal(await makeRoom(env, now, stub), true);
+  assert.equal(await makeRoom(env, now, stub), true);
+  assert.equal(await makeRoom(env, now, stub), false); // only the half-hour-old one is left
+  assert.deepEqual(shut, ['b2bbbb', 'c3cccc']);
+  assert.deepEqual(db.prepare('SELECT id FROM stages').all().map((r) => r.id), ['a1aaaa']);
+});
