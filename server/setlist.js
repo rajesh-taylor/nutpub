@@ -39,7 +39,12 @@ const GIGS = {
       // The answers, one at a time over the next ten seconds, each from a different guest (Rajesh 14 Nov).
       { after: 8, text: 'London 🇬🇧' }, { after: 10.5, text: 'Texas 🇺🇸' }, { after: 13, text: 'Berlin 🇩🇪' }, // flags (Rajesh 19 Nov)
       // Rajesh 18 Nov: a big Nutzap from a Nostr name, a nod to who made it all possible.
-      { after: 16, text: 'I approve', sats: 210000, nostr: 'Satoshi 💎🙌', nutzap: true }],
+      { after: 16, text: 'I approve', sats: 210000, nostr: 'Satoshi 💎🙌', nutzap: true },
+      // Rajesh 19 Nov: a fuller chat, four more places and a cheer from a Rod (not that one).
+      // Inside his 30-second clip, so they all come the first time through.
+      { after: 18, text: 'Dublin 🇮🇪' }, { after: 20.5, text: 'Lisbon 🇵🇹', nostr: 'satsback_sara' },
+      { after: 23, text: 'Tokyo 🇯🇵' }, { after: 25.5, text: 'São Paulo 🇧🇷' },
+      { after: 28, text: 'Go on Longy! 🎸🎤', nostr: 'Rod (not that one)' }],
   },
   frankie: {
     photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },

@@ -32,16 +32,21 @@
     .nut-menu a small { font: 13px/1.3 "IBM Plex Sans", var(--body); color: var(--smoke); }
     .nut-menu a:hover, .nut-menu a:focus-visible { background: rgb(232 168 69 / .12); outline: none; }
     .nut-menu a:hover b, .nut-menu a:focus-visible b { color: var(--cream); }
-    .judge h1 { margin: 0; padding-right: 0; font: 400 clamp(24px, 3vw, 30px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
+    .judge h1 { margin: 6px 0 0; padding-right: 0; font: 400 clamp(22px, 2.6vw, 27px)/1 var(--poster); letter-spacing: .05em; color: #e8a845; text-wrap: balance; }
     /* Two lines (Rajesh 15 Nov, late): the posters say the rest; the specs are on each poster's small print. */
     /* The curved sign (Rajesh 19 Nov), as on the pint screen: gold, worn, a shimmer every few seconds. */
     .home-sign { position: relative; justify-self: center; width: min(720px, 88vw); margin: -12px 0 0; line-height: 0; }
-    .home-byline { justify-self: center; margin: -26px 0 14px; font: 400 14px/1 var(--poster); letter-spacing: .32em; text-transform: uppercase; color: rgb(217 149 58 / .7); text-align: center; } /* the sign's byline, back (Rajesh 19 Nov) */
+    .home-byline { justify-self: center; margin: -26px 0 14px; font: 400 14px/1 var(--poster); letter-spacing: .32em; text-transform: uppercase; color: rgb(217 149 58 / .7); text-align: center;
+      background: linear-gradient(100deg, rgb(217 149 58 / .7) 40%, #fff3d0 50%, rgb(217 149 58 / .7) 60%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: home-shine-byline 8.4s .8s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { .home-byline { animation: none; } } /* the sign's byline, back (Rajesh 19 Nov) */
     .home-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
     .home-sign text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold-h); }
     .home-sign .btc { fill: #f7931a; }
-    .home-sign .shine { position: absolute; inset: 0; height: 100%; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: pint-shine 3.5s .8s linear infinite; }
+    .home-sign .shine { position: absolute; inset: 0; height: 100%; -webkit-mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; mask: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%) 96% 0 / 300% 100% no-repeat; animation: home-shine-sign 8.4s .8s linear infinite; }
     .home-sign .shine text { fill: #fff3d0; }
+    /* Rajesh 19 Nov: the shimmer takes turns, the sign then its byline, each 20% slower than the pint screen's. */
+    @keyframes home-shine-sign { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 28.5% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 28.51%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
+    @keyframes home-shine-byline { 0%, 50% { background-position: 100% 0; } 78.5% { background-position: 0 0; } 78.51%, 100% { background-position: 100% 0; } }
     @media (prefers-reduced-motion: reduce) { .home-sign .shine { display: none; } }
     @media (max-width: 700px) { .nut-menu { top: 20px; } .home-sign { margin-top: 52px; } .lines .lead { font-size: 16px; } .not-phone { display: none; } } /* below the Menu button on a phone */
     .lines { display: grid; gap: 8px; }

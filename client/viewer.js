@@ -1479,7 +1479,7 @@ $('buy').onclick = async () => {
     for (let i = 0; i < 30 && !(await wallet.topupDone(id)); i += 1) await new Promise((r) => setTimeout(r, 1000));
   } else if (have < due) { $('door-topup').hidden = false; return say(`You need ${sats(due)} and have ${sats(have)}.`); }
   $('buy').disabled = true;
-  say('Paying at the door…');
+  say(AS === 'home' ? 'Paying for your ticket…' : 'Paying at the door…'); // Rajesh 19 Nov: not 'at the door' at home
   try {
     let res = door.ticket ? null : await paidFetch(AS === 'home' ? '/api/door/ticket?as=home' : '/api/door/ticket');
     if (res && !res.ok) throw new Error(await refusal(res));
