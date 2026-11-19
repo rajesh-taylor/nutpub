@@ -325,9 +325,11 @@ function unlockAudio() {
   // At the very start of a tap, before any await, or iOS stays silent.
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running') ctx.resume().catch(() => {}); // Safari also says 'interrupted' (another tab or frame took the sound)
   return ctx;
 }
+// The sound went quiet mid-set (Rajesh 19 Nov, Safari: no sound on gigs 2 and 4): any tap on the page brings it back.
+addEventListener('pointerdown', () => { if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); }, { capture: true });
 
 // ---- The background photo: the account holder's own; or the Berlin picks, one before Play and three taking
 // turns while the set plays.

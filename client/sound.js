@@ -5,7 +5,7 @@ let ctx;
 export function unlockAudio() {
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running') ctx.resume().catch(() => {}); // Safari also says 'interrupted' (another tab or frame took the sound)
   return ctx;
 }
 
