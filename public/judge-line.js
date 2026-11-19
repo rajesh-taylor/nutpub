@@ -120,7 +120,7 @@ export async function judgeLine(r, page) {
         : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[7] });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
-    if (page === 'setup') say(1, `This is where ${name} sets the prices. Nothing to change. Then click 2 · Show Time, at the top.`, '', '', { story: TOLD.setup });
+    if (page === 'setup') say(1, `This is where ${name} sets prices, kinds of tickets, mods, show splits and more. Scroll down to look; nothing needs changing. Then click 2 · Show Time, at the top.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
       if (closed && replay) say(5, 'Back on the fan’s page: press play to watch the replay, which is kept for playback before deletion in 7 days. Then move the fan’s sats to Cashu.me and close that tab. Then click 3 · Your takings, at the top.', '', '', { story: TOLD.replay });
       else if (closed) say(5, 'The night’s over. Click 3 · Your takings, at the top.');

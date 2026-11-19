@@ -573,7 +573,8 @@ async function drawMods() {
     radio.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { main: true }); status(`${m.name} is the main mod.`, 'ok'); drawMods(); };
     main.append(radio, 'Main');
     main.hidden = list.length < 2; // one mod is the main mod anyway
-    const link = Object.assign(document.createElement('input'), { readOnly: true, value: keys[m.id] ? modLink(keys[m.id]) : 'Made on another browser: cancel it and make a new one to see the link.' });
+    // An example gig's mod (Aaron of Essex, setlist.js) has no link: his lines are scripted (Rajesh 19 Nov).
+    const link = Object.assign(document.createElement('input'), { readOnly: true, value: keys[m.id] ? modLink(keys[m.id]) : m.seed ? `Scripted for this example gig: ${m.name}’s lines come in by themselves.` : 'Made on another browser: cancel it and make a new one to see the link.' });
     link.setAttribute('aria-label', `${m.name}'s moderator link`);
     const copyBtn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Copy', disabled: !keys[m.id] });
     copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link.value); status(`${m.name}'s link copied. Send it to them privately.`, 'ok'); } catch { link.select(); } };

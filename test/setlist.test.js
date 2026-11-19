@@ -133,7 +133,7 @@ test('example gigs bring their chat: Longy’s pin, Aaron of Essex, and his ques
     const { cue } = await import('../server/setlist.js');
     const { one, all } = await import('../server/db.js');
     await setlist(env, 'longy');
-    assert.match(await kv.get('pin'), /Tip with a comment/);
+    assert.equal(await kv.get('pin'), 'Longy’s album: https://fountain.fm/album/NDsFdfoGddTW1qx8Mfds'); // his Fountain link only (Rajesh 19 Nov)
     assert.deepEqual((await all('SELECT name, icon FROM mods')).map((m) => m.name), ['Aaron of Essex']);
     assert.equal(await cue(0), true);
     assert.equal(await cue(0), false); // once, whoever asks first

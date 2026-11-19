@@ -33,7 +33,7 @@ const GIGS = {
       languages: ['en', 'de', 'es', 'fr', 'pt'],
     },
     // Rajesh 14 Nov: a pinned message per gig, Aaron of Essex as Longy's mod, and his question 5 s into the clip.
-    pin: 'Longy’s album: https://fountain.fm/album/NDsFdfoGddTW1qx8Mfds · Tip with a comment: type, put sats in the box on the right, press Enter.', // 137 of 140
+    pin: 'Longy’s album: https://fountain.fm/album/NDsFdfoGddTW1qx8Mfds', // Rajesh 19 Nov: his Fountain link only
     mods: [{ name: 'Aaron of Essex', icon: '🎤' }],
     cues: [{ after: 5, mod: { name: 'Aaron of Essex', icon: '🎤' }, text: 'Where\u2019s everyone watching from tonight?' },
       // The answers, one at a time over the next ten seconds, each from a different guest (Rajesh 14 Nov).

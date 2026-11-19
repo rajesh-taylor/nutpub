@@ -51,7 +51,7 @@ export function mountMods(route, admin) {
   const mod = async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'This mod link has been cancelled.' }, 403));
 
   // ---- The artist, on Plan gig.
-  route('GET', '/api/admin/mods', admin, async () => json({ mods: await all('SELECT id, name, icon, main, created FROM mods ORDER BY id'), icons: ICONS, pin: await pinned() }));
+  route('GET', '/api/admin/mods', admin, async () => json({ mods: await all("SELECT id, name, icon, main, created, key_hash LIKE 'seed:%' AS seed FROM mods ORDER BY id"), icons: ICONS, pin: await pinned() }));
   route('PUT', '/api/admin/pin', admin, async (c) => json({ pin: await setPin((await body(c))?.text) }));
   route('POST', '/api/admin/mods', admin, async (c) => {
     const b = await body(c);
