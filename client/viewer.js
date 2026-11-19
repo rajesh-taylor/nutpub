@@ -482,7 +482,22 @@ async function playLive(rp = false) {
   }
 }
 
+// The replay's one payment (session 35): a 402 for the whole replay, before the first play. A ticket gets in free.
+async function buyReplay() {
+  if (replay.bought) return true;
+  say('');
+  let res;
+  try { res = await paidFetch('/api/replay/buy'); } catch (e) { say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message); return false; }
+  if (!res.ok) { say(await refusal(res)); return false; }
+  const b = await res.json();
+  replay = { ...replay, bought: true };
+  if (b.paid) { spentHere += b.paid; meter(); balance(); }
+  replayLines(true);
+  return true;
+}
+
 async function play() {
+  if (replaying() && !(await buyReplay())) return;
   if (replaying() && replay.recorded) return playLive(true);
   if (liveOn && !replaying()) return playLive();
   const ac = unlockAudio();
@@ -508,7 +523,7 @@ async function play() {
       break;
     }
     if (!res.ok) { stop(await refusal(res)); break; }
-    if (res.paidWith) { spentHere += Math.ceil((replaying() ? replay.rate : show.stream.perMinute) / 6); meter(); balance(); }
+    if (res.paidWith) { spentHere += Math.ceil(show.stream.perMinute / 6); meter(); balance(); }
     const buf = await ac.decodeAudioData(await res.arrayBuffer());
     if (!playing || mine !== run) break; // stopped while it was on its way: don't start it
     if (startAt < ac.currentTime) startAt = ac.currentTime + 0.05; // fell behind (slow network): start now
@@ -1291,19 +1306,24 @@ function replayLines(closed) {
   line.hidden = !on && !gone;
   line.classList.toggle('gone', !!gone);
   const who = show.artist?.split(' ')[0] || 'The artist';
+  const until = on ? new Date(replay.until).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
   line.textContent = gone ? (replay.state === 'deleted' ? `${who} deleted the recording.` : 'The recording has gone. Recordings are kept for 7 days after the gig.')
-    : !on ? '' : replay.free || door.ticket ? 'Your ticket plays the replay free: press play.'
-      : `Watch the replay: ${T.spent(replay.rate)} a minute. Stop any time.${show.stream.mode === 'pay' ? ' Minutes paid live don’t carry over.' : ''}`;
+    : !on ? '' : replay.free || door.ticket ? `Your ticket plays the replay free, twice through, until ${until}: press play.`
+      : replay.bought ? `Your replay: watch it twice through, until ${until}. Press play.`
+        : `Watch the replay: ${replayPrice()}. Pay once, watch it twice through, until ${until}. Press play.`;
   replayStrip();
 }
 const closingSpot = document.createComment('closing');
+// "£4 (8,228 sats)": the artist's pounds and the sats the 402 asks for.
+const replayPrice = () => `${replay.pence ? `£${(replay.pence / 100).toFixed(2).replace(/\.00$/, '')} ` : ''}(${replay.price.toLocaleString('en-GB')} sats)`.replace(/^\((.*)\)$/, '$1');
 // Gig 2's judges (session 34): one line for the replay, in the fan's strip at the top.
 function replayStrip() {
   if (!FAN_STRIP || !replaying() || replay.free || door.ticket) return false;
   body.classList.add('fan-strip');
   $('fan-line').hidden = false;
   $('fan-line-k').textContent = 'Judges · replay';
-  $('fan-line-text').textContent = `The night’s over, but ${show.artist?.split(' ')[0] || 'the artist'}’s replay runs for 7 days: press play. Without a ticket it’s ${T.spent(replay.rate)} a minute, a 402 again. Then back to Show Time.`;
+  $('fan-line-text').textContent = replay.bought ? 'Bought: the replay plays twice through. Then back to Show Time.'
+    : `The night’s over, but ${show.artist?.split(' ')[0] || 'the artist'}’s replay runs for 7 days: press play. One 402 of ${replayPrice()} opens it, twice through. Then back to Show Time.`;
   return true;
 }
 function fanStrip(items) {

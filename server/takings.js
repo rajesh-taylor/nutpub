@@ -25,7 +25,7 @@ export function mountTakings(route, admin) {
 
   // Payments not collected yet. `here`: locked to the current key (the rest wait for the browser with the old one).
   route('GET', '/api/admin/locked', admin, async (c) => {
-    const list = await all('SELECT id, token, sats, kind, pubkey, at FROM locked WHERE collected_at IS NULL ORDER BY id');
+    const list = await all("SELECT id, token, sats, kind, pubkey, at FROM locked WHERE collected_at IS NULL AND kind != 'upfront' ORDER BY id"); // upfront: the NutPub's, not the artist's
     const key = await artistKey();
     // Drinks are locked to the bar's key; after last orders the artist's key may take those still waiting (refund path).
     return json({ pubkey: key, lastOrdersAt: lastOrdersAt(await showOf(c)), waiting: list,
@@ -68,7 +68,7 @@ export function mountTakings(route, admin) {
   route('GET', '/api/admin/takings', admin, async (c) => {
     const kinds = Object.fromEntries(['piece', 'tip', 'ticket', 'drink', 'replay'].map((k) => [k, { waiting: 0, collected: 0, count: 0 }]));
     const rows = await all(`SELECT kind, collected_at IS NOT NULL AS collected, COALESCE(SUM(sats), 0) AS sats, COUNT(*) AS n
-                            FROM locked WHERE at >= ? GROUP BY kind, collected`, await kv.get('nightStart', ''));
+                            FROM locked WHERE at >= ? AND kind != 'upfront' GROUP BY kind, collected`, await kv.get('nightStart', ''));
     for (const r of rows) {
       const k = (kinds[r.kind] ??= { waiting: 0, collected: 0, count: 0 });
       k[r.collected ? 'collected' : 'waiting'] += r.sats;
@@ -89,6 +89,7 @@ export function mountTakings(route, admin) {
       feePercent: FEE_PERCENT, // shown as its own line; not taken yet (needs each payment split)
       over: await gigOver(await current(c)), // Finish gig shows once the gig is over
       replay: await replayNow(await showOf(c)), // the replay's days left, for its tile (session 34)
+      upfront: await kv.get('freePaid', null), // a free stream, paid before the gig: its own line on the receipt (session 35)
     });
   });
 

@@ -26,7 +26,7 @@ const GIGS = {
       // a flat fee, never by the minute. Comments, tips and a stretch goal.
       ticket: { on: false, price: null, fiat: null, locked: false },
       stream: { mode: 'ticket', perMinute: null, freeMinutes: null },
-      online: { price: null, fiat: 20, locked: false },
+      online: { price: null, fiat: 20, locked: false }, hours: 2, // the show's length: every streamed gig has one (session 35)
       goals: [{ label: 'Longy’s next gig streamed in HD', at: null }, { label: '', at: null }], goalsFiat: [50],
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
@@ -51,7 +51,7 @@ const GIGS = {
       // ticket is on sale, with no door check and no drink: those are gig 3's.
       ticket: { on: true, price: null, fiat: 30, locked: false },
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
-      replay: { mode: '50', perMinute: null }, // the replay at half price: gig 2 shows it to judges (session 34)
+      replay: { mode: 'on', price: null, fiat: null, locked: false }, hours: 2, // the replay at its minimum for a 2-hour show: gig 2 shows it to judges (sessions 34-35)
       tip: { label: 'Tip Frankie', price: 2100 },
     },
     pin: '60 sats a minute: pay as you watch, stop any time. Tip with a comment: sats in the box on the right.',
@@ -71,6 +71,7 @@ const GIGS = {
       ticket: { on: true, price: null, fiat: 30, locked: false }, door: { on: false },
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5, drinkCoin: true, // the drink as the coin itself (NUT-16)
       set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
+      free: { viewers: 30 }, hours: 3, // free to watch, paid up front by Longy: a step of its own for judges (session 35)
       goals: [{ label: '', at: null }, { label: '', at: null }],
       tip: { label: 'Tip Longy', price: 2100 },
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
@@ -88,6 +89,7 @@ const GIGS = {
       ticket: { on: true, price: null, fiat: 25, locked: false }, door: { on: true },
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
       set: 'frankie-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
+      free: { viewers: 30 }, hours: 3,
       tip: { label: 'Tip Frankie', price: 2100 },
     },
     pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
@@ -105,8 +107,9 @@ async function open(step, env) {
   for (const p of [gig.ticket, gig.online]) if (p && p.fiat && !p.locked) p.price = satsFrom(p.fiat, gbp);
   if (gig.drinkFiat) Object.assign(gig.drink, { price: satsFrom(gig.drinkFiat, gbp), fiat: gig.drinkFiat });
   (gig.goalsFiat || []).forEach((f, i) => { if (gig.goals?.[i] && f) gig.goals[i].at = satsFrom(f, gbp); });
-  // Last orders (an unpoured drink goes to the artist then): three hours from now, by midnight at the latest.
-  const lastOrders = gig.drinks && !gig.lastOrders ? lastOrdersIn(3) : gig.lastOrders;
+  // The end (last orders: an unpoured drink goes to the artist then): the gig's hours from now, by midnight at the latest.
+  // Every streamed gig needs one (session 35): the replay's lowest price and a free stream's cost count hours.
+  const lastOrders = gig.lastOrders || (gig.drinks || gig.stream?.mode !== 'off' ? lastOrdersIn(gig.hours || 3) : '');
   const { show } = clean({ ...blank(), ...gig, date: ukDay(), streams: ukTime(), ...(lastOrders ? { lastOrders } : {}) });
   await run(`INSERT INTO shows (id, settings, updated) VALUES ('current', ?, ?)
              ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated = excluded.updated`, JSON.stringify(show), new Date().toISOString());

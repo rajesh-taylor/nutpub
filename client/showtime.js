@@ -141,13 +141,18 @@ async function preview() {
   renew();
 }
 
+// A free stream opens only once it's paid for on Plan gig (session 35, upfront.js): until then, say so.
+const freeNow = info.show.stream.mode === 'free' ? await api('GET', '/api/admin/free-stream').catch(() => null) : null;
+const unpaid = () => !!freeNow && !freeNow.covered;
+$('unpaid-note').hidden = !unpaid();
 for (const b of buttons) {
   b.onclick = () => {
     const s = b.dataset.stage;
+    if (['open', 'on'].includes(s) && unpaid()) { $('unpaid-note').hidden = false; $('unpaid-note').classList.add('flash'); return; }
     if (s === 'closed' && !confirm('End night? Every phone goes to Cheers and everyone watching stops.')) return;
     if (s === 'open' && now.opensAt && Date.now() / 1000 < now.opensAt
       && !confirm(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`)) return;
-    stage(s);
+    stage(s).catch((e) => { if (e.status === 409) { $('unpaid-note').hidden = false; } });
   };
 }
 await stage();

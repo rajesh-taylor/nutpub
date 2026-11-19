@@ -53,10 +53,20 @@ test('one screen per ticket: the newest takes over', async () => {
   assert.equal(await takeSeat(asks('t', 'laptop'), show, true), null);
 });
 
-test('a free stream stops three hours after its first viewer', async () => {
+test('a free stream never stops for running late (session 35)', async () => {
   assert.equal(await takeSeat(asks('a', 'a'), FREE, false), null);
-  await kv.set('freeFrom', Math.floor(Date.now() / 1000) - 3 * 3600 - 1);
-  assert.equal(await error(await takeSeat(asks('a', 'a'), FREE, false)), 'free_over');
+  await kv.set('freeFrom', Math.floor(Date.now() / 1000) - 9 * 3600);
+  assert.equal(await takeSeat(asks('a', 'a'), FREE, false), null);
+});
+
+test('a free stream is full at the most viewers paid for; those watching carry on', async () => {
+  configure({ MINT_URL: 'https://mint.test', MINT_TEST: '0' });
+  const show = { stream: { mode: 'free' }, free: { viewers: 3 } };
+  await fill(show, 3);
+  const res = await takeSeat(asks('late', 'a'), show, false);
+  assert.equal(res.status, 409);
+  assert.match((await res.json()).detail, /^Full\. Up to 3 watch at once/);
+  assert.equal(await takeSeat(asks('p1', 'a'), show, false), null);
 });
 
 test('how often pages ask', () => {

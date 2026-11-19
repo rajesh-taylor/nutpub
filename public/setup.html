@@ -168,6 +168,16 @@
     .board .replay-choices .choice { align-items: center; min-height: 36px; margin-bottom: 4px; }
     .board .replay-choices.off { opacity: .45; }
     @media (max-width: 600px) { .board .replay-choices .choice { flex-wrap: wrap; row-gap: 2px; } .board .replay-eq { flex-basis: 100%; margin-left: 28px; padding-left: 0; } }
+    .board .replay-more { margin: 2px 0 6px 28px; }
+    .board #replay-price { max-width: 440px; }
+    .board .replay-min.low { color: var(--red, #e07a6a); }
+    .board .free-viewers { max-width: 260px; }
+    .board .free-sum { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 10px 0; margin: 4px 0 12px; border-top: 1px solid rgb(142 151 173 / .25); border-bottom: 1px solid rgb(142 151 173 / .25); font-variant-numeric: tabular-nums; max-width: 520px; }
+    .board .free-why { font-size: 14px; color: var(--smoke); }
+    .board .free-tot { font: 400 26px/1 var(--poster, "Bebas Neue"), sans-serif; letter-spacing: .04em; font-weight: 400; }
+    .board .free-tot.r { text-align: right; }
+    .board .free-pay { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .board .free-paid { color: var(--green, #7fc79a); font-weight: 600; margin: 4px 0 6px; }
     .board .replay-eq { margin-left: auto; padding-left: 12px; font-size: 14px; color: var(--smoke); white-space: nowrap; font-variant-numeric: tabular-nums; }
     .board .choice[hidden] { display: none !important; } /* e.g. Scan at the door, while Venue tickets is off */
     .board .choice input { accent-color: var(--amber); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
@@ -322,6 +332,7 @@
               <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
               <label class="field">Venue capacity<input type="number" min="1" max="100000" inputmode="numeric" data-path="capacity" placeholder="No limit"></label>
             </div>
+            <p class="switch-note ends-note" id="ends-note" hidden>Needed for a stream: it sets your replay's lowest price, and what a free stream costs. Running late is fine; nobody's cut off.</p>
             <p class="date-warn" id="date-warn" hidden></p>
           </section>
 
@@ -407,18 +418,43 @@
             <p class="rate-line" id="rate-line"></p>
           </section>
 
-          <!-- Replay (session 34): after End night the gig page plays the recording until it's deleted, 7 days after the
-               broadcast. Paid streams only; Watch online has no price a minute, so only Off or the artist's own price. -->
+          <!-- Replay (sessions 34-35): after End night the gig page plays the recording until it's deleted, 7 days after the
+               broadcast, for one price (never below the minimum for the show's length; the server holds to it). Paid
+               streams only. -->
           <section class="panel wide" id="replay-card">
             <h2>Replay</h2>
-            <p class="replay-sub">After End night your gig page plays the recording until it's deleted, 7 days after the broadcast.</p>
+            <p class="replay-sub">After End night your gig page plays the recording for 7 days, until it's deleted.</p>
             <div class="replay-choices" id="replay-choices">
               <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="off"> <span><b>Off</b></span></label>
-              <label class="choice" data-replay-pct><input type="radio" name="replay" data-path="replay.mode" value="25"> <span><b>25% of the live price</b></span><span class="replay-eq" id="replay-eq-25"></span></label>
-              <label class="choice" data-replay-pct><input type="radio" name="replay" data-path="replay.mode" value="50"> <span><b>50% of the live price</b></span><span class="replay-eq" id="replay-eq-50"></span></label>
-              <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="own"> <span><b>My own price:</b> <input class="inline-sats" type="number" min="1" step="1" inputmode="numeric" data-path="replay.perMinute" aria-label="The replay's sats a minute" placeholder="40"> sats a minute</span><span class="replay-eq" id="replay-eq-own"></span></label>
+              <label class="choice"><input type="radio" name="replay" data-path="replay.mode" value="on"> <span><b>One price for the replay</b></span></label>
+              <div class="replay-more" data-when="replay.mode=on">
+                <div class="price-row" id="replay-price" data-price="replay">
+                  <label class="field fiat">£ with card<input id="replay-fiat" type="number" min="0.01" step="0.01" inputmode="decimal" data-path="replay.fiat" aria-label="The replay's price in pounds, by card"></label>
+                  <span class="about" aria-hidden="true">≈</span>
+                  <div class="field sats-field"><label for="replay-sats">Bitcoin price in Sats</label>
+                    <span class="sats-box"><input id="replay-sats" type="number" min="1" step="1" inputmode="numeric" data-path="replay.price">
+                      <label class="lock" title="Set own figure: the £ price no longer changes the sats"><input type="checkbox" data-path="replay.locked" aria-label="Set own figure"><svg class="open" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg class="shut" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></label></span></div>
+                </div>
+                <p class="switch-note replay-min" id="replay-min"></p>
+              </div>
             </div>
             <p class="switch-note" id="replay-note"></p>
+          </section>
+
+          <!-- Free to watch (session 35): a free stream is paid for by the artist before the gig, one 402 from the artist's
+               own wallet, locked to the NutPub's key. Past the most viewers new ones see Full; nobody is cut off. -->
+          <section class="panel wide" id="free-card" hidden>
+            <h2>Free to watch</h2>
+            <p class="replay-sub">Free for your fans. The stream still costs to run, so you pay for it before the gig.</p>
+            <label class="field free-viewers">Most viewers at once <span class="optional">· up to 100</span><input id="free-viewers" type="number" min="1" max="100" step="1" inputmode="numeric" data-path="free.viewers" placeholder="e.g. 30"></label>
+            <p class="free-paid" id="free-paid" hidden></p>
+            <div class="free-sum" id="free-sum" hidden>
+              <span id="free-what"></span><span></span>
+              <span class="free-why" id="free-why"></span><span></span>
+              <b class="free-tot" id="free-pounds"></b><b class="free-tot r" id="free-sats"></b>
+            </div>
+            <div class="free-pay" id="free-pay-row" hidden><button type="button" class="btn primary" id="free-pay">Pay</button><span class="switch-note" id="free-say"></span></div>
+            <p class="switch-note" id="free-note"></p>
           </section>
 
           <section class="panel wide">

@@ -43,6 +43,7 @@ export async function keepGigLine(ended = new Date().toISOString()) {
   const line = { start, ended, date: show.date, page: show.page, artist: show.artist, venue: (show.venue || '').split(',')[0].trim(),
     tickets: { room: t.room, home: t.home, inside: t.inside, sats: t.ticketSats, roomSats: t.roomSats }, tips: t.tips, tipsN: t.tipsN, home: t.homeSats, replay: t.replaySats,
     drinks: t.drinks, drinksN: t.drinksN, poured: t.poured, drinksAll: t.drinksAll, sats, feePercent: FEE_PERCENT,
+    upfront: (await kv.get('freePaid', null))?.sats || 0, // a free stream, paid before the gig (session 35)
     moved: await kv.get('moved', null), recordedMinutes: recorded === null ? null : Math.round(recorded) };
   await kv.set('gigs', [...gigs, line]);
   return line;

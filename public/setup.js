@@ -2,7 +2,7 @@
 import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
-  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', 'replay.perMinute': 'the replay\u2019s price a minute',
+  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', streamEnds: 'the stream\u2019s end time (Ends at)', 'free.viewers': 'the most viewers at once (Free to watch)', unpaid: 'pay for the free stream (Free to watch)',
   date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', lastOrders: 'date and last orders',
 };
 
@@ -215,28 +215,98 @@ function refresh() {
   $('drink-at').hidden = !show.drink?.at;
   // Short (Rajesh 18 Nov): the rest is the judges' story line.
   replayCard();
+  freeCard();
+  $('ends-note').hidden = show.stream.mode === 'off';
   $('split').textContent = drink ? `Added to the ticket. Not poured by ${show.lastOrders || 'the end'}? It goes to ${show.artist || 'the artist'}.` : '';
 }
 
-// The Replay card (session 34): the price a minute each choice comes to, never below the floor (/api/show's
-// replay.floor, server/shows.js replayRate). A free stream has no replay; Watch online has no 25% or 50%.
-let replayFloor = 0;
+// The show's length as people say it: "a 2-hour show", "a 2 h 10 show".
+const lengthOf = (mins) => (!mins ? '' : mins % 60 ? `a ${Math.floor(mins / 60)} h ${mins % 60} show` : `a ${mins / 60}-hour show`);
+const pounds = (p) => `£${(p / 100).toFixed(2).replace(/\.00$/, '')}`;
+const satsText = (n) => `${Number(n || 0).toLocaleString('en-GB')} sats`;
+
+// The Replay card (sessions 34-35): Off or one price, £ ≈ sats as Watch online, starting at the minimum for the
+// show's length and never below it (/api/show's replay: server/shows.js replayPrice, which the server holds to).
+let replayNow = { minPence: 0, minSats: 0 };
+let replayWarn = ''; // "Back to £4": kept through the save it causes, until the price is typed in again
 function replayCard() {
   const mode = show.stream.mode;
   const paid = mode === 'pay' || mode === 'ticket';
-  $('replay-card').hidden = mode === 'off';
-  for (const el of $('replay-choices').querySelectorAll('input')) el.disabled = !paid;
-  $('replay-choices').classList.toggle('off', !paid);
-  for (const el of form.querySelectorAll('[data-replay-pct]')) el.hidden = mode === 'ticket';
-  const at = (n) => (n ? `${Math.max(n, replayFloor).toLocaleString('en-GB')} sats a minute${n < replayFloor ? ' (the minimum)' : ''}` : '');
-  const live = mode === 'pay' ? show.stream.perMinute : 0;
-  $('replay-eq-25').textContent = at(live && Math.ceil(live / 4));
-  $('replay-eq-50').textContent = at(live && Math.ceil(live / 2));
-  $('replay-eq-own').textContent = show.replay?.perMinute < replayFloor ? at(show.replay.perMinute) : '';
-  $('replay-note').textContent = !paid ? 'A free stream has no replay.'
-    : show.replay?.mode === 'off' ? 'Off: after End night the page says Cheers, as now.'
-      : `Ticket holders watch free. Everyone else pays by the minute.${mode === 'pay' ? ' Minutes paid live don\u2019t count towards the replay.' : ''}`;
+  $('replay-card').hidden = !paid; // a free stream has the Free to watch card here instead; Room only, neither
+  const on = show.replay?.mode === 'on';
+  const mins = minutesOf(show);
+  const min = replayNow.minPence;
+  $('replay-min').classList.toggle('low', !!replayWarn);
+  $('replay-min').textContent = replayWarn && on ? replayWarn : !on ? '' : !mins ? 'Fill in Ends at above: the lowest price goes by the show\u2019s length.'
+    : min ? `${pounds(min)} is the lowest for ${lengthOf(mins)}.` : '';
+  $('replay-note').textContent = !on ? 'Off: after End night the page says Cheers, as now.'
+    : 'Ticket holders watch free. Everyone else pays once. Each fan can watch it twice through.';
 }
+// The show's length in minutes (shows.js showMinutes): past midnight counts.
+function minutesOf(s) {
+  const t = /^\d\d:\d\d$/;
+  if (!t.test(s.streams || '') || !t.test(s.lastOrders || '')) return 0;
+  const m = (x) => Number(x.slice(0, 2)) * 60 + Number(x.slice(3));
+  return (m(s.lastOrders) - m(s.streams) + 1440) % 1440;
+}
+// Turned on, or left below the minimum: back to the minimum, and say so.
+function replayFloorCheck(why) {
+  if (show.replay?.mode !== 'on' || !replayNow.minSats) return false;
+  const sats = Number($('replay-sats').value) || 0;
+  if (sats >= replayNow.minSats) return false;
+  const low = sats > 0 && sats < replayNow.minSats;
+  $('replay-fiat').value = (replayNow.minPence / 100).toFixed(2);
+  $('replay-sats').value = replayNow.minSats;
+  form.querySelector('[data-path="replay.locked"]').checked = false;
+  if (low || why === 'typed') replayWarn = `The lowest for ${lengthOf(minutesOf(show))} is ${pounds(replayNow.minPence)}. Back to ${pounds(replayNow.minPence)}.`;
+  return true;
+}
+for (const id of ['replay-fiat', 'replay-sats']) $(id).addEventListener('input', () => { replayWarn = ''; });
+for (const id of ['replay-fiat', 'replay-sats']) $(id).addEventListener('change', () => { if (replayFloorCheck('typed')) { read(); form.requestSubmit(); } });
+
+// The Free to watch card (session 35): the most viewers at once, the price (by viewers and hours, plus the spare
+// hour) and one Pay, from the artist's own wallet in this browser (client/upfront.js), locked to the NutPub's key.
+let freeNow = null;
+function freeCard() {
+  const on = show.stream.mode === 'free';
+  $('free-card').hidden = !on;
+  if (!on || !freeNow) return;
+  const f = freeNow;
+  const v = show.free?.viewers;
+  const mins = minutesOf(show);
+  const hours = (m) => (m % 60 ? `${Math.floor(m / 60)} h ${m % 60}` : `${m / 60} hour${m === 60 ? '' : 's'}`);
+  const ready = !!(v && mins && f.pence);
+  $('free-sum').hidden = !ready || (f.covered && !f.due);
+  $('free-what').textContent = ready ? `${v} viewers × ${hours(mins + 60)}` : '';
+  $('free-why').textContent = ready ? `your ${lengthOf(mins).replace(/^a /, '')}, plus a spare hour` : '';
+  $('free-pounds').textContent = ready ? pounds(f.due || f.pence) : '';
+  $('free-sats').textContent = ready ? `≈ ${satsText(f.dueSats)}` : '';
+  const paid = f.paid;
+  $('free-paid').hidden = !paid;
+  if (paid) {
+    const day = new Date(paid.at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    $('free-paid').textContent = `✓ Paid ${pounds(paid.pence)} · ${satsText(paid.sats)} · ${day} · up to ${paid.viewers} viewers at once`;
+  }
+  $('free-pay-row').hidden = !ready || f.covered;
+  $('free-pay').textContent = paid ? `Pay the difference: ${pounds(f.due)}` : `Pay ${pounds(f.due)}`;
+  $('free-note').textContent = !mins ? 'Fill in Ends at above: the price goes by the show\u2019s length.'
+    : !v ? 'How many people may watch at once? You pay for that many.'
+      : paid && !f.covered ? 'More viewers or a longer show: you pay the difference. Fewer: nothing back.'
+        : `Past ${v}, new viewers see Full. Nobody watching is ever cut off, even if you overrun.${f.covered ? '' : ' Paid from your wallet on this page, locked to the NutPub\u2019s key.'}`;
+}
+$('free-pay').onclick = async () => {
+  $('free-pay').disabled = true;
+  const say = (t) => { $('free-say').textContent = t; };
+  try {
+    const { payUpfront } = await import('/js/upfront.js');
+    freeNow = await payUpfront(key, say);
+    say('');
+    freeCard();
+    saved(await api('GET', '/api/show'));
+    status('Paid: the free stream is ready.', 'ok');
+  } catch (e) { say(`Not paid: ${e.message}`); }
+  $('free-pay').disabled = false;
+};
 
 function status(text, kind = '') {
   $('status').textContent = text;
@@ -260,7 +330,10 @@ function shareLink(path) {
 
 let phoneKind = '';
 function saved(res) {
+  if (res.replay) replayNow = res.replay;
+  if (res.free) freeNow = res.free;
   fill(res.show);
+  if (replayFloorCheck('start')) { read(); setTimeout(() => form.requestSubmit(), 0); } // turned on: it starts at the minimum
   shareLink(res.path);
   larix();
   dirty = false;
@@ -269,7 +342,7 @@ function saved(res) {
   if (phoneKind && kind !== phoneKind) $('preview-frame').contentWindow?.location.reload();
   phoneKind = kind;
   const at = res.updated ? new Date(res.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-  const todo = res.problems.map((p) => PROBLEMS[p] || p);
+  const todo = [...res.problems, ...(res.free && !res.free.covered && res.free.pence ? ['unpaid'] : [])].map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
   if ('artistKey' in res) artistReady = !!res.artistKey;
   if (!artistReady) todo.push('open 3 · Your takings once (it makes the key payments lock to; nothing can be sold until then)');
@@ -590,7 +663,6 @@ try {
   site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
   await templates();
   const first = await api('GET', '/api/show');
-  replayFloor = first.replay?.floor || 0;
   saved(first);
   photos(first.photos);
   const sold = await api('GET', '/api/admin/sold');

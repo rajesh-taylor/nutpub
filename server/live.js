@@ -5,7 +5,7 @@
 import QRCode from 'qrcode';
 import { kv, stageDb } from './db.js';
 import { MINT_TEST } from './config.js';
-import { current, showOf, saveShow, stageNow } from './shows.js';
+import { current, showOf, saveShow, stageNow, freeStatus } from './shows.js';
 import { one, all, run } from './db.js';
 import { cashuGate } from './gate.js';
 import { artistKey } from './takings.js';
@@ -159,19 +159,15 @@ const liveLink = async (show, exp) => {
 };
 
 // A seat at the live picture, so Stream's bill has a ceiling. One row per pass, kept for a little longer than the
-// longest gap between renewals. Who counts: everyone on a free stream, and on the test mint everyone (test sats cost
-// nothing, Stream's minutes do). People already watching are never turned away. A ticket opens one screen at a time:
+// longest gap between renewals. Who counts: everyone on a free stream (up to the most viewers the artist paid for,
+// upfront.js), and on the test mint everyone (test sats cost nothing, Stream's minutes do). People already watching are
+// never turned away, and nobody is cut off for running late (session 35: the free stream's three-hour stop went). A ticket opens one screen at a time:
 // the newest takes over (`start=1` on its first token) and the old one is told at its next renewal.
 export const VIEWER_LIMIT = 10;
-const FREE_HOURS = 3; // from the night's first free viewer; New night starts it again
 const SEAT = 90;
 export async function takeSeat(c, show, ticketed) {
   const t = seconds();
   const free = show.stream.mode === 'free';
-  if (free) {
-    const from = (await kv.get('freeFrom')) ?? (await kv.set('freeFrom', t));
-    if (t - from > FREE_HOURS * 3600) return json({ error: 'free_over', detail: 'This free stream has run its three hours.' }, 409);
-  }
   const screen = c.req.headers.get('X-Screen') || '';
   const mine = await one('SELECT screen FROM watchers WHERE pass = ? AND until > ?', c.pass, t);
   if (ticketed && mine && mine.screen !== screen && c.url.searchParams.get('start') !== '1') {
@@ -179,7 +175,8 @@ export async function takeSeat(c, show, ticketed) {
   }
   if (!mine && (free || MINT_TEST)) {
     const { n } = await one('SELECT COUNT(*) AS n FROM watchers WHERE until > ?', t);
-    if (n >= VIEWER_LIMIT) return json({ error: 'full', detail: 'This stream is full. Try again in a minute.' }, 409);
+    const cap = free ? (MINT_TEST ? Math.min(show.free?.viewers || VIEWER_LIMIT, VIEWER_LIMIT) : show.free?.viewers || 0) : VIEWER_LIMIT;
+    if (n >= cap) return json({ error: 'full', detail: `Full. Up to ${cap} watch at once: try again in a minute.` }, 409);
   }
   await run(`INSERT INTO watchers (pass, screen, until) VALUES (?, ?, ?)
              ON CONFLICT(pass) DO UPDATE SET screen = excluded.screen, until = excluded.until`, c.pass, screen, t + SEAT);
@@ -254,6 +251,7 @@ export function mountLive(route, admin, pass) {
       // Before the start time the artist may be streaming (a sound check): nobody watches it, so nobody pays for it.
       if (stage === 'doors') return json({ error: 'soon', detail: 'The stream hasn’t started yet.' }, 409);
       if (show.stream.mode === 'off') return json({ error: 'not_streamed', detail: 'This gig isn’t streamed.' }, 409);
+      if (show.stream.mode === 'free' && !(await freeStatus(show)).covered) return json({ error: 'unpaid_stream', detail: 'This free stream hasn’t been paid for yet.' }, 409);
       const ticketed = await hasTicket(c.pass);
       if (show.stream.mode === 'ticket' && !ticketed) return json({ error: 'no_ticket', detail: 'Buy a ticket to watch online.' }, 403);
       if (show.stream.mode === 'pay' && !ticketed && !show.stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);

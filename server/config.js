@@ -7,9 +7,13 @@ export let VERSION = '0';
 // The NutPub's share of what fans pay, in percent (wrangler.jsonc FEE_PERCENT). Shown on Takings; not taken yet.
 export let FEE_PERCENT = 5;
 export let ASSETS;
-// The replay's lowest price, in pence an hour: a Worker secret (npx wrangler secret put REPLAY_FLOOR), never in the
-// repo. Unset: no floor. shows.js turns it into sats a minute at the day's rate.
-export let REPLAY_FLOOR = 0;
+// What streaming costs, in pence: a Worker secret (npx wrangler secret put PRICING), never in the repo. JSON:
+// { replayHour, replayMin, viewerHour }: the replay's lowest price an hour of the show and its lowest price at all, and
+// what one viewer watching for an hour costs (a free-to-watch stream, paid up front). Unset: no minimum, nothing to
+// pay up front. shows.js does the sums.
+export let PRICING = { replayHour: 0, replayMin: 0, viewerHour: 0 };
+// The NutPub's own public key (a secret, NUTPUB_KEY): what the artist pays up front is locked to it (NUT-11).
+export let NUTPUB_KEY = '';
 // The wallet card: our Apple Pass Type ID, the team it belongs to, and its key and certificate (secrets, PEM).
 export let PASS_TYPE = '';
 export let PASS_TEAM = '';
@@ -33,7 +37,13 @@ export function configure(env) {
   VERSION = env.VERSION || '0';
   FEE_PERCENT = Number.isFinite(Number(env.FEE_PERCENT)) && env.FEE_PERCENT !== '' ? Math.min(Math.max(Number(env.FEE_PERCENT), 0), 50) : 5;
   ASSETS = env.ASSETS;
-  REPLAY_FLOOR = Math.max(0, Math.floor(Number(env.REPLAY_FLOOR)) || 0);
+  PRICING = (() => {
+    let p = {};
+    try { p = JSON.parse(env.PRICING || '{}'); } catch {}
+    const n = (v) => Math.max(0, Number(v) || 0);
+    return { replayHour: n(p.replayHour), replayMin: n(p.replayMin), viewerHour: n(p.viewerHour) };
+  })();
+  NUTPUB_KEY = /^0[23][0-9a-f]{64}$/.test(String(env.NUTPUB_KEY || '').toLowerCase()) ? env.NUTPUB_KEY.toLowerCase() : '';
   PASS_TYPE = env.PASS_TYPE || '';
   PASS_TEAM = env.PASS_TEAM || '';
   PASS_KEY = env.PASS_KEY || '';

@@ -32,6 +32,8 @@
     "MINT_TEST": "1",
     // The NutPub's share, in percent: one number to change when our costs (Cloudflare's prices) change.
     "FEE_PERCENT": "5",
+    // Streaming's costs (the replay's lowest price, a free stream's up-front price) are the secret PRICING, never here;
+    // what the artist pays up front is locked to the secret NUTPUB_KEY, the NutPub's own public key (session 35).
     // The wallet card (Apple Pass Type ID and team). Its key and certificate are secrets: PASS_KEY, PASS_CERT.
     "PASS_TYPE": "pass.com.thenutpub.ticket",
     "PASS_TEAM": "H5NRV4JGDB",

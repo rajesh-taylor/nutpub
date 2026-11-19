@@ -12,6 +12,7 @@ import { mountTakings, artistKey } from './takings.js';
 import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
 import { mountReplay } from './replay.js';
+import { mountUpfront } from './upfront.js';
 import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
 import { mountWallet } from './wallet.js';
@@ -23,7 +24,7 @@ import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor, closesAt } from './stages.js';
 import { setlist, finished, again, cue, cueTimes } from './setlist.js';
 import { keepMoved } from './closing.js';
-import { current, publicShow, replayPrice, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
+import { current, publicShow, replayPrice, freeStatus, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
 const routes = [];
 // route(method, '/exact/path' or /regex with (?<named>) groups/, ...steps)
@@ -86,7 +87,7 @@ route('GET', '/api/show', async (c) => {
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
   // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
   const judge = !!(stageDb().id && (await kv.get('setlist', null))?.only);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes(), replay: await replayPrice(now.show) });
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes(), replay: await replayPrice(now.show), ...(isAdmin(c) ? { free: await freeStatus(now.show) } : {}) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -94,7 +95,11 @@ route('GET', '/api/show/qr.svg', async (c) => {
   const svg = await QRCode.toString(link, { type: 'svg', margin: 2, color: { dark: '#050914', light: '#efe3c8' } });
   return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 });
-route('PUT', '/api/admin/show', admin, attempt(async (c) => saveShow(await body(c))));
+// With the replay's price and the free stream's (session 35): Plan gig's cards follow each save.
+route('PUT', '/api/admin/show', admin, attempt(async (c) => {
+  const now = await saveShow(await body(c));
+  return { ...now, replay: await replayPrice(now.show), free: await freeStatus(now.show) };
+}));
 // Finish gig. On a stage it also ticks the gig off the setlist and opens the next one (setlist.js).
 // The page sends what its Move took out (the amount and the mint's fee), for the gig's receipt; it's only kept on the
 // gig's line (closing.js), never checked: the money already left.
@@ -127,6 +132,7 @@ mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
 mountLive(route, admin, pass);
 mountReplay(route, pass);
+mountUpfront(route, admin);
 mountRate(route);
 mountMods(route, admin);
 mountWallet(route);

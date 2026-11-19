@@ -19,12 +19,13 @@ CREATE TABLE IF NOT EXISTS passes (id TEXT PRIMARY KEY, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS paid (pass TEXT NOT NULL, piece INTEGER NOT NULL, sats INTEGER NOT NULL, at TEXT NOT NULL, PRIMARY KEY (pass, piece));
 -- The live picture: how long this pass's token lasts, and what it has paid tonight. One row per pass, however long it watches.
 CREATE TABLE IF NOT EXISTS live_paid (pass TEXT PRIMARY KEY, until INTEGER NOT NULL, sats INTEGER NOT NULL) WITHOUT ROWID;
--- Replays (server/replay.js, session 34): after End night the gig page plays the recording (or a judge's clip) until
--- it's deleted, 7 days on. replay_free: the passes that held a ticket at End night (they watch free). replay_paid: a
--- recording's paid minutes (as live_paid); replay_pieces: a clip's paid 10-second pieces. Live minutes don't count.
--- Deleted with the replay. Added: scripts/replay-migration.sql
+-- Replays (server/replay.js, sessions 34-35): after End night the gig page plays the recording (or a judge's clip)
+-- until it's deleted, 7 days on. replay_free: the passes that held a ticket at End night (they watch free).
+-- replay_bought: who has bought it (sats 0: a ticket's free way in), with the seconds of recording handed out so far
+-- (twice through at most) and when the current token runs out; replay_pieces: a clip's 10-second pieces played.
+-- Live payments don't count. Deleted with the replay. Added: scripts/replay-migration.sql
 CREATE TABLE IF NOT EXISTS replay_free (pass TEXT PRIMARY KEY) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS replay_paid (pass TEXT PRIMARY KEY, until INTEGER NOT NULL, sats INTEGER NOT NULL) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS replay_bought (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, watched INTEGER NOT NULL, until INTEGER NOT NULL) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS replay_pieces (pass TEXT NOT NULL, piece INTEGER NOT NULL, sats INTEGER NOT NULL, at TEXT NOT NULL, PRIMARY KEY (pass, piece));
 -- Who is watching the live picture right now: one row per pass, and which screen holds it. The viewer limit counts these.
 CREATE TABLE IF NOT EXISTS watchers (pass TEXT PRIMARY KEY, screen TEXT NOT NULL, until INTEGER NOT NULL) WITHOUT ROWID;

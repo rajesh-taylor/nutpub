@@ -137,12 +137,13 @@ async function refresh() {
   const zaps = takings.nutzaps?.count || 0;
   const came = all('ticket') + all('tip') + all('piece') + all('replay') + drinkSum;
   sums = {
-    tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'), replay: all('replay'), replayOn: takings.replay,
+    tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'), replay: all('replay'), replayN: count('replay'), replayOn: takings.replay,
     drinks: drinkSum, drinksN: toArtist.length + unpouredLate.length, drinkOn, came,
     fee: Math.round((came * (takings.feePercent ?? 5)) / 100), feePercent: takings.feePercent ?? 5,
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
     // Anything still to move, wherever it's locked (another browser too); drinks locked to the bar are the bar's.
     left: locked.waiting.filter((p) => p.kind !== 'drink' || p.pubkey === pubkey).reduce((t, p) => t + p.sats, 0),
+    upfront: takings.upfront?.sats || 0, // a free stream, paid before the gig from the artist's own wallet (session 35)
     over: !!takings.over, homeN: count('piece'), sold: takings.sold || {}, poured: poured.length, drinksAll: drinks.length,
   };
   paint();
@@ -181,7 +182,8 @@ function paint() {
   if (!sums) return;
   const s = sums;
   $('big').replaceChildren(fig(s.came), ...(fiatOn() ? [] : [' ', Object.assign(document.createElement('small'), { textContent: 'sats' })]));
-  $('came').textContent = `Came in · ${fig(s.came)} · The NutPub's ${s.feePercent}% · (${fig(s.fee)}), not taken on the test mint`;
+  $('came').textContent = `Came in · ${fig(s.came)} · The NutPub's ${s.feePercent}% · (${fig(s.fee)}), not taken on the test mint`
+    + (s.upfront ? ` · The free stream, paid before the gig · (${fig(s.upfront)})` : ''); // session 35: the artist's own money, not in Came in
   $('v-tickets').textContent = fig(s.tickets);
   $('s-tickets').textContent = `${n(s.ticketsN)} sold`;
   $('v-tips').textContent = fig(s.tips);
@@ -191,8 +193,9 @@ function paint() {
   // Replays (session 34): their own tile, once the gig has a replay or replay sats came in.
   $('t-replay').hidden = !s.replay && !s.replayOn;
   $('v-replay').textContent = fig(s.replay);
-  $('s-replay').textContent = s.replayOn?.state === 'on' ? `${n(s.replayOn.days)} day${s.replayOn.days === 1 ? '' : 's'} left`
-    : s.replayOn?.state === 'deleted' ? 'Recording deleted' : 'Replay over';
+  const fans = s.replayN ? `${n(s.replayN)} fan${s.replayN === 1 ? '' : 's'} · ` : ''; // one payment each (session 35)
+  $('s-replay').textContent = fans + (s.replayOn?.state === 'on' ? `${n(s.replayOn.days)} day${s.replayOn.days === 1 ? '' : 's'} left`
+    : s.replayOn?.state === 'deleted' ? 'Recording deleted' : 'Replay over');
   $('t-drinks').classList.toggle('later', !s.drinkOn);
   $('v-drinks').textContent = s.drinkOn ? fig(s.drinks) : '—';
   $('s-drinks').textContent = s.drinkOn ? `${n(s.drinksN)} not poured by last orders` : 'With the first drink';
@@ -422,7 +425,7 @@ function liveLine() {
   return { artist: show.artist, date: show.date, venue: (show.venue || '').split(',')[0].trim(),
     tickets: { room: s.sold.room?.count || 0, home: s.sold.home?.count || 0, inside: s.sold.room?.inside || 0, sats: s.tickets, roomSats: s.sold.room?.sats ?? null },
     tips: s.tips, tipsN: s.tipsN, home: s.home, replay: s.replay, drinks: s.drinks, drinksN: s.drinksN, poured: s.poured, drinksAll: s.drinksAll,
-    sats: s.came, feePercent: s.feePercent, moved: lastMoved() || true };
+    sats: s.came, feePercent: s.feePercent, upfront: s.upfront, moved: lastMoved() || true };
 }
 function slip(g, { folded = false } = {}) {
   const out = [el('p', 'mark', 'THE NUTPUB')];
@@ -448,6 +451,11 @@ function slip(g, { folded = false } = {}) {
   const pct = g.feePercent ?? 5;
   out.push(ln(`The NutPub's ${pct}%`, `(${n(Math.round(((g.sats || 0) * pct) / 100))})`));
   out.push(el('p', 'small', 'not taken on the test mint'));
+  // A free stream's cost, paid up front (session 35): the artist's own money, so not in YOURS or the 5%.
+  if (g.upfront) {
+    out.push(ln('Free stream, paid before the gig', `(${n(g.upfront)})`));
+    if (!folded) out.push(el('p', 'small', 'from your own wallet, to the NutPub'));
+  }
   out.push(el('div', 'rule'));
   const m = g.moved;
   if (m?.amount) {

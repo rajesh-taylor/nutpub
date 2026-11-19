@@ -6,14 +6,14 @@
 import { ASSETS } from './config.js';
 import { one, run, stageDb } from './db.js';
 import { cashuGate } from './gate.js';
-import { showOf, piecePrice } from './shows.js';
+import { showOf, piecePrice, freeStatus } from './shows.js';
 import { artistKey } from './takings.js';
 import { hasTicket, addMessage, tipMessage, noGuestLinks } from './door.js';
 import { modOf, hasLink } from './mods.js';
 import { nostrOf, handle } from './nostr.js';
 import { nutzapInfo, checkNutzap, tokenProofs, recordNutzap, WHY } from './nutzap.js';
 import { json, body, randomHex, now } from './http.js';
-import { replayPlaying, replayFree, replayPiecePaid, replayPieceNext, replayPieceKeep, replaySpent } from './replay.js';
+import { replayPlaying, replayPieceOk, replayPieceSeen, replayPieceNext, replayPieceKeep } from './replay.js';
 
 const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
@@ -73,10 +73,10 @@ export function mountSet(route) {
       one('SELECT COALESCE(MAX(piece) + 1, 0) AS n FROM paid WHERE pass = ?', c.pass),
       one('SELECT COALESCE(SUM(sats), 0) AS sats FROM live_paid WHERE pass = ?', c.pass),
     ]);
-    // The replay (session 34) starts again from the top, and counts its own pieces: live ones don't carry over.
+    // The replay (sessions 34-35) starts again from the top, and counts its own pieces: live ones don't carry over.
     const replay = await replayPlaying(c);
-    if (replay && !replay.recorded) return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: await replayPieceNext(c.pass), replaySpent: await replaySpent(c.pass) });
-    return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n, ...(replay ? { replaySpent: await replaySpent(c.pass) } : {}) });
+    if (replay && !replay.recorded) return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: await replayPieceNext(c.pass) });
+    return json({ spent: spent.sats, live: live.sats, tipped: await tipped(c.pass), pieces: await pieces(c), next: next.n });
   });
 
   // The sound for piece n. Already paid for it: the same piece again, charged once (a retry after a lost reply).
@@ -84,25 +84,25 @@ export function mountSet(route) {
     async (c) => {
       const { stream } = await showOf(c);
       if (stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
-      // After End night, the replay: free with a ticket, otherwise each piece at the replay rate (a sixth of a minute).
+      // After End night, the replay: free with a ticket or once bought (/api/replay/buy), twice through at most.
       const replay = await replayPlaying(c);
       if (replay) {
         if (replay.recorded) return json({ error: 'replay_recorded', detail: 'The replay is the night’s recording.' }, 409);
-        if ((await replayFree(c.pass)) || (await replayPiecePaid(c.pass, c.piece))) return send(c, 'audio');
-        c.replay = replay;
-        return null;
+        const ok = await replayPieceOk(c.pass, c.piece, await pieces(c));
+        if (ok === 'unpaid') return json({ error: 'replay_unpaid', detail: 'Buy the replay first.' }, 403);
+        if (ok === 'watched') return json({ error: 'watched', detail: 'You’ve watched it twice through.' }, 409);
+        await replayPieceKeep(c.pass, c.piece);
+        return send(c, 'audio');
       }
+      if (stream.mode === 'free' && !(await freeStatus(await showOf(c))).covered) return json({ error: 'unpaid_stream', detail: 'This free stream hasn’t been paid for yet.' }, 409); // session 35
       if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
       if (stream.mode === 'ticket') return json({ error: 'ticket_needed', detail: 'Buy Watch online first: one price for the whole show.' }, 403);
       if (!stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
     },
-    cashuGate(async (c) => (c.replay ? Math.ceil(c.replay.rate / 6) : piecePrice(await showOf(c))),
-      async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds${c.replay ? ' of the replay' : ''}`,
-      { lockTo: artistKey, kind: (c) => (c.replay ? 'replay' : 'piece') }),
+    cashuGate(async (c) => piecePrice(await showOf(c)), async (c) => `${(await showOf(c)).title || 'The set'}: 10 seconds`, { lockTo: artistKey, kind: 'piece' }),
     async (c) => {
-      if (c.replay) await replayPieceKeep(c.pass, c.piece, c.paid);
-      else await run('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)', c.pass, c.piece, c.paid, now());
+      await run('INSERT OR IGNORE INTO paid (pass, piece, sats, at) VALUES (?, ?, ?, ?)', c.pass, c.piece, c.paid, now());
       return send(c, 'audio');
     });
 
@@ -110,7 +110,7 @@ export function mountSet(route) {
   route('GET', /^\/api\/set\/video\/(?<n>\d+)$/, pass, piece, async (c) => {
     if ((await showOf(c)).stream.mode === 'off') return json({ error: 'no_stream', detail: 'No stream tonight: this gig is at the venue only.' }, 409);
     if (await replayPlaying(c)) {
-      if (!(await replayFree(c.pass)) && !(await replayPiecePaid(c.pass, c.piece))) return json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' }, 403);
+      if (!(await replayPieceSeen(c.pass, c.piece))) return json({ error: 'not_paid', detail: 'Play the sound first.' }, 403);
       return send(c, 'video');
     }
     if (!(await free(c)) && !(await hasTicket(c.pass)) && !(await hasPaid(c.pass, c.piece))) {

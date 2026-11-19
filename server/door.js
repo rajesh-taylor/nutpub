@@ -2,18 +2,14 @@
 // and the live chat. A ticket is two locked payments from the phone: the artist's part to the artist's key, and the
 // drink to the bar's key with a locktime at last orders and a refund to the artist's key (NUT-11), so an unpoured
 // drink becomes the artist's and the mint, not this server, enforces it. Nothing here holds a sat.
-import { startReplay, endReplay, replayNow, replayFree } from './replay.js';
-// The replay as the gig page needs it: and whether this pass watches it free (a ticket at End night).
-const replayFor = async (show, c) => {
-  const r = await replayNow(show);
-  const pass = c.req.headers.get('X-Pass');
-  return r && { ...r, free: !!pass && (await replayFree(pass)) };
-};
+import { startReplay, endReplay, replayNow, replayFor as replayOf } from './replay.js';
+// The replay as the gig page needs it: and whether this pass watches it free (a ticket at End night) or has bought it.
+const replayFor = async (show, c) => replayOf(await replayNow(show), c.req.headers.get('X-Pass'));
 import QRCode from 'qrcode';
 import { one, all, run, sql, batch, kv, siteUrl } from './db.js';
 import { cashuGate } from './gate.js';
 import { totpOk } from './totp.js';
-import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver, drinkOpen } from './shows.js';
+import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageNow, pollEvery, gigOver, drinkOpen, freeStatus } from './shows.js';
 import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
@@ -112,6 +108,10 @@ export function mountDoor(route, admin, pass) {
   route('POST', '/api/admin/stage', admin, async (c) => {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);
+    // A free stream opens only once the artist has paid for it up front (upfront.js, session 35).
+    if (['open', 'on'].includes(stage) && !(await freeStatus(await showOf(c))).covered) {
+      return json({ error: 'unpaid_stream', detail: 'Pay for the free stream on 1 · Plan your gig first.' }, 409);
+    }
     await kv.set('stageAt', now()); // pages ask every 2 s for the next half hour: a rehearsal feels live
     // Show Time's step line: when each step began ("The show is on, since 19:05"). Going back drops the later ones.
     const times = await kv.get('stageTimes', {});
