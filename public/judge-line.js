@@ -4,6 +4,7 @@
 // Gig 3 (Rajesh 17 Nov) runs from Show Time: each step a line of story, then the one thing to do, with the fan's QR (for
 // the judge's own phone) and Pour by hand right in the line; the fan's phone sits on Show Time itself (Rajesh 18 Nov). No camera on the laptop.
 // r: /api/admin/setlist's answer; page: 'setup', 'show' or 'takings'.
+let toPlay = false; // gig 3: the fan's phone scrolled back to its player once, at step 6
 export async function judgeLine(r, page) {
   const list = r?.setlist;
   if (!list?.only) return;
@@ -53,7 +54,7 @@ export async function judgeLine(r, page) {
     2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
     4: 'Ticket bought, with the beer token in it. The NutPub signed it blind, so even we can’t tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
-    5: 'Let them in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
+    5: 'Let the Nutter in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
     6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, some music.',
     7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
@@ -176,6 +177,9 @@ export async function judgeLine(r, page) {
       // Only tonight's: each list's pass is that fan's pass now, so a hello from an earlier gig on this stage doesn't count.
       const hello = ['', '-home'].some((k) => { try { const t = JSON.parse(localStorage.getItem(`nutpub-todo${k}`) || 'null'); return !!t?.hello && t.pass === localStorage.getItem(`nutpub-pass${k}`); } catch { return false; } });
       const tipped = hello && ((await admin('/api/admin/takings'))?.locked?.tip?.count || 0) > 0; // tonight's tips, real coins
+      // Rajesh 21 Nov: the fan's phone is still scrolled down where the ticket was bought, near the beer token's card:
+      // once, on reaching step 6, it goes back to the top, with the play button in view.
+      if (!hello && !toPlay) { toPlay = true; try { document.getElementById('phone')?.contentWindow?.scrollTo({ top: 0, behavior: 'smooth' }); } catch {} }
       if (!tipped) return say(6, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab.'
         : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[6] });
       // Step 7: the bar, then End night.
