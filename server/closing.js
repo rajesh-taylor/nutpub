@@ -12,7 +12,7 @@ export const KEEP_DAYS = 7;
 const DAY = 86_400_000;
 
 // The night's records, all at once (the gig ended 7 days ago).
-const NIGHT = ['tickets', 'passkeys', 'nostr', 'nutzaps', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
+const NIGHT = ['tickets', 'blinded', 'door_in', 'door_words', 'passkeys', 'nostr', 'nutzaps', 'drinks', 'live_paid', 'watchers', 'paid', 'tips', 'messages'];
 
 // One line per gig kept for good (Takings' Past gigs, and its receipt): the date, the venue and the totals, nothing
 // about anyone. Written by Finish gig (or a new date) before the gig is cleared, or here 7 days on, once per gig: the
@@ -24,7 +24,7 @@ export async function keepGigLine(ended = new Date().toISOString()) {
   const { show } = await currentShow();
   const t = await one(`SELECT
     (SELECT COUNT(*) FROM tickets WHERE kind = 'room') AS room, (SELECT COUNT(*) FROM tickets WHERE kind = 'home') AS home,
-    (SELECT COUNT(*) FROM tickets WHERE checked_at IS NOT NULL) AS inside,
+    (SELECT COUNT(*) FROM door_in) AS inside,
     (SELECT COALESCE(SUM(sats), 0) FROM tickets WHERE kind = 'room') AS roomSats,
     (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'ticket' AND at >= ?1) AS ticketSats,
     (SELECT COALESCE(SUM(sats), 0) FROM locked WHERE kind = 'tip' AND at >= ?1) AS tips,

@@ -151,7 +151,8 @@ test('a ticket kept with a passkey comes back with Find my ticket, once per chal
   assert.equal((await call('POST', '/api/passkey', await p.create(ch), { 'X-Pass': 'p1' })).error, 'old_challenge');
   ch = await challenge(call);
   const found = await call('POST', '/api/passkey/check', await p.get(ch));
-  assert.deepEqual([found.pass, found.kind, found.code, found.secret], ['p1', 'room', 'c0de', 's3cret']);
+  // The purchase only: the ticket itself is rebuilt on the phone from the passkey's user ID (blind.js).
+  assert.deepEqual(found, { status: 200, pass: 'p1', kind: 'room' });
   assert.equal((await call('POST', '/api/passkey/check', await p.get(ch))).error, 'old_challenge');
   assert.equal((await call('POST', '/api/passkey/check', await (await phone()).get(await challenge(call)))).error, 'no_ticket');
   await run('DELETE FROM tickets'); // New night
