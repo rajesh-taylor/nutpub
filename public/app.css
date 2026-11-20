@@ -1269,8 +1269,9 @@ body.one .drink .card-title { color: var(--amber); }
   body.one .tabs button.nudge::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 5px; vertical-align: 3px; border-radius: 50%; background: var(--amber); }
   /* One tab at a time. The comment box stays on Chat and Tip. */
   body.one:not([data-tab="ticket"]) #tab-ticket, body.one:not([data-tab="tip"]) #tab-tip, body.one:not([data-tab="wallet"]) .bottom { display: none !important; }
-  body.one[data-tab="ticket"] .chat, body.one[data-tab="wallet"] .chat { display: none !important; }
-  body.one[data-tab="tip"] .chat > :not(.say):not(.say-thanks):not(.nutzaps) { display: none !important; }
+  /* Not in full screen (Rajesh 20 Nov: from the Ticket tab, full screen showed no chat over the picture). */
+  body.one:not(.full)[data-tab="ticket"] .chat, body.one:not(.full)[data-tab="wallet"] .chat { display: none !important; }
+  body.one:not(.full)[data-tab="tip"] .chat > :not(.say):not(.say-thanks):not(.nutzaps) { display: none !important; }
   /* The chat as B draws it: no card round it, the newest at the bottom, the comment box under it. */
   body.one .chat { flex: 1 1 auto; display: flex; flex-direction: column; margin: 8px 0 0; padding: 0; border: 0; background: none; }
   body.one .chat-top { margin: 0 0 6px; padding: 0; border: 0; }
@@ -1332,12 +1333,14 @@ body.one.full .strip { position: fixed; z-index: 4; left: 0; right: 0; bottom: 0
 body.one.full .strip .say input { padding-top: 11px; padding-bottom: 11px; }
 /* The chat over the picture: its newest lines only (3, 5 or 10, the artist's pick), at the bottom right, above the
    controls. The words stay one size on a big screen. */
-body.one.full .chat { position: fixed; z-index: 3; top: 72px; right: 16px; bottom: calc(var(--strip) + 64px); left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none; display: block; }
+body.one.full .chat { position: fixed; z-index: 3; top: 72px; right: 16px; bottom: calc(var(--strip) + 64px); left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%); mask-image: linear-gradient(to bottom, transparent, #000 18%); }
 body.one.full .chat > :not(.feed) { display: none !important; }
 /* Rajesh 20 Nov: no 3/5/10 any more; as many lines as fit between the top and the strip, the oldest fading out at the top
    (the mods delete what shouldn't be there). */
-body.one.full .feed { max-height: none; height: 100%; overflow: hidden; gap: 4px; align-items: flex-end; justify-content: flex-end;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%); mask-image: linear-gradient(to bottom, transparent, #000 18%); }
+/* Safari (Rajesh 20 Nov) showed none with a 100%-high list: the list keeps its own height and the box clips its top. */
+body.one.full .feed { max-height: none; height: auto; flex: none; overflow: visible; gap: 4px; align-items: flex-end; }
 body.one.full .feed li, body.one.full .feed li.tipped { display: block; flex: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 16px; line-height: 1.35; }
 /* Full screen hides the page's other parts: the tabs, the cards, the wallet card. */
 body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.one.full .tab-tip, body.one.full .bottom { display: none !important; }

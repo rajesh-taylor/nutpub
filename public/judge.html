@@ -12,7 +12,10 @@
        Cashu line for devs is each poster's small print. */
     @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
     /* Rajesh 20 Nov: a lighter navy here, so the sign and posters lift off it. */
-    body.judge { --deep: #0c1528; text-align: left; padding: 0; overflow-x: clip; background: var(--deep) repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 48px); }
+    /* Rajesh 20 Nov: a touch darker, with a little noise for grain and dither (no banding in the dark). */
+    body.judge { --deep: #0a1224; text-align: left; padding: 0; overflow-x: clip; background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 48px), var(--deep); }
     .judge main, .judge footer { max-width: 1360px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
     .judge main { position: relative; padding-block: 28px 40px; display: grid; gap: 22px; }
     .nut-menu { position: absolute; top: 44px; right: max(16px, env(safe-area-inset-right, 0px)); z-index: 5; text-align: right; }
@@ -56,7 +59,9 @@
     .lines b { color: var(--cream); font-weight: 400; }
     .lines .lead { font: 400 19px/1.5 "IBM Plex Sans", var(--body); letter-spacing: 0; } /* Rajesh 19 Nov: a reading face, not the code one */ /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
-    .judge main > .lines.intro { max-width: 760px; text-align: center; gap: 14px; }
+    .judge main > .lines.intro { text-align: center; gap: 14px; }
+    .lines.intro .lead:first-child { max-width: 760px; justify-self: center; }
+    @media (min-width: 1150px) { .lines.intro .what { white-space: nowrap; } } /* one line, across the three posters (Rajesh 20 Nov) */
     .lines.intro .lead { text-wrap: balance; }
     .lines.intro .what { color: #e8a845; font-size: 17px; }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; max-width: 1200px; width: 100%; justify-self: center; } /* three in a row (Rajesh 19 Nov: gigs 3 and 4 folded together) */

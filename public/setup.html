@@ -140,7 +140,9 @@
       .board .ticket-split .half:not([hidden]) + .half:not([hidden]) { border-left: 0; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid rgb(239 227 200 / .14); }
     }
     /* Venue tickets: a yes/no, so a switch (Square, Toast and YouTube Studio do the same); the row underneath shows when it's on. */
-    .board .room-switch { align-items: center; gap: 14px; min-height: 44px; margin: 0 0 10px; }
+    /* Rajesh 20 Nov: only the words and the switch toggle it; a click beside them (after pasting the pin) did too. */
+    .board .room-switch { align-items: center; gap: 14px; min-height: 44px; margin: 0 0 10px; width: fit-content; max-width: 100%; }
+    .board .door-step .room-switch { width: auto; }
     .board .room-switch input { appearance: none; -webkit-appearance: none; position: relative; width: 44px !important; height: 26px !important; margin: 0 !important; border-radius: 13px; background: rgb(239 227 200 / .18); border: 1px solid rgb(239 227 200 / .3); cursor: pointer; transition: background .15s; }
     .board .room-switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--cream); transition: transform .15s; }
     .board .room-switch input:checked { background: var(--amber); border-color: var(--amber); }
