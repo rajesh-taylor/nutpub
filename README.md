@@ -20,7 +20,7 @@ A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https:/
 - [Architecture](#architecture)
 - [Run it yourself](#run-it-yourself)
 - [Status and known limits](#status-and-known-limits)
-- [Roadmap](#roadmap)
+- [Coming next](#coming-next-27-nov--11-dec)
 - [Licence](#licence)
 
 ---
@@ -32,7 +32,7 @@ The home page shows three gig posters. Each one opens a private practice stage o
 | | Gig | You'll see | Device |
 |---|---|---|---|
 | 1 | **Longy, online** | A £20 Watch online ticket (one 402), the live chat with a moderator, tips with comments in full screen, a stretch goal filling up, and the venue's TV page | Laptop |
-| 2 | **Frankie Peroni, pay as you watch** | 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it (open the Network tab to watch). Stop and nothing more is charged. Then the replay, and the fan's leftover sats moved home to their own wallet | Laptop |
+| 2 | **Frankie Peroni, pay as you watch** | Paste his Fountain link as the chat's pinned message. Then 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it (open the Network tab to see the 402, then the paid 200). Stop and nothing more is charged. Then the fan's leftover sats go home to their own wallet | Laptop |
 | 3 | **The night at the venue: Longy at The Fickle Pickle** | A £35 venue ticket with a £5 beer token included; a 30-second door QR scanned by your own phone as the doormen's list; the beer token handed over as an animated QR and poured by the bar | Laptop, phone optional |
 
 Every gig ends on **Your takings**: move the night's earnings to [Cashu.me](https://cashu.me) in one tap (it asks to add the test mint once), then **Finish gig** stamps the till receipt PAID OUT.
@@ -143,10 +143,18 @@ The NutPub is a working concept on a test mint, not a production service.
 
 ---
 
-## Roadmap
+## Coming next: 27 Nov – 11 Dec
 
-- **Before 27 Nov 2026:** blind-signed tickets, so the door can check a ticket without knowing who bought it; a passkey-sealed backup of the artist's key.
-- **After NutNovember:** venue deals (drinks, ticketing with the venue) through Refueler Pass; show splits paid as the fan pays, one coin per member; an AI agent that buys tickets over the 402; card payments as a top-up.
+The two weeks after NutNovember. "Exploring" means we're still working out how.
+
+- **Passkeys that seal the ticket (WebAuthn PRF):** the ticket's seed only comes out after Face ID or a fingerprint. The passkey's own ID stays as the fallback for password managers without PRF.
+- **Give a ticket away:** the friend's phone swaps it for a fresh blind-signed ticket, the way a Cashu wallet receives a token, so the giver's copy stops working.
+- **Move to your phone:** the night's takings as an animated NUT-16 QR that the artist's phone wallet scans.
+- **Show splits paid as the fan pays:** a coin per band member, each locked to their own key.
+- **A replay pass:** the artist sends the replay to someone who wasn't there, locked to their key.
+- **An agent that buys a ticket over the 402,** within a limit its person sets, finding gigs over MCP.
+- **Exploring, venue deals:** one payment buys a blind-signed ticket per business (dinner at the pub, then the gig room's door; another building, or another night), each checked only at its own door, so the restaurant can't tell which diner went to the show.
+- **Exploring, tips without Wi-Fi at the venue:** coins locked to the artist's key while online, handed over by QR or Bluetooth, checked offline with the mint's signature (NUT-12).
 
 ---
 

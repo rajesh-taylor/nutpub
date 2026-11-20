@@ -23,13 +23,15 @@ export async function judgeLine(r, page) {
   const fanDone = () => ['nutpub-todo', 'nutpub-todo-home'].some((k) => { try { return !!JSON.parse(localStorage.getItem(k) || 'null')?.all; } catch { return false; } });
   let said = '';
   // n: the step; text: the one thing to do; story: gig 3's line of the story, before it; extra: a QR or a button.
-  const replay = list.at === 'frankie'; // gig 2 shows the replay (session 34): a step of its own after End night
+  // Gig 2 (Rajesh 20 Nov): no replay; the Fountain pin first, then one thing a step, the fan's sats home and Move apart.
+  const g2 = list.at === 'frankie';
+  const FOUNTAIN = 'https://fountain.fm/artist/YPv5hRTJVHSoWeB86g6m';
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
   const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at the venue's TV page (Chat & Big Time Charlies) before End night
   const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  const steps = pickle ? 8 : replay || tv ? 6 : 5;
+  const steps = pickle ? 8 : g2 ? 7 : tv ? 6 : 5;
   const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
     if (said === n + story + text) return;
     said = n + story + text;
@@ -61,12 +63,14 @@ export async function judgeLine(r, page) {
     end: 'Every sat tonight went straight to Longy’s key. The NutPub only checked it.',
     takings: 'Closing time. The ticket and tips are Longy’s, locked to his key.',
   } : list.at === 'frankie' ? {
-    setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute.',
+    setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute. He has no website: his fans find him on Fountain.',
+    pinned: 'Pinned over the chat, for every fan watching.',
     start: 'Show time. Nobody pays until they press play.',
     fan: 'You’re a fan at home. The video comes in 10-second pieces.',
     end: 'You paid for the minutes you watched, straight to Frankie’s key.',
-    replay: 'The night’s over, but Frankie’s replay runs for 7 days.',
-    takings: 'That’s two ways to get paid. Gig 3 gets NUT-heavy: a door that checks a 30-second code, and a first drink that’s a coin on a QR.',
+    home: 'What the fan didn’t spend is the fan’s: it goes home to their own wallet.',
+    takings: 'That’s two ways to get paid: a ticket, and by the minute. Gig 3 gets NUT-heavy: a door with a 30-second code, and a beer token that’s a coin.',
+    paid: 'Paid out: from Frankie’s browser to his own wallet, nobody in between.',
   } : {};
   let key = '';
   try { key = localStorage.getItem('nutpub-admin') || ''; } catch {}
@@ -87,6 +91,15 @@ export async function judgeLine(r, page) {
     };
     return b;
   };
+  // A button that copies a link (gig 2's Fountain link), with the link beside it to select by hand.
+  const copyBtn = (text) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: 'Copy the link' });
+    b.onclick = async () => { try { await navigator.clipboard.writeText(text); b.textContent = 'Copied ✓'; } catch { b.textContent = 'Select it, left'; } };
+    return b;
+  };
+  // The fan's leftover sats went home (viewer.js marks it in this browser), and Takings' Move is done (its own page).
+  const fanHome = () => ['nutpub-todo', 'nutpub-todo-home'].some((k) => { try { return !!JSON.parse(localStorage.getItem(k) || 'null')?.home; } catch { return false; } });
+  const movedAll = () => { const m = document.getElementById('done-moved'); return !!m && !m.hidden; };
   const draw = async () => {
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
     if (!s) return;
@@ -122,21 +135,39 @@ export async function judgeLine(r, page) {
       return say(7, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab. Then press End night, the purple button below.'
         : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[7] });
     }
+    if (g2) {
+      if (page === 'setup') {
+        if (!/fountain\.fm\//.test(document.getElementById('pin-text')?.value || '')) {
+          return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments and moderators: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN) });
+        }
+        return say(1, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
+      }
+      if (page === 'show') {
+        if (closed) return fanHome() ? say(5, 'Click 3 · Your takings, at the top.')
+          : say(5, 'Back on the fan’s page: press Move my sats, move them to Cashu.me, then close that tab.', '', '', { story: TOLD.home });
+        if (!on) return say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
+        if (!fanDone()) return say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
+        return say(4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
+      }
+      if (!closed) return say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+      return movedAll() ? say(7, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
+        : say(6, 'Press Move to my own wallet: Cashu.me opens in a new tab.', '', '', { story: TOLD.takings });
+    }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     if (page === 'setup') say(1, `This is where ${name} sets prices, ticketing, comments & mods, show splits and more. Scroll down to view; nothing needs changing. Then click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
-      if (closed && replay) say(5, 'Back on the fan’s page: press play to watch the replay, which is kept for playback before deletion in 7 days. Then move the fan’s sats to Cashu.me and close that tab. Then click 3 · Your takings, at the top.', '', '', { story: TOLD.replay });
-      else if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
+      if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
       else if (tv && !tvSeen()) say(4, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
       else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
     } else if (!closed) say(tv ? 5 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-    else say(replay || tv ? 6 : 5, `${replay ? 'The replay has its own tile. ' : ''}Press Move to Cashu.me, then close the Cashu.me tab, come back here and press Finish gig.`, '', '', { story: TOLD.takings });
+    else say(tv ? 6 : 5, `Press Move to Cashu.me, then close the Cashu.me tab, come back here and press Finish gig.`, '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.
-  if (page === 'show' || (pickle && page === 'setup')) { // gig 3's Plan gig: the price and the door move it on (session 36)
+  if (g2 && page === 'setup') document.getElementById('pin-text')?.addEventListener('input', () => draw());
+  if (page === 'show' || (pickle && page === 'setup') || (g2 && ['setup', 'takings'].includes(page))) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);
     addEventListener('focus', draw);

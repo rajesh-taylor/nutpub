@@ -56,10 +56,12 @@ const GIGS = {
       // ticket is on sale, with no door check and no drink: those are gig 3's.
       ticket: { on: true, price: null, fiat: 30, locked: false },
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
-      replay: { mode: 'on', price: null, fiat: null, locked: false }, hours: 2, // the replay at its minimum for a 2-hour show: gig 2 shows it to judges (sessions 34-35)
+      // Rajesh 20 Nov: no replay for judges (the card shows Off; the Pub Menu's technical page tells it).
+      replay: { mode: 'off', price: null, fiat: null, locked: false }, hours: 2,
       tip: { label: 'Tip Frankie', price: 2100 },
     },
-    pin: '60 sats a minute: pay as you watch, stop any time. Tip with a comment: sats in the box on the right.',
+    // Rajesh 20 Nov: the pin starts empty; the judge pastes Frankie's Fountain link (gig 2's first step, judge-line.js).
+    pin: '',
     // A guest's line half a minute in: a quiet nod to the btc++ Berlin talk on federated mints.
     // Rajesh 18 Nov: a big tip half a minute in, then two Nutzaps from Nostr names, 2 s and 5 s after it.
     cues: [{ after: 30, text: 'Real music, real singer songwriters 🇬🇧', sats: 50000 },

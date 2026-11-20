@@ -1163,7 +1163,7 @@ body:has(#stamp:not([hidden])) .judge-line { display: none; }
 .judge-line b { font: 400 16px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); white-space: nowrap; }
 .judge-line .btn { margin: 0 0 0 auto; font-size: 18px; padding: 9px 16px 7px; white-space: nowrap; }
 /* Gig 3 (17 Nov): a line of the story above the thing to do; the fan's QR for the judge's phone, in the line. */
-.judge-line .jl-say { flex: 1 1 320px; min-width: 0; display: grid; gap: 4px; }
+.judge-line .jl-say { flex: 1 1 320px; min-width: 0; display: grid; gap: 4px; overflow-wrap: anywhere; } /* gig 2's Fountain link wraps on a phone */
 .judge-line .jl-say > span:last-child { font-weight: 500; letter-spacing: -.005em; }
 /* The story (Rajesh 18 Nov: more professional): upright, not italic, a step smaller and grey; the action under it, cream. */
 .judge-line .jl-story { font-size: 15px; line-height: 1.45; color: var(--smoke); font-weight: 400; }

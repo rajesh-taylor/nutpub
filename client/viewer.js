@@ -360,7 +360,13 @@ function backdrop(on) {
 }
 backdrop(false);
 
+// Gig 2's strip counts 10 seconds down after Stop (Rajesh 20 Nov), then asks for play again.
+let stoppedAt = 0;
 function controls(on) {
+  if (!on && playing && TODO && !todo.again) {
+    stoppedAt = Date.now();
+    const t = setInterval(() => { todoDraw(); if (Date.now() - stoppedAt > 10_500) clearInterval(t); }, 1000);
+  }
   if (on) todoMark(todo.stopped ? 'again' : 'played'); else if (playing) todoMark('stopped');
   playing = on;
   if (on) say(''); // playing again: the "Stopped" line goes
@@ -1285,9 +1291,14 @@ function todoItems() {
       { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goals. An artist can set several, for anything: here, his next gig streamed in HD.', text: show.tip?.price ? `Out of full screen, press the yellow ${show.tip.label || 'Tip'} ${sats(show.tip.price)} button under the player, two or three times: watch the stretch goal fill` : `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
+  // Gig 2 (Rajesh 20 Nov): one thing a step. Play and stop; play again once the countdown's done; the Network tab a step
+  // of its own (it proves the 402 and the paid 200), ticked by Seen it or by going on to full screen.
   if (show.stream.mode === 'pay') return [
-    { done: !!todo.played || spentHere > 0, story: `Each 10-second piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it. Want to see them? Open your browser’s developer tools (⌥⌘I in Chrome) on the Network tab first.`, text: `Press play: ${sats(show.stream.perMinute)} a minute`, did: `Played: ${sats(show.stream.perMinute)} a minute`, now: 'Press play, bottom left', short: `Play: ${sats(show.stream.perMinute)} a minute`, shortDid: 'Played' },
-    { done: !!todo.again, story: 'Stop, and the payments stop. In the Network tab each piece shows a 402, then the paid 200.', text: 'Stop, then play again: you pay only for what you watch', did: 'Stopped and played again: paid only for what you watched', now: 'Stop, then play again: bottom left', short: 'Stop, then play again', shortDid: 'Stopped, played again' },
+    { done: !!todo.stopped || !!todo.again, story: `Each 10-second piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it.`, text: 'Press play, watch about 5 seconds, then stop', did: 'Played, then stopped', now: 'Watch about 5 seconds, then stop: bottom left', short: 'Play 5 seconds, then stop', shortDid: 'Played, stopped' },
+    { done: !!todo.again, story: 'Stopped, and the payments stop.', text: playAgainIn() > 0 ? `Play again in ${playAgainIn()} ${playAgainIn() === 1 ? 'second' : 'seconds'}` : 'Now press play again: you pay only for what you watch', did: 'Played again: paid only for what you watched', now: 'Press play again: bottom left', short: 'Play again', shortDid: 'Played again' },
+    { done: !!todo.net || !!todo.full, story: 'Every piece is a 402: the server asks, the wallet in this browser pays, the piece arrives with a 200.', text: 'Open your browser’s developer tools (⌥⌘I) on the Network tab: each piece shows a 402, then the paid 200. Then press Seen it',
+      html: 'Open your browser’s developer tools (⌥⌘I) on the Network tab: each piece shows a 402, then the paid 200. <button type="button" class="btn primary" data-todo="net">Seen it</button>',
+      did: 'Saw the 402s and the 200s', short: 'The Network tab: 402, then 200', shortDid: 'Saw the 402s' },
     { ...full, story: 'Full screen, then a tip, as at Longy’s.' }, { ...tip, story: 'A tip is another 402, with your words beside it.' }];
   return [];
 }
@@ -1297,6 +1308,9 @@ const homeHello = () => { try { const t = JSON.parse(localStorage.getItem('nutpu
 if (IN_SHOW && !KEEP) addEventListener('storage', (e) => { if (e.key === 'nutpub-todo-home') todoDraw(); });
 // The strip at the top (gigs 1 and 2, the page of its own): the one next thing, or the way back to Show Time.
 const FAN_STRIP = TODO && AS !== 'room' && top === self;
+const playAgainIn = () => Math.max(0, 10 - Math.floor((Date.now() - stoppedAt) / 1000));
+// A step's own button in the strip (gig 2's Seen it): ticks that step.
+$('fan-line').addEventListener('click', (e) => { const k = e.target.closest('[data-todo]')?.dataset.todo; if (k) todoMark(k); });
 // The replay's badge on the picture and its line on the closing card: free with a ticket, else the rate; or why it's gone.
 function replayLines(closed) {
   const on = replaying();
@@ -1965,6 +1979,7 @@ async function tick() {
     const HAD = `nutpub-had${KEEP}`;
     let had = false;
     try { if (left) localStorage.setItem(HAD, '1'); had = !!localStorage.getItem(HAD); } catch {}
+    if (!left && had) todoMark('home'); // gig 2's Show Time line moves on (judge-line.js)
     $('change').textContent = left ? `You have ${sats(left)} left in your browser wallet. Move them into your own Cashu or Lightning wallet now: this browser forgets them after 7 days, for good.`
       : had ? (TODO ? `All done. Close the Cashu.me tab now: ${show.artist || 'the artist'} needs it next.` // a judge (Rajesh 18 Nov): one Cashu.me at a time // a judge (Rajesh 18 Nov)
         : 'All done: your sats are in your own wallet. You can close this tab.') : '';
