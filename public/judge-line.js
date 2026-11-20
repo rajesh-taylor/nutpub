@@ -114,16 +114,25 @@ export async function judgeLine(r, page) {
       if (!show) return;
       // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
       const ready = Number(show.ticket?.fiat) === 35 && !!show.door?.on;
+      // Rajesh 20 Nov: the box to fill shimmers, as gig 2's pin does: the price first, then the door's switch.
+      if (page === 'setup') {
+        const priced = Number(show.ticket?.fiat) === 35;
+        document.querySelector('[data-path="ticket.fiat"]')?.classList.toggle('pin-hint', !priced);
+        document.getElementById('door-on')?.closest('.room-switch')?.classList.toggle('pin-hint', priced && !show.door?.on);
+      }
       if (!ready) {
         if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket’s price and the door first.', 'Back to Plan gig →', '/setup');
-        return say(1, 'Type £35 for the venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
+        return say(1, 'Type £35 for the In the Room venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
       }
       if (page === 'setup') return say(2, 'On your phone: scan the DOOR pass with the camera, if you like. Then click 2 · Show Time, at the top.', '', '', { story: STORY[2] });
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
       // The fan's sats home is gig 2's step now (Rajesh 19 Nov): here the night's over, on to Your takings.
-      if (closed) return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
+      if (closed) { // Rajesh 20 Nov: nothing left on the fan's page
+        document.getElementById('head-fan')?.remove();
+        return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
+      }
       const tickets = (await admin('/api/admin/door')) || [];
-      if (!tickets.length) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
+      if (!tickets.length) return say(3, 'On the fan’s phone, on the right: scroll down and buy the venue ticket.', '', '', { story: STORY[3] });
       if (!tickets.some((t) => t.checked_at)) return say(4, 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Let in by hand.', '', '',
         { story: STORY[4], extra: pressBtn('Let in by hand', '#door-tickets button', /^Let in by hand/, 'Letting in…') });
       if (!on) return say(5, 'Press Start show, the green button below.', '', '', { story: STORY[5] });
