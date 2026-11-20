@@ -1283,13 +1283,16 @@ function todoItems() {
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
     return [{ done: !!door.ticket, text: 'Scroll down to buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
+      // Gig 3's passkey (Rajesh 20 Nov: the list skipped it and went straight to the door): optional, Not now counts.
+      PASSKEYS && { done: !!door.passkey || keepSkipped || !!door.checkedAt, text: 'Save your ticket as a passkey, below, or press Not now', did: door.passkey ? 'Saved the ticket as a passkey' : 'Passkey: not now', short: 'Passkey, or Not now' },
       show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or show a door word and press Let in, on the left' : 'Get let in: the doormen’s phone scans your QR, or show a door word for Let in on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
-      // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
-      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
       // A hello in Show Time's desktop view counts too: either way the clip plays on (Rajesh 18 Nov).
       s.drink && { ...hello, done: !!todo.hello || (IN_SHOW && homeHello()), text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
-      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip].filter(Boolean);
+      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip,
+      // Rajesh 20 Nov (session 40): the drink after the music, hello and tip: a breather before the bar.
+      // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
+      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
   }
   // Longy's (Rajesh 15 Nov): hello first, then full screen and a big tip there, then a second tip back on the page,
   // under the stretch goal, to watch it move.

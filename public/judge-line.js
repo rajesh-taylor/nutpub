@@ -54,8 +54,10 @@ export async function judgeLine(r, page) {
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
     4: 'Ticket bought, with the beer token in it. The NutPub signed it blind, so even we can’t tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
     5: 'Let them in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
-    6: 'The fan’s phone now holds the beer token: a real coin, locked to the bar.',
-    7: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
+    // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
+    6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, a breather: Longy live at The Fickle Pickle.',
+    7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
+    poured: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',
     // Session 40 (Rajesh 20 Nov): what Takings shows below. The no-show is client/noshow.js, paid at End night.
     takings: 'Below: tonight’s takings, a no-show’s beer token, Longy’s since last orders, and after Finish gig, the night’s receipt under Past gigs.',
@@ -169,15 +171,18 @@ export async function judgeLine(r, page) {
           { story: STORY[4], extra: both });
       }
       if (!on) return say(5, 'Press Start show, the green button below.', '', '', { story: STORY[5] });
-      const d = await drinks();
-      if (!d.some((x) => x.poured)) return say(6, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
-        { story: STORY[6], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
-      // Rajesh 18 Nov: hello in the chat first, so the clip plays a while; the fan's list (this browser) says when it's said.
-      // Either chat counts: the fan's phone or the desktop view below (Rajesh 18 Nov).
+      // Step 6 (Rajesh 20 Nov): Longy's set first. Hello in the chat, so the clip plays a while; the fan's list (this browser) says
+      // when it's said. Either chat counts: the fan's phone or the desktop view below (Rajesh 18 Nov).
       // Only tonight's: each list's pass is that fan's pass now, so a hello from an earlier gig on this stage doesn't count.
       const hello = ['', '-home'].some((k) => { try { const t = JSON.parse(localStorage.getItem(`nutpub-todo${k}`) || 'null'); return !!t?.hello && t.pass === localStorage.getItem(`nutpub-pass${k}`); } catch { return false; } });
-      return say(7, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab. Then press End night, the purple button below.'
-        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[7] });
+      const tipped = hello && ((await admin('/api/admin/takings'))?.locked?.tip?.count || 0) > 0; // tonight's tips, real coins
+      if (!tipped) return say(6, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab.'
+        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[6] });
+      // Step 7: the bar, then End night.
+      const d = await drinks();
+      if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
+        { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
+      return say(7, 'Now press End night, the purple button below.', '', '', { story: STORY.poured });
     }
     if (g2) {
       if (page === 'setup') {
