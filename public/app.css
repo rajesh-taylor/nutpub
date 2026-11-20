@@ -1223,6 +1223,8 @@ body:has(#stamp:not([hidden])) .judge-line { display: none; }
 .fan-line[hidden], body.full .fan-line { display: none; }
 .fan-line svg { vertical-align: -2px; color: var(--amber); }
 body.fan-strip #todo { display: none !important; }
+/* A small phone (Rajesh 20 Nov, iPhone 13 mini): the strip a little higher and tighter, with a gap above the player; the player itself unchanged. */
+@media (max-width: 599px) { .fan-line { margin: 4px 10px 10px; padding: 8px 12px; font-size: 16px; } .fan-line .jl-story { font-size: 14px; } }
 /* Full screen: the list's next step on the picture, top centre, between Live and Test mint. */
 .todo-now { display: none; }
 body.one.full .todo-now:not([hidden]) { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 12px; position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: min(64vw, 760px); margin: 0; padding: 8px 14px 7px; border: 1px solid var(--amber); border-radius: 8px; background: rgb(5 9 20 / .85); color: var(--cream); font-size: 16px; line-height: 1.3; text-align: center; pointer-events: none; }

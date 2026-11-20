@@ -214,6 +214,9 @@ export async function judgeLine(r, page) {
         : say(6, 'Close the fan’s Cashu.me tab first: the demo works with one Cashu.me tab at a time. Then press Move to my own wallet.', '', '', { story: TOLD.takings });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
+    // Fan's page ↗ only while the show's on (Rajesh 20 Nov): not on Plan gig, not before Start show, not after End night.
+    const fanBtn = document.getElementById('head-fan');
+    if (fanBtn) fanBtn.style.display = page === 'show' && on && !closed ? '' : 'none';
     if (page === 'setup') say(1, `This is where ${name} sets prices, ticketing, comments & mods, show splits and more. Scroll down to view; nothing needs changing. Then click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
       if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
