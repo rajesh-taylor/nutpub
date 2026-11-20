@@ -138,7 +138,12 @@ export async function judgeLine(r, page) {
         if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket’s price and the door first.', 'Back to Plan gig →', '/setup');
         return say(1, 'Type £35 for the In the Room venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
       }
-      if (page === 'setup') return say(2, 'On your phone: scan the DOOR pass with the camera, if you like. Then click 2 · Show Time, at the top.', '', '', { story: STORY[2] });
+      // Rajesh 20 Nov: ask for the scan before Show Time (the phone stays optional); a button takes them to the pass.
+      if (page === 'setup') {
+        const toPass = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: 'Show me the DOOR pass ↓' });
+        toPass.onclick = () => document.getElementById('door-pass-card')?.scrollIntoView({ block: 'center' });
+        return say(2, 'Scan the DOOR pass with your phone’s camera and open its link: your phone is now the doormen’s scanner. Then click 2 · Show Time, at the top. No phone? Go straight to Show Time.', '', '', { story: STORY[2], extra: toPass });
+      }
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
       // The fan's sats home is gig 2's step now (Rajesh 19 Nov): here the night's over, on to Your takings.
       if (closed) { // Rajesh 20 Nov: nothing left on the fan's page
