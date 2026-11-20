@@ -27,7 +27,14 @@ import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, info.artistKe
 const streamed = info.show.stream.mode !== 'off';
 // An example gig (a stage's setlist): its set plays from a recording, so no Larix. The stream button becomes a status
 // light, ● On air, and the signal box says so (Rajesh 14 Nov).
-const EXAMPLE = await api('GET', '/api/admin/setlist').then((r) => !!r.setlist).catch(() => false);
+const LIST = await api('GET', '/api/admin/setlist').then((r) => r.setlist).catch(() => null);
+const EXAMPLE = !!LIST;
+// Gig 3 on a judge's stage (session 40): End night calls last orders, then a no-show's ticket and beer token are paid
+// from a wallet of its own in this browser (noshow.js), so Takings has an unpoured drink going to Longy.
+const NOSHOW = !!LIST?.only && LIST.at === 'pickle' && !!info.show.ticket?.price && !!info.show.drink?.price;
+const mintUrl = NOSHOW ? (await fetch('/api/health').then((r) => r.json()).catch(() => null))?.mint?.url : null;
+if (NOSHOW && mintUrl) import('./noshow.js').then((m) => m.noShowReady(mintUrl, info.show.ticket.price)).catch(() => {}); // test sats ahead of time
+let lastOrders = false; // End night's few seconds: the button says Last orders…
 $('stream-btn').hidden = !streamed;
 $('signal').hidden = !streamed;
 
@@ -59,6 +66,7 @@ const lasted = (iso) => { const m = Math.max(0, Math.floor((now.now - Date.parse
 function steps() {
   const at = ORDER.indexOf(now.stage);
   for (const b of buttons) {
+    if (lastOrders && b.dataset.stage === 'closed') continue; // Last orders… stays until the night's over
     const i = ORDER.indexOf(b.dataset.stage);
     const [next, current, past] = (phone.matches ? SHORT : LABEL)[b.dataset.stage];
     const isNow = i === at && now.stage !== 'doors';
@@ -152,7 +160,20 @@ for (const b of buttons) {
     if (s === 'closed' && !confirm('End night? Every phone goes to Cheers and everyone watching stops.')) return;
     if (s === 'open' && now.opensAt && Date.now() / 1000 < now.opensAt
       && !confirm(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`)) return;
-    stage(s).catch((e) => { if (e.status === 409) { $('unpaid-note').hidden = false; } });
+    (async () => {
+      if (s === 'closed' && NOSHOW && mintUrl) {
+        lastOrders = true;
+        b.disabled = true;
+        b.textContent = 'Last orders\u2026';
+        try {
+          await api('POST', '/api/admin/last-orders');
+          const show = await fetch('/api/show').then((r) => r.json());
+          await (await import('./noshow.js')).noShow(mintUrl, show.show.ticket.price);
+        } catch (e) { console.warn('[no-show]', e.message); } // the night ends anyway
+        lastOrders = false;
+      }
+      await stage(s);
+    })().catch((e) => { if (e.status === 409) { $('unpaid-note').hidden = false; } });
   };
 }
 await stage();

@@ -22,7 +22,7 @@ import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor, closesAt } from './stages.js';
-import { setlist, finished, again, cue, cueTimes } from './setlist.js';
+import { setlist, finished, again, cue, cueTimes, lastOrdersNow } from './setlist.js';
 import { keepMoved } from './closing.js';
 import { current, publicShow, replayPrice, freeStatus, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
 
@@ -112,6 +112,8 @@ route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
   if (!list) throw new Error('That gig isn\u2019t on this stage\u2019s setlist.');
   return { setlist: list, path: (await current(c)).path };
 }));
+// Gig 3 on a judge's stage: End night calls last orders first (setlist.js, session 40).
+route('POST', '/api/admin/last-orders', admin, attempt(async () => ({ lastOrders: await lastOrdersNow() })));
 // An example gig's chat line, due now in a viewer's set (setlist.js): posted once, whoever asks first.
 route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((await body(c))?.n)) })));
 // `fan`: the fan's page as the judge should first see it: Longy's and Frankie's online (Rajesh 15 Nov: the venue's page

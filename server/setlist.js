@@ -6,7 +6,7 @@
 // A stage made by a gig card on /judge (Rajesh 14 Nov) holds one gig only: { at, done, only: true }, no next gig.
 import { endReplay } from './replay.js';
 import { kv, run, one, stageDb } from './db.js';
-import { blank, clean, currentShow, clearGig } from './shows.js';
+import { blank, clean, currentShow, clearGig, lastOrdersAt } from './shows.js';
 import { usePhotos } from './photo.js';
 import { getRate } from './rate.js';
 import { satsFrom } from './money.js';
@@ -181,6 +181,20 @@ export async function cue(n) {
   // Its Nutzap tag: a row keyed by minus the message's id, so it never meets a real coin's (Takings joins on those).
   if (id && c.nutzap) await run('INSERT INTO nutzaps (locked, message, pubkey, name, event, at) VALUES (?, ?, ?, ?, ?, ?)', -id, id, '', c.nostr || null, '{}', new Date().toISOString());
   return true;
+}
+
+// Gig 3 on a judge's stage (session 40, agreed with Rajesh 20 Nov): End night calls last orders, at that minute, so the
+// no-show's beer token (client/noshow.js), paid just after, is locked to the bar's key until a time already gone and
+// so Longy's on Takings. Never later than the gig's own last orders; nothing on any other gig or once the night is over.
+// The drinks already bought keep their own time (it's inside the coin): the judge's own was poured anyway.
+export async function lastOrdersNow() {
+  const list = await kv.get('setlist', null);
+  if (!stageDb()?.id || !list?.only || list.at !== 'pickle' || (await kv.get('stage')) === 'closed') return null;
+  const { show } = await currentShow();
+  const at = ukTime();
+  if (lastOrdersAt(show) && lastOrdersAt({ ...show, lastOrders: at }) >= lastOrdersAt(show)) return show.lastOrders;
+  await run("UPDATE shows SET settings = ?, updated = ? WHERE id = 'current'", JSON.stringify({ ...show, lastOrders: at }), new Date().toISOString());
+  return at;
 }
 
 // The stage's setlist: { at, done }. A stage made before the setlist (14 Nov) gets it on first look. An example left

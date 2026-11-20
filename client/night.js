@@ -114,6 +114,8 @@ fetch('/api/rate').then((r) => r.json()).then((r) => { rate = r; drawUnit(); pai
 let state = { waiting: [], drinks: [], lastOrdersAt: null, pubkey: null };
 let sums = null; // what paint() draws
 const afterLastOrders = () => state.lastOrdersAt && Date.now() / 1000 > state.lastOrdersAt + 5;
+// Drinks nobody poured, waiting under the bar's key once last orders has gone: the artist's to collect (session 40).
+const lateWaiting = () => (afterLastOrders() ? state.waiting.filter((p) => p.kind === 'drink' && p.pubkey !== state.pubkey).reduce((t, p) => t + p.sats, 0) : 0);
 const shortDay = (d) => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 async function refresh() {
   const [takings, locked, drinks] = await Promise.all([
@@ -139,6 +141,7 @@ async function refresh() {
   sums = {
     tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'), replay: all('replay'), replayN: count('replay'), replayOn: takings.replay,
     drinks: drinkSum, drinksN: toArtist.length + unpouredLate.length, drinkOn, came,
+    late: lateWaiting(), // unpoured after last orders, still locked to the bar's key: Move takes them by the refund path
     fee: Math.round((came * (takings.feePercent ?? 5)) / 100), feePercent: takings.feePercent ?? 5,
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
     // Anything still to move, wherever it's locked (another browser too); drinks locked to the bar are the bar's.
@@ -229,7 +232,7 @@ function paint() {
   $('finish-go').hidden = !s.over;
   $('finish-note').textContent = s.over ? (onSetlist?.only ? 'Then back to the three gigs.' : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
-  const toMove = s.waiting + s.held;
+  const toMove = s.waiting + s.held + s.late;
   $('move').disabled = !toMove;
   if (!toMove && !$('artist-status').dataset.busy) $('artist-status').textContent = s.came ? 'Nothing waiting to move.' : '';
   else if (!$('artist-status').dataset.busy) $('artist-status').textContent = toMove !== s.came ? `${n(toMove)} sats to move, from this gig and earlier ones.` : '';
@@ -278,7 +281,7 @@ $('move').onclick = async () => {
   $('artist-status').dataset.busy = '1';
   try {
     const before = await artist.balance();
-    const expected = before + state.waiting.filter((p) => p.pubkey === state.pubkey).reduce((t, p) => t + p.sats, 0);
+    const expected = before + state.waiting.filter((p) => p.pubkey === state.pubkey).reduce((t, p) => t + p.sats, 0) + lateWaiting();
     say('Collecting…');
     const missed = await collectAllHere(say);
     say('Making your code…');

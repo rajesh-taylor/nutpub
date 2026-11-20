@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { configure } from '../server/config.js';
 import { sqliteStage, withStage, useDb, kv, run } from '../server/db.js';
 import { currentShow, nextGig } from '../server/shows.js';
-import { setlist, finished, again } from '../server/setlist.js';
+import { setlist, finished, again, lastOrdersNow } from '../server/setlist.js';
 
 function fakeStorage() {
   const db = new DatabaseSync(':memory:');
@@ -172,5 +172,25 @@ test('the venue night (gig 4): £30 at the door with the first drink in it, the 
     assert.equal(show.door.on, true);
     assert.equal(show.stream.mode, 'free');
     assert.equal(show.set, 'frankie-2');
+  });
+});
+
+// Session 40: End night on a judge's gig 3 calls last orders at that minute (the no-show's beer token is then Longy's);
+// never on another gig, never later than planned, never once the night's over.
+test('End night calls last orders on a judge’s gig 3 only', async () => {
+  const ukNow = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
+  await withStage(st, async () => {
+    await setlist(env, 'frankie');
+    assert.equal(await lastOrdersNow(), null); // gig 2: nothing
+  });
+  st = makeStage('p1ckle');
+  await withStage(st, async () => {
+    await setlist(env, 'pickle');
+    const planned = (await currentShow()).show.lastOrders;
+    const at = await lastOrdersNow();
+    assert.equal(at, planned > ukNow() ? ukNow() : planned);
+    assert.equal((await currentShow()).show.lastOrders, at);
+    await kv.set('stage', 'closed');
+    assert.equal(await lastOrdersNow(), null); // the night's over
   });
 });

@@ -34,11 +34,12 @@ export async function judgeLine(r, page) {
   const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
   const steps = pickle ? 8 : g2 ? 7 : tv ? 6 : 5;
-  const say = (n, text, btn, href, { story = '', extra = null } = {}) => {
-    if (said === n + story + text) return;
-    said = n + story + text;
+  const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
+    if (said === n + story + note + text) return;
+    said = n + story + note + text;
     const words = Object.assign(document.createElement('span'), { className: 'jl-say' });
     if (story) words.append(Object.assign(document.createElement('span'), { className: 'jl-story', textContent: story }));
+    if (note) words.append(Object.assign(document.createElement('span'), { className: 'jl-story', textContent: note })); // what the page shows below (gig 3's step 8)
     words.append(Object.assign(document.createElement('span'), { textContent: text }));
     line.replaceChildren(Object.assign(document.createElement('b'), { textContent: n ? `Judges · ${n} of ${steps}` : 'Judges' }), words);
     if (extra) line.append(extra);
@@ -55,7 +56,9 @@ export async function judgeLine(r, page) {
     5: 'Let them in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     6: 'The fan’s phone now holds the beer token: a real coin, locked to the bar.',
     7: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
-    8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the token’s £5 went to the bar.',
+    8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',
+    // Session 40 (Rajesh 20 Nov): what Takings shows below. The no-show is client/noshow.js, paid at End night.
+    takings: 'Below: tonight’s takings, a no-show’s beer token, Longy’s since last orders, and after Finish gig, the night’s receipt under Past gigs.',
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
   const TOLD = list.at === 'longy' ? {
@@ -123,7 +126,7 @@ export async function judgeLine(r, page) {
     const on = s.stage === 'on';
     if (pickle) {
       if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
-        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[8] : '' });
+        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[8] : '', note: closed ? STORY.takings : '' });
       const show = (await admin('/api/show'))?.show;
       if (!show) return;
       // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
