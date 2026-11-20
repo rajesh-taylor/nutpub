@@ -993,7 +993,7 @@ const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then
 // Passkeys (passkey.js): on the page itself, not in the setup page's frames. None on a judge's stage (/judge, 14 Nov):
 // no Save ticket, no Find my ticket; the ticket lives in this browser, with its link to keep. Gig 3, the night at the
 // venue (session 39), has one optional step: Save your ticket as a passkey, on the fan's phone beside Show Time too.
-const GIG3 = judge && judgeGig === 'pickle';
+const GIG3 = judge && judgeGig === 'pickle' && AS === 'room'; // the venue's page only, not the desktop view
 const PASSKEYS = passkeysWork() && !TICKET_VIEW && (GIG3 || (top === self && !judge));
 let keepSkipped = false; // gig 3's Not now
 // The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
@@ -1283,7 +1283,7 @@ function todoItems() {
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
     return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
-      show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or press Let in by hand, on the left' : 'Get let in: the doormen’s phone scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
+      show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or show a door word and press Let in, on the left' : 'Get let in: the doormen’s phone scans your QR, or show a door word for Let in on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).

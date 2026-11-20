@@ -146,7 +146,8 @@ export async function judgeLine(r, page) {
       if (!door.inside) {
         const waiting = door.words.some((w) => !w.in_at);
         const both = Object.assign(document.createElement('span'), { className: 'jl-btns' });
-        both.append(fanBtn('Show a door word', '#door-word-btn', 'Asking…'), pressBtn('Let in', '#door-tickets button', /Let in$/, 'Letting in…'));
+        if (!waiting) both.append(fanBtn('Show a door word', '#door-word-btn', 'Asking…'));
+        both.append(pressBtn('Let in', '#door-tickets button', /Let in$/, 'Letting in…'));
         return say(4, waiting ? 'The fan’s phone shows a door word: press Let in.' : 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Show a door word, then Let in.', '', '',
           { story: STORY[4], extra: both });
       }
