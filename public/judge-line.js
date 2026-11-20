@@ -128,18 +128,27 @@ export async function judgeLine(r, page) {
       if (!show) return;
       // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
       const ready = Number(show.ticket?.fiat) === 35 && !!show.door?.on;
+      // Rajesh 20 Nov: the box to fill shimmers, as gig 2's pin does: the price first, then the door's switch.
+      if (page === 'setup') {
+        const priced = Number(show.ticket?.fiat) === 35;
+        document.querySelector('[data-path="ticket.fiat"]')?.classList.toggle('pin-hint', !priced);
+        document.getElementById('door-on')?.closest('.room-switch')?.classList.toggle('pin-hint', priced && !show.door?.on);
+      }
       if (!ready) {
         if (page !== 'setup') return say(1, 'Back on Plan gig: the venue ticket’s price and the door first.', 'Back to Plan gig →', '/setup');
-        return say(1, 'Type £35 for the venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
+        return say(1, 'Type £35 for the In the Room venue ticket, then turn on Scan tickets at the door.', '', '', { story: STORY[1] });
       }
       if (page === 'setup') return say(2, 'On your phone: scan the DOOR pass with the camera, if you like. Then click 2 · Show Time, at the top.', '', '', { story: STORY[2] });
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
       // The fan's sats home is gig 2's step now (Rajesh 19 Nov): here the night's over, on to Your takings.
-      if (closed) return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
+      if (closed) { // Rajesh 20 Nov: nothing left on the fan's page
+        document.getElementById('head-fan')?.remove();
+        return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
+      }
       // Blind-signed tickets (session 39): the door knows how many are in, never whose. No phone: the fan's phone shows a
       // door word (its own button, in the phone on the right) and Show Time lets it in.
       const door = (await admin('/api/admin/door')) || { sold: 0, inside: 0, words: [] };
-      if (!door.sold) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
+      if (!door.sold) return say(3, 'On the fan’s phone, on the right: scroll down and buy the venue ticket.', '', '', { story: STORY[3] });
       // The fan's phone offers the one optional step first: Save your ticket as a passkey.
       const keep = document.getElementById('phone')?.contentDocument?.getElementById('keep');
       if (!door.inside && keep && !keep.hidden) return say(4, 'On the fan’s phone: save the ticket as a passkey if you like (Find my ticket brings it back on another phone), or press Not now.', '', '', { story: STORY[4] });

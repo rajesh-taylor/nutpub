@@ -1282,7 +1282,7 @@ function todoItems() {
   const hello = { done: !!todo.hello, text: 'Say hello in the chat', did: 'Said hello in the chat', now: 'Say hello: the comment box below', short: 'Say hello in the chat' };
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
-    return [{ done: !!door.ticket, text: 'Buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
+    return [{ done: !!door.ticket, text: 'Scroll down to buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
       show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or show a door word and press Let in, on the left' : 'Get let in: the doormen’s phone scans your QR, or show a door word for Let in on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },

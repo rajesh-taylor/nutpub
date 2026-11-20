@@ -483,9 +483,13 @@ function drawWrap(view, s) {
   $('wrap-finish-note').textContent = s.over ? (onSetlist?.only ? 'Done with this gig? The receipt stays under Past gigs.' : onSetlist ? 'Done with this gig? It ticks off your setlist. The receipt stays under Past gigs.' : 'Done with this gig? Plan gig opens for the next one. The receipt stays under Past gigs.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (fin) {
     // Judges get one way on (Rajesh 15 Nov): back to the three gig cards.
-    $('wrap-after').replaceChildren(onSetlist?.only
-      ? Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })
-      : Object.assign(el('p', 'wrap-next'), {}));
+    // Gig 3 is the last (Rajesh 20 Nov): a thank-you, and the Pub Menu for more.
+    const last = onSetlist?.at === 'pickle';
+    $('wrap-after').replaceChildren(...(onSetlist?.only
+      ? (last ? [el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old china! 🍻 We’re still building: the Pub Menu has more.'),
+        Object.assign(el('a', 'btn primary judges-on', 'The Pub Menu →'), { href: judgePage.replace(/\/judge$/, '/menu') })]
+        : [Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })])
+      : [Object.assign(el('p', 'wrap-next'), {})]));
     if (!onSetlist?.only) $('wrap-after').firstChild.append(...(finishedNext || []));
   }
 }
