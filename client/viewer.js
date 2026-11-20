@@ -1302,7 +1302,9 @@ function todoItems() {
       did: 'Saw the 402s and the 200s', short: 'The Network tab: 402, then 200', shortDid: 'Saw the 402s' },
     // Rajesh 20 Nov: the video's playing for the tip and until End night.
     { ...full, story: 'Full screen, then a tip, as at Longy’s.', ...(playing ? {} : { html: `Press play, then go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture` }) },
-    { ...tip, story: 'A tip is another 402, with your words beside it.' }];
+    // Rajesh 20 Nov: a big tip, so Takings shows a real night's tips (the chat's scripted tips are words only).
+    { ...tip, done: !!todo.tipFull || tippedHere >= 50000, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type a comment, put 50,000 in the sats box beside it, then press the yellow ➤ button on the right',
+      now: 'Type a comment, put 50,000 in the sats box beside it, then press the yellow ➤ button', short: 'Tip 50,000 in full screen', shortDid: 'Tipped in full screen' }];
   return [];
 }
 // The desktop view's fan (Show Time's other frame) said hello: its list, kept beside this one.
@@ -1945,7 +1947,9 @@ let tickTimer = null;
 function nextTick() {
   clearTimeout(tickTimer);
   tickTimer = setTimeout(() => {
-    if (document.hidden) nextTick();
+    // Hidden and quiet: no requests. Hidden but playing (Rajesh 20 Nov: the Show Time tab closed, the fan's tab played
+    // on past End night): keep asking, so End night stops it and nobody goes on paying.
+    if (document.hidden && !playing) nextTick();
     else tick().catch(() => {}).finally(nextTick);
   }, tickEvery * 1000);
 }

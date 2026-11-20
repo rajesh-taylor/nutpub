@@ -14,6 +14,8 @@ export async function judgeLine(r, page) {
   document.getElementById('after')?.style.setProperty('display', 'none'); // Show Time's night-over words (Stop your stream…): not on a judge's stage (Rajesh 19 Nov)
   // No gig poster on a judge's stage (Rajesh 17 Nov): never part of the demo. Hidden, not removed: Plan gig still fills it.
   document.getElementById('poster-panel')?.style.setProperty('display', 'none');
+  // No Replay card on a judge's stage (Rajesh 20 Nov: less to take in); real artists keep it.
+  document.getElementById('replay-card')?.style.setProperty('display', 'none');
   const name = { longy: 'Longy', frankie: 'Frankie', pickle: 'Longy', yours: 'Frankie' }[list.at] || 'the artist';
   const pickle = list.at === 'pickle';
   const line = Object.assign(document.createElement('div'), { className: 'judge-line' });
@@ -137,12 +139,19 @@ export async function judgeLine(r, page) {
     }
     if (g2) {
       if (page === 'setup') {
-        if (!/fountain\.fm\//.test(document.getElementById('pin-text')?.value || '')) {
-          return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments and moderators: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN) });
+        const pin = document.getElementById('pin-text');
+        // The pin's box is inside Comments and moderators: it only shows with comments on.
+        if (!document.querySelector('[data-path="comments"]')?.checked) {
+          return say(1, 'Turn on Comments in the live chat, under Comments and moderators: the Pinned message box is in there.', '', '', { story: TOLD.setup });
         }
+        const pinned = /fountain\.fm\//.test(pin?.value || '');
+        pin?.classList.toggle('pin-hint', !pinned); // the empty box shimmers until the link's in (app.css)
+        if (pin && !pinned) pin.placeholder = 'Paste in Frankie’s Fountain link here';
+        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments and moderators: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN) });
         return say(1, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
       }
       if (page === 'show') {
+        if (closed && fanHome()) document.getElementById('head-fan')?.remove(); // nothing left on the fan's page
         if (closed) return fanHome() ? say(5, 'Click 3 · Your takings, at the top.')
           : say(5, 'Back on the fan’s page: press Move my sats, move them to Cashu.me, then close that tab.', '', '', { story: TOLD.home });
         if (!on) return say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
@@ -151,7 +160,7 @@ export async function judgeLine(r, page) {
       }
       if (!closed) return say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
       return movedAll() ? say(7, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
-        : say(6, 'Press Move to my own wallet: Cashu.me opens in a new tab.', '', '', { story: TOLD.takings });
+        : say(6, 'Close the fan’s Cashu.me tab if it’s still open: one Cashu.me at a time. Then press Move to my own wallet.', '', '', { story: TOLD.takings });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     if (page === 'setup') say(1, `This is where ${name} sets prices, ticketing, comments & mods, show splits and more. Scroll down to view; nothing needs changing. Then click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
@@ -166,7 +175,10 @@ export async function judgeLine(r, page) {
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.
-  if (g2 && page === 'setup') document.getElementById('pin-text')?.addEventListener('input', () => draw());
+  if (g2 && page === 'setup') {
+    document.getElementById('pin-text')?.addEventListener('input', () => draw());
+    document.querySelector('[data-path="comments"]')?.addEventListener('change', () => draw());
+  }
   if (page === 'show' || (pickle && page === 'setup') || (g2 && ['setup', 'takings'].includes(page))) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);

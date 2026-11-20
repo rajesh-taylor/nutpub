@@ -36,6 +36,8 @@ fetch('/api/stage').then((r) => r.json()).then(({ stage }) => {
   $('receive').hidden = $('paste').hidden = true;
   $('back').textContent = '← Back';
 }).catch(() => {});
+// A judge's stage (Rajesh 20 Nov): one way home, Move to Cashu.me; Take sats home (Lightning) stays for real fans.
+fetch('/api/show').then((r) => r.json()).then(({ judge }) => { if (judge) $('home').hidden = true; }).catch(() => {});
 $('receive').addEventListener('click', () => {
   $('paste').hidden = !$('paste').hidden;
   if (!$('paste').hidden) { $('takeout').hidden = true; $('paste-token').focus(); }

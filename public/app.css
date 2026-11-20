@@ -1332,12 +1332,13 @@ body.one.full .strip { position: fixed; z-index: 4; left: 0; right: 0; bottom: 0
 body.one.full .strip .say input { padding-top: 11px; padding-bottom: 11px; }
 /* The chat over the picture: its newest lines only (3, 5 or 10, the artist's pick), at the bottom right, above the
    controls. The words stay one size on a big screen. */
-body.one.full .chat { position: fixed; z-index: 3; top: auto; right: 16px; bottom: calc(var(--strip) + 64px); left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none; display: block; }
+body.one.full .chat { position: fixed; z-index: 3; top: 72px; right: 16px; bottom: calc(var(--strip) + 64px); left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none; display: block; }
 body.one.full .chat > :not(.feed) { display: none !important; }
-body.one.full .feed { max-height: none; overflow: hidden; gap: 4px; align-items: flex-end; }
-body.one.full .feed li, body.one.full .feed li.tipped { display: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 16px; line-height: 1.35; }
-body.one.full .feed li:nth-last-child(-n+3) { display: block; }
-body.one.full[data-rows="5"] .feed li:nth-last-child(-n+5), body.one.full[data-rows="10"] .feed li:nth-last-child(-n+10) { display: block; }
+/* Rajesh 20 Nov: no 3/5/10 any more; as many lines as fit between the top and the strip, the oldest fading out at the top
+   (the mods delete what shouldn't be there). */
+body.one.full .feed { max-height: none; height: 100%; overflow: hidden; gap: 4px; align-items: flex-end; justify-content: flex-end;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%); mask-image: linear-gradient(to bottom, transparent, #000 18%); }
+body.one.full .feed li, body.one.full .feed li.tipped { display: block; flex: none; background: rgb(5 9 20 / .62); padding: 3px 9px; border-radius: 4px; font-size: 16px; line-height: 1.35; }
 /* Full screen hides the page's other parts: the tabs, the cards, the wallet card. */
 body.one.full .show-line, body.one.full .tabs, body.one.full .tab-ticket, body.one.full .tab-tip, body.one.full .bottom { display: none !important; }
 .strip #tip:disabled { display: none; } /* no tip price set: the comment box's sats only */
@@ -1384,3 +1385,10 @@ body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-le
 .drink-when { display: grid; gap: 6px; }
 .drink-when .choice b { white-space: nowrap; }
 .drink-when input[type="time"] { margin-left: 10px; width: 8.5em; }
+
+/* Gig 2's first step (Rajesh 20 Nov): the empty Pinned message box shimmers until Frankie's link is pasted in. */
+.pin-hint { border-color: var(--amber) !important; background-image: linear-gradient(100deg, transparent 30%, rgb(217 149 58 / .22) 50%, transparent 70%);
+  background-size: 250% 100%; background-repeat: no-repeat; animation: pin-hint 2.4s ease-in-out infinite; }
+.pin-hint::placeholder { color: var(--amber) !important; opacity: 1; }
+@keyframes pin-hint { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+@media (prefers-reduced-motion: reduce) { .pin-hint { animation: none; } }
