@@ -55,7 +55,7 @@ export async function judgeLine(r, page) {
     4: 'Ticket bought, with the beer token in it. The NutPub signed it blind, so even we can’t tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
     5: 'Let them in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
-    6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, a breather: Longy live at The Fickle Pickle.',
+    6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, some music.',
     7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
     poured: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',

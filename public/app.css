@@ -274,6 +274,7 @@ body[data-as="home"]:not(.wallet-card) .when { display: none; }
 .drink-coin { flex: none; }
 .doors-sign { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; font: 400 30px/1 var(--poster); letter-spacing: .14em; color: var(--cream); background: rgb(5 9 20 / .55); z-index: 1; }
 body[data-as="room"][data-stage="doors"] .big-play, body[data-as="room"][data-stage="doors"] .bar { display: none; }
+body.hold-doors[data-stage="doors"] .big-play, body.hold-doors[data-stage="doors"] .bar { display: none; } /* gig 3's desktop view on Show Time */
 .soon { font: 400 13px/1 var(--poster); letter-spacing: .14em; padding: 3px 6px 2px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; }
 
 /* The chat: newest at the bottom, like a live stream's. */

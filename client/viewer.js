@@ -994,6 +994,9 @@ const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then
 // no Save ticket, no Find my ticket; the ticket lives in this browser, with its link to keep. Gig 3, the night at the
 // venue (session 39), has one optional step: Save your ticket as a passkey, on the fan's phone beside Show Time too.
 const GIG3 = judge && judgeGig === 'pickle' && AS === 'room'; // the venue's page only, not the desktop view
+// Gig 3's desktop view on Show Time (Rajesh 20 Nov): like the fan's phone, Doors · chat open and no play until Start show,
+// so judges don't press play on the wrong player.
+const HOLD = judge && judgeGig === 'pickle' && AS === 'home' && IN_SHOW;
 const PASSKEYS = passkeysWork() && !TICKET_VIEW && (GIG3 || (top === self && !judge));
 let keepSkipped = false; // gig 3's Not now
 // The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
@@ -1094,7 +1097,7 @@ function render() {
   // In the room the chat opens with the set: at doors the phone is the ticket and the drink. One screen: always.
   $('chat').hidden = closed || (!ONE && room && !ticket); // at doors the room's phone shows only the goal (styles hide the rest)
   // At home the set plays whenever you press play (the clip, on a loop); in the room it waits for Start show.
-  const live = replaying() || (AS === 'home' ? !closed && !confirmed && (opened || !!MOD) : stage === 'on');
+  const live = replaying() || (AS === 'home' && !HOLD ? !closed && !confirmed && (opened || !!MOD) : stage === 'on');
   const counting = AS === 'home' && !closed && !confirmed && !opened && !TICKET_VIEW && !MOD;
   $('countdown').hidden = !counting;
   body.classList.toggle('counting', counting);
@@ -1102,7 +1105,8 @@ function render() {
   // No stream (gig 3, at the venue): the photo and a line on it, no player (Rajesh 15 Nov, late).
   const noStream = show.stream.mode === 'off';
   body.classList.toggle('no-stream', noStream);
-  $('doors-sign').hidden = noStream ? closed : AS === 'home' || stage !== 'doors';
+  $('doors-sign').hidden = noStream ? closed : (AS === 'home' && !HOLD) || stage !== 'doors';
+  body.classList.toggle('hold-doors', HOLD);
   $('doors-sign').textContent = !noStream || stage === 'doors' ? 'Doors · chat open' : 'On stage now · at the venue only';
   $('live-badge').hidden = stage !== 'on' && !liveOn;
   $('budget-box').hidden = !liveOn || !pays();
@@ -1288,6 +1292,8 @@ function todoItems() {
       show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or show a door word and press Let in, on the left' : 'Get let in: the doormen’s phone scans your QR, or show a door word for Let in on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
       // A hello in Show Time's desktop view counts too: either way the clip plays on (Rajesh 18 Nov).
+      // Rajesh 20 Nov: the phone's player has no play button until the show starts: say where Start show is.
+      s.drink && { done: stage === 'on' || stage === 'closed', text: IN_SHOW ? 'Press Start show, on the left: the set starts here' : 'On the laptop’s Show Time, press Start show: the set starts here', did: 'The show is on', short: 'Start show' },
       s.drink && { ...hello, done: !!todo.hello || (IN_SHOW && homeHello()), text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
       free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip,
       // Rajesh 20 Nov (session 40): the drink after the music, hello and tip: a breather before the bar.

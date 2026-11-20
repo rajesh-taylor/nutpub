@@ -1035,7 +1035,8 @@ No courses called starters/mains/desserts unless Rajesh adds more dishes; no "86
 - **Step 8:** story "…the poured token's £5 went to the bar.", then "Below: tonight's takings, a no-show's beer token, Longy's since last orders, and after Finish gig, the night's receipt under Past gigs." Gigs 1 and 2 unchanged.
 - **The fan's phone list** has "Save your ticket as a passkey, below, or press Not now" after the ticket (Rajesh: it went straight to the door).
 - **New order (Rajesh 20 Nov: a breather with Longy's set before the bar), still 8 steps:** 5 Start show; 6 press play, hello, then tip 2,100 ("The show's on, and the beer token's on the fan's phone, locked to the bar. First, a breather: Longy live at The Fickle Pickle."); 7 Pour by hand ("Thirsty? …"), then "Poured. …" and End night; 8 Takings. The fan's list follows: buy, passkey, let in, hello, tip, drink.
-- **Live:** the no-show, step 8 and the passkey line deployed and run by Rajesh on thenutpub.com (all fine). The new order: to commit and deploy after this note.
+- **Live:** the no-show, step 8, the passkey line and the new order, each run by Rajesh on thenutpub.com (all fine).
+- **Then (Rajesh's run):** step 6's story ends "First, some music."; the fan's list has "Press Start show, on the left: the set starts here" after Let in (the phone's player has no play button until then); Show Time's desktop view on gig 3 shows Doors · chat open and no play until Start show (`HOLD` in `client/viewer.js`), so judges don't press the wrong player.
 - **Snag list** (memory, for the snag session): at phone width the end of gig 3 clips the top of "The Pub Menu" button.
 - **Order of the next sessions (Rajesh 20 Nov):** 41 The Doorman's List design pass; 42 the artist's key backup; 43 the Pub Menu's technical page and a plan for an agent buying a ticket; then maybe an OBS test; then the snag session.
 
