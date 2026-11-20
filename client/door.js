@@ -1,5 +1,6 @@
-// The door's page (/door.html#k=<the door link's key>, or #t=<ticket code>.<time code> from a ticket's QR): one
-// scan, once.
+// The door's page (/door.html#k=<the door link's key>, or #b=<the ticket's proof> from a ticket's QR): one scan, once.
+// Blind-signed tickets (session 39): the door sees that tonight's gig signed the ticket, that its QR is fresh and that
+// it's the first time in; never which purchase it came from.
 // The phone's own camera opens the QR's link in its default browser, where the key was saved when the door link was
 // first opened. The artist's own browser opens it too, with the artist's key.
 const $ = (id) => document.getElementById(id);
@@ -19,42 +20,44 @@ async function api(method, path, body) {
   if (!r.ok) throw Object.assign(new Error(data.detail || r.statusText), { status: r.status });
   return data;
 }
-// The Doorman's List (agreed 17 Nov): green Let them in, Authorised ticket., then what was paid; never a name.
+// The Doorman's List (agreed 17 Nov; blind-signed tickets 20 Nov): green Let them in, Authorised ticket., the three
+// checks in short form, then what the door can still know. Never a name, nor which purchase.
 const WORDS = {
   in: ['Let them in', 'Authorised ticket.'],
   already: ['Already in', ''],
-  online: ['Watch online', 'For watching online, not for the venue.'],
-  unknown: ['Not a ticket', 'Not for this gig.'],
-  stale: ['Old QR', 'The ticket’s QR changes every 30 seconds. Ask them to open the ticket page, then scan again.'],
+  unknown: ['Not a ticket', 'Not signed by tonight’s gig.'],
+  stale: ['Old QR', 'Ask them to open the ticket page, then scan again.'],
   off: ['Door check off', 'The artist hasn’t turned the door check on for this gig.'],
 };
-function show(state, big, small, paid = '') {
+const CHECKS = [['signed', 'Signed by tonight’s gig'], ['fresh', 'QR fresh (30 s)'], ['first', 'First time in']];
+function show(state, big, small, checks = null, line = '') {
   $('result').dataset.state = state;
   $('big').textContent = big;
   $('small').textContent = small;
-  $('paid').textContent = paid;
-  $('paid').hidden = !paid;
+  $('checks').replaceChildren(...CHECKS.filter(([k]) => checks && k in checks).map(([k, words]) =>
+    Object.assign(document.createElement('li'), { className: checks[k] ? 'ok' : 'no', textContent: `${checks[k] ? '✓' : '✗'} ${words}` })));
+  $('checks').hidden = !checks;
+  $('paid').textContent = line;
+  $('paid').hidden = !line;
 }
-// "Ticket 1 · paid £35 (72,262 sats) on 19 Nov"
-const paidLine = (o) => {
-  if (!o?.n) return '';
-  const sats = `${Number(o.sats).toLocaleString('en-GB')} sats`;
-  const day = o.paidAt ? ` on ${new Date(o.paidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '';
-  return `Ticket ${o.n} · paid ${o.pence ? `£${(o.pence / 100).toFixed(2).replace(/\.00$/, '')} (${sats})` : sats}${day}`;
-};
 const count = async () => { const c = await api('GET', '/api/door/count'); $('inside').textContent = c.inside; $('sold').textContent = c.sold; return c; };
 
-async function scan(code, otp = '') {
+async function scan(proof) {
   try {
-    const out = await api('POST', '/api/door/scan', { code, otp });
-    const [big, small] = WORDS[out.result];
-    show(out.result, big, out.result === 'already' ? `Scanned at ${new Date(out.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.` : small, paidLine(out));
+    const out = await api('POST', '/api/door/scan', { proof });
+    const [big, small] = WORDS[out.result] || WORDS.unknown;
+    const at = out.at && new Date(out.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const line = out.sold ? `${out.result === 'in' ? 'A venue ticket for tonight · ' : ''}${out.inside} in of ${out.sold} sold` : '';
+    show(out.result, big, out.result === 'already' ? `Scanned at ${at}.` : small, out.checks || null, line);
     await count();
   } catch (e) { show('unknown', 'Try again', e.message); }
 }
 function fromHash() {
-  const t = new URLSearchParams(location.hash.slice(1)).get('t');
-  if (t) { history.replaceState(null, '', location.pathname); scan(...t.split('.')); }
+  const b = new URLSearchParams(location.hash.slice(1)).get('b');
+  const old = new URLSearchParams(location.hash.slice(1)).get('t'); // a ticket page from before 20 Nov
+  if (b || old) history.replaceState(null, '', location.pathname);
+  if (b) scan(b);
+  else if (old) show('unknown', 'Old ticket page', 'Ask them to reload the ticket page, then scan again.');
 }
 
 try {

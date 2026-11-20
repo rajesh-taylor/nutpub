@@ -52,6 +52,7 @@
         <div class="keep" id="keep" hidden>
           <button type="button" class="btn primary" id="keep-btn">Save ticket to your phone's passwords</button>
           <p class="hint" id="keep-note">Your ticket lives in this web browser. Save it to your phone's passwords for safe keeping.</p>
+          <button type="button" class="door-word-btn" id="keep-skip" hidden>Not now</button>
         </div>
         <!-- Saved: what happens next, in three lines. -->
         <ul class="st-list" id="st-list" hidden>
@@ -81,6 +82,13 @@
           <a class="wallet-file" id="door-wallet-file" hidden>Open-source wallet, no account</a>
         </span>
         <p class="hint door-where" id="door-where" hidden></p>
+        <!-- Let in by hand (blind-signed tickets, 20 Nov): the phone shows a door word the artist lets in on Show Time. -->
+        <button type="button" class="door-word-btn" id="door-word-btn" hidden>No scanner? Show a door word</button>
+        <div class="door-word" id="door-word" hidden>
+          <p class="door-word-big" id="door-word-big"></p>
+          <p class="hint">Say it at the door. It’s good for 10 minutes; this page moves on when they let you in.</p>
+          <button type="button" class="btn quiet" id="door-word-back">Back to the QR</button>
+        </div>
       </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">

@@ -51,8 +51,8 @@ export async function judgeLine(r, page) {
     1: 'Gig 3 gets NUT-heavy: door entry by a QR code that refreshes every 30 seconds, so a screenshot can’t get in, and a £5 beer token that’s a coin, included in Longy’s £35 ticket.',
     2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
-    4: 'Ticket bought, with the beer token in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
-    5: 'Let them in. The door saw an authorised ticket and the price paid, never a name. The beer token reaches the fan’s phone when the show starts.',
+    4: 'Ticket bought, with the beer token in it. The NutPub signed it blind, so even we can’t tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
+    5: 'Let them in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     6: 'The fan’s phone now holds the beer token: a real coin, locked to the bar.',
     7: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the token’s £5 went to the bar.',
@@ -93,6 +93,20 @@ export async function judgeLine(r, page) {
     };
     return b;
   };
+  // A button on the fan's phone, the one beside Show Time (gig 3): pressed from the line.
+  const fanBtn = (words, sel, busy) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: words });
+    b.onclick = async () => {
+      b.disabled = true; b.textContent = busy;
+      for (let i = 0; i < 10; i++) {
+        const own = document.getElementById('phone')?.contentDocument?.querySelector(sel);
+        if (own && !own.hidden && !own.disabled) return own.click();
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      b.disabled = false; b.textContent = words;
+    };
+    return b;
+  };
   // A button that copies a link (gig 2's Fountain link), with the link beside it to select by hand.
   const copyBtn = (text) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: 'Copy the link' });
@@ -122,10 +136,20 @@ export async function judgeLine(r, page) {
       // Rajesh 18 Nov: the judges press the artist's own button, at the top; no button of the line's own.
       // The fan's sats home is gig 2's step now (Rajesh 19 Nov): here the night's over, on to Your takings.
       if (closed) return say(8, 'The night’s over. Click 3 · Your takings, at the top.');
-      const tickets = (await admin('/api/admin/door')) || [];
-      if (!tickets.length) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
-      if (!tickets.some((t) => t.checked_at)) return say(4, 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Let in by hand.', '', '',
-        { story: STORY[4], extra: pressBtn('Let in by hand', '#door-tickets button', /^Let in by hand/, 'Letting in…') });
+      // Blind-signed tickets (session 39): the door knows how many are in, never whose. No phone: the fan's phone shows a
+      // door word (its own button, in the phone on the right) and Show Time lets it in.
+      const door = (await admin('/api/admin/door')) || { sold: 0, inside: 0, words: [] };
+      if (!door.sold) return say(3, 'On the fan’s phone, on the right: buy the venue ticket.', '', '', { story: STORY[3] });
+      // The fan's phone offers the one optional step first: Save your ticket as a passkey.
+      const keep = document.getElementById('phone')?.contentDocument?.getElementById('keep');
+      if (!door.inside && keep && !keep.hidden) return say(4, 'On the fan’s phone: save the ticket as a passkey if you like (Find my ticket brings it back on another phone), or press Not now.', '', '', { story: STORY[4] });
+      if (!door.inside) {
+        const waiting = door.words.some((w) => !w.in_at);
+        const both = Object.assign(document.createElement('span'), { className: 'jl-btns' });
+        both.append(fanBtn('Show a door word', '#door-word-btn', 'Asking…'), pressBtn('Let in', '#door-tickets button', /Let in$/, 'Letting in…'));
+        return say(4, waiting ? 'The fan’s phone shows a door word: press Let in.' : 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Show a door word, then Let in.', '', '',
+          { story: STORY[4], extra: both });
+      }
       if (!on) return say(5, 'Press Start show, the green button below.', '', '', { story: STORY[5] });
       const d = await drinks();
       if (!d.some((x) => x.poured)) return say(6, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
