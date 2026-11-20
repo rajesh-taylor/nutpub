@@ -59,25 +59,32 @@ async function refresh() {
 let shown = null;
 const showNow = async () => (shown ||= await fetch('/api/show').then((r) => r.json()).then((s) => s.show));
 
-// The door: each venue ticket bought, in order. Let in by hand marks it in, as a scan does; the fan's page moves on.
-async function letIn(code, n) {
+// The door (blind-signed tickets, 20 Nov): the NutPub can't tell whose ticket is whose, so no list by buyer. A fan with
+// no scanner at the door shows a door word on their phone (PUNTER-47); Let in marks that ticket in, as a scan does.
+let doorSaid = 0; // when Let in last said something: the strip's own line waits 15 s
+async function letIn(word) {
+  doorSaid = Date.now();
   try {
-    const { result } = await api('POST', '/api/admin/door/let-in', { code });
-    $('door-say').textContent = result === 'in' ? `Ticket ${n} let in. Watch the phone.` : `Ticket ${n} is already in.`;
+    const { result } = await api('POST', '/api/admin/door/let-in', { word });
+    $('door-say').textContent = result === 'in' ? `${word} let in. Watch the phone.` : result === 'already' ? `${word} is already in.`
+      : result === 'old' ? `${word} is more than 10 minutes old: ask for a new one.` : `No door word ${word}.`;
   } catch (e) { $('door-say').textContent = e.message; }
   doorList().catch(() => {});
 }
 async function doorList() {
   const show = await fetch('/api/show').then((r) => r.json()).then((s) => s.show);
-  const list = show.ticket.on && show.door.on ? await api('GET', '/api/admin/door') : [];
-  $('door-tickets').replaceChildren(...list.map((t, i) => {
-    const b = Object.assign(document.createElement('button'), { type: 'button', className: t.checked_at ? 'btn quiet' : 'btn',
-      textContent: t.checked_at ? `Ticket ${i + 1} · in` : `Let in by hand · ticket ${i + 1}`, disabled: !!t.checked_at });
-    b.onclick = () => letIn(t.code, i + 1);
+  const on = show.ticket.on && show.door.on;
+  const d = on ? await api('GET', '/api/admin/door') : { words: [], sold: 0 };
+  $('door-tickets').replaceChildren(...d.words.map((w) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: w.in_at ? 'btn quiet' : 'btn',
+      textContent: w.in_at ? `${w.word} · in` : `${w.word} · waiting at the door · Let in`, disabled: !!w.in_at });
+    b.onclick = () => letIn(w.word);
     return b;
   }));
-  $('door-strip').hidden = !list.length;
+  if (Date.now() - doorSaid > 15_000) $('door-say').textContent = `${d.inside ?? 0} in of ${d.sold} sold. The doormen’s phone scans each ticket’s QR. No phone? The fan shows a door word: Let in.`;
+  $('door-strip').hidden = !on || !d.sold;
 }
 
 await Promise.all([refresh(), doorList()]);
-setInterval(() => { if (!document.hidden) { refresh().catch(() => {}); doorList().catch(() => {}); } }, 10_000);
+setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 10_000);
+setInterval(() => { if (!document.hidden) doorList().catch(() => {}); }, 4_000); // a door word shows within seconds

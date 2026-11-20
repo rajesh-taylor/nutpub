@@ -3,7 +3,8 @@
 // stops at once. "Free, with tips" shows play without a 402. The tip button is a 402 of its own.
 import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
-import { totp, stepAt } from '../server/totp.js';
+import { stepAt } from '../server/totp.js';
+import { seedFor, keepSeed, seedText, blindFor, signedTicket, proofAt, inAt } from './ticket.js';
 import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
 import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
 import { pintGlass, playCoin } from './pint.js';
@@ -96,7 +97,7 @@ const inFiat = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
-const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false, cues = [] }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false, gig: judgeGig = null, cues = [] }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -141,7 +142,9 @@ tipLabel(sats(show.tip.price || 0));
 const linkedPass = new URLSearchParams(location.hash.slice(1)).get('ticket');
 const fromLink = /^[\w-]{8,128}$/.test(linkedPass || '') ? linkedPass : null;
 if (linkedPass) history.replaceState(null, '', location.pathname + location.search);
+const linkedSeed = new URLSearchParams(location.hash.slice(1)).get('seed');
 if (fromLink) { try { localStorage.setItem(`nutpub-pass${KEEP}`, fromLink); } catch {} }
+if (fromLink && /^[\w-]{43}$/.test(linkedSeed || '')) keepSeed(fromLink, linkedSeed, KEEP);
 async function getPass(fresh = false) {
   if (!fresh && fromLink) return fromLink;
   let id = null;
@@ -978,20 +981,21 @@ const split = () => {
 const DUE = `nutpub-drink-due${KEEP}`;
 const drinkDue = () => { try { return localStorage.getItem(DUE) === pass; } catch { return false; } };
 const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else localStorage.removeItem(DUE); } catch {} };
-// The door QR's secret: the server gives it while the ticket has no passkey, and after that only to a passkey check.
-// Kept in this browser once given, with its door code, so the QR still works with no signal.
-const SECRET = `nutpub-door${KEEP}`;
-function withSecret(d) {
-  try {
-    if (d?.code && d.secret) localStorage.setItem(SECRET, JSON.stringify({ code: d.code, secret: d.secret }));
-    else if (d?.code) { const k = JSON.parse(localStorage.getItem(SECRET) || 'null'); if (k?.code === d.code) d.secret = k.secret; }
-  } catch {}
+// The blind-signed venue ticket (ticket.js): unblinded here from the gig's signature, kept in this browser so the QR
+// works with no signal. Let in: the phone finds its own ticket in the door's list (the server can't say whose is whose).
+async function withTicket(d) {
+  if (d?.ticketKind !== 'room') return d;
+  try { d.mine = await signedTicket(pass, d, KEEP); } catch { d.mine = null; }
+  d.checkedAt = d.mine ? inAt(d.mine, d.inside) : null;
   return d;
 }
-const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).then(withSecret).catch(() => ({}));
+const myDoor = () => fetch('/api/door/me', { headers: { 'X-Pass': pass } }).then((r) => r.json()).then(withTicket).catch(() => ({}));
 // Passkeys (passkey.js): on the page itself, not in the setup page's frames. None on a judge's stage (/judge, 14 Nov):
-// no Save ticket, no Find my ticket; the ticket lives in this browser, with its link to keep.
-const PASSKEYS = passkeysWork() && top === self && !TICKET_VIEW && !judge;
+// no Save ticket, no Find my ticket; the ticket lives in this browser, with its link to keep. Gig 3, the night at the
+// venue (session 39), has one optional step: Save your ticket as a passkey, on the fan's phone beside Show Time too.
+const GIG3 = judge && judgeGig === 'pickle' && AS === 'room'; // the venue's page only, not the desktop view
+const PASSKEYS = passkeysWork() && !TICKET_VIEW && (GIG3 || (top === self && !judge));
+let keepSkipped = false; // gig 3's Not now
 // The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
 let keepTried = false;
 // Wallet cards are held back from fans before 27 Nov (12 Nov): a card can't get anyone in (Apple won't let us change
@@ -1025,18 +1029,19 @@ whenLine();
 priceLine();
 readyLive();
 
-// The door's QR, drawn here from the ticket's code and its time code (RFC 6238, see totp.js), new every 30 seconds
-// on the server's clock (skew), with no signal needed once the page has the ticket. A screenshot goes stale.
+// The door's QR, drawn here from the blind-signed ticket: the ticket and a signature of the 30-second step by the
+// ticket's own key (blind.js), new every 30 seconds on the server's clock (skew), with no signal needed once the page
+// has the ticket. A screenshot goes stale.
 let qrDrawn = '';
 async function doorQr() {
-  if (!door.code || !door.secret || $('door-pass').hidden) return;
+  if (!door.mine || $('door-pass').hidden) return;
   const step = stepAt(Date.now() + skew);
-  if (qrDrawn === `${door.code}.${step}`) return;
-  const want = `${door.code}.${step}`;
+  const want = `${door.mine.t.y}.${step}`;
+  if (qrDrawn === want) return;
   qrDrawn = want;
   try {
-    const [{ qrSvg }, otp] = await Promise.all([import('./qr.js'), totp(door.secret, step)]);
-    const svg = await qrSvg(`${location.origin}/door.html#t=${door.code}.${otp}`, { icons: true }); // a peanut, a mic and a beer
+    const { qrSvg } = await import('./qr.js');
+    const svg = await qrSvg(`${location.origin}/door.html#b=${proofAt(door.mine, step)}`, { icons: true }); // a peanut, a mic and a beer
     if (qrDrawn === want) $('door-qr').src = $('door-qr-tab').src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
   } catch (e) { if (qrDrawn === want) qrDrawn = ''; throw e; } // try again next second, not next step
 }
@@ -1077,7 +1082,7 @@ function render() {
   body.classList.toggle('confirmed', confirmed);
   $('save-ticket').hidden = !confirmed;
   if (confirmed) receipt();
-  walletLinks(WALLET_CARDS && room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.code);
+  walletLinks(WALLET_CARDS && room && doorCheck && door.ticketKind === 'room' && !closed && !TICKET_VIEW && !door.checkedAt && door.mine);
   // At the door the artist's photo fills the top of the phone; the date and the ticket sit in the bottom half.
   body.classList.toggle('at-door', !ONE && room && !$('door').hidden);
   body.classList.toggle('test-mint', !!health.mint.test);
@@ -1131,9 +1136,12 @@ function render() {
   // At home too whenever the gig sells tickets, even with a free stream (a venue ticket can be found from there).
   const findOn = PASSKEYS && !ticket && !closed && (room ? !$('door').hidden : !!(show.ticket.on || (online && show.online?.price)));
   $('find').hidden = !findOn;
-  const keepOn = PASSKEYS && ticket && !door.passkey && !door.checkedAt && !closed && (confirmed || (room ? !$('inside').hidden : true));
+  const keepOn = PASSKEYS && ticket && !door.passkey && !door.checkedAt && !closed && !keepSkipped && (confirmed || (room ? !$('inside').hidden : true));
   const keepFirst = keepOn && !keepTried; // nothing else to press until it's done
   $('keep').hidden = !keepOn;
+  // Gig 3: the one optional step, in its own words, with Not now.
+  if (GIG3) { $('keep-btn').textContent = 'Save your ticket as a passkey'; if (!confirmed) $('keep-note').textContent = 'Keep it in your password manager, so another phone can bring it back.'; }
+  $('keep-skip').hidden = !GIG3;
   if (keepOn) {
     if (confirmed) { if ($('keep').nextElementSibling !== $('save-link')) $('save-link').before($('keep')); }
     else if (room) { if ($('keep').previousElementSibling !== $('door-pass')) $('door-pass').after($('keep')); }
@@ -1153,7 +1161,7 @@ function render() {
 
   // The door's QR, on the gig day (a QR weeks ahead would need a second device to show it). Scanned once, the page says
   // so by itself.
-  const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.code && !keepFirst;
+  const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.mine && !keepFirst;
   $('door-pass').hidden = !passOn;
   // One thing at a time until they're in: save the passkey, then Show at the door. Goals, tips and chat come after.
   // In the room only: at home the show is on the screen, so the chat and the wallet stay (Rajesh 15 Nov: a Watch online
@@ -1163,6 +1171,12 @@ function render() {
   if (ONE && tab === null) showTab(TICKET_VIEW || confirmed || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
   if (ONE && confirmed && tab !== 'ticket') showTab('ticket'); // bought ahead: the receipt is the page
   $('door-pass').classList.toggle('in', !!door.checkedAt);
+  // A door word instead of the QR (No scanner?), until they're let in or its ten minutes run out.
+  const word = passOn && !door.checkedAt && !!doorWord && doorWord.until > Date.now() + skew;
+  $('door-pass').classList.toggle('word', word);
+  $('door-word').hidden = !word;
+  $('door-word-big').textContent = word ? doorWord.word : '';
+  $('door-word-btn').hidden = !passOn || word || !!door.checkedAt;
   // Under Show at the door: where this page lives, so it's easy to find again on the night.
   $('door-where').hidden = !(passOn && !door.checkedAt);
   $('door-where').textContent = 'Open before you go in for door staff.';
@@ -1269,7 +1283,7 @@ function todoItems() {
   if (AS === 'room') { // the venue's page, when the venue ticket brings the door or a drink
     if (!show.ticket.on || !(show.door?.on || s.drink)) return [];
     return [{ done: !!door.ticket, text: 'Scroll down to buy the venue ticket', did: 'Bought the venue ticket', short: 'Buy the venue ticket' },
-      show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or press Let in by hand, on the left' : 'Get let in: the doormen’s phone scans your QR, or Let in by hand on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
+      show.door?.on && { done: !!door.checkedAt, text: IN_SHOW ? 'Get let in: the doormen’s phone scans your QR, or show a door word and press Let in, on the left' : 'Get let in: the doormen’s phone scans your QR, or show a door word for Let in on Show Time', did: 'Let in at the door', short: 'Get let in at the door' },
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' },
       // Rajesh 18 Nov: a comment first, so Longy's clip plays a while (his clip, kindly lent for the demo).
@@ -1445,15 +1459,6 @@ if (!ONE) $('drink-open').onclick = () => { drinkAside = false; render(); scroll
 
 // The ticket's QR, full screen: big and plain, so the door's camera reads it at once.
 $('door-show').onclick = async () => {
-  // A ticket with a passkey: its check first, once in this browser (then the QR works with no signal).
-  if (door.code && !door.secret && door.passkey) {
-    try {
-      const t = await checkPasskey();
-      if (!t) return;
-      if (t.code !== door.code) return say('That passkey is for another ticket: pick the one made with this one.');
-      door = withSecret({ ...door, secret: t.secret });
-    } catch (e) { return say(e.message); }
-  }
   $('door-artist').textContent = show.artist || '';
   $('door-when').textContent = [show.date === ukNow().slice(0, 10) ? 'Tonight' : shortDay(show.date && `${show.date}T12:00:00Z`), venueName()].filter(Boolean).join(' · ');
   $('door-in').hidden = true; $('door-qr').hidden = false; $('door-bar').hidden = $('door-note').hidden = false; doorBar(); $('door-small').textContent = `${location.host}${location.pathname}`; $('door-small').classList.add('door-url'); // the artist's own address
@@ -1461,11 +1466,30 @@ $('door-show').onclick = async () => {
   $('door-close').focus();
 };
 $('door-close').onclick = () => { $('door-screen').hidden = true; };
+// No scanner? Show a door word: the phone sends the same proof as its QR, with no pass, and shows the word the door
+// gave it (PUNTER-47); the artist lets that word in on Show Time.
+let doorWord = null; // { word, until }
+$('door-word-btn').onclick = async () => {
+  if (!door.mine) return;
+  $('door-word-btn').disabled = true;
+  try {
+    const out = await fetch('/api/door/word', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proof: proofAt(door.mine, stepAt(Date.now() + skew)) }) }).then((r) => r.json());
+    if (out.result === 'word') doorWord = out;
+    else say(out.result === 'already' ? 'This ticket is already in.' : out.result === 'off' ? 'The door check is off for this gig.' : out.detail || 'That didn’t work: try again.');
+  } catch { say('No connection: try again in a moment.'); }
+  $('door-word-btn').disabled = false;
+  render();
+};
+$('door-word-back').onclick = () => { doorWord = null; render(); };
+$('keep-skip').onclick = () => { keepSkipped = true; render(); };
 // Keep it with a passkey: the password manager lists it by the artist and the date.
 $('keep-btn').onclick = async () => {
   try {
-    const name = ['NutPub ticket', show.artist, shortDay(show.date && `${show.date}T12:00:00Z`)].filter(Boolean).join(' · ');
-    if (!(await makePasskey(pass, name))) { keepTried = true; return render(); }
+    // A venue ticket: "Longy · The Fickle Pickle · ticket · 21 Nov", one passkey per ticket (session 39).
+    const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '';
+    const name = (door.ticketKind === 'room' ? [show.artist, venueName(), 'ticket', day] : ['NutPub ticket', show.artist, shortDay(show.date && `${show.date}T12:00:00Z`)]).filter(Boolean).join(' · ');
+    if (!(await makePasskey(pass, name, door.ticketKind === 'room' ? seedFor(pass, KEEP) : null))) { keepTried = true; return render(); }
     door.passkey = true;
     render();
   } catch (e) { keepTried = true; render(); say(e.message); }
@@ -1478,7 +1502,7 @@ $('find').onclick = async () => {
     const keep = t.kind === 'home' ? '-home' : '';
     try {
       localStorage.setItem(`nutpub-pass${keep}`, t.pass);
-      if (t.secret) localStorage.setItem(`nutpub-door${keep}`, JSON.stringify({ code: t.code, secret: t.secret }));
+      if (t.kind === 'room' && t.seed) keepSeed(t.pass, t.seed, keep); // the passkey's user ID: the ticket's 32 bytes
     } catch { return say('This browser can’t keep the ticket (private window?).'); }
     location.replace(`${location.pathname}${t.kind === 'home' ? '?as=home' : ''}`);
   } catch (e) { say(e.message); }
@@ -1500,7 +1524,8 @@ $('buy').onclick = async () => {
   $('buy').disabled = true;
   say(AS === 'home' ? 'Paying for your ticket…' : 'Paying at the door…'); // Rajesh 19 Nov: not 'at the door' at home
   try {
-    let res = door.ticket ? null : await paidFetch(AS === 'home' ? '/api/door/ticket?as=home' : '/api/door/ticket');
+    // A venue ticket: made on this phone, only its blinded copy goes with the 402 (ticket.js).
+    let res = door.ticket ? null : AS === 'home' ? await paidFetch('/api/door/ticket?as=home') : await paidFetch('/api/door/ticket', { 'X-Blind': await blindFor(pass, KEEP) });
     if (res && !res.ok) throw new Error(await refusal(res));
     if (AS === 'room' && split().drink) {
       res = await paidFetch('/api/door/drink');
@@ -1741,7 +1766,8 @@ if (ONE) { // on the Ticket tab: the receipt at the top, Find my ticket under th
   document.querySelector('.bottom').append($('save-ticket'));
   $('money').after($('find')); // Find my ticket: under the tips at home (the ticket box is the room's)
 } else $('welcome').append($('save-ticket')); // in the room: over the photo
-const ticketLink = () => `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}`;
+// A venue ticket's link carries its 32 bytes too (after the #, never sent): without them the door QR can't be made.
+const ticketLink = () => { const seed = AS === 'room' && seedText(pass, KEEP); return `${location.origin}${location.pathname}${AS === 'home' ? '?as=home' : ''}#ticket=${pass}${seed ? `&seed=${seed}` : ''}`; };
 const shortDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '');
 const gigLine = () => [show.artist, shortDay(show.date && `${show.date}T12:00:00Z`), show.streams || show.starts].filter(Boolean).join(' · ');
 // The venue ticket in the phone's wallet (the door check on): Apple Wallet on Apple devices, Google Wallet elsewhere
@@ -1969,7 +1995,7 @@ async function tick() {
   stage = next;
   if (now.door) {
     const pouredBefore = door.drink?.poured;
-    door = withSecret({ ...door, ...now.door, secret: now.door.secret || door.secret });
+    door = await withTicket({ ...door, ...now.door });
     if (door.drink?.poured && !pouredBefore) pint(); // the bar just poured it: the mint says it's spent (NUT-07)
   }
   replay = now.replay || null;

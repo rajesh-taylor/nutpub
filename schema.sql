@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS tips (pass TEXT, sats INTEGER NOT NULL, at TEXT NOT N
 -- secret: the time code's secret (RFC 6238; the ticket page's QR changes every 30 s). Added 11 Nov: scripts/totp-migration.sql
 CREATE TABLE IF NOT EXISTS tickets (pass TEXT PRIMARY KEY, sats INTEGER NOT NULL, at TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'room', code TEXT, checked_at TEXT, secret TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS tickets_code ON tickets (code);
+-- Blind-signed venue tickets (server/blind.js, session 39). blinded: the blinded ticket (B_) a phone sent with its 402
+-- and tonight's gig key's signature on it, with its DLEQ proof (JSON): neither says what the ticket is. door_in: the
+-- fingerprint (Y) of each ticket let in, so none gets in twice; it can't be matched to a purchase. door_words: the
+-- words a ticket showed instead of its QR (No scanner?), ten minutes each. All three go at New night, with the gig key.
+-- Added 20 Nov: scripts/blind-migration.sql
+CREATE TABLE IF NOT EXISTS blinded (pass TEXT PRIMARY KEY, blind TEXT NOT NULL, signed TEXT NOT NULL) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS door_in (y TEXT PRIMARY KEY, at TEXT NOT NULL) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS door_words (word TEXT PRIMARY KEY, y TEXT NOT NULL, at INTEGER NOT NULL) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS drinks (id INTEGER PRIMARY KEY, pass TEXT UNIQUE NOT NULL, locked INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, pass TEXT, sats INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL,

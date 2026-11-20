@@ -86,8 +86,10 @@ route('GET', '/api/show', async (c) => {
   const now = await current(c);
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
   // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
-  const judge = !!(stageDb().id && (await kv.get('setlist', null))?.only);
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, cues: await cueTimes(), replay: await replayPrice(now.show), ...(isAdmin(c) ? { free: await freeStatus(now.show) } : {}) });
+  const list = stageDb().id ? await kv.get('setlist', null) : null;
+  const judge = !!list?.only;
+  // gig: which judge's gig ('pickle' is gig 3, the night at the venue: its one optional passkey step, session 39).
+  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(isAdmin(c) ? { free: await freeStatus(now.show) } : {}) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {

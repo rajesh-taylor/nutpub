@@ -33,11 +33,11 @@ The home page shows three gig posters. Each one opens a private practice stage o
 |---|---|---|---|
 | 1 | **Longy, online** | A £20 Watch online ticket (one 402), the live chat with a moderator, tips with comments in full screen, a stretch goal filling up, and the venue's TV page | Laptop |
 | 2 | **Frankie Peroni, pay as you watch** | Paste his Fountain link as the chat's pinned message. Then 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it (open the Network tab to see the 402, then the paid 200). Stop and nothing more is charged. Then the fan's leftover sats go home to their own wallet | Laptop |
-| 3 | **The night at the venue: Longy at The Fickle Pickle** | A £35 venue ticket with a £5 beer token included; a 30-second door QR scanned by your own phone as the doormen's list; the beer token handed over as an animated QR and poured by the bar | Laptop, phone optional |
+| 3 | **The night at the venue: Longy at The Fickle Pickle** | A £35 venue ticket with a £5 beer token included, blind-signed so not even the NutPub can tell who came in; saved as a passkey if you like; a 30-second door QR scanned by your own phone as the doormen's list; the beer token handed over as an animated QR and poured by the bar | Laptop, phone optional |
 
 Every gig ends on **Your takings**: move the night's earnings to [Cashu.me](https://cashu.me) in one tap (it asks to add the test mint once), then **Finish gig** stamps the till receipt PAID OUT.
 
-No phone? Every phone step has a laptop button: **Let in by hand**, **Pour by hand**. The demo never uses the laptop's camera.
+No phone? Every phone step has a laptop button: **Show a door word** and **Let in**, **Pour by hand**. The demo never uses the laptop's camera.
 
 ---
 
@@ -59,13 +59,15 @@ No phone? Every phone step has a laptop button: **Let in by hand**, **Pour by ha
 
 ### For venues
 
-- **The door:** each venue ticket's QR changes every 30 seconds (TOTP), so a screenshot won't get in. Any phone becomes the door scanner from the artist's DOOR pass; it shows **Let them in**, **Authorised ticket.**, the ticket's number and what was paid, never a name.
+- **Blind-signed tickets:** the fan's phone makes the venue ticket from 32 random bytes and sends only a blinded copy with the 402; tonight's gig key signs it without seeing inside (Cashu's own blind signature, NUT-00, with a NUT-12 proof the phone checks). So the door can tell a ticket is real and unused, but not which purchase it came from.
+- **The door:** each venue ticket's QR is signed again by the ticket's own key every 30 seconds, so a screenshot won't get in. Any phone becomes the door scanner from the artist's DOOR pass; it shows **Let them in**, **Authorised ticket.**, then ✓ Signed by tonight's gig · ✓ QR fresh (30 s) · ✓ First time in, never a name. No scanner? The fan's phone shows a door word (PUNTER-47) and the artist lets it in on Show Time.
 - **The bar:** a first drink can be included in the ticket price. It's a real coin locked to the bar's key until last orders, handed over as an animated QR (NUT-16, proposed); not poured by last orders, it goes back to the artist.
 - **The TV page:** the chat, top tippers and stretch goals, for the screens around the room.
 
 ### Privacy
 
-- No name, email or address is asked for, and no list of who came is kept.
+- No name, email or address is asked for, and no list of who came is kept: the door keeps a fingerprint per ticket let in, which can't be matched to a purchase, and New night wipes it.
+- What stays linked: the purchase, to a random browser ID (for watching online and the free replay), and the first drink, by its number.
 - Everything from the night is deleted after 7 days, except one line of totals.
 
 ---
@@ -78,9 +80,10 @@ Because it's plain HTTP 402, anything that can pay a 402 can buy a ticket: a bro
 
 | Spec | Used for |
 |---|---|
-| NUT-00 to 04 | Blind-signed ecash; minting test sats |
+| NUT-00 to 04 | Blind-signed ecash; minting test sats; the venue ticket, blind-signed by the gig's key (checked against NUT-00's test vectors) |
 | NUT-07 | Checking whether a coin is spent (the poured drink) |
-| NUT-10 · NUT-11 | Locking each payment to its owner; the drink's last-orders locktime |
+| NUT-10 · NUT-11 | Locking each payment to its owner; the drink's last-orders locktime; the venue ticket's secret, locked to its own key |
+| NUT-12 | The gig's proof that it signed the fan's ticket, checked on the phone |
 | NUT-16 *(proposed)* | Animated QR codes: the drink handed over as the coin itself |
 | NUT-18 | Payment requests |
 | NUT-24 | HTTP 402: tickets, each minute of video, tips, replays |

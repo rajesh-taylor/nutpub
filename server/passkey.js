@@ -1,11 +1,10 @@
 // Passkeys for tickets (WebAuthn): no account, no email. Made on the phone straight after paying and kept by its
 // password manager (iCloud Keychain, Google, Proton Pass, Bitwarden, KeePassDX), so "Find my ticket" brings the
-// ticket back after the browser's data is cleared, or on a new phone. Once a ticket has a passkey, the door QR's
-// secret goes only to a browser that has just passed its check.
+// ticket back after the browser's data is cleared, or on a new phone.
 //
-// We keep the passkey's public key and which ticket it opens; never anything about the person. Its user handle (the
-// 32 bytes the password manager keeps with it) is made on the phone and never sent here: it's the ticket's seed, for
-// the blind-signed ticket to come, so Find my ticket can restore that one from the mint without us linking buyer to door.
+// We keep the passkey's public key and which purchase it opens; never anything about the person. Its user handle (the
+// 32 bytes the password manager keeps with it) is made on the phone and never sent here: it's the blind-signed
+// ticket's seed (blind.js), so Find my ticket rebuilds the ticket on the phone without us linking buyer to door.
 //
 // Signatures are checked with WebCrypto only: ES256 (P-256, most phones), Ed25519, RS256 (Windows Hello).
 import { one, run, kv, stageDb } from './db.js';
@@ -162,7 +161,7 @@ export function mountPasskeys(route, pass) {
     return json({ ok: true, synced: k.synced });
   });
 
-  // Find my ticket, and the door QR's secret: a passkey check gives back the ticket's pass, its door code and secret.
+  // Find my ticket: a passkey check gives back the purchase's pass and kind.
   route('POST', '/api/passkey/check', async (c) => {
     const b = await body(c);
     if (!(await challengeOk(b?.challenge))) return old();
@@ -172,10 +171,11 @@ export function mountPasskeys(route, pass) {
     try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if (!(await spend(b.challenge))) return old();
     await run('UPDATE passkeys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
-    const t = await one('SELECT kind, code, secret FROM tickets WHERE pass = ?', k.pass);
+    const t = await one('SELECT kind FROM tickets WHERE pass = ?', k.pass);
     if (!t) return json({ error: 'no_ticket', detail: 'This passkey’s ticket was for another night.' }, 404);
-    const room = t.kind === 'room';
-    return json({ pass: k.pass, kind: t.kind, code: room ? t.code : null, secret: room ? t.secret : null });
+    // The phone has the passkey's user ID (the ticket's 32 bytes) itself: it rebuilds the blinded ticket and asks
+    // /api/door/me for the gig's signature again. Nothing here is the ticket.
+    return json({ pass: k.pass, kind: t.kind });
   });
 }
 
