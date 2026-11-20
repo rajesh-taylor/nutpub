@@ -486,7 +486,7 @@ function drawWrap(view, s) {
     // Gig 3 is the last (Rajesh 20 Nov): a thank-you, and the Pub Menu for more.
     const last = onSetlist?.at === 'pickle';
     $('wrap-after').replaceChildren(...(onSetlist?.only
-      ? (last ? [el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old china! 🍻 We’re still building: the Pub Menu has more.'),
+      ? (last ? [el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old china! 🍻 I’m still building: the Pub Menu has more.'),
         Object.assign(el('a', 'btn primary judges-on', 'The Pub Menu →'), { href: judgePage.replace(/\/judge$/, '/menu') })]
         : [Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })])
       : [Object.assign(el('p', 'wrap-next'), {})]));

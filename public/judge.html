@@ -12,9 +12,10 @@
        Cashu line for devs is each poster's small print. */
     @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
     /* Rajesh 20 Nov: a lighter navy here, so the sign and posters lift off it. */
-    /* Rajesh 20 Nov: a touch darker, with a little noise for grain and dither (no banding in the dark). */
-    body.judge { --deep: #081020; text-align: left; padding: 0; overflow-x: clip; background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    /* Rajesh 20 Nov: a touch darker, with a little noise for grain and dither (no banding in the dark). Later on 20 Nov:
+       darker still, with less noise. */
+    body.judge { --deep: #050b17; text-align: left; padding: 0; overflow-x: clip; background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .03 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
       repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 48px), var(--deep); }
     .judge main, .judge footer { max-width: 1360px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
     .judge main { position: relative; padding-block: 28px 40px; display: grid; gap: 22px; }
@@ -60,11 +61,13 @@
     .lines .lead { font: 400 19px/1.5 "IBM Plex Sans", var(--body); letter-spacing: 0; } /* Rajesh 19 Nov: a reading face, not the code one */ /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
     .judge main > .lines.intro { text-align: center; gap: 14px; }
-    .lines.intro .lead:first-child { max-width: 900px; justify-self: center; }
+    .lines.intro .lead:first-child:not(.what) { max-width: 900px; justify-self: center; }
     @media (min-width: 900px) { .lines.intro .ln { display: block; } } /* a sentence a line */
     @media (min-width: 1150px) { .lines.intro .what { white-space: nowrap; } } /* one line, across the three posters (Rajesh 20 Nov) */
     .lines.intro .lead { text-wrap: balance; }
     .lines.intro .what { color: #e8a845; font-size: 17px; }
+    .lines.intro .for-whom { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 16px; font-size: 19px; }
+    .lines.intro .for-whom .dot { color: #e8a845; font-size: 14px; }
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; max-width: 1200px; width: 100%; justify-self: center; } /* three in a row (Rajesh 19 Nov: gigs 3 and 4 folded together) */
     @media (max-width: 1000px) { .wall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; } } /* two and one on smaller laptops */
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
@@ -231,8 +234,9 @@
     <!-- Rajesh 20 Nov: the middlemen line gone; who it's for, then what it is, centred under the sign. -->
     <h1 class="sr">The NutPub</h1>
     <div class="lines intro">
-      <p class="lead"><b><span class="ln">For artists and creators who’d rather not maintain a spreadsheet of their fans’ details.</span> <span class="ln">And for fans happy to pay for live music, without middlemen taking a big cut.</span></b></p>
+      <!-- Rajesh 20 Nov (late): the two who-it's-for lines gone; the gold line first, then who it's for, dot-separated. -->
       <p class="lead what">A whole night out in Cashu, from the ticket, door entry, first round, 402 stream payments, tips and the takings back to your own wallet.</p>
+      <p class="lead for-whom"><b>Artists &amp; Musicians</b><span class="dot" aria-hidden="true">•</span><b>Fans</b><span class="dot" aria-hidden="true">•</span><b>Pubs</b></p>
     </div>
 
     <div class="wall">
