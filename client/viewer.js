@@ -369,6 +369,7 @@ function controls(on) {
   }
   if (on) todoMark(todo.stopped ? 'again' : 'played'); else if (playing) todoMark('stopped');
   playing = on;
+  if (TODO) todoDraw(); // gig 2's full-screen step asks for play when it's stopped
   if (on) say(''); // playing again: the "Stopped" line goes
   backdrop(on);
   // The cover photo is for before Play: once playing, plain black behind the picture.
@@ -1296,10 +1297,12 @@ function todoItems() {
   if (show.stream.mode === 'pay') return [
     { done: !!todo.stopped || !!todo.again, story: `Each 10-second piece answers 402 until your wallet pays ${sats(Math.ceil(show.stream.perMinute / 6))} for it.`, text: 'Press play, watch about 5 seconds, then stop', did: 'Played, then stopped', now: 'Watch about 5 seconds, then stop: bottom left', short: 'Play 5 seconds, then stop', shortDid: 'Played, stopped' },
     { done: !!todo.again, story: 'Stopped, and the payments stop.', text: playAgainIn() > 0 ? `Play again in ${playAgainIn()} ${playAgainIn() === 1 ? 'second' : 'seconds'}` : 'Now press play again: you pay only for what you watch', did: 'Played again: paid only for what you watched', now: 'Press play again: bottom left', short: 'Play again', shortDid: 'Played again' },
-    { done: !!todo.net || !!todo.full, story: 'Every piece is a 402: the server asks, the wallet in this browser pays, the piece arrives with a 200.', text: 'Open your browser’s developer tools (⌥⌘I) on the Network tab: each piece shows a 402, then the paid 200. Then press Seen it',
-      html: 'Open your browser’s developer tools (⌥⌘I) on the Network tab: each piece shows a 402, then the paid 200. <button type="button" class="btn primary" data-todo="net">Seen it</button>',
+    { done: !!todo.net || !!todo.full, story: 'Every piece is a 402: the server asks, the wallet in this browser pays, the piece arrives with a 200.', text: 'Open developer tools (⌥⌘I) on the Network tab, type “audio” in its filter box, then press play: each piece shows a 402, then the paid 200. Then press Seen it',
+      html: 'Open developer tools (⌥⌘I) on the Network tab, type “audio” in its filter box, then press play: each piece shows a 402, then the paid 200. <button type="button" class="btn primary" data-todo="net">Seen it</button>',
       did: 'Saw the 402s and the 200s', short: 'The Network tab: 402, then 200', shortDid: 'Saw the 402s' },
-    { ...full, story: 'Full screen, then a tip, as at Longy’s.' }, { ...tip, story: 'A tip is another 402, with your words beside it.' }];
+    // Rajesh 20 Nov: the video's playing for the tip and until End night.
+    { ...full, story: 'Full screen, then a tip, as at Longy’s.', ...(playing ? {} : { html: `Press play, then go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture` }) },
+    { ...tip, story: 'A tip is another 402, with your words beside it.' }];
   return [];
 }
 // The desktop view's fan (Show Time's other frame) said hello: its list, kept beside this one.

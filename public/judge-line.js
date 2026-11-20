@@ -46,7 +46,7 @@ export async function judgeLine(r, page) {
   // doormen's; the fan is the phone beside Show Time; the bar pours by hand.
   // Rajesh 19 Nov (late): Longy's deal with the venue, a beer token in the ticket; Drink at bar is off a judge's Plan gig.
   const STORY = {
-    1: 'Longy’s agreed a deal with the venue: his £35 ticket includes a free beer token worth £5. The bar takes it from the fan’s phone, and the doormen check every ticket.',
+    1: 'Gig 3 gets NUT-heavy: door entry by a QR code that refreshes every 30 seconds, so a screenshot can’t get in, and a £5 beer token that’s a coin, included in Longy’s £35 ticket.',
     2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
     4: 'Ticket bought, with the beer token in it. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
@@ -63,13 +63,13 @@ export async function judgeLine(r, page) {
     end: 'Every sat tonight went straight to Longy’s key. The NutPub only checked it.',
     takings: 'Closing time. The ticket and tips are Longy’s, locked to his key.',
   } : list.at === 'frankie' ? {
-    setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute. He has no website: his fans find him on Fountain.',
+    setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute.',
     pinned: 'Pinned over the chat, for every fan watching.',
     start: 'Show time. Nobody pays until they press play.',
     fan: 'You’re a fan at home. The video comes in 10-second pieces.',
     end: 'You paid for the minutes you watched, straight to Frankie’s key.',
     home: 'What the fan didn’t spend is the fan’s: it goes home to their own wallet.',
-    takings: 'That’s two ways to get paid: a ticket, and by the minute. Gig 3 gets NUT-heavy: a door with a 30-second code, and a beer token that’s a coin.',
+    takings: 'He’s able to earn income in 3 ways: venue tickets, per minute streaming and tips.', // Rajesh 20 Nov: shorter; the NUT-heavy line opens gig 3
     paid: 'Paid out: from Frankie’s browser to his own wallet, nobody in between.',
   } : {};
   let key = '';
