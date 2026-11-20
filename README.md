@@ -48,6 +48,7 @@ No phone? Every phone step has a laptop button: **Show a door word** and **Let i
 - **Plan your gig:** venue tickets, Watch online or pay by the minute, prices in pounds with the sats beside them, a door scanner, moderators, stretch goals and show splits, with a phone preview of the fan's page alongside.
 - **Show Time:** the night runs on three buttons (Start stream, Start show, End night), with live previews of the fan's page at home and on a phone, and a door and bar strip for anyone without a scanner.
 - **Your takings:** what came in, by kind, with the platform's 5% on its own line; one tap moves it to the artist's own Cashu wallet; the night closes as a till receipt.
+- **Your 12 words:** the key that opens the takings is made from 12 words (BIP-39, as Bitcoin wallets do), shown once to write on paper and checked by asking for two of them. On another browser signed in to the stage, the words bring the key back, and any sats collected but not yet moved with it. They never leave the browser.
 - **Replays for 7 days:** after End night, the gig page plays the recording. Ticket holders watch free; everyone else pays once (one 402) at the artist's price, which can't go below a minimum set by the show's length.
 - **Your recordings:** each broadcast as an MP4 to download or delete.
 
@@ -136,7 +137,7 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 
 The NutPub is a working concept on a test mint, not a production service.
 
-- The artist's key lives in one browser, with no backup yet.
+- The artist's key lives in one browser; its 12 words bring back the money, not the sign-in (that's the stage's own passkey or link). Stages made before 20 Nov have no words. A passkey-sealed copy of the key comes after 27 Nov.
 - On the test mint, a stream takes 10 viewers at a time.
 - **Free to watch, paid up front** (the artist covers a free stream's cost before the gig) is built but switched off until it's redesigned (`UPFRONT` in `server/config.js`).
 - **Put on a gig** (a stage of your own, sealed with a passkey) is built but off the home page; the demo uses the three posters.

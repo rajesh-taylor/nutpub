@@ -9,16 +9,35 @@ const MAX_COINS = 500; // in one swap to the mint
 const hex = (b) => [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 const unhex = (s) => Uint8Array.from(s.match(/../g), (h) => parseInt(h, 16));
 
-// The wallet's seed, kept in this browser only.
-function seed(name) {
-  let s = null;
-  try { s = localStorage.getItem(`${name}-seed`); } catch {}
-  if (!s) {
-    s = hex(crypto.getRandomValues(new Uint8Array(64)));
-    try { localStorage.setItem(`${name}-seed`, s); } catch {}
-  }
+// The wallet's seed, kept in this browser only. The artist's takings wallet (TAKINGS) makes 12 words first and the seed
+// from them (words.js, session 42), so the words bring its key back on another browser; its words are kept beside the
+// seed so Takings can show them. A stage made before 20 Nov keeps its 64 random bytes and has no words. The other
+// wallets (a fan's, the bar's) stay random: loaded without the word list, so a fan's page stays small.
+// Made once per page (`making`), and never over one another call has just written: a seed without its own words
+// would leave the words on show unable to bring the key back.
+export const TAKINGS = 'nutpub-takings';
+const making = {};
+async function seed(name) {
+  const read = () => { try { return localStorage.getItem(`${name}-seed`); } catch { return null; } };
+  const s = read() || await (making[name] ||= (async () => {
+    let words = null;
+    let made;
+    if (name === TAKINGS) {
+      const { newWords, seedOf } = await import('./words.js');
+      words = newWords();
+      made = hex(seedOf(words));
+    } else made = hex(crypto.getRandomValues(new Uint8Array(64)));
+    const now = read();
+    if (now) return now;
+    try {
+      if (words) localStorage.setItem(`${name}-words`, words);
+      localStorage.setItem(`${name}-seed`, made);
+    } catch {}
+    return made;
+  })());
   return unhex(s);
 }
+export const wordsHere = (name = TAKINGS) => { try { return localStorage.getItem(`${name}-words`); } catch { return null; } };
 
 const loadPledges = () => { try { return JSON.parse(localStorage.getItem('nutpub-pledges') || '[]'); } catch { return []; } };
 const savePledges = (list) => { try { localStorage.setItem('nutpub-pledges', JSON.stringify(list)); } catch {} };
@@ -42,7 +61,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
   const repo = new IndexedDbRepositories({ name });
   await repo.init();
   walletStep.now = 'coco';
-  const coco = await initializeCoco({ repo, seedGetter: async () => seed(name) });
+  const coco = await initializeCoco({ repo, seedGetter: () => seed(name) });
   walletStep.now = 'mint';
   await coco.mint.addMint(mintUrl, { trusted: true });
   walletStep.now = 'tidying';

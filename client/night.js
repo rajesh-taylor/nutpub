@@ -2,7 +2,7 @@
 // opens its own wallet in this browser ('nutpub-takings' for the artist, 'nutpub-bar' for the bar), the same wallets
 // as the artist's and the bar's own pages, so Collect and Pour sign with the key that lives here. The server only
 // lists the locked payments and marks one collected when the mint says it's spent.
-import { openWallet } from './wallet.js';
+import { openWallet, wordsHere } from './wallet.js';
 import { unlockAudio, trombone, clink } from './sound.js';
 import { money } from '../server/money.js';
 
@@ -48,24 +48,110 @@ async function artistKeyHere(pubkey) {
     await api('PUT', '/api/admin/artist-key', { pubkey: publicKeyHex });
     return publicKeyHex;
   }
-  const here = await holds(artist, pubkey);
-  $('key-warn').hidden = here;
-  if (!here) {
-    $('key-warn').replaceChildren('Your bitcoin is locked to another web browser: open Your takings there to move it. ');
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn quiet';
-    b.textContent = 'Use this browser from now on';
-    b.onclick = () => $('key-sheet').showModal(); // asks first, as a sheet: what stays behind is said plainly
-    $('key-warn').append(b);
-  }
+  $('key-warn').hidden = await holds(artist, pubkey); // its two ways out: the 12 words, or a new key (asks first)
   return pubkey;
 }
+$('key-new').onclick = () => $('key-sheet').showModal();
 $('key-keep').onclick = () => $('key-sheet').close();
 $('key-switch').onclick = async () => {
   $('key-sheet').close();
   const { publicKeyHex } = await artist.coco.keyring.generateKeyPair();
   await api('PUT', '/api/admin/artist-key', { pubkey: publicKeyHex });
+  $('key-status').textContent = '';
+  await refresh();
+};
+
+// ---- The 12 words (session 42): the backup of the key above, made with this browser's takings wallet (wallet.js).
+// The padlock beside Move: open until the words are written down and two of them checked, then shut. A key brought
+// back from typed words is backed up by those words. A stage made before 20 Nov has no words: today's line stays.
+// The words never leave this browser; checked once, the browser remembers it (nutpub-takings-checked).
+const CHECKED = 'nutpub-takings-checked';
+const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const recall = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+async function backup(pubkey) {
+  const pair = pubkey && await artist.coco.keyring.getKeyPair(pubkey);
+  if (!pair) return 'away';
+  if (pair.derivationIndex == null) return 'brought';
+  if (!wordsHere()) return 'old';
+  return recall(CHECKED) ? 'shut' : 'open';
+}
+const linkButton = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', className: 'link', textContent: text, onclick });
+async function drawLock() {
+  const kind = await backup(state.pubkey);
+  const shut = kind === 'shut' || kind === 'brought';
+  $('lock-arm').setAttribute('d', kind === 'open' ? 'M8 11V7a4 4 0 0 1 7.6-1.7' : 'M8 11V7a4 4 0 0 1 8 0v4');
+  $('lock-body').setAttribute('fill', shut ? '#d9953a' : 'none');
+  const t = $('lock-text');
+  if (kind === 'open') t.replaceChildren('Only this browser can open your bitcoin. ', linkButton('Write down your 12 words', showWords), ' to bring it back on another.');
+  else if (shut) t.replaceChildren(Object.assign(document.createElement('b'), { textContent: 'Backed up with your 12 words.' }), ' Move it after the gig, or the next day.',
+    ...(kind === 'shut' ? [' ', linkButton('Show my words', showWords)] : []));
+  else t.replaceChildren('Only this browser can open your bitcoin. Move it after the gig, or the next day.');
+}
+
+// Sheet 1, the words; sheet 2, two of them checked (picked at random each time).
+let toCheck = [];
+function showWords() {
+  const words = (wordsHere() || '').split(' ');
+  if (words.length !== 12) return;
+  $('words-list').replaceChildren(...words.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
+  $('words-sheet').showModal();
+}
+const forget = () => $('words-list').replaceChildren(); // the words leave the page once the sheet is shut
+$('words-sheet').addEventListener('close', forget);
+$('words-later').onclick = () => $('words-sheet').close();
+$('words-done').onclick = async () => {
+  $('words-sheet').close();
+  toCheck = (await import('./words.js')).twoToCheck();
+  $('check-a-l').textContent = `Word ${toCheck[0]}`;
+  $('check-b-l').textContent = `Word ${toCheck[1]}`;
+  $('check-a').value = $('check-b').value = '';
+  $('check-err').textContent = '';
+  $('check-sheet').showModal();
+};
+$('check-again').onclick = () => { $('check-sheet').close(); showWords(); };
+$('check-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const words = (wordsHere() || '').split(' ');
+  const wrong = toCheck.filter((at, i) => ($(i ? 'check-b' : 'check-a').value.trim().toLowerCase() !== words[at - 1]));
+  if (wrong.length === 2) { $('check-err').textContent = `Words ${wrong[0]} and ${wrong[1]} aren't right. Look at your paper again.`; return; }
+  if (wrong.length) { $('check-err').textContent = `Word ${wrong[0]} isn't right. Look at your paper again.`; return; }
+  remember(CHECKED, '1');
+  $('check-sheet').close();
+  $('key-status').textContent = 'Backed up. Keep the paper somewhere safe.';
+  await drawLock();
+};
+
+// Sheet 3, on a browser without the key: the typed words find which of their keys is the stage's, and it goes into
+// this browser's keyring as it is (this browser keeps its own seed: two browsers sharing one seed would trip over each
+// other's coins). Then the mint is asked for coins made from the words' seed (collected, never moved): Coco's sweep
+// swaps any it finds into this browser's wallet, so Move takes them too.
+$('back-open').onclick = () => { $('back-err').textContent = ''; $('back-sheet').showModal(); $('back-words').focus(); };
+$('back-cancel').onclick = () => $('back-sheet').close();
+$('back-sheet').addEventListener('close', () => { $('back-words').value = ''; });
+$('back-words').addEventListener('keydown', (e) => { // Enter brings it back (the words never need a new line)
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('back-form').requestSubmit(); }
+});
+$('back-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const { checkWords, seedOf, findKey, keyAt } = await import('./words.js');
+  const typed = checkWords($('back-words').value);
+  if (typed.error) { $('back-err').textContent = typed.error; return; }
+  const seed = seedOf(typed.words);
+  const at = findKey(seed, state.pubkey);
+  if (at < 0) { $('back-err').textContent = 'These words are for a different stage.'; return; }
+  await artist.coco.keyring.addKeyPair(keyAt(seed, at).secretKey);
+  $('back-sheet').close();
+  const say = (t) => { $('key-status').textContent = t; };
+  say('Your bitcoin is back in this browser. Looking for sats collected before…');
+  await refresh();
+  const before = await artist.balance();
+  const looked = await Promise.race([
+    artist.coco.wallet.sweep(health.mint.url, seed, { units: ['sat'] }).then(() => true, () => false),
+    new Promise((ok) => setTimeout(() => ok(false), 30000)),
+  ]);
+  const found = (await artist.balance()) - before;
+  say(found > 0 ? `Your bitcoin is back in this browser. Also found ${sats(found)} collected before.`
+    : looked ? 'Your bitcoin is back in this browser.' : 'Your bitcoin is back in this browser. The mint didn’t answer about sats collected before.');
   await refresh();
 };
 async function keyLine(id, wallet, pubkey, who, path) { // the bar's card (hidden until the first drink returns)
@@ -124,6 +210,7 @@ async function refresh() {
   info = await fetch('/api/show').then((r) => r.json());
   const pubkey = await artistKeyHere(locked.pubkey);
   state = { waiting: locked.waiting, drinks, lastOrdersAt: locked.lastOrdersAt, pubkey };
+  await drawLock();
   const { show } = info;
   const all = (k) => (takings.locked[k]?.waiting || 0) + (takings.locked[k]?.collected || 0);
   const count = (k) => takings.locked[k]?.count || 0;
