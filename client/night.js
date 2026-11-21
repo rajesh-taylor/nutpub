@@ -565,7 +565,9 @@ function printSlip(g) {
 // Gig 3's thank-you (Rajesh 20 Nov), its cockney glossed for judges abroad; then the Regulars (21 Nov).
 function thanks() {
   const p = el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old ');
-  p.append(Object.assign(document.createElement('abbr'), { title: 'Cockney rhyming slang: china plate, mate', textContent: 'china' }),
+  const china = Object.assign(document.createElement('abbr'), { textContent: 'china', tabIndex: 0 });
+  china.dataset.means = 'Cockney rhyming slang: china plate, mate';
+  p.append(china,
     '! 🍻 Before you go, meet the Regulars: AI agents buy tickets here too.');
   return p;
 }

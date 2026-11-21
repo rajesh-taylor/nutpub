@@ -130,7 +130,7 @@ export async function judgeLine(r, page) {
     const on = s.stage === 'on';
     if (pickle) {
       if (page === 'takings' && (await admin('/api/admin/setlist'))?.setlist?.done?.includes(list.at)) {
-        const bread = Object.assign(document.createElement('abbr'), { title: 'Cockney rhyming slang: bread and honey, money', textContent: 'bread' });
+        const bread = Object.assign(document.createElement('abbr'), { textContent: 'bread', tabIndex: 0 }); bread.dataset.means = 'Cockney rhyming slang: bread and honey, money';
         return say('', 'Before you go, meet the Regulars: AI agents buy tickets here too.', 'Meet the Regulars →', judge.replace(/\/judge$/, '/agents'),
           { story: ['Longy’s ', bread, ' is in his own wallet.'] });
       }

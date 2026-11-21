@@ -1448,5 +1448,13 @@ body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-le
 @media (prefers-reduced-motion: reduce) { .pin-hint { animation: none; } }
 /* Gig 3's first step (Rajesh 20 Nov): the door's switch row shimmers too, once the price is in. */
 label.pin-hint { border: 1px solid var(--amber); border-radius: 8px; padding: 6px 12px; }
-/* Cockney rhyming slang (Rajesh 21 Nov): a dotted line under it, its meaning on hover. */
-abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+/* Cockney rhyming slang (Rajesh 21 Nov): a dotted line under it, its meaning at once on hover or a tap (the browser's own
+   title tooltip waited a second or two, so data-means instead). */
+abbr[data-means] { position: relative; text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; outline: none; }
+abbr[data-means]:hover::after, abbr[data-means]:focus::after {
+  content: attr(data-means); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: 30;
+  width: max-content; max-width: min(300px, 80vw); padding: 6px 10px; border-radius: 6px; background: var(--deep, #050914);
+  border: 1px solid rgb(217 149 58 / .6); box-shadow: 0 8px 20px rgb(0 0 0 / .5); color: var(--cream, #efe3c8);
+  font: 400 13px/1.35 "IBM Plex Sans", system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-align: left;
+  white-space: normal; pointer-events: none;
+}
