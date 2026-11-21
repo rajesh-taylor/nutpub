@@ -53,6 +53,12 @@
     .allergens, .tab-note { font-size: 14px; line-height: 1.5; color: var(--smoke); }
     .tab-note .nut { font: 400 15px/1 var(--poster); letter-spacing: .06em; color: var(--amber); margin-right: 6px; }
     .allergens b, .tab-note b { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: var(--cream); margin-right: 6px; }
+    /* Session 43: the way into the Kitchen (the technical page), dashed like Happy Hour. */
+    .kitchen-link { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; max-width: 460px; margin: 20px auto 0; padding: 12px 16px; border: 1.5px dashed var(--amber); border-radius: 6px; text-decoration: none; text-align: center; }
+    .kitchen-link b { font: 400 24px/1 var(--poster); letter-spacing: .12em; color: var(--amber); padding-top: 3px; }
+    .kitchen-link span { font-size: 14px; color: rgb(239 227 200 / .85); }
+    .kitchen-link:hover { background: rgb(217 149 58 / .1); }
+    .kitchen-link:hover b { color: var(--cream); }
     .menu .back { display: block; text-align: center; margin: 0 0 12px; font-size: 15px; color: var(--amber); }
   </style>
 </head>
@@ -68,8 +74,8 @@
       <p class="rule">Tonight</p>
       <ul class="dishes">
         <li class="dish">
-          <div class="line"><span class="name">Fish 'N Nips</span><span class="dots" aria-hidden="true"></span><span class="price">NIP-61 · NIP-47 · NIP-53</span></div>
-          <p class="what">Nostr: your handle in the chat, Nutzaps, the live gig listed on Nostr.</p>
+          <div class="line"><span class="name">Fish 'N Nips</span><span class="dots" aria-hidden="true"></span><span class="price">NIP-07 · NIP-98 · NIP-61</span></div>
+          <p class="what">Nostr: your handle in the chat, and Nutzaps.</p>
         </li>
         <li class="dish">
           <div class="line"><span class="name">Passkey Pie</span><span class="dots" aria-hidden="true"></span><span class="price">WebAuthn</span></div>
@@ -119,6 +125,7 @@
         <p class="tab-note"><b>The Tab</b><span class="nut">NUT-18</span>The amount, the mint and the lock.</p>
         <p class="allergens"><b>Allergens</b>Contains no email, name, address. May contain NUTs.</p>
       </div>
+      <a class="kitchen-link" href="/kitchen"><b>Into the Kitchen →</b><span>what’s built, what’s next, and the specs</span></a>
     </div>
     <a class="back" href="/">Back to the NutPub</a>
   </main>

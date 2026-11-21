@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>The Kitchen · The NutPub</title>
+  <meta name="description" content="What the NutPub does, ticked off: built, after 27 Nov, or proposed, with the Cashu NUTs and Nostr NIPs behind each part.">
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* The Kitchen (session 43, 21 Nov): what the NutPub does, a tick chip each, for judges and developers. Reached from
+       the Pub Menu. Rajesh 21 Nov: short lines; ideas not built yet get a name and their specs, never the how. */
+    @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
+    body.kitchen main { max-width: 1136px; text-align: left; font-family: "IBM Plex Sans", var(--body); }
+    .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
+      background: var(--midnight); border: 1px solid rgb(217 149 58 / .55); border-radius: 6px;
+      box-shadow: 0 0 0 5px var(--deep), 0 0 0 6px rgb(217 149 58 / .3); }
+    .kitchen .top { display: block; text-align: center; margin: 0 0 4px; text-decoration: none;
+      font: 700 15px/1 Georgia, "Times New Roman", serif; letter-spacing: .28em; text-transform: uppercase; color: var(--amber); }
+    .kitchen .top .nb { color: #f7931a; }
+    .kitchen .top:hover { color: var(--cream); }
+    .kitchen h1 { margin: 6px 0 0; text-align: center; font: 400 clamp(54px, 15vw, 84px)/1 var(--poster); letter-spacing: .06em; color: var(--cream); }
+    .kitchen .lede { margin: 8px auto 0; max-width: 620px; text-align: center; font-size: clamp(16px, 4.2vw, 18px); line-height: 1.5; color: rgb(239 227 200 / .88); }
+    .key { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin: 20px 0 0; padding: 0; list-style: none; }
+    .key li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #c9cfdc; }
+    .chip { flex: none; white-space: nowrap; font: 400 14px/1 var(--poster); letter-spacing: .1em; padding: 4px 8px 2px; border-radius: 3px; }
+    .chip.built { border: 1px solid var(--cream); color: var(--cream); background: rgb(239 227 200 / .08); }
+    .chip.after { border: 1px solid var(--amber); color: var(--amber); }
+    .chip.proposed { border: 1px dashed var(--smoke); color: #c9cfdc; }
+    .part { margin-top: 34px; }
+    .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
+    .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(217 149 58 / .4); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+    .kcard { display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 14px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
+    .kcard .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .kcard h3 { margin: 0; font: 600 17px/1.3 "IBM Plex Sans", var(--body); color: var(--cream); }
+    .kcard p { margin: 0; font-size: 15px; line-height: 1.5; color: rgb(239 227 200 / .84); }
+    .kcard .specs { margin-top: auto; padding-top: 2px; font: 400 16px/1.2 var(--poster); letter-spacing: .07em; color: var(--amber); }
+    .kcard code { font: 14px var(--mono); color: var(--cream); }
+    .kcard a { color: var(--amber); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px; margin-top: 34px; padding-top: 16px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 14px; color: #a9b0c2; }
+    .foot a { color: var(--amber); }
+    .made { margin: 0 0 20px; text-align: center; font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
+    .made a { color: var(--smoke); text-decoration: none; }
+    .made a:hover { color: var(--cream); text-decoration: underline; }
+  </style>
+</head>
+<body class="kitchen">
+  <main>
+    <div class="board-card">
+      <a class="top" href="/menu">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span> · Pub Menu</a>
+      <h1>The Kitchen</h1>
+      <p class="lede">What the NutPub does, ticked off, and the Cashu NUTs and Nostr NIPs behind each part.</p>
+      <ul class="key" aria-label="What the chips mean">
+        <li><span class="chip built">✓ Built</span>live on thenutpub.com now</li>
+        <li><span class="chip after">After 27 Nov</span>the two weeks after NutNovember</li>
+        <li><span class="chip proposed">Proposed</span>still working out how</li>
+      </ul>
+
+      <section class="part" aria-labelledby="k-tickets">
+        <h2 id="k-tickets">Tickets</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>Watch online ticket</h3><span class="chip built">✓ Built</span></div>
+            <p>One 402, paid from the wallet in your browser. No account, no email.</p><p class="specs">NUT-24 · NUT-18 · NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>Venue ticket, blind-signed</h3><span class="chip built">✓ Built</span></div>
+            <p>The door can tell it’s real, never who bought it.</p><p class="specs">NUT-00 · NUT-10 · NUT-12</p></li>
+          <li class="kcard"><div class="head"><h3>Tickets as passkeys</h3><span class="chip built">✓ Built</span></div>
+            <p>Saved in your password manager. Find my ticket brings it back.</p><p class="specs">WebAuthn</p></li>
+          <li class="kcard"><div class="head"><h3>Passkeys that seal the ticket</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">WebAuthn PRF</p></li>
+          <li class="kcard"><div class="head"><h3>Give a ticket away</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NUT-00 · NUT-12</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-door">
+        <h2 id="k-door">The door</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>A QR that changes every 30 seconds</h3><span class="chip built">✓ Built</span></div>
+            <p>A screenshot won’t get in.</p><p class="specs">Schnorr signatures · BIP-340</p></li>
+          <li class="kcard"><div class="head"><h3>The Doorman’s List</h3><span class="chip built">✓ Built</span></div>
+            <p>Any phone scans. Three checks, never a name.</p><p class="specs">NUT-12</p></li>
+          <li class="kcard"><div class="head"><h3>A door word</h3><span class="chip built">✓ Built</span></div>
+            <p>No scanner? Let them in by hand.</p><p class="specs">The NutPub’s own</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-bar">
+        <h2 id="k-bar">The bar</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>The first drink is a coin</h3><span class="chip built">✓ Built</span></div>
+            <p>Handed over as a loop of QR codes. Poured means spent.</p><p class="specs">NUT-11 · NUT-16 (proposed) · NUT-07</p></li>
+          <li class="kcard"><div class="head"><h3>Tips without Wi-Fi</h3><span class="chip proposed">Proposed</span></div>
+            <p class="specs">NUT-11 · NUT-12</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-stream">
+        <h2 id="k-stream">The stream</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>Pay by the minute</h3><span class="chip built">✓ Built</span></div>
+            <p>Stop, and nothing more is charged.</p><p class="specs">NUT-24</p></li>
+          <li class="kcard"><div class="head"><h3>Live video, paid as you watch</h3><span class="chip built">✓ Built</span></div>
+            <p>No payment, no picture.</p><p class="specs">NUT-24 · NUT-11</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-tips">
+        <h2 id="k-tips">Tips and chat</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>Tips with words</h3><span class="chip built">✓ Built</span></div>
+            <p>A comment and sats, sent together.</p><p class="specs">NUT-24 · NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>Sign in with Nostr</h3><span class="chip built">✓ Built</span></div>
+            <p>Your Nostr name in the chat. No password.</p><p class="specs">NIP-07 · NIP-46 · NIP-44 · NIP-98</p></li>
+          <li class="kcard"><div class="head"><h3>Nutzaps</h3><span class="chip built">✓ Built</span></div>
+            <p>Tips signed with your Nostr key.</p><p class="specs">NIP-61</p></li>
+          <li class="kcard"><div class="head"><h3>Chat, moderators, the TV page</h3><span class="chip built">✓ Built</span></div>
+            <p>For the room and for home.</p><p class="specs">The NutPub’s own</p></li>
+          <li class="kcard"><div class="head"><h3>Tip from your own wallet</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NIP-47</p></li>
+          <li class="kcard"><div class="head"><h3>The gig, live on Nostr</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NIP-53</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-replay">
+        <h2 id="k-replay">The replay</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>Replays for 7 days</h3><span class="chip built">✓ Built</span></div>
+            <p>After the show: free with a ticket, one payment without. Then deleted.</p><p class="specs">NUT-24 · NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>A replay pass</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NUT-11</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-takings">
+        <h2 id="k-takings">Your takings</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>Payments the server can’t spend</h3><span class="chip built">✓ Built</span></div>
+            <p>Every payment is locked to its owner’s key.</p><p class="specs">NUT-11 · NUT-07</p></li>
+          <li class="kcard"><div class="head"><h3>Move to my own wallet</h3><span class="chip built">✓ Built</span></div>
+            <p>One tap, then a till receipt.</p><p class="specs">NUT-03 · NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>Your 12 words</h3><span class="chip built">✓ Built</span></div>
+            <p>BIP-39 words on Coco’s key path, <code>m/129373′/10′/0′/0′/i</code>. On another browser they bring the key back, and a sweep collects sats not yet moved. No new encryption.</p><p class="specs">BIP-39 · BIP-32 · NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>A passkey-sealed copy of the key</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">WebAuthn PRF</p></li>
+          <li class="kcard"><div class="head"><h3>Show splits as the fan pays</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NUT-11</p></li>
+          <li class="kcard"><div class="head"><h3>Move to your phone</h3><span class="chip after">After 27 Nov</span></div>
+            <p class="specs">NUT-16 (proposed)</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-agents">
+        <h2 id="k-agents">Agents</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>An agent buys a ticket</h3><span class="chip built">✓ Built</span></div>
+            <p>Every price is a plain HTTP 402, the idea x402 shares. Try it: <code>npm run agent</code>.</p><p class="specs">NUT-24 · NUT-18 · NUT-04</p></li>
+          <li class="kcard"><div class="head"><h3>Gig search, tickets and hire days over MCP</h3><span class="chip after">After 27 Nov</span></div>
+            <p>On refueler.io. <a href="/agents">The Regulars →</a></p><p class="specs">MCP</p></li>
+          <li class="kcard"><div class="head"><h3>Venue deals</h3><span class="chip proposed">Proposed</span></div>
+            <p class="specs">NUT-00 · NUT-12</p></li>
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="k-privacy">
+        <h2 id="k-privacy">Privacy</h2>
+        <ul class="cards">
+          <li class="kcard"><div class="head"><h3>No list of who came</h3><span class="chip built">✓ Built</span></div>
+            <p>No name, email or address asked for.</p><p class="specs">NUT-00 · NUT-12</p></li>
+          <li class="kcard"><div class="head"><h3>Gone after 7 days</h3><span class="chip built">✓ Built</span></div>
+            <p>Everything from the night, except one line of totals.</p><p class="specs">The NutPub’s own</p></li>
+          <li class="kcard"><div class="head"><h3>A wallet in your browser</h3><span class="chip built">✓ Built</span></div>
+            <p>Test sats from the public test mint. No app.</p><p class="specs">NUT-04 · Coco</p></li>
+        </ul>
+      </section>
+
+      <div class="foot">
+        <span>Built on <a href="https://github.com/cashubtc/coco" target="_blank" rel="noreferrer noopener">Coco</a> and <a href="https://github.com/cashubtc/cashu-ts" target="_blank" rel="noreferrer noopener">cashu-ts</a>. The code: <a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub ↗</a></span>
+        <a href="/menu">Back to the Pub Menu</a>
+      </div>
+    </div>
+    <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>
+  </main>
+</body>
+</html>

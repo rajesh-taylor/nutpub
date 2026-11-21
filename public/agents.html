@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>The Regulars · The NutPub</title>
+  <meta name="description" content="AI agents at the NutPub: buying a ticket over the 402 today; gig search, tickets and venue hire days over MCP, coming on refueler.io.">
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* The Regulars (session 43, 21 Nov): AI agents at the NutPub, one tap from the home page. What works today (the agent
+       script) and what the MCP server will give, marked as coming on refueler.io: thenutpub.com has no MCP endpoint. */
+    @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
+    body.regulars main { max-width: 1000px; text-align: left; font-family: "IBM Plex Sans", var(--body); }
+    .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
+      background: var(--midnight); border: 1px solid rgb(217 149 58 / .55); border-radius: 6px;
+      box-shadow: 0 0 0 5px var(--deep), 0 0 0 6px rgb(217 149 58 / .3); }
+    .regulars .top { display: block; text-align: center; margin: 0 0 4px; text-decoration: none;
+      font: 700 15px/1 Georgia, "Times New Roman", serif; letter-spacing: .28em; text-transform: uppercase; color: var(--amber); }
+    .regulars .top .nb { color: #f7931a; }
+    .regulars .top:hover { color: var(--cream); }
+    .regulars h1 { margin: 6px 0 0; text-align: center; font: 400 clamp(54px, 15vw, 84px)/1 var(--poster); letter-spacing: .06em; color: var(--cream); }
+    .regulars .lede { margin: 8px auto 0; max-width: 620px; text-align: center; font-size: clamp(16px, 4.2vw, 18px); line-height: 1.5; color: rgb(239 227 200 / .9); }
+    .chip { flex: none; white-space: nowrap; font: 400 15px/1 var(--poster); letter-spacing: .1em; padding: 4px 9px 2px; border-radius: 3px; }
+    .chip.built { border: 1px solid var(--cream); color: var(--cream); background: rgb(239 227 200 / .08); }
+    .chip.after { border: 1px solid var(--amber); color: var(--amber); }
+    .head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+    .regulars h2 { margin: 0; font: 400 clamp(26px, 6.5vw, 30px)/1.05 var(--poster); letter-spacing: .08em; color: var(--cream); }
+    .regulars p { margin: 10px 0 0; font-size: 15.5px; line-height: 1.55; color: rgb(239 227 200 / .86); }
+    .regulars p.small { font-size: 14px; color: #a9b0c2; }
+    .today { margin-top: 30px; padding: clamp(16px, 4vw, 22px) clamp(14px, 4vw, 24px); background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; }
+    pre { margin: 14px 0 0; padding: 14px 16px; overflow-x: auto; background: var(--deep); border: 1px solid rgb(239 227 200 / .12); border-radius: 4px; font: 14px/1.6 var(--mono); color: var(--cream); }
+    .mcp-soon { margin-top: 34px; }
+    .whom { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+    .whom li { padding: 18px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
+    .whom h3 { margin: 0; font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--amber); }
+    .whom p { margin-top: 10px; font-size: 15px; color: var(--cream); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px; margin-top: 26px; padding-top: 14px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 15px; }
+    .foot a, .today a { color: var(--amber); }
+    .made { margin: 0 0 20px; text-align: center; font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
+    .made a { color: var(--smoke); text-decoration: none; }
+    .made a:hover { color: var(--cream); text-decoration: underline; }
+  </style>
+</head>
+<body class="regulars">
+  <main>
+    <div class="board-card">
+      <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
+      <h1>The Regulars</h1>
+      <p class="lede">AI agents welcome. Every price at the NutPub is a plain HTTP 402, so an agent can pay one the way your browser does. What works today, and what’s coming.</p>
+
+      <section class="today" aria-labelledby="r-today">
+        <div class="head"><h2 id="r-today">Today: an agent buys a ticket</h2><span class="chip built">✓ Built</span></div>
+        <p>A small script buys gig 1’s Watch online ticket with test sats: it asks, gets the 402, takes test sats from the mint, locks them to the artist’s key and pays. No account, no browser. Start <a href="/">gig 1</a> first: your stage’s address is in the address bar.</p>
+        <pre>git clone https://github.com/rajesh-taylor/nutpub &amp;&amp; cd nutpub &amp;&amp; npm install
+npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
+        <p class="small">The ticket then shows on your stage’s Takings. Every price is a 402 (NUT-24), the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>
+      </section>
+
+      <section class="mcp-soon" aria-labelledby="r-soon">
+        <div class="head"><h2 id="r-soon">Coming: an MCP server, on refueler.io</h2><span class="chip after">After 27 Nov</span></div>
+        <p>One MCP server for agents to talk to. It will live on refueler.io; thenutpub.com has no MCP endpoint.</p>
+        <ul class="whom">
+          <li><h3>For fans’ agents</h3>
+            <p><b>Find a gig:</b> by artist, town or night.</p>
+            <p><b>Buy a ticket:</b> over the 402, never past the limit you set.</p></li>
+          <li><h3>For artists</h3>
+            <p><b>Be found:</b> your gigs, for fans’ agents to find.</p>
+            <p><b>Find a room:</b> a venue’s hire days.</p></li>
+          <li><h3>For venues</h3>
+            <p><b>Your hire days:</b> the nights a room is free, for artists’ agents to find.</p></li>
+        </ul>
+        <p class="small">The same rules as the rest of the NutPub: no account, no email, and every payment locked to whoever it’s for.</p>
+      </section>
+
+      <div class="foot">
+        <a href="/kitchen">The Kitchen: everything the NutPub does</a>
+        <a href="/">Back to the three gigs</a>
+      </div>
+    </div>
+    <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>
+  </main>
+</body>
+</html>

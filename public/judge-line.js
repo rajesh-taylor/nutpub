@@ -53,7 +53,7 @@ export async function judgeLine(r, page) {
     1: 'Gig 3 gets NUT-heavy: door entry by a QR code that refreshes every 30 seconds, so a screenshot can’t get in, and a £5 beer token that’s a coin, included in Longy’s £35 ticket.',
     2: 'A ticket’s only as good as the door that checks it. This QR turns a phone into the doormen’s scanner.',
     3: 'You’re a fan at the door of The Fickle Pickle. At the venue, the stream waits for a ticket: fans who’ve paid to be there get the stream on their phones too.',
-    4: 'Ticket bought, with the beer token in it. The NutPub signed it blind, so even we can’t tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
+    4: 'Ticket bought, with the beer token in it. It was signed blind, so not even the NutPub can tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
     5: 'Let the Nutter in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
     6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, some music.',

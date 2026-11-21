@@ -97,6 +97,15 @@
     .again { margin-bottom: -4px !important; font: 400 14px/1 var(--poster); letter-spacing: .2em; color: #c4521a; }
     .said { font-size: 14px; color: #8a2a0a; }
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 12px/1.5 var(--mono); color: #4a3a1c; }
+    /* The Regulars strip (session 43): under the posters, the wall's width, amber dashed like the Pub Menu's Happy Hour. */
+    .regulars-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; width: 100%; max-width: 1200px; box-sizing: border-box; justify-self: center; margin-top: 6px; padding: 14px 18px; background: var(--midnight); border: 1.5px dashed rgb(232 168 69 / .7); border-radius: 6px; text-decoration: none; }
+    .regulars-strip b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: #e8a845; padding-top: 3px; }
+    .regulars-strip span { flex: 1 1 320px; font: 400 16px/1.45 "IBM Plex Sans", var(--body); color: rgb(239 227 200 / .92); }
+    .regulars-strip i { font: 400 20px/1 var(--poster); font-style: normal; letter-spacing: .1em; color: #e8a845; padding-top: 3px; }
+    .regulars-strip:hover { border-color: #e8a845; background: rgb(232 168 69 / .08); }
+    .regulars-strip:hover i { color: var(--cream); }
+    .regulars-strip:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+    @media (max-width: 900px) { .regulars-strip { max-width: 420px; } }
     .judge footer { padding-block: 56px calc(40px + env(safe-area-inset-bottom, 0px)); }
     .judge footer p { margin: 0; padding-top: 22px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .judge footer a { color: var(--smoke); text-decoration: none; }
@@ -280,6 +289,8 @@
       </article>
 
     </div>
+    <!-- Session 43 (Rajesh 21 Nov): one tap to The Regulars, AI agents at the NutPub; not a fourth gig, no stage. -->
+    <a class="regulars-strip" href="/agents"><b>The Regulars</b><span>Your AI agent can buy a ticket too: over the 402 today, finding gigs over MCP soon.</span><i>Read the notes →</i></a>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
       <p class="billing-note">Without them, it’d be karaoke.</p>
@@ -301,13 +312,13 @@
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/18.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-18 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-18</b></span></a>
         <a class="sm" href="https://github.com/cashubtc/nuts/blob/main/24.md" target="_blank" rel="noreferrer noopener" aria-label="NUT-24 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NUT-24</b></span></a>
         <a class="sm" href="https://github.com/nostr-protocol/nips/blob/master/61.md" target="_blank" rel="noreferrer noopener" aria-label="NIP-61 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NIP-61</b></span></a>
-        <a class="sm" href="https://github.com/nostr-protocol/nips/blob/master/53.md" target="_blank" rel="noreferrer noopener" aria-label="NIP-53 on GitHub"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/></svg><span class="txt"><b>NIP-53</b></span></a>
       </div>
       </div>
       </div>
     </section>
   </main>
-  <!-- Rajesh 20 Nov: no footer for the judges; "A Refueler Labs project" and its line come back about 11 Dec. -->
+  <!-- Rajesh 21 Nov: the footer back (it was off from 20 Nov); The Regulars names refueler.io for the MCP server. -->
+  <footer><p><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p></footer>
   <script type="module">
     // Each card makes a stage of its own (POST /api/stages/judge) and opens it; this browser remembers it, so the card
     // then offers Open again (the stage's page still has its key in this browser) and Start fresh (a new stage).
