@@ -231,7 +231,8 @@ export async function judgeLine(r, page) {
       else if (tv && !tvSeen()) say(4, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
       else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
     } else if (!closed) say(tv ? 5 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-    else say(tv ? 6 : 5, `Press Move to Cashu.me, then close the Cashu.me tab, come back here and press Finish gig.`, '', '', { story: TOLD.takings });
+    // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.
+    else say(tv ? 6 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

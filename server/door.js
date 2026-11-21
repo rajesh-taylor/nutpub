@@ -301,18 +301,19 @@ export function mountDoor(route, admin, pass) {
     return json({ id: Number(id) });
   });
   const chatSince = async (c, after) => {
-    const [rows, tipped, gone, show, slow, pin] = await Promise.all([
+    const [rows, tipped, gone, show, slow, pin, cued] = await Promise.all([
       all('SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id WHERE m.id > ? AND m.deleted = 0 ORDER BY m.id DESC LIMIT 50', after),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
-      showOf(c), slowMode(), pinned(),
+      showOf(c), slowMode(), pinned(), kv.get('cuedIds', []),
     ]);
+    const scripted = new Set(cued); // an example gig's scripted lines (setlist.js cue): the TV page lets them go first
     const words = show.comments !== false; // off: only the tips, without their words
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
       messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
-        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}) })),
+        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}) })),
       slow, pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
@@ -334,7 +335,7 @@ export function mountDoor(route, admin, pass) {
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
       q.get('top') ? topTippers() : null,
     ]);
-    return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top } : {}) });
+    return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top, lightning: show.lightning || '' } : {}) }); // the TV page: the artist's own Lightning address under its QR (session 45)
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

@@ -27,8 +27,10 @@ const GIGS = {
       ticket: { on: false, price: null, fiat: null, locked: false },
       stream: { mode: 'ticket', perMinute: null, freeMinutes: null },
       online: { price: null, fiat: 20, locked: false }, hours: 2, // the show's length: every streamed gig has one (session 35)
-      goals: [{ label: 'Longy’s next gig streamed in HD', at: null }, { label: '', at: null }], goalsFiat: [16], // £16: the judge's tips fill it (Rajesh 19 Nov)
-      tip: { label: 'Tip Longy', price: 2100 },
+      // Two short goals, far apart on the track (Rajesh 21 Nov, session 45): the judge's 30,000 tip passes the encore,
+      // two or three 2,100 tips after it reach the song.
+      goals: [{ label: 'Encore', at: 15000 }, { label: 'Debut latest song', at: 35000 }],
+      tip: { label: 'Tip Longy', price: 2100 }, lightning: 'longy@fountain.fm', // his own address, under the TV page's QR (session 45)
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
       languages: ['en', 'de', 'es', 'fr', 'pt'],
     },
@@ -44,7 +46,7 @@ const GIGS = {
       // Inside his 30-second clip, so they all come the first time through.
       { after: 18, text: 'Dublin 🇮🇪' }, { after: 20.5, text: 'Lisbon 🇵🇹', nostr: 'satsback_sara' },
       { after: 23, text: 'Tokyo 🇯🇵' }, { after: 25.5, text: 'São Paulo 🇧🇷' },
-      { after: 28, text: 'Go on Longy! 🎸🎤', nostr: 'Rod (not that one)' }],
+      { after: 28, text: 'Go on Longy! 🎸🎤', nostr: 'Rod Stuart (not that one)' }], // Rajesh 21 Nov: his full name
   },
   frankie: {
     photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },
@@ -58,7 +60,7 @@ const GIGS = {
       stream: { mode: 'pay', perMinute: 60, freeMinutes: null },
       // Rajesh 20 Nov: no replay for judges (the card shows Off; the Pub Menu's technical page tells it).
       replay: { mode: 'off', price: null, fiat: null, locked: false }, hours: 2,
-      tip: { label: 'Tip Frankie', price: 2100 },
+      tip: { label: 'Tip Frankie', price: 2100 }, lightning: 'frankieperoni@fountain.fm',
     },
     // Rajesh 20 Nov: the pin starts empty; the judge pastes Frankie's Fountain link (gig 2's first step, judge-line.js).
     pin: '',
@@ -110,7 +112,7 @@ const GIGS = {
       set: 'longy-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
       free: { viewers: 30 }, hours: 3, // free to watch, paid up front by Longy: a step of its own for judges (session 35)
       goals: [{ label: '', at: null }, { label: '', at: null }],
-      tip: { label: 'Tip Longy', price: 2100 },
+      tip: { label: 'Tip Longy', price: 2100 }, lightning: 'longy@fountain.fm', // his own address, under the TV page's QR (session 45)
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
     },
     pin: 'At The Fickle Pickle: your ticket includes a drink on Longy. At home the stream is free: tips welcome.',
@@ -150,7 +152,7 @@ const GIGS = {
       drinks: true, drink: { mode: 'artist', price: null }, drinkFiat: 5,
       set: 'frankie-2', stream: { mode: 'free', perMinute: null, freeMinutes: null },
       free: { viewers: 30 }, hours: 3,
-      tip: { label: 'Tip Frankie', price: 2100 },
+      tip: { label: 'Tip Frankie', price: 2100 }, lightning: 'frankieperoni@fountain.fm',
     },
     pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
 };
@@ -180,6 +182,7 @@ async function open(step, env) {
   if (!kept) { await kv.set('pin', GIGS[step].pin || ''); await seedMods(GIGS[step].mods); }
   await kv.set('cues', GIGS[step].cues || []);
   await kv.set('cued', []);
+  await kv.set('cuedIds', []); // the scripted lines' message ids: the TV page lets them go first (session 45)
   const list = await kv.get('setlist', { done: [] });
   await kv.set('setlist', { ...list, at: step, done: list.done || [] });
 }
@@ -201,6 +204,7 @@ export async function cue(n) {
   // A pass of its own: in the chat as a mod, a Nostr name or 'guest 3f9a'. A scripted tip shows in the chat only:
   // no coins move, so it never reaches Takings or the stretch goal (both count locked coins).
   const id = await addMessage(randomHex(16), c.text, c.sats || 0, c.mod || null, c.nostr || null);
+  if (id) await kv.set('cuedIds', [...(await kv.get('cuedIds', [])), id].slice(-60));
   // Its Nutzap tag: a row keyed by minus the message's id, so it never meets a real coin's (Takings joins on those).
   if (id && c.nutzap) await run('INSERT INTO nutzaps (locked, message, pubkey, name, event, at) VALUES (?, ?, ?, ?, ?, ?)', -id, id, '', c.nostr || null, '{}', new Date().toISOString());
   return true;

@@ -52,8 +52,8 @@ test('a new stage opens on Longy’s gig, filled in, today', async () => {
     assert.equal(show.ticket.on, false); // online only (15 Nov)
     assert.equal(show.stream.mode, 'ticket'); // a flat-fee Watch online ticket
     assert.ok(show.online.price > 0);
-    assert.equal(show.goals[0].label, 'Longy’s next gig streamed in HD'); // a stretch goal, £50 in sats
-    assert.ok(show.goals[0].at > 0);
+    // Two stretch goals in sats (session 45): an encore, then his latest song.
+    assert.deepEqual(show.goals.map((g) => [g.label, g.at]), [['Encore', 15000], ['Debut latest song', 35000]]);
     assert.equal(show.set, ''); // his clip, the default set
     assert.deepEqual([...photos.keys()].sort(), ['k3f9x2:photo', 'k3f9x2:photo-wide2']);
   });

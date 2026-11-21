@@ -1,8 +1,8 @@
 // The room's tippers screen (/longy/screen): for the venue's big screen. Tonight's top three tippers (the server adds
-// them up, ?top=1), then the chat as it comes in: handle · sats · words, newest on top. The gig page's one request,
+// them up, ?top=1), then the chat as it comes in: handle · sats · words, newest at the bottom (session 45). The gig page's one request,
 // /api/tick, at the pace it asks for; a message a moderator deletes goes from here too. Comments off: tips only, no words.
 const $ = (id) => document.getElementById(id);
-const SHOWN = 6;
+const SHOWN = 12; // fit() keeps what fits: the newest, real lines before scripted ones (session 45)
 let after = 0;
 let updated = '';
 let every = 2;
@@ -11,24 +11,35 @@ const feed = [];
 const sats = (n) => `${n.toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
 const cell = (cls, text) => Object.assign(document.createElement('span'), { className: cls, textContent: text });
 
-// Only the lines that fit whole (Rajesh 19 Nov): the latest at the bottom was cut in half by the stretch goals.
+// Only the lines that fit whole (Rajesh 19 Nov: the latest was cut in half). Session 45 (Rajesh 21 Nov): the chat reads
+// from the bottom up, newest at the bottom, as in the full screen and the chat box; what doesn't fit goes off the top.
+// Measured from the layout (offsetHeight), not the screen: a new line slides in and looks shorter than it ends up.
 function fit() {
-  const box = document.querySelector('.screen-main');
+  const box = $('feed-box');
   const list = $('feed');
-  if (!box || !list) return;
-  const bottom = box.getBoundingClientRect().bottom;
-  while (list.children.length > 1 && list.lastElementChild.getBoundingClientRect().bottom > bottom) list.lastElementChild.remove();
+  if (!box || !list || box.hidden) return;
+  const head = box.querySelector('h2');
+  const room = box.clientHeight - head.offsetHeight - parseFloat(getComputedStyle(head).marginBottom);
+  // Too many: the example gig's scripted lines go first, oldest first, so what people really typed and tipped stays in
+  // view (Rajesh 21 Nov). Nothing marks whose line is whose.
+  while (list.children.length > 1 && list.offsetHeight > room) {
+    const scripted = [...list.children].filter((li) => li.classList.contains('cue'));
+    (scripted.length > 1 ? scripted[0] : list.firstElementChild).remove();
+  }
 }
+
 addEventListener('resize', () => draw(new Set()));
+document.fonts?.ready.then(() => draw(new Set()));
 
 // On a judge's stage, a note on what this page is for (Rajesh 19 Nov).
-fetch('/api/show').then((r) => r.json()).then((s) => { if (s.judge) $('screen-judge').hidden = false; }).catch(() => {});
+fetch('/api/show').then((r) => r.json()).then((s) => { if (s.judge) { $('screen-judge').hidden = false; document.body.classList.add('judging'); draw(new Set()); } }).catch(() => {});
 
 function draw(fresh, top) {
   $('feed-box').hidden = !feed.length;
-  $('feed').replaceChildren(...feed.slice(0, SHOWN).map((m) => {
+  $('feed').replaceChildren(...feed.slice(0, SHOWN).reverse().map((m) => { // oldest first: the newest at the bottom
     const li = document.createElement('li');
-    if (fresh.has(m.id)) li.className = 'new';
+    if (fresh.has(m.id)) li.classList.add('new');
+    if (m.cue) li.classList.add('cue');
     li.append(cell(m.nostr ? 'who nostr' : 'who', m.who));
     if (m.nutzap) li.append(cell('zap', 'Nutzap'));
     if (m.sats) li.append(cell('sats', sats(m.sats)));
@@ -95,13 +106,14 @@ async function tick() {
     const name = now.show.artist || now.show.title || 'tonight';
     $('artist').textContent = name;
     document.title = `Tips · ${name}`;
-    $('where').textContent = `${location.host}${location.pathname.replace(/\/screen$/, '')}`;
+    // The artist's own Lightning address under the QR (Rajesh 21 Nov), else the gig page's address.
+    $('where').textContent = now.lightning ? `⚡ ${now.lightning}` : `${location.host}${location.pathname.replace(/\/screen$/, '')}`;
     $('qr').src = `/api/show/qr.svg?u=${encodeURIComponent(updated)}`;
   }
   const fresh = new Set();
   for (const m of now.messages || []) {
     after = Math.max(after, m.id);
-    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text }); fresh.add(m.id); }
+    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text, cue: !!m.cue }); fresh.add(m.id); }
   }
   const gone = new Set(now.deleted || []);
   for (let i = feed.length - 1; i >= 0; i -= 1) if (gone.has(feed[i].id)) feed.splice(i, 1);

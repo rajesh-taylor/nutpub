@@ -1384,7 +1384,9 @@ body.one.full .strip { position: fixed; z-index: 4; left: 0; right: 0; bottom: 0
 body.one.full .strip .say input { padding-top: 11px; padding-bottom: 11px; }
 /* The chat over the picture: its newest lines only (3, 5 or 10, the artist's pick), at the bottom right, above the
    controls. The words stay one size on a big screen. */
-body.one.full .chat { position: fixed; z-index: 3; top: 72px; right: 16px; bottom: calc(var(--strip) + 96px); /* clear of the controls and the exit button (Rajesh 20 Nov) */ left: auto; width: min(440px, 36vw); height: auto; margin: 0; padding: 0; border: 0; background: none; pointer-events: none;
+/* align-self: stretch (session 45, Rajesh 21 Nov): the laptop layout's align-self: start made the box as tall as its lines,
+   growing down from the top past its bottom edge, so a long chat covered the exit button. Stretched, it fills top to bottom. */
+body.one.full .chat { position: fixed; z-index: 3; top: 72px; right: 16px; bottom: calc(var(--strip) + 96px); /* clear of the controls and the exit button (Rajesh 20 Nov) */ left: auto; width: min(440px, 36vw); height: auto; align-self: stretch; margin: 0; padding: 0; border: 0; background: none; pointer-events: none;
   display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%); mask-image: linear-gradient(to bottom, transparent, #000 18%); }
 body.one.full .chat > :not(.feed) { display: none !important; }

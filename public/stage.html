@@ -53,6 +53,7 @@
     .out .to-gig-note { margin: 10px 0 28px; }
     .under { margin: 12px 0 0; font-size: 17px; color: var(--cream); }
     .under a { color: #e8a845; }
+    .stage h1.wait { font-size: 30px; color: var(--smoke); }
     .how { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--smoke); }
     .out { margin: auto 0; }
     .out p { color: var(--smoke); }
@@ -96,6 +97,8 @@
         <text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6" filter="url(#worn-sign)">THENUTPU<tspan class="btc">₿</tspan></text>
       </svg>
     </p>
+    <!-- Session 45 (Rajesh 21 Nov): words while the stage is made (about 5 s on a judge's stage), not an empty page. -->
+    <h1 id="wait" class="wait" role="status">Setting up the stage…</h1>
     <div id="mine" hidden>
       <h1 id="ready">Your stage is ready</h1>
       <ul class="one-how" id="one-how" hidden></ul>
@@ -140,6 +143,7 @@
     }
     const r = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
+    if (!r?.setlist?.only) document.getElementById('wait').hidden = true; // a judge's stage keeps it until Plan gig opens
     // Another browser (a fan, or a judge's second phone, Rajesh 21 Nov): the way to the gig, where Find my ticket is.
     // A judge's stage: its key is in the browser that made it, so no way in as the artist; the three gigs instead.
     if (!r) {
@@ -161,6 +165,8 @@
       // signed in, and goes straight to the artist's pages, where one line a page says what's next (judge-line.js).
       // Open again comes back to where they were: Plan gig, Show Time once the show's on, Takings once the night's over.
       document.getElementById('mine').hidden = true;
+      const who = { longy: 'Longy’s', frankie: 'Frankie’s', pickle: 'Longy’s', yours: 'Frankie’s' }[list.at];
+      if (who) document.getElementById('wait').textContent = `Setting up ${who} stage…`;
       await import('/js/artist-key.js').then((m) => m.artistKeyHere(key)).catch(() => {});
       const st = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
       location.replace(st?.stage === 'closed' ? '/takings' : st?.stage === 'on' ? '/show' : '/setup');

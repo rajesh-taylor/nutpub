@@ -1307,12 +1307,14 @@ function todoItems() {
     // Rajesh 18 Nov: the ticket is the first step, so the strip at the top says so before anything else.
     // Rajesh 19 Nov: a line of story above each step in the strip at the top, as gig 3's Judges line has.
     return [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket', story: 'One 402 buys the ticket, paid from the wallet in this browser.' },
-      { ...hello, text: 'Say hello in the chat, on the right', story: 'Aaron of Essex, Longy’s moderator, wants to know where you’re watching from.' },
+      // Rajesh 21 Nov: Nostr sign-in offered here, gig 1 only (gigs 2 and 3 are full enough), before the hello and the tip.
+      { ...hello, text: 'Say hello in the box at the bottom of the chat, on the right', story: 'Use your Nostr sign-in (the purple button, top of the chat) to comment and tip with Nutzaps, or just type in as a guest.' }, // Rajesh 21 Nov
       { ...full, story: 'In full screen the chat lands on the picture.' },
-      { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type a comment in the wide box, put 30,000 in the sats box beside it, then press the yellow ➤ button on the right',
-        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Type a comment, put 30,000 in the sats box beside it, then press the yellow ➤ button',
+      { done: !!todo.tipFull, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type another comment in the wide box, this time add 30,000 in the sats box beside it, then press the yellow ➤ button on the right',
+        // Rajesh 21 Nov: the step before was a comment in the chat box, so this one is "another".
+        did: todo.tipFullSats ? `Tipped ${sats(todo.tipFullSats)} in full screen` : 'Tipped in full screen', now: 'Type another comment, this time add 30,000 in the sats box beside it, then press the yellow ➤ button',
         short: 'Tip 30,000 in full screen', shortDid: 'Tipped in full screen', tip: true },
-      { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goals. An artist can set several, for anything: here, his next gig streamed in HD.', text: show.tip?.price ? `Out of full screen, press the yellow ${show.tip.label || 'Tip'} ${sats(show.tip.price)} button under the player, two or three times: watch the stretch goal fill` : `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
+      { done: !!todo.tipDesk, story: 'Tips fill Longy’s stretch goals. An artist can set several, for anything: here, an encore, then the debut of his latest song.', text: show.tip?.price ? `Out of full screen, press the yellow ${show.tip.label || 'Tip'} ${sats(show.tip.price)} button under the player, two or three times: watch the stretch goal fill` : `Out of full screen, ${again}: keep an eye on the stretch goal`, did: 'Tipped again: the stretch goal moved',
         short: 'Tip again here, watch the stretch goal', shortDid: 'Tipped again', tip: true }];
   }
   // Gig 2 (Rajesh 20 Nov): one thing a step. Play and stop; play again once the countdown's done; the Network tab a step
@@ -1385,7 +1387,7 @@ function fanStrip(items) {
   const next = items[at];
   $('fan-line-story').textContent = next?.story || '';
   $('fan-line-story').hidden = !next?.story;
-  if (!next) $('fan-line-text').textContent = 'Now go back to the Show Time tab and press End night.';
+  if (!next) $('fan-line-text').textContent = 'All done here. Go back to the Show Time tab.'; // Show Time says what's next (gig 1: the TV page first; session 45)
   else if (next.html) $('fan-line-text').innerHTML = next.html; // our own words and icon only
   else $('fan-line-text').textContent = `${next.text}.`;
 }

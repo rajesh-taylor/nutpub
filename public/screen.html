@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/app.css">
   <style>
     /* The venue's big screen, read from across the room. The home page's sign at the home page's size; the QR on the
-       left, as big as the room needs ("Scan to tip Longy"); the top three tippers and the chat on the right; the
+       left, as big as the room needs ("Scan to tip Longy"); then Top tippers, then the Chat, in columns (session 45); the
        stretch goals along the bottom, as on the gig page. Text near-white (250), no gold backdrops. Smallest use: a tablet. */
     body.screen-page { --white: rgb(250 250 250); background: var(--midnight); padding: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
     .screen-top { position: relative; padding: 2vh 5vw 0; text-align: center; }
@@ -23,30 +23,40 @@
     .screen-full { position: absolute; top: 2vh; right: 2vw; }
     .screen-judge { display: flex; gap: 14px; align-items: baseline; justify-content: center; width: fit-content; max-width: 92vw; margin: 1.5vh auto 0; padding: 8px 16px; border: 1px solid var(--amber); border-radius: 8px; background: rgb(217 149 58 / .08); font: 16px/1.4 var(--body); color: var(--cream); } /* judges only (Rajesh 19 Nov) */
     .screen-judge b { flex: none; font: 400 16px/1.2 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
-    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 900px); gap: 5vw; align-items: start; justify-content: center; padding: 5vh 6vw 1vh; }
+    /* Three columns (Rajesh 21 Nov, session 45): the QR, Top tippers, Chat, each list in rows under its heading. The
+       chat a little wider; it fills its column's height, newest at the bottom, as in the full screen and the chat box. */
+    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 3.5vw; align-items: start; padding: 5vh 6vw 1vh; }
+    .screen-main > section { min-width: 0; }
+    #top-box { grid-column: 2; } #feed-box { grid-column: 3; align-self: stretch; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    #feed-box[hidden] { display: none; }
+    #feed-box .screen-feed { margin-top: auto; flex: none; }
     .screen-left { display: flex; flex-direction: column; align-items: center; gap: 1.2vh; }
     .screen-qr { width: min(38vw, 36vh); aspect-ratio: 1; background: var(--cream); border-radius: 1.2vh; padding: 1.2vh; }
     .screen-qr img { width: 100%; height: 100%; display: block; }
+    .judging .screen-qr { width: min(30vw, 25vh); } /* a judge's laptop: the Judges line takes room, so the QR's caption still shows (session 45) */
     .screen-scan { margin: 0; text-align: center; font: 400 clamp(26px, min(3.2vw, 5.4vh), 72px)/1.05 var(--poster); letter-spacing: .06em; color: var(--white); }
     .screen-scan span { color: var(--amber); }
     .screen-scan b { display: block; font: 600 clamp(14px, 1.3vw, 28px)/1.4 var(--body); letter-spacing: 0; color: var(--smoke); }
-    .screen-right { min-width: 0; width: min(100%, 900px); display: flex; flex-direction: column; gap: 2.4vh; }
-    .screen-right h2 { margin: 0 0 .6vh; font: 400 clamp(16px, 1.6vw, 36px)/1 var(--poster); letter-spacing: .16em; color: var(--smoke); }
+    .screen-main h2 { margin: 0 0 .6vh; font: 400 clamp(16px, 1.6vw, 36px)/1 var(--poster); letter-spacing: .16em; color: var(--smoke); }
     .screen-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
     .screen-list li { display: flex; align-items: baseline; gap: 1.6vw; padding: 1vh 0; border-bottom: 1px solid rgb(239 227 200 / .1); min-width: 0; }
     .screen-list .who { display: block; border: 0; border-radius: 0; flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--white); }
-    .screen-list .who.nostr { color: #b98cff; } /* a Nostr name, as in the chat; the look is for screen v2.0 */
+    .screen-list .who.nostr { color: #b98cff; font-size: inherit; margin: 0; } /* app.css's .nostr (the sign-in row) made it 12px (session 45) */ /* a Nostr name, as in the chat; the look is for screen v2.0 */
     .screen-list .sats { flex: none; color: var(--amber); }
     .screen-list .zap { flex: none; font: 400 .6em/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: #fff; background: #8e30eb; border-radius: 4px; padding: .35em .5em .25em; align-self: center; } /* a Nutzap */
     .screen-list .words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(250 250 250 / .8); font-family: var(--body); letter-spacing: 0; }
-    .screen-top3 li { font: 400 clamp(26px, min(3vw, 5vh), 72px)/1 var(--poster); letter-spacing: .04em; }
-    .screen-top3 li .n { flex: none; width: 1.4em; color: var(--amber); }
+    .screen-top3 li { font: 400 clamp(22px, min(2.4vw, 4.6vh), 64px)/1 var(--poster); letter-spacing: .04em; }
+    .screen-top3 li .who { flex: 1 1 auto; min-width: 0; max-width: none; }
+    .screen-top3 li { gap: 1vw; }
+    .screen-top3 li .n { flex: none; width: .8em; color: var(--amber); } /* the rank close to the name (Rajesh 21 Nov) */
     .screen-top3 li .sats { margin-left: auto; }
-    .screen-feed li { font: 400 clamp(18px, min(1.9vw, 3.2vh), 46px)/1.15 var(--poster); letter-spacing: .04em; }
-    .screen-feed li .words { font-size: .8em; }
-    .screen-feed li:nth-child(n+5) { opacity: .55; }
+    /* Chat: the name and sats on one line, the words under them (two lines at most). */
+    .screen-feed li { flex-wrap: wrap; row-gap: .4vh; font: 400 clamp(18px, min(1.8vw, 3.2vh), 44px)/1.15 var(--poster); letter-spacing: .04em; }
+    .screen-feed li .who { max-width: 70%; }
+    .screen-feed li .words { flex: 1 1 100%; font-size: .8em; line-height: 1.3; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+    .screen-feed li.cue:nth-last-child(n+5) { opacity: .55; } /* the oldest scripted lines, at the top, dimmed; real lines stay bright */
     .screen-feed li.new { animation: in .8s ease-out; }
-    @keyframes in { from { transform: translateY(-30%); } }
+    @keyframes in { from { transform: translateY(30%); } } /* a new line comes up from below (session 45) */
     /* The stretch goals: the gig page's track, wide. A mic above each goal, no circle: cream, amber once met. */
     .screen-goals { flex: none; height: 24vh; padding: 1vh 8vw max(5vh, calc(env(safe-area-inset-bottom) + 20px)); border-top: 1px solid rgb(239 227 200 / .08); display: flex; flex-direction: column; justify-content: center; gap: 2vh; }
     .screen-goals .head { display: flex; justify-content: space-between; align-items: baseline; font: 400 clamp(18px, 2vw, 44px)/1 var(--poster); letter-spacing: .14em; color: var(--white); }
@@ -58,7 +68,7 @@
     .screen-goals .mic svg { display: block; width: 100%; height: 100%; fill: currentColor; }
     .screen-goals .mic.met { color: var(--amber); }
     .screen-goals .mic::after { content: ""; position: absolute; left: 50%; top: calc(100% + .6vh); height: clamp(10px, 1.6vh, 26px); width: 2px; margin-left: -1px; background: rgb(239 227 200 / .7); }
-    .screen-goals .mic span { position: absolute; left: 50%; top: calc(100% + 3.4vh); transform: translateX(-50%); white-space: nowrap; font: 400 clamp(16px, 1.7vw, 38px)/1.1 var(--poster); letter-spacing: .06em; color: var(--white); }
+    .screen-goals .mic span { position: absolute; left: 50%; top: calc(100% + 5vh); transform: translateX(-50%); white-space: nowrap; font: 400 clamp(16px, 1.7vw, 38px)/1.1 var(--poster); letter-spacing: .06em; color: var(--white); }
     .screen-goals .mic:last-child span { left: auto; right: 50%; transform: none; text-align: right; }
     .screen-goals .mic.met span { color: var(--amber); }
     .screen-goals .list { display: none; margin: 0; font: 400 18px/1.4 var(--poster); letter-spacing: .06em; color: var(--white); }
@@ -66,7 +76,7 @@
     .screen-goals .thanks { margin: 0; text-align: center; font: 400 clamp(26px, 3.4vw, 76px)/1.1 var(--poster); letter-spacing: .04em; color: var(--amber); }
     @media (prefers-reduced-motion: reduce) { .screen-sign .shine { display: none; } .screen-feed li.new { animation: none; } }
     @media (orientation: portrait) { body.screen-page { height: auto; min-height: 100dvh; overflow: visible; } .screen-sign { width: min(92vw, 640px); }
-      .screen-main { grid-template-columns: minmax(0, 1fr); overflow: visible; gap: 4vh; padding-top: 3vh; } .screen-qr { width: min(70vw, 42vh); }
+      .screen-main { grid-template-columns: minmax(0, 1fr); overflow: visible; gap: 4vh; padding-top: 3vh; } #top-box, #feed-box { grid-column: auto; } .screen-main { grid-template-rows: auto; } .screen-qr { width: min(70vw, 42vh); }
       .screen-full { position: static; margin-top: 2vh; } .screen-goals { height: auto; padding-top: 3vh; padding-bottom: max(8vh, calc(env(safe-area-inset-bottom) + 40px)); }
       .screen-goals .mic span { display: none; } .screen-goals .list { display: block; } }
   </style>
@@ -95,10 +105,8 @@
       <div class="screen-qr"><img id="qr" src="/api/show/qr.svg" alt="QR code to the gig page"></div>
       <p class="screen-scan">Scan to tip <span id="artist"></span><b id="where"></b></p>
     </div>
-    <div class="screen-right">
-      <section id="top-box" hidden><h2>Top tippers</h2><ol class="screen-list screen-top3" id="top"></ol></section>
-      <section id="feed-box" hidden><h2>Latest</h2><ol class="screen-list screen-feed" id="feed" aria-live="polite"></ol></section>
-    </div>
+    <section id="top-box" hidden><h2>Top tippers</h2><ol class="screen-list screen-top3" id="top"></ol></section>
+    <section id="feed-box" hidden><h2>Chat</h2><ol class="screen-list screen-feed" id="feed" aria-live="polite"></ol></section>
   </div>
   <section class="screen-goals" id="goals" hidden>
     <div class="head"><span>Stretch goals</span><b id="goal-sum"></b></div>

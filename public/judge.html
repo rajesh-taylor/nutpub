@@ -38,6 +38,9 @@
     @keyframes home-shine-byline { 0%, 50% { background-position: 100% 0; } 78.5% { background-position: 0 0; } 78.51%, 100% { background-position: 100% 0; } }
     @media (prefers-reduced-motion: reduce) { .home-sign .shine { display: none; } }
     @media (max-width: 700px) { .nut-menu { top: 10px; right: max(6px, env(safe-area-inset-right, 0px)); } .menu-btn { padding: 0; border: 0; } .menu-btn b { display: none; } .menu-btn svg { height: 22px; } .home-sign { margin-top: 0; } .home-byline { margin-top: -10px; font-size: 12px; letter-spacing: .16em; } .lines .lead { font-size: 16px; } .not-phone { display: none; } } /* a phone (Rajesh 20 Nov): the pint alone, small, top right; the sign and byline up where the Menu box was */
+    .judge main > .home-start { margin: 6px 0 0; width: 100%; max-width: 1200px; justify-self: center; box-sizing: border-box; text-align: left; }
+    .home-start .said { flex: 1 1 100%; margin: 0; color: #f0a37a; }
+    @media (max-width: 600px) { .home-start .btn { flex: 1 1 100%; margin: 0; text-align: center; } }
     .lines { display: grid; gap: 8px; }
     .judge main > h1, .judge main > .lines { width: 100%; max-width: 1200px; justify-self: center; } /* as wide as the three posters (Rajesh 19 Nov) */
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
@@ -227,7 +230,17 @@
     <h1 class="sr">The NutPub</h1>
     <div class="lines intro">
       <!-- Rajesh 20 Nov (late): the gold line alone; "Artists & Musicians • Fans • Pubs" gone too (evening). -->
-      <p class="lead what">A whole night out in Cashu, from the ticket, door entry, first round, 402 stream payments, tips and the takings back to your own wallet.</p>
+      <p class="lead what">A whole night out in Cashu, from the ticket, door entry, first round, 402 stream payments, comments &amp; tips and the takings back to your own wallet.</p>
+    </div>
+    <!-- Session 45 (Rajesh 21 Nov): how a judge starts. The Judges line begins here, as on every page after it: one line
+         of story, one action, one button. It starts gig 1, as poster 1's button does (Carry on, once this browser has one). -->
+    <div class="judge-line home-start" id="home-start">
+      <b>Judges</b>
+      <span class="jl-say">
+        <span class="jl-story">Three gigs, one after another. You’re the artist and a fan, in two tabs, with test sats already in the wallet.</span>
+        <span>A laptop is all you need; a phone helps in gig 3.</span>
+      </span>
+      <button type="button" class="btn primary" id="home-go">Start gig 1 →</button>
     </div>
 
     <div class="wall">
@@ -313,12 +326,14 @@
     const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', pickle: 'Start the night at the venue' };
     const el = (tag, props) => Object.assign(document.createElement(tag), props);
 
-    async function start(gig, card) {
-      for (const b of card.querySelectorAll('button')) b.disabled = true;
-      const pressed = card.querySelector('button.go:not(.out)') || card.querySelector('button.go');
+    // own: the Judges line's button (session 45), pressed instead of the poster's; it says what's happening itself.
+    async function start(gig, card, own) {
+      const all = [...card.querySelectorAll('button'), ...(own ? [own] : [])];
+      for (const b of all) b.disabled = true;
+      const pressed = own || card.querySelector('button.go:not(.out)') || card.querySelector('button.go');
       const label = pressed.textContent;
       pressed.textContent = 'Setting up the stage…'; // a few seconds: the gig's photos are copied onto it
-      card.querySelector('.said')?.remove();
+      for (const s of document.querySelectorAll('.said')) s.remove();
       try {
         const r = await fetch('/api/stages/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gig }) });
         const out = await r.json().catch(() => ({}));
@@ -326,8 +341,9 @@
         keep(gig, out.stage);
         location.href = out.url;
       } catch (e) {
-        card.querySelector('.btns').after(el('p', { className: 'said', role: 'status', textContent: e.message }));
-        for (const b of card.querySelectorAll('button')) b.disabled = false;
+        const said = el('p', { className: 'said', role: 'status', textContent: e.message });
+        if (own) own.after(said); else card.querySelector('.btns').after(said);
+        for (const b of all) b.disabled = false;
         pressed.textContent = label;
       }
     }
@@ -347,6 +363,18 @@
             el('a', { className: 'go', href: `${location.protocol}//${id}.${location.host}/`, textContent: 'Open again' }),
             el('button', { type: 'button', className: 'go out', textContent: 'Start fresh', onclick: () => start(gig, card) })]
           : [el('button', { type: 'button', className: 'go', textContent: START[gig], onclick: () => start(gig, card) })]));
+      }
+      // The Judges line's button: gig 1, or back to this browser's gig 1 stage (session 45).
+      const go = document.getElementById('home-go');
+      const one = stages.longy;
+      document.querySelector('#home-start .said')?.remove();
+      go.disabled = false;
+      if (one && /^[a-z][a-z0-9]{5}$/.test(one)) {
+        go.textContent = 'Carry on with gig 1 →';
+        go.onclick = () => { location.href = `${location.protocol}//${one}.${location.host}/`; };
+      } else {
+        go.textContent = 'Start gig 1 →';
+        go.onclick = () => start('longy', document.querySelector('[data-gig="longy"]'), go);
       }
     }
     draw();

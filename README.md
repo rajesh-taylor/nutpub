@@ -1,20 +1,20 @@
 # The NutPub
 
-**Ticketing, live streaming and tips for live music, paid in Cashu ecash over HTTP 402.**
+**Live music paid in Cashu ecash: tickets, the door, the bar, the stream and tips, each an HTTP 402, from a wallet in the browser. No app, no account.**
 
-Fans buy a ticket, get let in at the door, collect a drink at the bar, watch the stream, tip the artist and watch the replay, all from a wallet in their browser. No app to install, no account, no email address. Every payment is locked to the key of whoever it's for: the server checks payments, and can't spend them.
+## Try it
 
-I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.
+1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop. A phone helps in gig 3, but isn't needed.
+2. Press **Start gig 1**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet.
+3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3.
 
-**Live demo:** [thenutpub.com](https://thenutpub.com) · laptop recommended, phone optional
-
-> **Test mint · test sats.** The demo runs on the public Cashu test mint (`testnut.cashu.space`). Its sats have no value.
+Test mint, test sats: they have no value. I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.
 
 ---
 
 ## Contents
 
-- [Try it: three gigs](#try-it-three-gigs)
+- [The three gigs](#the-three-gigs)
 - [An agent buys a ticket](#an-agent-buys-a-ticket)
 - [What's built](#whats-built)
 - [How payments work](#how-payments-work)
@@ -26,7 +26,7 @@ I'm one person, building this with Anthropic's Claude as my coding agent. A [Ref
 
 ---
 
-## Try it: three gigs
+## The three gigs
 
 The home page shows three gig posters. Each one opens a practice stage of its own (`<id>.thenutpub.com`) on **1 · Plan your gig**, as the artist. A **Judges** line at the top of every page tells one line of the story and the one thing to do next; you press the artist's own buttons and tabs. Run them in order: each builds on the one before.
 
