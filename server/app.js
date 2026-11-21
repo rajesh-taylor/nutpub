@@ -54,6 +54,7 @@ route('GET', /^\/(?<file>[a-z-]+\.html)$/, (c) => page(c.params.file)(c));
 route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the three pages
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
 route('GET', '/setup', page('setup.html'));
+route('GET', '/cellar', page('setup.html')); // Cellar (session 46): the same page, showing what an artist sets once
 route('GET', '/judge', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('judge.html')(c))); // Judge for yourself: the three gig cards (thenutpub.com only)
 route('GET', '/menu', page('menu.html')); // Pub Menu: off every menu since session 45 (the Kitchen says it); kept for old links
 route('GET', '/kitchen', page('kitchen.html')); // The Kitchen (session 43): what the NutPub does, a tick chip each, from the Pub Menu

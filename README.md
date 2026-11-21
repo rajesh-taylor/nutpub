@@ -77,7 +77,8 @@ The ticket is then on your stage: after End night, Your takings counts it. The s
 
 ### For artists
 
-- **Plan your gig:** venue tickets, Watch online or pay by the minute, prices in pounds with the sats beside them, a door scanner, moderators, stretch goals and show splits.
+- **Cellar:** what an artist sets once: name and page, the 12 words, photos, the stream key, moderators. Pre-roll is drawn there, not wired yet.
+- **Plan your gig:** venue tickets, Watch online or pay by the minute, prices in pounds with the sats beside them, a door scanner, comments, stretch goals, show splits and tips.
 - **Show Time:** the night runs on three buttons (Start stream, Start show, End night), with previews of the fan's page.
 - **Your takings:** what came in, by kind; one tap moves it to the artist's own Cashu wallet; the night closes as a till receipt.
 - **Your 12 words:** the key that opens the takings is made from 12 words (BIP-39), written on paper and checked. On another browser they bring the key back, and any sats not yet moved. They never leave the browser.

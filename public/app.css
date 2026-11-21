@@ -619,6 +619,8 @@ body.at-door #door-home { background: rgb(5 9 20 / .72); }
   body.board .board-head .head-back, body.board .board-head .head-new { font-size: 14px; padding: 5px 8px 3px; }
   body.board .board-head .tabs { order: 3; width: 100%; flex-wrap: nowrap; gap: 0; justify-content: space-between; }
   body.board .board-head .tabs a { font-size: 17px; letter-spacing: .06em; padding: 8px 2px; white-space: nowrap; }
+  body.board .board-head .tabs .tab-long { display: none; } /* Rajesh 21 Nov: Cellar, Plan gig, Show Time, Takings on a phone */
+  body.board .board-head .tabs .tab-cellar::after { display: none; }
   body.board .page { padding: 20px 16px; }
   body.board aside { flex: 1 1 100%; width: 100%; min-width: 0; }
   body.board .phone-frame { width: min(390px, 100%); margin: 0 auto; }
@@ -1460,3 +1462,7 @@ abbr[data-means]:hover::after, abbr[data-means]:focus::after {
   font: 400 13px/1.35 "IBM Plex Sans", system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-align: left;
   white-space: normal; pointer-events: none;
 }
+
+/* Cellar (session 46): the artist's first tab, what's set once; a hairline sets it apart from the night's three. */
+.board-head .tabs .tab-cellar { position: relative; }
+.board-head .tabs .tab-cellar::after { content: ""; position: absolute; top: 30%; bottom: 30%; right: -17px; width: 1px; background: rgb(239 227 200 / .22); }

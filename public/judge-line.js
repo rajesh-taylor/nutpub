@@ -3,7 +3,7 @@
 // opens Plan gig, and the lines lead through Show Time, the fan's page and Takings. Never on an artist's own stage.
 // Gig 3 (Rajesh 17 Nov) runs from Show Time: each step a line of story, then the one thing to do, with the fan's QR (for
 // the judge's own phone) and Pour by hand right in the line; the fan's phone sits on Show Time itself (Rajesh 18 Nov). No camera on the laptop.
-// r: /api/admin/setlist's answer; page: 'setup', 'show' or 'takings'.
+// r: /api/admin/setlist's answer; page: 'cellar', 'setup', 'show' or 'takings'.
 let toPlay = false; // gig 3: the fan's phone scrolled back to its player once, at step 6
 export async function judgeLine(r, page) {
   const list = r?.setlist;
@@ -114,16 +114,26 @@ export async function judgeLine(r, page) {
     };
     return b;
   };
-  // A button that copies a link (gig 2's Fountain link), with the link beside it to select by hand.
-  const copyBtn = (text) => {
+  // A button that copies a link (gig 2's Fountain link), with the link beside it to select by hand. Session 46: then the
+  // box it goes in comes into view (it sits below the first screen on a laptop), ready to paste.
+  const copyBtn = (text, box) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn primary', textContent: 'Copy the link' });
-    b.onclick = async () => { try { await navigator.clipboard.writeText(text); b.textContent = 'Copied ✓'; } catch { b.textContent = 'Select it, left'; } };
+    b.onclick = async () => {
+      try { await navigator.clipboard.writeText(text); b.textContent = 'Copied ✓'; } catch { b.textContent = 'Select it, left'; return; }
+      box?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      box?.focus({ preventScroll: true });
+    };
     return b;
   };
   // The fan's leftover sats went home (viewer.js marks it in this browser), and Takings' Move is done (its own page).
   const fanHome = () => ['nutpub-todo', 'nutpub-todo-home'].some((k) => { try { return !!JSON.parse(localStorage.getItem(k) || 'null')?.home; } catch { return false; } });
   const movedAll = () => { const m = document.getElementById('done-moved'); return !!m && !m.hidden; };
   const draw = async () => {
+    // Cellar (session 46): not a step of the night; a judge who looks in is told so.
+    if (page === 'cellar') {
+      document.getElementById('head-fan')?.style.setProperty('display', 'none');
+      return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream and moderators.` });
+    }
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
     if (!s) return;
     const closed = s.stage === 'closed';
@@ -199,12 +209,12 @@ export async function judgeLine(r, page) {
         const pin = document.getElementById('pin-text');
         // The pin's box is inside Comments and moderators: it only shows with comments on.
         if (!document.querySelector('[data-path="comments"]')?.checked) {
-          return say(1, 'Turn on Comments in the live chat, under Comments and moderators: the Pinned message box is in there.', '', '', { story: TOLD.setup });
+          return say(1, 'Turn on Comments in the live chat, under Comments: the Pinned message box is in there.', '', '', { story: TOLD.setup });
         }
         const pinned = /fountain\.fm\//.test(pin?.value || '');
         pin?.classList.toggle('pin-hint', !pinned); // the empty box shimmers until the link's in (app.css)
         if (pin && !pinned) pin.placeholder = 'Paste in Frankie’s Fountain link here';
-        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments and moderators: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN) });
+        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN, pin) });
         return say(1, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
       }
       if (page === 'show') {
@@ -223,7 +233,8 @@ export async function judgeLine(r, page) {
     // Fan's page ↗ only while the show's on (Rajesh 20 Nov): not on Plan gig, not before Start show, not after End night.
     const fanBtn = document.getElementById('head-fan');
     if (fanBtn) fanBtn.style.display = page === 'show' && on && !closed ? '' : 'none';
-    if (page === 'setup') say(1, `This is where ${name} sets prices, ticketing, comments & mods, show splits and more. Scroll down to view; nothing needs changing. Then click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
+    // Session 46: what's set once moved to Cellar, the first tab; Plan gig keeps tonight.
+    if (page === 'setup') say(1, `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
       if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });

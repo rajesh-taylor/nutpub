@@ -2,7 +2,7 @@
 import { satsFrom } from '/js/money.js';
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
-  artist: 'artist', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', streamEnds: 'the stream\u2019s end time (Ends at)', 'free.viewers': 'the most viewers at once (Free to watch)', unpaid: 'pay for the free stream (Free to watch)',
+  artist: 'artist (in Cellar)', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', streamEnds: 'the stream\u2019s end time (Ends at)', 'free.viewers': 'the most viewers at once (Free to watch)', unpaid: 'pay for the free stream (Free to watch)',
   date: 'date', 'date.past': 'a date that hasn\u2019t passed', 'drink.price': 'drink price', 'drink.over': 'a drink price below the ticket price (the drink is included in it)', lastOrders: 'date and last orders',
 };
 
@@ -345,7 +345,7 @@ function saved(res) {
   const todo = [...res.problems, ...(res.free && !res.free.covered && res.free.pence ? ['unpaid'] : [])].map((p) => PROBLEMS[p] || p);
   const head = res.updated ? `Saved ${at}.` : 'A new show.';
   if ('artistKey' in res) artistReady = !!res.artistKey;
-  if (!artistReady) todo.push('open 3 · Your takings once (it makes the key payments lock to; nothing can be sold until then)');
+  if (!artistReady) todo.push('open Cellar once (it makes the key payments lock to; nothing can be sold until then)');
   status(todo.length ? `${head} Still to do before going live: ${todo.join(', ')}.` : `${head} Ready to go live.`,
     todo.length ? 'todo' : 'ok');
   // The box under the page's title says the same, where the artist starts.
@@ -460,7 +460,7 @@ $('tpl-delete').addEventListener('click', async () => {
 
 // ---- The photos: uploaded the moment one is dropped in or picked (the server checks type and size too).
 function photos(all = {}) {
-  for (const box of form.querySelectorAll('.slot')) {
+  for (const box of form.querySelectorAll('.slot[data-slot]')) { // the photos (Pre-roll's slot in Cellar isn't wired yet)
     const url = all[box.dataset.slot];
     box.classList.toggle('full', !!url);
     box.querySelector('label').style.backgroundImage = url ? `url("${url}")` : '';
@@ -486,7 +486,7 @@ async function upload(slot, file) {
     status('Photo saved.', 'ok');
   } catch (err) { status(`Photo not saved: ${err.message}`, 'bad'); }
 }
-for (const box of form.querySelectorAll('.slot')) {
+for (const box of form.querySelectorAll('.slot[data-slot]')) { // the photos (Pre-roll's slot in Cellar isn't wired yet)
   const { slot } = box.dataset;
   const label = box.querySelector('label');
   const input = box.querySelector('input');
@@ -695,6 +695,10 @@ try {
   setInterval(goalPreview, 5000);
   $('phone-in-row').hidden = false;
   drawMods().catch(() => {});
+  // Cellar (session 46): the artist's key, made here the first time, and its 12 words (client/cellar.js).
+  if (document.body.dataset.room === 'cellar') {
+    import('/js/cellar.js').then((m) => m.cellarWords(key)).catch((e) => { $('words-line').textContent = `Couldn’t open this browser’s wallet: ${e.message || e}`; });
+  }
   api('GET', '/api/admin/door-link').then((d) => { doorLink(d.made); if (judgeStage && $('door-on').checked && !$('copy-door').disabled) drawDoorQr(true); }).catch(() => {});
 } catch (err) {
   $('locked').hidden = false;

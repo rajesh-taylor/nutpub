@@ -40,7 +40,38 @@
     .board .three input { height: 52px; } /* Safari draws date and time boxes taller than number boxes */
     .board .date-warn { margin: 0 0 12px; font-size: 14px; color: var(--amber); }
     .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
-    .board .three { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; gap: 0 12px; } /* date, stream, show, ends: one line, on a phone too */
+    .board .three { display: grid; grid-template-columns: 2.2fr 1.3fr 1fr 1fr 1fr; gap: 0 12px; } /* venue, date, stream, ends, capacity: one line on a laptop */
+    /* Cellar (session 46): each card shows on its own page; the header's tabs say which. */
+    body[data-room="cellar"] [data-room="night"], body[data-room="night"] [data-room="cellar"] { display: none !important; }
+    .board .cellar-intro { margin: 0 0 20px; max-width: 60ch; font-size: 16px; color: var(--smoke); }
+    .board .words-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; font-size: 15px; color: var(--cream); }
+    .board .words-line svg { flex: none; }
+    .board .words-line .btn { font-size: 18px; padding: 9px 14px 7px; }
+    .board .chip-soon { font: 400 13px/1 var(--poster); letter-spacing: .1em; padding: 4px 8px 2px; border: 1px dashed var(--smoke); border-radius: 3px; color: #c9cfdc; }
+    .board .chip-soon.after { border: 1px solid var(--amber); color: var(--amber); } /* as the Kitchen's After 27 Nov chip */
+    .board .words-soon { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 14px; color: var(--smoke); }
+    .board .preroll .room-switch input:disabled { cursor: not-allowed; opacity: .5; }
+    .board .preroll .room-switch b { color: var(--smoke); }
+    .board .preroll .slot.off label { cursor: not-allowed; opacity: .55; }
+    /* The 12 words' sheets, as on Your takings (night-takings.html); "wsheet", since .sheet here is the mini poster. */
+    dialog.wsheet { width: min(100% - 32px, 520px); margin: auto auto 0; padding: 12px 18px 28px; border: 0; border-top: 1px solid rgb(217 149 58 / .45); border-radius: 14px 14px 0 0; background: #0b1426; color: var(--cream); text-align: left; }
+    @media (min-width: 700px) { dialog.wsheet { margin: auto; border: 1px solid rgb(217 149 58 / .45); border-radius: 12px; } }
+    dialog.wsheet::backdrop { background: rgb(5 9 20 / .75); }
+    dialog.wsheet h2 { margin: 8px 0 10px; font: 400 28px/1.05 var(--poster); letter-spacing: .08em; }
+    dialog.wsheet p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; }
+    dialog.wsheet .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 54px; font-size: 21px; margin-top: 12px; }
+    dialog.wsheet .last { margin-top: 22px; color: var(--smoke); }
+    dialog.wsheet .muted { color: var(--smoke); }
+    dialog.wsheet .words { list-style: none; margin: 4px 0 14px; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px 16px; border: 1px dashed rgb(239 227 200 / .3); border-radius: 8px; counter-reset: w; }
+    dialog.wsheet .words li { font: 17px/1.3 var(--mono); counter-increment: w; display: flex; gap: 10px; align-items: baseline; }
+    dialog.wsheet .words li::before { content: counter(w); font-size: 12px; color: var(--smoke); width: 1.6em; text-align: right; font-variant-numeric: tabular-nums; }
+    dialog.wsheet .two-in { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    dialog.wsheet .wfield { display: grid; gap: 4px; }
+    dialog.wsheet .wfield label { font-size: 13px; color: var(--smoke); }
+    dialog.wsheet input { width: 100%; box-sizing: border-box; font: 17px/1.5 var(--mono); padding: 10px 12px; border: 1px solid rgb(239 227 200 / .35); border-radius: 6px; background: var(--deep); color: var(--cream); }
+    dialog.wsheet input:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
+    dialog.wsheet .err { margin: 10px 0 0; color: #e0675b; font-size: 14px; }
+    dialog.wsheet .err:empty { display: none; }
     .board .wide { grid-column: 1 / -1; }
     .board .split-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: center; margin: 0 0 10px; font-size: 15px; }
     .board .split-rows .head { color: var(--smoke); }
@@ -272,7 +303,9 @@
       .board h1 { font-size: 40px; }
       .board .split-rows, .board .add-row { grid-template-columns: minmax(0, 1fr); }
       .board .split-rows .head:nth-child(-n+2) { display: none; }
-      .board .three { gap: 0 8px; grid-template-columns: 1fr 1fr; } /* two by two: date and stream, show and ends */
+      .board .three { gap: 0 8px; grid-template-columns: 1fr 1fr; } /* the venue, then two by two: date and stream, ends and capacity */
+      .board .three .venue { grid-column: 1 / -1; }
+      .board .three .venue input { text-align: left; padding: 10px 12px; font-size: 16px; }
       .board .three input { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; padding: 10px 6px; font-size: 15px; text-align: center; }
       .board .three input::-webkit-calendar-picker-indicator { display: none; }
       .board .three input::-webkit-date-and-time-value { text-align: center; }
@@ -280,15 +313,20 @@
   </style>
 </head>
 <body class="board">
-  <!-- The board's header: the night's three pages, and the way home. -->
+  <!-- Cellar (session 46): /cellar is this page too, showing only what an artist sets once (data-room="cellar");
+       /setup shows the night (data-room="night"). One form, one saved show: nothing on the server changes. -->
+  <script>document.body.dataset.room = location.pathname === '/cellar' ? 'cellar' : 'night'; if (document.body.dataset.room === 'cellar') document.title = 'Cellar · The NutPub';</script>
+  <!-- The board's header: Cellar, the night's three pages, and the way home. -->
   <header class="board-head">
     <a class="btn quiet head-back" href="/">← Back</a>
     <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
-    <nav class="tabs" aria-label="The night">
-      <a class="on" href="/setup" aria-current="page">1 · Plan your gig</a>
+    <nav class="tabs" aria-label="The artist's pages">
+      <a class="tab-cellar" href="/cellar">Cellar</a>
+      <a href="/setup">1 · Plan <span class="tab-long">your </span>gig</a>
       <a href="/show">2 · Show Time</a>
-      <a href="/takings">3 · Your takings</a>
+      <a href="/takings">3 · <span class="tab-long">Your </span>takings</a>
     </nav>
+    <script>{ const a = document.querySelector(`.board-head .tabs a[href="/${document.body.dataset.room === 'cellar' ? 'cellar' : 'setup'}"]`); a.classList.add('on'); a.setAttribute('aria-current', 'page'); }</script>
     <!-- The fan's page, one click from every artist page (Rajesh 15 Nov), in a tab of its own. -->
     <a class="btn primary head-fan" id="head-fan" href="/" target="_blank" rel="noopener" hidden>Fan’s page ↗</a>
     <script type="module">
@@ -296,12 +334,13 @@
       try { key = localStorage.getItem('nutpub-admin'); } catch {}
       const r = key && await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.path) { const a = document.getElementById('head-fan'); a.href = r.fan || r.path; a.hidden = false; }
-      import('/judge-line.js').then((m) => m.judgeLine(r, 'setup')).catch(() => {}); // a judge's stage: the one next thing to do
+      import('/judge-line.js').then((m) => m.judgeLine(r, document.body.dataset.room === 'cellar' ? 'cellar' : 'setup')).catch(() => {}); // a judge's stage: the one next thing to do
     </script>
   </header>
   <div class="page">
     <main>
-      <div class="top">
+      <p class="cellar-intro" data-room="cellar">What stays the same from gig to gig: who you are, your 12 words, your photos, your stream and your moderators.</p>
+      <div class="top" data-room="night">
         <div style="flex: 1 1 320px;">
           <!-- With two or more saved shows, a drop-down that loads one. -->
           <p class="template" id="tpl-box" hidden><span id="tpl-word" hidden>Template</span><select id="tpl-list" aria-label="Start from a saved gig" hidden></select></p>
@@ -327,20 +366,33 @@
         <p class="hint" id="signin-note"></p>
       </form>
 
-      <section class="panel" id="next-gig" hidden>
+      <section class="panel" id="next-gig" data-room="night" hidden>
         <p>This gig is over. Move your money on <a href="/takings">Your takings</a>, then press Finish gig there: this page opens for the next one, same settings. Or give the next gig its date here.</p>
       </section>
 
       <form id="form" hidden autocomplete="off">
         <div class="grid">
-          <section class="panel wide">
-            <h2>Event</h2>
-            <div class="event-names">
+          <!-- Cellar: who the artist is, set once. -->
+          <section class="panel wide" data-room="cellar">
+            <h2>You</h2>
+            <div class="two">
               <label class="field" id="field-artist">Artist<input data-path="artist" maxlength="60"></label>
-              <label class="field" id="field-venue">Name &amp; address of venue<input data-path="venue" maxlength="120" placeholder="e.g. The Bell, 1 High Street, Bath" autocomplete="off"></label>
-              <label class="field" id="field-page">URL <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+              <label class="field" id="field-page">Your page <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
             </div>
+          </section>
+
+          <!-- Cellar: the 12 words (session 42's sheets, as on Your takings). The key is made here the first time. -->
+          <section class="panel wide" id="words-card" data-room="cellar">
+            <h2>Your 12 words</h2>
+            <p class="replay-sub">Every payment locks to a key in this browser. Your 12 words bring it back on another. Keep them somewhere safe: the NutPub can’t see them or open your takings, so nobody can get them back for you.</p>
+            <div class="words-line" id="words-line" role="status"><span>Opening this browser’s wallet…</span></div>
+            <p class="words-soon"><span class="chip-soon after">After 27 Nov</span>A passkey copy of your words</p>
+          </section>
+
+          <section class="panel wide" data-room="night">
+            <h2>Event</h2>
             <div class="three">
+              <label class="field venue" id="field-venue">Name &amp; address of venue<input data-path="venue" maxlength="120" placeholder="e.g. The Bell, 1 High Street, Bath" autocomplete="off"></label>
               <label class="field">Date<input type="date" data-path="date"></label>
               <label class="field">Stream starts<input type="time" data-path="streams"></label>
               <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
@@ -350,7 +402,7 @@
             <p class="date-warn" id="date-warn" hidden></p>
           </section>
 
-          <section class="panel wide">
+          <section class="panel wide" data-room="night">
             <h2>Ticketing</h2>
             <!-- Rajesh 11 Nov: in the order an artist decides. The kind of night sets Venue tickets (ticket.on) and the
                  stream's mode; the two inputs stay, hidden, so the saved show is the same as before. -->
@@ -442,7 +494,7 @@
           <!-- Replay (sessions 34-35): after End night the gig page plays the recording until it's deleted, 7 days after the
                broadcast, for one price (never below the minimum for the show's length; the server holds to it). Paid
                streams only. -->
-          <section class="panel wide" id="replay-card">
+          <section class="panel wide" id="replay-card" data-room="night">
             <h2>Replay</h2>
             <p class="replay-sub">After End night your gig page plays the recording for 7 days, until it's deleted.</p>
             <div class="replay-choices" id="replay-choices">
@@ -464,7 +516,7 @@
 
           <!-- Free to watch (session 35): a free stream is paid for by the artist before the gig, one 402 from the artist's
                own wallet, locked to the NutPub's key. Past the most viewers new ones see Full; nobody is cut off. -->
-          <section class="panel wide" id="free-card" hidden>
+          <section class="panel wide" id="free-card" data-room="night" hidden>
             <h2>Free to watch</h2>
             <p class="replay-sub">Free for your fans. The stream still costs to run, so you pay for it before the gig.</p>
             <label class="field free-viewers">Most viewers at once <span class="optional">· up to 100</span><input id="free-viewers" type="number" min="1" max="100" step="1" inputmode="numeric" data-path="free.viewers" placeholder="e.g. 30"></label>
@@ -478,19 +530,18 @@
             <p class="switch-note" id="free-note"></p>
           </section>
 
-          <section class="panel wide">
-            <h2>Comments and moderators</h2>
+          <!-- Comments per gig (Rajesh 21 Nov: a quick 5-minute act may want none); the moderators, people the artist
+               trusts, live in Cellar. -->
+          <section class="panel wide" data-room="night">
+            <h2>Comments</h2>
             <label class="choice room-switch"><b>Comments in the live chat</b><input type="checkbox" role="switch" data-path="comments" aria-label="Comments in the live chat"></label>
-            <p class="switch-note" data-when="comments=false">Off: tips still show in the chat, without words. No moderators.</p>
+            <p class="switch-note" data-when="comments=false">Off: tips still show in the chat, without words. No moderators tonight.</p>
             <div data-when="comments">
             <label class="field">Pinned message <span class="optional">· optional, over the chat; links work here</span><input id="pin-text" maxlength="140" placeholder="e.g. Merch at longy.com · next gig Fri 12 Dec" autocomplete="off"></label>
-            <p class="switch-note">Moderators: a private link each, for people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never this page, your takings or your stream key.</p>
-            <div class="mod-rows" id="mod-rows"></div>
-            <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
             </div>
           </section>
           <!-- One card (Rajesh 15 Nov, late): the stretch goals the tips fill, a hairline, then who shares the takings. -->
-          <section class="panel wide" id="goals-card">
+          <section class="panel wide" id="goals-card" data-room="night">
             <h2>Stretch goals and splits</h2>
             <div class="two-up">
               <div>
@@ -518,7 +569,7 @@
           </section>
 
           <!-- Tips and Nutzaps (Rajesh 15 Nov, late): the one-tap tip for everyone, then the Nutzap buttons for Nostr fans. -->
-          <section class="panel wide" id="tips-card">
+          <section class="panel wide" id="tips-card" data-room="night">
             <h2>Tips and Nutzaps</h2>
             <h3 class="sub">Tip button</h3>
             <p class="sub-note">One tap, for every fan. Any other amount goes in the comment box.</p>
@@ -535,7 +586,7 @@
             </div>
           </section>
 
-          <section class="panel wide">
+          <section class="panel wide" data-room="cellar">
             <h2>Live stream</h2>
             <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Stream from your phone with <b>Larix Broadcaster</b> (iPhone or Android): install, scan this QR with your phone, then press the red button in Larix. Free Larix puts its name over your video; <b>Larix Premium</b> $9.99/mo removes it.</p>
             <p><button type="button" class="btn primary" id="make-stream">Make my stream</button></p>
@@ -558,7 +609,7 @@
             <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">Keep the key and the code private: anyone with them can stream as you.</p>
           </section>
 
-          <section class="panel wide">
+          <section class="panel wide" data-room="cellar">
             <h2>Images</h2>
             <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Two tall photos for phones, two wide ones for screens. Drop one in, or click. A JPEG, PNG or WebP, up to 5 MB.</p>
             <div class="slots">
@@ -566,6 +617,26 @@
               <div class="slot tall" data-slot="tall2"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
               <div class="slot wide" data-slot="wide1"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
               <div class="slot wide" data-slot="wide2"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+            </div>
+          </section>
+
+          <section class="panel wide" data-room="cellar">
+            <h2>Moderators</h2>
+            <p class="switch-note">A private link each, for people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never your pages, your takings or your stream key. Up to three.</p>
+            <div class="mod-rows" id="mod-rows"></div>
+            <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
+          </section>
+
+          <!-- Pre-roll (Rajesh 21 Nov): videos and photos lined up before the show, played until Start show. Drawn, not
+               wired yet: it stays off. The limits fit a real producer's set (four 2-3 minute clips at 1080p, eight
+               photos), so the space can't become a file store; each gig's set goes 7 days after it, like the recording. -->
+          <section class="panel wide preroll" id="preroll-card" data-room="cellar">
+            <h2>Pre-roll <span class="chip-soon">Not wired yet</span></h2>
+            <p class="replay-sub">Videos and photos fans watch while they wait for the show. Up to 4 videos, 10 minutes in all, and 8 photos: 1 GB at most. Deleted 7 days after the gig.</p>
+            <label class="choice room-switch"><b>Play my pre-roll before the show</b><input type="checkbox" role="switch" disabled aria-label="Play my pre-roll before the show"></label>
+            <div class="slots">
+              <div class="slot wide off"><label aria-disabled="true"><span>+ Videos</span><span><small>MP4 · up to 4</small></span></label></div>
+              <div class="slot wide off"><label aria-disabled="true"><span>+ Photos</span><span><small>JPEG, PNG or WebP · up to 8</small></span></label></div>
             </div>
           </section>
         </div>
@@ -587,12 +658,35 @@
           <input id="tpl-name"><button type="button" id="tpl-save"></button>
         </div>
       </form>
+
+      <!-- Cellar's 12 words: the same two sheets as Your takings (client/cellar.js). -->
+      <dialog class="wsheet" id="words-sheet" aria-labelledby="words-h">
+        <h2 id="words-h">Your 12 words</h2>
+        <p>Write them on paper, in this order. They bring back your bitcoin on any browser signed in to your stage.</p>
+        <ol class="words" id="words-list"></ol>
+        <p class="muted" style="font-size: 14px;">Anyone with these words can take your bitcoin. They stay in this browser: the NutPub never sees them.</p>
+        <button type="button" class="btn primary" id="words-done">I've written them down</button>
+        <button type="button" class="btn quiet last" id="words-later">Not now</button>
+      </dialog>
+      <dialog class="wsheet" id="check-sheet" aria-labelledby="check-h">
+        <h2 id="check-h">Check two words</h2>
+        <p>From your paper:</p>
+        <form id="check-form" novalidate>
+          <div class="two-in">
+            <div class="wfield"><label for="check-a" id="check-a-l">Word 1</label><input id="check-a" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+            <div class="wfield"><label for="check-b" id="check-b-l">Word 2</label><input id="check-b" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+          </div>
+          <p class="err" id="check-err" role="alert"></p>
+          <button type="submit" class="btn primary">Done</button>
+        </form>
+        <button type="button" class="btn quiet last" id="check-again">Show the words again</button>
+      </dialog>
     </main>
 
     <aside id="preview" hidden aria-label="The attendee's phone">
       <p class="cap">The fan's phone</p>
       <div class="phone-frame"><iframe id="preview-frame" title="The show page, as an attendee sees it"></iframe></div>
-      <section class="panel mini" id="poster-panel">
+      <section class="panel mini" id="poster-panel" data-room="night">
         <h2>Gig poster</h2>
         <!-- A small copy of the A4 poster: the photo fading into the poster's brown, the artist, the date. -->
         <div class="sheet" aria-hidden="true">
