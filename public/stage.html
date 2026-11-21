@@ -48,6 +48,9 @@
       letter-spacing: .08em; text-decoration: none; }
     .go:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
     .go.fan { margin-top: 12px; padding: 13px 0 10px; background: none; border: 1px solid var(--amber); color: var(--amber); font-size: 20px; }
+    /* Another browser at the stage's own address (session 44): the way to the gig, where Find my ticket is. */
+    .out a.go { color: var(--deep); margin: 28px auto 0; max-width: 360px; padding: 16px 16px 13px; text-align: center; font-size: 24px; }
+    .out .to-gig-note { margin: 10px 0 28px; }
     .under { margin: 12px 0 0; font-size: 17px; color: var(--cream); }
     .under a { color: #e8a845; }
     .how { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--smoke); }
@@ -115,6 +118,8 @@
     <div id="theirs" class="out" hidden>
       <h1>An artist's stage</h1>
       <p id="theirs-text">This stage belongs to an artist. Is it yours?</p>
+      <a class="go" id="to-gig" href="/" hidden>Open the gig as a fan →</a>
+      <p class="to-gig-note" id="to-gig-note" hidden>Find my ticket is there.</p>
       <p><a id="back" href="/">Back to your stage</a></p>
     </div>
   </main>
@@ -135,10 +140,18 @@
     }
     const r = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
-    // A judge's stage opened in another browser: its key is in the browser that made it. No passkey to find it with.
-    if (!r && (await fetch('/api/show').then((x) => x.json()).catch(() => ({}))).judge) {
-      document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Start a fresh one from the three gigs.';
-      Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The three gigs' });
+    // Another browser (a fan, or a judge's second phone, Rajesh 21 Nov): the way to the gig, where Find my ticket is.
+    // A judge's stage: its key is in the browser that made it, so no way in as the artist; the three gigs instead.
+    if (!r) {
+      const s = await fetch('/api/show').then((x) => x.json()).catch(() => ({}));
+      if (s.path) {
+        document.getElementById('to-gig').href = s.path;
+        document.getElementById('to-gig').hidden = document.getElementById('to-gig-note').hidden = false;
+      }
+      if (s.judge) {
+        document.getElementById('theirs-text').textContent = 'This gig was set up in another browser.';
+        Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: 'The three gigs' });
+      }
     }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
     const list = r?.setlist;

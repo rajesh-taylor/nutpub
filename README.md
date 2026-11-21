@@ -88,7 +88,7 @@ The ticket is then on your stage: after End night, Your takings counts it. The s
 
 - **One gig page,** at the venue or at home, on a phone or a laptop.
 - **Tips with words:** a comment and sats, sent together. Sign in with Nostr for your name in the chat and one-tap Nutzaps.
-- **Tickets as passkeys:** saved in the phone's password manager; **Find my ticket** brings one back.
+- **Tickets as passkeys:** saved in the phone's password manager; **Find my ticket** brings one back, on another device too (tried 21 Nov: saved on a Mac, found on an iPhone).
 
 ### For venues
 
@@ -167,7 +167,6 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 The NutPub is a working concept on a test mint, not a production service.
 
 - The artist's key lives in one browser. Its 12 words bring back the money, not the sign-in. Stages made before 20 Nov have no words.
-- **Find my ticket** on a second device isn't tried yet.
 - A replay from a real broadcast isn't tried yet (the example gigs play recordings).
 - On the test mint, a stream takes 10 viewers at a time.
 - **Free to watch, paid up front** is built but switched off until it's redesigned.
