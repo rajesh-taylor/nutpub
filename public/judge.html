@@ -41,8 +41,8 @@
     /* Two lines (Rajesh 15 Nov, late): the posters say the rest; the specs are on each poster's small print. */
     /* The curved sign (Rajesh 19 Nov), as on the pint screen: gold, worn, a shimmer every few seconds. */
     .home-sign { position: relative; justify-self: center; width: min(860px, 92vw); margin: -44px 0 0; line-height: 0; } /* Rajesh 20 Nov: bigger, higher */
-    .home-byline { justify-self: center; margin: -30px 0 10px; font: 400 clamp(14px, 1.55vw, 17.5px)/1 var(--poster); letter-spacing: .3em; -webkit-text-stroke: .35px rgb(217 149 58 / .7); text-transform: uppercase; color: rgb(217 149 58 / .7); text-align: center;
-      background: linear-gradient(100deg, rgb(217 149 58 / .7) 40%, #fff3d0 50%, rgb(217 149 58 / .7) 60%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: home-shine-byline 8.4s .8s linear infinite; }
+    .home-byline { justify-self: center; margin: -30px 0 10px; font: 400 clamp(14px, 1.55vw, 17.5px)/1 var(--poster); letter-spacing: .3em; text-transform: uppercase; color: var(--amber); text-align: center; /* Rajesh 21 Nov: no outline, a solid fill: the see-through outline over the shimmer read as smudged */
+      background: linear-gradient(100deg, var(--amber) 40%, #fff3d0 50%, var(--amber) 60%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: home-shine-byline 8.4s .8s linear infinite; }
     @media (prefers-reduced-motion: reduce) { .home-byline { animation: none; } } /* the sign's byline, back (Rajesh 19 Nov) */
     .home-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
     .home-sign text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold-h); }
@@ -115,7 +115,7 @@
     .billing::before, .billing::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgb(239 227 200 / .35)); }
     .billing::after { transform: scaleX(-1); }
     /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
-    .lineup { text-align: center; margin-top: 40px; min-width: 0; width: 100%; max-width: 1068px; justify-self: center; } /* the laurels keep their width as the posters widen */
+    .lineup { text-align: center; margin-top: 72px; min-width: 0; width: 100%; max-width: 1068px; justify-self: center; } /* the laurels keep their width as the posters widen */
     .lineup .billing { margin-bottom: 8px; }
     .billing-note { margin: 0 0 28px; font: italic 15px/1.4 Georgia, "Times New Roman", serif; color: var(--smoke); } /* Rajesh 19 Nov */
     .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 88px) / 11), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
@@ -219,6 +219,7 @@
         <b>Menu</b></span></summary>
       <ul>
         <li><a href="/menu"><b>Pub Menu</b><small>What each part of the night is made of</small></a></li>
+        <li><a href="/kitchen"><b>The Kitchen</b><small>What’s built, what’s next, and the specs</small></a></li>
         <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener"><b>GitHub ↗</b><small>The code, Apache-2.0</small></a></li>
       </ul>
     </details>

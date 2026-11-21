@@ -35,8 +35,11 @@
     .whom li { padding: 18px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
     .whom h3 { margin: 0; font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--amber); }
     .whom p { margin-top: 10px; font-size: 15px; color: var(--cream); }
-    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px; margin-top: 26px; padding-top: 14px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 15px; }
-    .foot a, .today a { color: var(--amber); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 16px; margin-top: 26px; padding-top: 18px; border-top: 1px solid rgb(217 149 58 / .25); }
+    .today a { color: var(--amber); }
+    /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
+    .btn-out { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box; padding: 10px 18px 7px; border: 1.5px solid var(--amber); border-radius: 6px; font: 400 20px/1 var(--poster); letter-spacing: .1em; color: var(--amber); text-decoration: none; }
+    .btn-out:hover, .btn-out:focus-visible { background: rgb(217 149 58 / .12); color: var(--cream); }
     .made { margin: 0 0 20px; text-align: center; font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .made a { color: var(--smoke); text-decoration: none; }
     .made a:hover { color: var(--cream); text-decoration: underline; }
@@ -74,8 +77,8 @@ npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
       </section>
 
       <div class="foot">
-        <a href="/kitchen">The Kitchen: everything the NutPub does</a>
-        <a href="/">Back to the three gigs</a>
+        <a class="btn-out" href="/kitchen">The Kitchen →</a>
+        <a class="btn-out" href="/">← The three gigs</a>
       </div>
     </div>
     <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>

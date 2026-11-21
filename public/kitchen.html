@@ -38,8 +38,11 @@
     .kcard .specs { margin-top: auto; padding-top: 2px; font: 400 16px/1.2 var(--poster); letter-spacing: .07em; color: var(--amber); }
     .kcard code { font: 14px var(--mono); color: var(--cream); }
     .kcard a { color: var(--amber); }
-    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px; margin-top: 34px; padding-top: 16px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 14px; color: #a9b0c2; }
-    .foot a { color: var(--amber); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 15px; color: rgb(239 227 200 / .8); }
+    .foot span a { color: var(--amber); }
+    /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
+    .btn-out { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box; padding: 10px 18px 7px; border: 1.5px solid var(--amber); border-radius: 6px; font: 400 20px/1 var(--poster); letter-spacing: .1em; color: var(--amber); text-decoration: none; }
+    .btn-out:hover, .btn-out:focus-visible { background: rgb(217 149 58 / .12); color: var(--cream); }
     .made { margin: 0 0 20px; text-align: center; font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .made a { color: var(--smoke); text-decoration: none; }
     .made a:hover { color: var(--cream); text-decoration: underline; }
@@ -177,7 +180,7 @@
 
       <div class="foot">
         <span>Built on <a href="https://github.com/cashubtc/coco" target="_blank" rel="noreferrer noopener">Coco</a> and <a href="https://github.com/cashubtc/cashu-ts" target="_blank" rel="noreferrer noopener">cashu-ts</a>. The code: <a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub ↗</a></span>
-        <a href="/menu">Back to the Pub Menu</a>
+        <a class="btn-out" href="/menu">← The Pub Menu</a>
       </div>
     </div>
     <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>
