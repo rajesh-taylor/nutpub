@@ -202,7 +202,7 @@ function todoMark(key) {
 }
 // A tip went through: in full screen or out of it (Longy's list asks for one of each).
 function todoTip(n) {
-  const key = document.body.classList.contains('full') ? 'tipFull' : todo.tipFull ? 'tipAfter' : 'tipDesk'; // gig 1: hello, encore, then Yes Longy!
+  const key = document.body.classList.contains('full') ? 'tipFull' : 'tipDesk';
   if (TODO && !todo[key]) todo[`${key}Sats`] = n;
   todoMark(key);
   todoDraw();
@@ -1300,32 +1300,23 @@ function todoItems() {
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
   }
-  // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers only. Steps 1 to 3 are
-  // Cellar, Plan gig and Start show; the fan's page carries on at 4 and ends at 9; Show Time has 10 and 11. The pub's TV
-  // opens before the first tip and is looked at again after the last, so its new comments and goals are seen.
+  // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers, 8 steps. 1 Cellar, 2 Plan gig,
+  // 3 Start show; here 4 the ticket, 5 one big tip in full screen (both goals), 6 the pub's TV; Show Time 7, Takings 8.
+  // One tip, not several: the test mint stumbled on quick ones, and 50,000 passes both goals at once.
   if (show.stream.mode === 'ticket') {
     const tv = `${location.pathname.replace(/\/$/, '')}/screen`;
-    const list = [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket', story: 'One 402 buys the ticket, paid from the wallet in this browser.' },
-      { done: !!todo.tv, story: 'Tips and the chat go up on the pub’s TVs too.', text: 'Press Open the pub’s TV: it opens in a new tab. Have a look, then come back to this tab',
-        html: `Press Open the pub’s TV: it opens in a new tab. Have a look, then come back to this tab. <a class="btn primary" data-todo="tv" href="${tv}" target="_blank" rel="noopener">Open the pub’s TV ↗</a>`,
-        did: 'Opened the pub’s TV', short: 'Open the pub’s TV' },
-      // Nostr sign-in offered here, gig 1 only (Rajesh 21 Nov).
-      { done: !!todo.tipDesk || !!todo.tipFull, story: 'Use your Nostr sign-in (top of the chat, with a purple dot), or type as a guest. A tip is another 402, with your words beside it.',
-        text: 'In the chat box, bottom right, type Hello from the judges’ table, put 2,100 in the sats box beside it, then press the amber ➤ button',
-        did: 'Said hello with 2,100 sats', short: 'Hello, with 2,100 sats', tip: true },
-      { done: !!todo.tipFull, story: 'In full screen the chat lands on the picture. Tips fill Longy’s stretch goals: first, the encore.',
-        html: `Go full screen ${FULL_ICON} (bottom right of the video), type for the encore, put 30,000 in the sats box beside it, then press the amber ➤ button`,
-        text: 'Go full screen, type for the encore, put 30,000 in the sats box beside it, then press the amber ➤ button',
-        now: 'Type for the encore, put 30,000 in the sats box beside it, then press the amber ➤ button',
-        did: 'Tipped 30,000 in full screen: the encore', short: 'Full screen: 30,000 for the encore', tip: true },
-      // One tip of 20,000, not quick taps of 2,100 (the test mint stumbled on the taps); 30,000 + 20,000 + 2,100 passes both goals.
-      { done: !!todo.tipAfter, story: 'Then the debut of his latest song.', text: 'Press Esc to leave full screen, type Yes Longy! in the chat box, put 20,000 in the sats box beside it, then press the amber ➤ button',
-        now: 'First press Esc to leave full screen', did: 'Tipped 20,000: both stretch goals met', short: 'Yes Longy!, with 20,000', tip: true },
-      { done: !!todo.tv2, story: 'The pub’s TV shows it all: the new comments, and both stretch goals met.',
-        text: 'Go back to the pub’s TV tab and have a look. Then come back here and press Seen it',
-        html: 'Go back to the pub’s TV tab and have a look. Then come back here and press <button type="button" class="btn primary" data-todo="tv2">Seen it</button>',
-        did: 'Saw the pub’s TV again', short: 'The pub’s TV again' }];
-    return Object.assign(list, { base: 3, total: 11 });
+    const list = [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket',
+        story: 'One 402 buys the ticket, paid from the wallet in this browser. Nostr users can sign in at the top of the chat.' },
+      { done: !!todo.tipFull, story: 'Tips fill Longy’s stretch goals: an encore, then the debut of his latest song.',
+        html: `Go full screen ${FULL_ICON} (bottom right of the video), type encore! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button`,
+        text: 'Go full screen, type encore! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button',
+        now: 'Type encore!, put 50,000 in the sats box beside it, then press the yellow ➤ button',
+        did: 'Tipped 50,000: both stretch goals met', short: 'Full screen: encore!, 50,000', tip: true },
+      { done: !!todo.tv2, story: 'Tips and the chat go up on the pub’s TVs too: your encore!, and both stretch goals met.',
+        text: 'Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it',
+        html: `Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it. <a class="btn quiet" data-todo="tv" href="${tv}" target="_blank" rel="noopener">Open the pub’s TV ↗</a> <button type="button" class="btn primary" data-todo="tv2">Seen it</button>`,
+        now: 'Now leave full screen: the button, bottom right', did: 'Saw the pub’s TV', short: 'The pub’s TV' }];
+    return Object.assign(list, { base: 3, total: 8 });
   }
   // Gig 2 (Rajesh 20 Nov): one thing a step. Play and stop; play again once the countdown's done; the Network tab a step
   // of its own (it proves the 402 and the paid 200), ticked by Seen it or by going on to full screen.
@@ -1338,8 +1329,8 @@ function todoItems() {
     // Rajesh 20 Nov: the video's playing for the tip and until End night.
     { ...full, story: 'Full screen, then a tip, as at Longy’s.', ...(playing ? {} : { html: `Press play, then go full screen ${FULL_ICON} (bottom right of the video): comments land over the picture` }) },
     // Rajesh 20 Nov: a big tip, so Takings shows a real night's tips (the chat's scripted tips are words only).
-    { ...tip, done: !!todo.tipFull || tippedHere >= 50000, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type a comment, put 50,000 in the sats box beside it, then press the amber ➤ button on the right',
-      now: 'Type a comment, put 50,000 in the sats box beside it, then press the amber ➤ button', short: 'Tip 50,000 in full screen', shortDid: 'Tipped in full screen' }];
+    { ...tip, done: !!todo.tipFull || tippedHere >= 50000, story: 'A tip is another 402, with your words beside it.', text: 'In full screen, type a comment, put 50,000 in the sats box beside it, then press the yellow ➤ button on the right',
+      now: 'Type a comment, put 50,000 in the sats box beside it, then press the yellow ➤ button', short: 'Tip 50,000 in full screen', shortDid: 'Tipped in full screen' }];
   return [];
 }
 // The desktop view's fan (Show Time's other frame) said hello: its list, kept beside this one.
