@@ -100,13 +100,16 @@ export async function openWallet(mintUrl, name = 'nutpub') {
     },
     // Has a token we gave out been taken by another wallet? One question to the mint (NUT-07): true once every coin
     // in it is spent. Nothing is sent but the coins' public Y values.
+    // The mint's keys are loaded once, so a page asking every few seconds (Move to my phone) asks only this.
     async landed(token) {
       const { proofs } = await coco.wallet.decodeToken(token, mintUrl);
-      const w = new Wallet(mintUrl, { unit: 'sat' });
-      await w.loadMint();
+      const w = await (this.mintKeys ||= (async () => { const m = new Wallet(mintUrl, { unit: 'sat' }); await m.loadMint(); return m; })()
+        .catch((e) => { this.mintKeys = null; throw e; }));
       const states = await w.checkProofsStates(proofs);
       return states.length > 0 && states.every((s) => s.state === 'SPENT');
     },
+    // How many coins a note holds (two or fewer show as one still QR).
+    coinsIn: async (token) => (await coco.wallet.decodeToken(token, mintUrl)).proofs.length,
     // Pay a NUT-18 request in-band (NUT-24): returns the cashuB string for the X-Cashu header.
     // Coco's tokens keep their DLEQ proofs, so they pass a gate that requires them.
     // A request with a P2PK lock (every NutPub payment) is locked to exactly that key: no locktime, no refund keys,

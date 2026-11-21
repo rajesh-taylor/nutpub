@@ -14,8 +14,24 @@
     <p class="big"><span id="balance">…</span> <small>sats</small></p>
     <!-- Move to Cashu.me (as on Takings): the whole wallet as one note, handed over after the # (never sent to a server). -->
     <div class="move" id="move" hidden>
+      <!-- Move to my phone (session 44): on a laptop or tablet, the note as an animated QR for the phone's own wallet. -->
+      <button type="button" class="btn primary move-go" id="to-phone" hidden>Move to my phone</button>
+      <p class="move-note" id="to-phone-note" hidden>Scan it with the Cashu wallet on your phone.</p>
       <button type="button" class="btn primary move-go" id="cashu-me">Move to Cashu.me</button>
-      <p class="move-note">Cashu.me asks to add the test mint: say yes.</p>
+      <p class="move-note" id="cashu-me-note">Cashu.me asks to add the test mint: say yes.</p>
+    </div>
+    <!-- The note, screen to camera: no server in between. The mint says when its coins are spent (NUT-07): Landed. -->
+    <div class="phone-qr" id="phone-qr" hidden>
+      <div class="phone-card">
+        <h2 id="phone-title">Scan with your phone</h2>
+        <canvas class="phone-code" id="phone-code" width="1" height="1" aria-label="Your sats as an animated QR code, for your phone’s Cashu wallet"></canvas>
+        <p class="phone-mark" aria-hidden="true">THE NUTPU<span>₿</span></p>
+        <p class="phone-landed" id="phone-landed" hidden></p>
+        <p id="phone-how">On your phone, open Cashu.me, Minibits or macadamia, tap Scan and hold it up to this screen. Keep this page open.</p>
+        <p class="phone-wait" id="phone-wait"><span class="phone-dot" aria-hidden="true"></span>Waiting for your phone…</p>
+        <p class="phone-btns"><button type="button" class="btn" id="phone-copy">Copy instead</button><button type="button" class="btn" id="phone-close">Close</button><a class="btn" id="phone-back" href="/" hidden>← Back to set</a></p>
+      </div>
+      <p class="move-note" id="phone-mint">Your wallet asks to add the test mint: say yes.</p>
     </div>
     <p class="buttons"><a class="btn" href="/" id="back">← Back to set</a><button class="btn" id="home" hidden>Take sats home</button><button class="btn" id="receive" hidden>Receive ecash</button></p>
     <!-- Receive ecash: a note from any Cashu wallet (Minibits, cashu.me), into this one. Same mint only. -->
