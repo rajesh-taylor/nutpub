@@ -7,6 +7,7 @@
   <title>The Kitchen · The NutPub</title>
   <meta name="description" content="What the NutPub does, ticked off: built, after 27 Nov, or proposed, with the Cashu NUTs and Nostr NIPs behind each part.">
   <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/nut-menu.css">
   <style>
     /* The Kitchen (session 43, 21 Nov): what the NutPub does, a tick chip each, for judges and developers. Reached from
        the Pub Menu. Rajesh 21 Nov: short lines; ideas not built yet get a name and their specs, never the how. */
@@ -39,7 +40,6 @@
     .kcard code { font: 14px var(--mono); color: var(--cream); }
     .kcard a { color: var(--amber); }
     .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 15px; color: rgb(239 227 200 / .8); }
-    .foot span a { color: var(--amber); }
     /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
     .btn-out { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box; padding: 10px 18px 7px; border: 1.5px solid var(--amber); border-radius: 6px; font: 400 20px/1 var(--poster); letter-spacing: .1em; color: var(--amber); text-decoration: none; }
     .btn-out:hover, .btn-out:focus-visible { background: rgb(217 149 58 / .12); color: var(--cream); }
@@ -50,6 +50,17 @@
 </head>
 <body class="kitchen">
   <main>
+    <div class="page-top">
+      <details class="nut-menu">
+        <summary aria-label="Menu"><span class="menu-btn"><svg class="pint" viewBox="0 0 40 56" aria-hidden="true"><path d="M7.5 16 H32.5 L30.5 50 H9.5 Z" fill="#d9953a" opacity=".6"/><path d="M6 6 H34 L31 52 H9 Z" fill="none" stroke="#e8a845" stroke-width="2.8" stroke-linejoin="round"/><path d="M6 7 Q9 1 15 4 Q20 0 25 4 Q31 1 34 7 Z" fill="#efe3c8"/></svg><b>Menu</b></span></summary>
+        <ul>
+          <li><a href="/"><b>The three gigs</b><small>Home: start here</small></a></li>
+          <li><a href="/menu"><b>Pub Menu</b><small>What each part of the night is made of</small></a></li>
+          <li><a href="/agents"><b>The Regulars</b><small>AI agents at the NutPub</small></a></li>
+          <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener"><b>GitHub ↗</b><small>The code, Apache-2.0</small></a></li>
+        </ul>
+      </details>
+    </div>
     <div class="board-card">
       <a class="top" href="/menu">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span> · Pub Menu</a>
       <h1>The Kitchen</h1>
@@ -179,7 +190,6 @@
       </section>
 
       <div class="foot">
-        <span>Built on <a href="https://github.com/cashubtc/coco" target="_blank" rel="noreferrer noopener">Coco</a> and <a href="https://github.com/cashubtc/cashu-ts" target="_blank" rel="noreferrer noopener">cashu-ts</a>. The code: <a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub ↗</a></span>
         <a class="btn-out" href="/menu">← The Pub Menu</a>
       </div>
     </div>
