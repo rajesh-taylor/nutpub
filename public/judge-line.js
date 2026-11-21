@@ -40,8 +40,8 @@ export async function judgeLine(r, page) {
   if (tv && page === 'cellar') document.getElementById('words-sheet')?.addEventListener('close', () => { seeCellar(); said = ''; draw(); });
   if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  const steps = pickle ? 8 : g2 ? 7 : tv ? 8 : 5; // gig 1: 1 Cellar, 2 Plan gig, 3 Start show, 4–6 the fan's page, 7 End night, 8 Takings (session 47)
-  const o = tv ? 1 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
+  const steps = pickle ? 8 : g2 ? 7 : tv ? 9 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
+  const o = tv ? 2 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
     const key = n + [].concat(story).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note + text;
     if (said === key) return;
@@ -142,7 +142,7 @@ export async function judgeLine(r, page) {
     if (page === 'cellar') {
       document.getElementById('head-fan')?.style.setProperty('display', 'none');
       // Gig 1 (Rajesh 21 Nov, session 47): a look at the 12 words, no typing, then on to Plan gig.
-      if (tv) return say(1, cellarSeen() ? 'Done. Now click 1 · Plan gig, up above.' : 'Press Write down your 12 words, have a look, then Not now.', '', '', { story: TOLD.cellar });
+      if (tv) return say(cellarSeen() ? 2 : 1, cellarSeen() ? 'Now click 1 · Plan gig, up above.' : 'Press Write down your 12 words, have a look, then Not now.', '', '', { story: TOLD.cellar });
       return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream and moderators.` });
     }
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
@@ -248,19 +248,19 @@ export async function judgeLine(r, page) {
     if (page === 'setup') say(1 + o, tv ? 'Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a gander before you click 2 · Show Time, up above.'
       : `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show' && tv) { // gig 1 (session 47): the pub's TV is part of the fan's steps now
-      if (closed) say(8, 'The night’s over. Click 3 · Your takings, at the top.');
-      else if (!on) say(3, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
-      else if (!fanDone()) say(4, 'Press Fan’s page ↗, top right, and follow the strip there: steps 4 to 6. Then come back here.', '', '', { story: TOLD.fan });
-      else say(7, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
+      if (closed) say(9, 'The night’s over. Click 3 · Your takings, at the top.');
+      else if (!on) say(4, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
+      else if (!fanDone()) say(5, 'Press Fan’s page ↗, top right, and follow the strip there: steps 5 to 7. Then come back here.', '', '', { story: TOLD.fan });
+      else say(8, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
     } else if (page === 'show') {
       if (closed) say((tv ? 6 : 5) + o, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2 + o, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3 + o, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
       else if (tv && !tvSeen()) say(4 + o, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
       else say((tv ? 5 : 4) + o, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
-    } else if (!closed) say(tv ? 7 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+    } else if (!closed) say(tv ? 8 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
     // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.
-    else say(tv ? 8 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
+    else say(tv ? 9 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

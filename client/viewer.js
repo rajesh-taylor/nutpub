@@ -1300,8 +1300,8 @@ function todoItems() {
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
   }
-  // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers, 8 steps. 1 Cellar, 2 Plan gig,
-  // 3 Start show; here 4 the ticket, 5 one big tip in full screen (both goals), 6 the pub's TV; Show Time 7, Takings 8.
+  // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers, 9 steps. 1 the 12 words, 2 on to
+  // Plan gig, 3 Plan gig, 4 Start show; here 5 the ticket, 6 one big tip in full screen (both goals), 7 the pub's TV; 8, 9.
   // One tip, not several: the test mint stumbled on quick ones, and 50,000 passes both goals at once.
   if (show.stream.mode === 'ticket') {
     const tv = `${location.pathname.replace(/\/$/, '')}/screen`;
@@ -1316,7 +1316,7 @@ function todoItems() {
         text: 'Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it',
         html: `Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it. <a class="btn quiet" data-todo="tv" href="${tv}" target="_blank" rel="noopener">Open the pub’s TV ↗</a> <button type="button" class="btn primary" data-todo="tv2">Seen it</button>`,
         now: 'Now leave full screen: the button, bottom right', did: 'Saw the pub’s TV', short: 'The pub’s TV' }];
-    return Object.assign(list, { base: 3, total: 8 });
+    return Object.assign(list, { base: 4, total: 9 });
   }
   // Gig 2 (Rajesh 20 Nov): one thing a step. Play and stop; play again once the countdown's done; the Network tab a step
   // of its own (it proves the 402 and the paid 200), ticked by Seen it or by going on to full screen.
