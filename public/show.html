@@ -12,23 +12,23 @@
     body.board { padding: 0; text-align: left; background: #050914; font: 16px/1.45 var(--body); }
     .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
     .board-head .mark { font: 400 34px/1 var(--poster); letter-spacing: .08em; margin: 0; padding: 14px 0 10px; }
-    .board-head .head-back { font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .head-back { font-size: 15px; padding: 8px 12px; }
     .board-head .tabs { display: flex; flex-wrap: wrap; gap: 32px; }
-    .board-head .tabs a { font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--smoke); text-decoration: none; padding: 20px 4px 16px; border-bottom: 3px solid transparent; }
-    .board-head .tabs a.on { color: var(--cream); border-bottom-color: var(--amber); }
+    .board-head .tabs a { font: 500 17px/1 var(--body); letter-spacing: 0; color: var(--smoke); text-decoration: none; padding: 22px 2px 17px; border-bottom: 3px solid transparent; }
+    .board-head .tabs a.on { font-weight: 600; color: var(--cream); border-bottom-color: var(--cream); }
     .board-head .tabs a:hover { color: var(--cream); }
-    .board-head .head-new { font-size: 16px; padding: 7px 12px 5px; }
+    .board-head .head-new { font-size: 15px; padding: 8px 12px; }
     .page { max-width: 1800px; margin: 0 auto; padding: 24px 40px 48px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
     .page main { flex: 999 1 640px; min-width: 0; max-width: none; padding: 0; text-align: left; }
     .host { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
-    .host .label { font: 400 18px/1 var(--poster); letter-spacing: .14em; color: var(--smoke); margin: 0 6px 0 0; }
-    .host .btn.on { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .host .label { font: 600 14px/1 var(--body); letter-spacing: 0; color: var(--smoke); margin: 0 6px 0 0; }
+    .host .btn.on { background: var(--cream); border-color: var(--cream); color: var(--deep); }
     .host .count { margin-left: auto; font-size: 14px; color: var(--smoke); }
     .bar-strip { margin-top: -8px; }
     .bar-drinks { display: flex; flex-wrap: wrap; gap: 8px; }
-    .bar-drinks .btn { font-size: 16px; padding: 7px 12px 5px; }
+    .bar-drinks .btn { font-size: 15px; padding: 8px 12px; }
     .bar-strip .count { flex: 1 1 240px; text-align: right; }
-    .cap { margin: 0 0 10px; font: 400 16px/1 var(--poster); letter-spacing: .18em; color: var(--smoke); }
+    .cap { margin: 0 0 10px; font: 500 13px/1.2 var(--body); letter-spacing: .02em; color: var(--smoke); }
     /* Watching at home: the fan's laptop page, drawn 1280 wide and scaled to fit, so it's the laptop's layout, not the phone's. */
     .frame-box { width: 100%; overflow: hidden; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; background: var(--deep); }
     .frame { width: 1280px; height: 800px; border: 0; display: block; transform-origin: 0 0; }
@@ -38,43 +38,40 @@
     .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
     .note { margin: 12px 0 0; font-size: 13px; color: var(--smoke); text-align: center; }
     .night-btns { display: flex; justify-content: space-between; gap: 32px; margin: 0 0 12px; }
-    .unpaid-note { margin: 0 0 12px; color: var(--amber); font-size: 15px; }
+    .unpaid-note { margin: 0 0 12px; color: var(--cream); font-size: 15px; }
     .unpaid-note a { color: var(--cream); }
-    .big { flex: 0 1 340px; min-height: 52px; border: 0; border-radius: 10px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: #fff; cursor: pointer; }
-    .big.stream { background: var(--amber); color: var(--deep); }
-    .big.go { background: #1f9d55; }
-    .big.end { background: #7a4fd0; }
-    .big:disabled { opacity: .25; cursor: default; }
-    /* Option 3 (14 Nov): the buttons say where you are. Done: outlined with a tick. Now: lit. Next: as before. */
-    .big.done:disabled { opacity: 1; background: none; border: 1px solid rgb(217 149 58 / .5); color: var(--amber); }
-    .big.now:disabled { opacity: 1; box-shadow: 0 0 0 4px rgb(255 255 255 / .18); }
+    /* Option 3 (14 Nov): the buttons say where you are. Session 47: one amber at a time, on the next step (no green or purple).
+       Next: amber. Now: an ember outline (live). Done: a cream outline with a tick. Later: a faint outline. */
+    .big { flex: 0 1 340px; min-height: 52px; border: 1px solid var(--line); border-radius: 8px; background: none; font: 600 22px/1 var(--body); letter-spacing: 0; color: rgb(239 227 200 / .5); cursor: pointer; }
+    .big:not(:disabled) { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .big:disabled { cursor: default; }
+    .big.now:disabled { border-color: rgb(226 96 63 / .6); color: var(--live); }
+    .big.done:disabled { border-color: rgb(239 227 200 / .4); color: var(--cream); }
     /* An example gig: the stream is a status light, not a button (it plays from a recording). */
-    .big.on-air:disabled { opacity: 1; background: none; border: 1px solid rgb(226 75 74 / .6); box-shadow: none; color: #ff6b62; cursor: default; }
-    .big.go.now { box-shadow: 0 0 0 4px rgb(31 157 85 / .35); }
-    .big.end.now { box-shadow: 0 0 0 4px rgb(122 79 208 / .4); }
+    .big.on-air:disabled { border-color: rgb(226 96 63 / .6); color: var(--live); }
     .times { margin: -2px 0 12px; font-size: 16px; line-height: 1.45; color: var(--smoke); }
     .times b { color: var(--cream); font-weight: 600; }
     .after { margin: 0 0 18px; font-size: 18px; color: var(--cream); }
-    .after a { color: var(--amber); }
-    @media (max-width: 700px) { .night-btns { gap: 10px; } .big { font-size: 19px; min-height: 50px; padding: 6px 4px; } } /* shorter (Rajesh 13 Nov): one line each on a small phone */
-    /* Is the stream reaching us: the dot is grey until it is, then green. The preview is the real picture. */
+    .after a { color: var(--cream); }
+    @media (max-width: 700px) { .night-btns { gap: 10px; } .big { font-size: 17px; min-height: 50px; padding: 6px 4px; } } /* shorter (Rajesh 13 Nov): one line each on a small phone */
+    /* Is the stream reaching us: the dot is grey until it is, then sage. The preview is the real picture. */
     .signal { display: flex; align-items: center; gap: 16px; padding: 8px 14px; margin: 0 0 12px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
     .signal p { margin: 0; }
     .signal > div:last-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; min-width: 0; }
-    .signal-head { display: flex; align-items: center; gap: 10px; font: 400 20px/1.2 var(--poster); white-space: nowrap; letter-spacing: .08em; color: var(--cream); }
-    .signal .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--smoke); flex: none; }
-    .signal.on .dot { background: #2ecc71; box-shadow: 0 0 0 4px rgb(46 204 113 / .2); }
+    .signal-head { display: flex; align-items: center; gap: 10px; font: 600 16px/1.2 var(--body); white-space: nowrap; letter-spacing: 0; color: var(--cream); }
+    .signal .dot { width: 12px; height: 12px; border-radius: 50%; background: rgb(239 227 200 / .3); flex: none; }
+    .signal.on .dot { background: var(--ok); box-shadow: 0 0 0 4px rgb(140 196 154 / .2); }
     .signal-text { font-size: 15px; color: var(--smoke); }
     .preview-box { flex: 0 0 144px; aspect-ratio: 16 / 9; background: #000; border-radius: 4px; overflow: hidden; }
     .preview-box video { width: 100%; height: 100%; object-fit: contain; display: block; }
     .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
       /* Widgets (12 Nov): pages for the venue's screens, each a button with a copy icon beside it; room for more on the row. */
     .widgets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 16px; text-align: left; }
-    .widgets-head { margin: 0; font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--amber); }
+    .widgets-head { margin: 0; font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
     .widget-row { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; }
     .widget { display: inline-flex; align-items: stretch; gap: 4px; }
     .widget .copy { display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; background: none; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; color: var(--cream); cursor: pointer; }
-    .widget .copy:hover { color: var(--amber); border-color: var(--amber); }
+    .widget .copy:hover { color: var(--cream); border-color: rgb(239 227 200 / .6); }
     .widget .w-icon { display: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
     @media (max-width: 1000px) { .widget .w-icon { display: block; } .widget .w-name { display: none; } .widget > a.btn { display: inline-flex; align-items: center; justify-content: center; width: 52px; padding: 0; } } /* an icon on phones and small tablets (Rajesh 13 Nov) */
     .widget .copy svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -91,7 +88,7 @@
       <a href="/takings">3 · <span class="tab-long">Your </span>takings</a>
     </nav>
     <!-- The fan's page, one click from every artist page (Rajesh 15 Nov), in a tab of its own. -->
-    <a class="btn primary head-fan" id="head-fan" href="/" target="_blank" rel="noopener" hidden>Fan’s page ↗</a>
+    <a class="btn quiet head-fan" id="head-fan" href="/" target="_blank" rel="noopener" hidden>Fan’s page ↗</a>
     <script type="module">
       let key = null;
       try { key = localStorage.getItem('nutpub-admin'); } catch {}

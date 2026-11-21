@@ -14,8 +14,8 @@
     @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
     body.kitchen main { max-width: 1136px; text-align: left; font-family: "IBM Plex Sans", var(--body); }
     .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
-      background: var(--midnight); border: 1px solid rgb(217 149 58 / .55); border-radius: 6px;
-      box-shadow: 0 0 0 5px var(--deep), 0 0 0 6px rgb(217 149 58 / .3); }
+      background: var(--midnight); border: 1px solid rgb(239 227 200 / .3); border-radius: 6px;
+      box-shadow: 0 0 0 5px var(--deep), 0 0 0 6px rgb(239 227 200 / .15); }
     .kitchen .top { display: block; text-align: center; margin: 0 0 4px; text-decoration: none;
       font: 700 15px/1 Georgia, "Times New Roman", serif; letter-spacing: .28em; text-transform: uppercase; color: var(--amber); }
     .kitchen .top .nb { color: #f7931a; }
@@ -24,13 +24,13 @@
     .kitchen .lede { margin: 8px auto 0; max-width: 620px; text-align: center; font-size: clamp(16px, 4.2vw, 18px); line-height: 1.5; color: rgb(239 227 200 / .88); }
     .key { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin: 20px 0 0; padding: 0; list-style: none; }
     .key li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #c9cfdc; }
-    .chip { flex: none; white-space: nowrap; font: 400 14px/1 var(--poster); letter-spacing: .1em; padding: 4px 8px 2px; border-radius: 3px; }
+    .chip { flex: none; white-space: nowrap; font: 600 12px/1 var(--body); letter-spacing: .02em; padding: 4px 8px; border-radius: 3px; }
     .chip.built { border: 1px solid var(--cream); color: var(--cream); background: rgb(239 227 200 / .08); }
-    .chip.after { border: 1px solid var(--amber); color: var(--amber); }
-    .chip.proposed { border: 1px dashed var(--smoke); color: #c9cfdc; }
+    .chip.after { border: 1px solid rgb(239 227 200 / .4); color: var(--cream); }
+    .chip.proposed { border: 1px dashed var(--smoke); color: var(--smoke); }
     .part { margin-top: 34px; }
-    .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
-    .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(217 149 58 / .4); }
+    .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--cream); }
+    .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(239 227 200 / .25); }
     /* Rajesh 21 Nov: no empty cards, no holes. Built cards grow to fill their row; ideas not built yet are slim
        dashed tiles underneath, a name, a chip and their specs. */
     .cards { display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 0; list-style: none; }
@@ -38,22 +38,22 @@
     .soon-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
     .soon-tile { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 10px 14px; background: rgb(5 9 20 / .35); border: 1px dashed rgb(239 227 200 / .22); border-radius: 5px; }
     .soon-tile b { font: 600 15.5px/1.3 "IBM Plex Sans", var(--body); color: var(--cream); }
-    .soon-tile b a { color: var(--cream); text-decoration: underline dotted rgb(217 149 58 / .8); text-underline-offset: 4px; }
-    .soon-tile .specs { font: 400 16px/1.2 var(--poster); letter-spacing: .07em; color: var(--amber); }
-    .soon-tile .chip { font-size: 13px; }
+    .soon-tile b a { color: var(--cream); text-decoration: underline dotted rgb(239 227 200 / .6); text-underline-offset: 4px; }
+    .soon-tile .specs { font: 600 13px/1.3 var(--body); letter-spacing: .02em; color: var(--cream); }
+    .soon-tile .chip { font-size: 12px; }
     @media (max-width: 600px) { .soon-tile { flex: 1 1 100%; flex-direction: column; align-items: flex-start; gap: 6px; } } /* a phone: chip, name, specs, the same in every tile */
     .kcard { display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 14px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
     .kcard .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .kcard h3 { margin: 0; font: 600 17px/1.3 "IBM Plex Sans", var(--body); color: var(--cream); }
     .kcard p { margin: 0; font-size: 15px; line-height: 1.5; color: rgb(239 227 200 / .84); }
-    .kcard .specs { margin-top: auto; padding-top: 2px; font: 400 16px/1.2 var(--poster); letter-spacing: .07em; color: var(--amber); }
+    .kcard .specs { margin-top: auto; padding-top: 2px; font: 600 13px/1.3 var(--body); letter-spacing: .02em; color: var(--cream); }
     .kcard code { font: 14px var(--mono); color: var(--cream); }
-    .kcard a { color: var(--amber); }
-    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid rgb(217 149 58 / .25); font-size: 15px; color: rgb(239 227 200 / .8); }
+    .kcard a { color: var(--cream); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; color: rgb(239 227 200 / .8); }
     /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
-    .btn-out { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box; padding: 10px 18px 7px; border: 1.5px solid var(--amber); border-radius: 6px; font: 400 20px/1 var(--poster); letter-spacing: .1em; color: var(--amber); text-decoration: none; }
-    .btn-out:hover, .btn-out:focus-visible { background: rgb(217 149 58 / .12); color: var(--cream); }
-    .made { margin: 0 0 20px; text-align: center; font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
+    .btn-out { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box; padding: 10px 18px; border: 1.5px solid var(--amber); border-radius: 6px; font: 600 16px/1 var(--body); letter-spacing: 0; color: var(--amber); text-decoration: none; }
+    .btn-out:hover, .btn-out:focus-visible { background: rgb(217 149 58 / .12); }
+    .made { margin: 0 0 20px; text-align: center; font: 500 12px/1 var(--body); letter-spacing: .04em; }
     .made a { color: var(--smoke); text-decoration: none; }
     .made a:hover { color: var(--cream); text-decoration: underline; }
   </style>

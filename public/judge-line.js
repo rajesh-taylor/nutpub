@@ -187,7 +187,7 @@ export async function judgeLine(r, page) {
         return say(4, waiting ? 'The fan’s phone shows a door word: press Let in.' : 'On your phone: scan the fan’s door QR on the right. No phone, Judge? Press Show a door word, then Let in.', '', '',
           { story: STORY[4], extra: both });
       }
-      if (!on) return say(5, 'Press Start show, the green button below.', '', '', { story: STORY[5] });
+      if (!on) return say(5, 'Press Start show, the amber button below.', '', '', { story: STORY[5] });
       // Step 6 (Rajesh 20 Nov): Longy's set first. Hello in the chat, so the clip plays a while; the fan's list (this browser) says
       // when it's said. Either chat counts: the fan's phone or the desktop view below (Rajesh 18 Nov).
       // Only tonight's: each list's pass is that fan's pass now, so a hello from an earlier gig on this stage doesn't count.
@@ -202,7 +202,7 @@ export async function judgeLine(r, page) {
       const d = await drinks();
       if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
-      return say(7, 'Now press End night, the purple button below.', '', '', { story: STORY.poured });
+      return say(7, 'Now press End night, the amber button below.', '', '', { story: STORY.poured });
     }
     if (g2) {
       if (page === 'setup') {
@@ -221,9 +221,9 @@ export async function judgeLine(r, page) {
         if (closed && fanHome()) document.getElementById('head-fan')?.remove(); // nothing left on the fan's page
         if (closed) return fanHome() ? say(5, 'Click 3 · Your takings, at the top.')
           : say(5, 'Back on the fan’s page: press Move my sats, move them to Cashu.me, then close that tab.', '', '', { story: TOLD.home });
-        if (!on) return say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
+        if (!on) return say(2, 'Press Start show, the amber button below.', '', '', { story: TOLD.start });
         if (!fanDone()) return say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
-        return say(4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
+        return say(4, 'The fan’s list is all ticked: press End night, the amber button below.', '', '', { story: TOLD.end });
       }
       if (!closed) return say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
       return movedAll() ? say(7, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
@@ -237,10 +237,10 @@ export async function judgeLine(r, page) {
     if (page === 'setup') say(1, `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show') {
       if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
-      else if (!on) say(2, 'Press Start show, the green button below.', '', '', { story: TOLD.start });
+      else if (!on) say(2, 'Press Start show, the amber button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
       else if (tv && !tvSeen()) say(4, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
-      else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the purple button below.', '', '', { story: TOLD.end });
+      else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the amber button below.', '', '', { story: TOLD.end });
     } else if (!closed) say(tv ? 5 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
     // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.
     else say(tv ? 6 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });

@@ -21,8 +21,8 @@
     .screen-sign .shine text { font: 700 80px Georgia, "Times New Roman", serif; fill: #fff3d0; }
     @keyframes sign-shine { 0% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } 42.41% { -webkit-mask-position: 4% 0; mask-position: 4% 0; } 42.42%, 100% { -webkit-mask-position: 96% 0; mask-position: 96% 0; } }
     .screen-full { position: absolute; top: 2vh; right: 2vw; }
-    .screen-judge { display: flex; gap: 14px; align-items: baseline; justify-content: center; width: fit-content; max-width: 92vw; margin: 1.5vh auto 0; padding: 8px 16px; border: 1px solid var(--amber); border-radius: 8px; background: rgb(217 149 58 / .08); font: 16px/1.4 var(--body); color: var(--cream); } /* judges only (Rajesh 19 Nov) */
-    .screen-judge b { flex: none; font: 400 16px/1.2 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+    .screen-judge { display: flex; gap: 14px; align-items: baseline; justify-content: center; width: fit-content; max-width: 92vw; margin: 1.5vh auto 0; padding: 8px 16px; border: 1px solid rgb(239 227 200 / .28); border-radius: 8px; background: var(--raised); font: 16px/1.4 var(--body); color: var(--cream); } /* judges only (Rajesh 19 Nov) */
+    .screen-judge b { flex: none; font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--smoke); } /* as the judges' line (session 47) */
     /* Three columns (Rajesh 21 Nov, session 45): the QR, Top tippers, Chat, each list in rows under its heading. The
        chat a little wider; it fills its column's height, newest at the bottom, as in the full screen and the chat box. */
     .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 3.5vw; align-items: start; padding: 5vh 6vw 1vh; }

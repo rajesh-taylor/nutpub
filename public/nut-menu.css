@@ -1,22 +1,21 @@
 /* The menu: a pint with the word, so judges see it opens something (Rajesh 15 Nov); a card under it, one row per
    place, its name and what's there (19 Nov). On every reading page since 21 Nov: home, the Kitchen and the Pub
    Noticeboard (the Pub Menu left the menus in session 45). Home places it absolutely (judge.html); the other pages give it a row of its own above their card. */
-@font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
 .nut-menu { z-index: 5; text-align: right; }
 .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }
 .nut-menu summary::-webkit-details-marker { display: none; }
-.menu-btn { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 5px; border: 1.5px solid rgb(232 168 69 / .55); border-radius: 6px; }
-.menu-btn b { font: 400 18px/1 var(--poster); letter-spacing: .14em; color: #e8a845; padding-top: 3px; }
+.menu-btn { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 5px; border: 1px solid rgb(239 227 200 / .4); border-radius: 6px; }
+.menu-btn b { font: 600 15px/1 var(--body); letter-spacing: 0; color: var(--cream); }
 .menu-btn svg { display: block; height: 26px; width: auto; transition: transform .2s; }
 .nut-menu summary:hover .menu-btn svg, .nut-menu[open] .menu-btn svg { transform: rotate(-10deg); }
-.nut-menu summary:hover .menu-btn, .nut-menu[open] .menu-btn { border-color: #e8a845; }
+.nut-menu summary:hover .menu-btn, .nut-menu[open] .menu-btn { border-color: rgb(239 227 200 / .7); }
 .nut-menu summary:focus-visible { outline: 2px solid var(--amber); border-radius: 4px; }
-.nut-menu ul { position: absolute; right: 4px; top: calc(100% + 6px); min-width: 230px; list-style: none; margin: 0; padding: 6px; background: var(--deep); border: 1px solid rgb(232 163 61 / .55); border-radius: 8px; display: grid; gap: 2px; text-align: left; box-shadow: 0 14px 30px rgb(0 0 0 / .65); }
+.nut-menu ul { position: absolute; right: 4px; top: calc(100% + 6px); min-width: 230px; list-style: none; margin: 0; padding: 6px; background: var(--deep); border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 2px; text-align: left; box-shadow: 0 14px 30px rgb(0 0 0 / .65); }
 .nut-menu li + li { border-top: 1px solid rgb(239 227 200 / .1); padding-top: 2px; }
 .nut-menu a { display: grid; gap: 3px; padding: 10px 12px; border-radius: 6px; text-decoration: none; }
-.nut-menu a b { font: 400 19px/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: #e8a845; }
-.nut-menu a small { font: 13px/1.3 "IBM Plex Sans", var(--body); color: var(--smoke); }
-.nut-menu a:hover, .nut-menu a:focus-visible { background: rgb(232 168 69 / .12); outline: none; }
+.nut-menu a b { font: 600 16px/1.2 var(--body); letter-spacing: 0; color: var(--cream); }
+.nut-menu a small { font: 13px/1.3 var(--body); color: var(--smoke); }
+.nut-menu a:hover, .nut-menu a:focus-visible { background: rgb(239 227 200 / .08); outline: none; }
 .nut-menu a:hover b, .nut-menu a:focus-visible b { color: var(--cream); }
 /* A phone (Rajesh 20 Nov): the pint alone, small. */
 @media (max-width: 700px) { .menu-btn { padding: 0; border: 0; } .menu-btn b { display: none; } .menu-btn svg { height: 22px; } }
