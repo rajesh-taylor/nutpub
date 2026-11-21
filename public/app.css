@@ -1448,3 +1448,5 @@ body.wallet .role, body.bar .role { display: flex; width: fit-content; margin-le
 @media (prefers-reduced-motion: reduce) { .pin-hint { animation: none; } }
 /* Gig 3's first step (Rajesh 20 Nov): the door's switch row shimmers too, once the price is in. */
 label.pin-hint { border: 1px solid var(--amber); border-radius: 8px; padding: 6px 12px; }
+/* Cockney rhyming slang (Rajesh 21 Nov): a dotted line under it, its meaning on hover. */
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }

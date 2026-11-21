@@ -36,10 +36,11 @@ export async function judgeLine(r, page) {
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
   const steps = pickle ? 8 : g2 ? 7 : tv ? 6 : 5;
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
-    if (said === n + story + note + text) return;
-    said = n + story + note + text;
+    const key = n + [].concat(story).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note + text;
+    if (said === key) return;
+    said = key;
     const words = Object.assign(document.createElement('span'), { className: 'jl-say' });
-    if (story) words.append(Object.assign(document.createElement('span'), { className: 'jl-story', textContent: story }));
+    if (story) { const st = Object.assign(document.createElement('span'), { className: 'jl-story' }); st.append(...[].concat(story)); words.append(st); }
     if (note) words.append(Object.assign(document.createElement('span'), { className: 'jl-story', textContent: note })); // what the page shows below (gig 3's step 8)
     words.append(Object.assign(document.createElement('span'), { textContent: text }));
     line.replaceChildren(Object.assign(document.createElement('b'), { textContent: n ? `Judges · ${n} of ${steps}` : 'Judges' }), words);
@@ -128,6 +129,11 @@ export async function judgeLine(r, page) {
     const closed = s.stage === 'closed';
     const on = s.stage === 'on';
     if (pickle) {
+      if (page === 'takings' && (await admin('/api/admin/setlist'))?.setlist?.done?.includes(list.at)) {
+        const bread = Object.assign(document.createElement('abbr'), { title: 'Cockney rhyming slang: bread and honey, money', textContent: 'bread' });
+        return say('', 'Before you go, meet the Regulars: AI agents buy tickets here too.', 'Meet the Regulars →', judge.replace(/\/judge$/, '/agents'),
+          { story: ['Longy’s ', bread, ' is in his own wallet.'] });
+      }
       if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
         closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[8] : '', note: closed ? STORY.takings : '' });
       const show = (await admin('/api/show'))?.show;
@@ -233,6 +239,7 @@ export async function judgeLine(r, page) {
     document.getElementById('pin-text')?.addEventListener('input', () => draw());
     document.querySelector('[data-path="comments"]')?.addEventListener('change', () => draw());
   }
+  if (pickle && page === 'takings') document.addEventListener('nutpub:finished', () => draw());
   if (page === 'show' || (pickle && page === 'setup') || (g2 && ['setup', 'takings'].includes(page))) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);

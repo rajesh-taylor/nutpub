@@ -31,7 +31,17 @@
     .part { margin-top: 34px; }
     .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--amber); }
     .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(217 149 58 / .4); }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+    /* Rajesh 21 Nov: no empty cards, no holes. Built cards grow to fill their row; ideas not built yet are slim
+       dashed tiles underneath, a name, a chip and their specs. */
+    .cards { display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 0; list-style: none; }
+    .cards > .kcard { flex: 1 1 300px; min-width: 0; }
+    .soon-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .soon-tile { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 10px 14px; background: rgb(5 9 20 / .35); border: 1px dashed rgb(239 227 200 / .22); border-radius: 5px; }
+    .soon-tile b { font: 600 15.5px/1.3 "IBM Plex Sans", var(--body); color: var(--cream); }
+    .soon-tile b a { color: var(--cream); text-decoration: underline dotted rgb(217 149 58 / .8); text-underline-offset: 4px; }
+    .soon-tile .specs { font: 400 16px/1.2 var(--poster); letter-spacing: .07em; color: var(--amber); }
+    .soon-tile .chip { font-size: 13px; }
+    @media (max-width: 600px) { .soon-tile { flex: 1 1 100%; flex-direction: column; align-items: flex-start; gap: 6px; } } /* a phone: chip, name, specs, the same in every tile */
     .kcard { display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 14px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
     .kcard .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .kcard h3 { margin: 0; font: 600 17px/1.3 "IBM Plex Sans", var(--body); color: var(--cream); }
@@ -80,10 +90,10 @@
             <p>The door can tell it’s real, never who bought it.</p><p class="specs">NUT-00 · NUT-10 · NUT-12</p></li>
           <li class="kcard"><div class="head"><h3>Tickets as passkeys</h3><span class="chip built">✓ Built</span></div>
             <p>Saved in your password manager. Find my ticket brings it back.</p><p class="specs">WebAuthn</p></li>
-          <li class="kcard"><div class="head"><h3>Passkeys that seal the ticket</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">WebAuthn PRF</p></li>
-          <li class="kcard"><div class="head"><h3>Give a ticket away</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NUT-00 · NUT-12</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>Passkeys that seal the ticket</b><span class="specs">WebAuthn PRF</span></li>
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>Give a ticket away</b><span class="specs">NUT-00 · NUT-12</span></li>
         </ul>
       </section>
 
@@ -93,7 +103,7 @@
           <li class="kcard"><div class="head"><h3>A QR that changes every 30 seconds</h3><span class="chip built">✓ Built</span></div>
             <p>A screenshot won’t get in.</p><p class="specs">Schnorr signatures · BIP-340</p></li>
           <li class="kcard"><div class="head"><h3>The Doorman’s List</h3><span class="chip built">✓ Built</span></div>
-            <p>Any phone scans. Three checks, never a name.</p><p class="specs">NUT-12</p></li>
+            <p>Any <abbr title="Cockney rhyming slang: dog and bone, phone">dog and bone</abbr> scans. Three checks, never a name.</p><p class="specs">NUT-12</p></li>
           <li class="kcard"><div class="head"><h3>A door word</h3><span class="chip built">✓ Built</span></div>
             <p>No scanner? Let them in by hand.</p><p class="specs">The NutPub’s own</p></li>
         </ul>
@@ -104,8 +114,9 @@
         <ul class="cards">
           <li class="kcard"><div class="head"><h3>The first drink is a coin</h3><span class="chip built">✓ Built</span></div>
             <p>Handed over as a loop of QR codes. Poured means spent.</p><p class="specs">NUT-11 · NUT-16 (proposed) · NUT-07</p></li>
-          <li class="kcard"><div class="head"><h3>Tips without Wi-Fi</h3><span class="chip proposed">Proposed</span></div>
-            <p class="specs">NUT-11 · NUT-12</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip proposed">Proposed</span><b>Tips without Wi-Fi</b><span class="specs">NUT-11 · NUT-12</span></li>
         </ul>
       </section>
 
@@ -130,10 +141,10 @@
             <p>Tips signed with your Nostr key.</p><p class="specs">NIP-61</p></li>
           <li class="kcard"><div class="head"><h3>Chat, moderators, the TV page</h3><span class="chip built">✓ Built</span></div>
             <p>For the room and for home.</p><p class="specs">The NutPub’s own</p></li>
-          <li class="kcard"><div class="head"><h3>Tip from your own wallet</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NIP-47</p></li>
-          <li class="kcard"><div class="head"><h3>The gig, live on Nostr</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NIP-53</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>Tip from your own wallet</b><span class="specs">NIP-47</span></li>
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>The gig, live on Nostr</b><span class="specs">NIP-53</span></li>
         </ul>
       </section>
 
@@ -142,8 +153,9 @@
         <ul class="cards">
           <li class="kcard"><div class="head"><h3>Replays for 7 days</h3><span class="chip built">✓ Built</span></div>
             <p>After the show: free with a ticket, one payment without. Then deleted.</p><p class="specs">NUT-24 · NUT-11</p></li>
-          <li class="kcard"><div class="head"><h3>A replay pass</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NUT-11</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>A replay pass</b><span class="specs">NUT-11</span></li>
         </ul>
       </section>
 
@@ -156,12 +168,11 @@
             <p>One tap, then a till receipt.</p><p class="specs">NUT-03 · NUT-11</p></li>
           <li class="kcard"><div class="head"><h3>Your 12 words</h3><span class="chip built">✓ Built</span></div>
             <p>BIP-39 words on Coco’s key path, <code>m/129373′/10′/0′/0′/i</code>. On another browser they bring the key back, and a sweep collects sats not yet moved. No new encryption.</p><p class="specs">BIP-39 · BIP-32 · NUT-11</p></li>
-          <li class="kcard"><div class="head"><h3>A passkey-sealed copy of the key</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">WebAuthn PRF</p></li>
-          <li class="kcard"><div class="head"><h3>Show splits as the fan pays</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NUT-11</p></li>
-          <li class="kcard"><div class="head"><h3>Move to your phone</h3><span class="chip after">After 27 Nov</span></div>
-            <p class="specs">NUT-16 (proposed)</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>A passkey-sealed copy of the key</b><span class="specs">WebAuthn PRF</span></li>
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>Show splits as the fan pays</b><span class="specs">NUT-11</span></li>
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b>Move to your phone</b><span class="specs">NUT-16 (proposed)</span></li>
         </ul>
       </section>
 
@@ -170,10 +181,10 @@
         <ul class="cards">
           <li class="kcard"><div class="head"><h3>An agent buys a ticket</h3><span class="chip built">✓ Built</span></div>
             <p>Every price is a plain HTTP 402, the idea x402 shares. Try it: <code>npm run agent</code>.</p><p class="specs">NUT-24 · NUT-18 · NUT-04</p></li>
-          <li class="kcard"><div class="head"><h3>Gig search, tickets and hire days over MCP</h3><span class="chip after">After 27 Nov</span></div>
-            <p>On refueler.io. <a href="/agents">The Regulars →</a></p><p class="specs">MCP</p></li>
-          <li class="kcard"><div class="head"><h3>Venue deals</h3><span class="chip proposed">Proposed</span></div>
-            <p class="specs">NUT-00 · NUT-12</p></li>
+        </ul>
+        <ul class="soon-row" aria-label="Not built yet">
+          <li class="soon-tile"><span class="chip after">After 27 Nov</span><b><a href="/agents">Gig search, tickets and hire days over MCP</a></b><span class="specs">MCP</span></li>
+          <li class="soon-tile"><span class="chip proposed">Proposed</span><b>Venue deals</b><span class="specs">NUT-00 · NUT-12</span></li>
         </ul>
       </section>
 

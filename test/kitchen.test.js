@@ -9,19 +9,21 @@ const read = (f) => readFileSync(new URL(`../public/${f}`, import.meta.url), 'ut
 const kitchen = read('kitchen.html');
 const regulars = read('agents.html');
 
-test('every Kitchen card has one chip: built, after 27 Nov or proposed', () => {
+test('built cards carry a line and their specs; ideas not built yet are tiles: a chip, a name and specs', () => {
   const cards = kitchen.split('<li class="kcard">').slice(1).map((c) => c.split('</li>')[0]);
-  assert.ok(cards.length >= 25, `only ${cards.length} cards`);
+  const tiles = kitchen.split('<li class="soon-tile">').slice(1).map((c) => c.split('</li>')[0]);
+  assert.ok(cards.length >= 20, `only ${cards.length} cards`);
+  assert.ok(tiles.length >= 8, `only ${tiles.length} tiles`);
   for (const c of cards) {
-    const chips = [...c.matchAll(/class="chip (built|after|proposed)"/g)].map((m) => m[1]);
-    assert.equal(chips.length, 1, c.slice(0, 120));
+    assert.match(c, /class="chip built"/, c.slice(0, 120));
     assert.match(c, /class="specs"/, c.slice(0, 120));
   }
-});
-
-test('ideas not built yet give a name and their specs, never the how', () => {
-  const later = kitchen.split('<li class="kcard">').slice(1).map((c) => c.split('</li>')[0]).filter((c) => !c.includes('chip built'));
-  for (const c of later) assert.ok([...c.matchAll(/<p(?! class="specs")/g)].length <= 1, c.slice(0, 120));
+  // Rajesh 21 Nov: never the how for what isn't built: no sentence, only a name and its specs.
+  for (const t of tiles) {
+    assert.equal([...t.matchAll(/class="chip (after|proposed)"/g)].length, 1, t.slice(0, 120));
+    assert.match(t, /class="specs"/, t.slice(0, 120));
+    assert.ok(!/<p\b/.test(t), t.slice(0, 120));
+  }
 });
 
 test('no other projects, no Refueler products, no fees, no MCP endpoint on thenutpub.com', () => {

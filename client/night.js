@@ -317,7 +317,7 @@ function paint() {
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
   $('finish').hidden = !done;
   $('finish-go').hidden = !s.over;
-  $('finish-note').textContent = s.over ? (onSetlist?.only ? 'Then back to the three gigs.' : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
+  $('finish-note').textContent = s.over ? (onSetlist?.only ? (onSetlist.at === 'pickle' ? 'Then meet the Regulars.' : 'Then back to the three gigs.') : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held + s.late;
   $('move').disabled = !toMove;
@@ -493,7 +493,8 @@ async function finishGig(btn) {
       : list ? ['Done. Every gig on ', link('/', 'your setlist'), ' is ticked off.']
       : ['Finished. ', link('/setup', 'Plan gig'), ' is ready for the next one.'];
     if (finishedLine) paint();
-    $('artist-status').replaceChildren(...(list?.only ? ['Done. ', link(judgePage, 'Back to the three gigs'), '.'] : finishedNext));
+    $('artist-status').replaceChildren(...(list?.only ? (onSetlist?.at === 'pickle' ? ['Done.'] : ['Done. ', link(judgePage, 'Back to the three gigs'), '.']) : finishedNext));
+    document.dispatchEvent(new Event('nutpub:finished')); // the Judges line moves on (judge-line.js)
   } catch (e) { $(btn === $('wrap-finish') ? 'wrap-status' : 'artist-status').textContent = `Not done: ${e.message}`; }
   finally { btn.disabled = false; }
 }
@@ -561,6 +562,13 @@ function printSlip(g) {
   $('r-slip').replaceChildren(...slip(g));
   print();
 }
+// Gig 3's thank-you (Rajesh 20 Nov), its cockney glossed for judges abroad; then the Regulars (21 Nov).
+function thanks() {
+  const p = el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old ');
+  p.append(Object.assign(document.createElement('abbr'), { title: 'Cockney rhyming slang: china plate, mate', textContent: 'china' }),
+    '! 🍻 Before you go, meet the Regulars: AI agents buy tickets here too.');
+  return p;
+}
 function drawWrap(view, s) {
   const fin = view === 'finished';
   $('wrap-tag').textContent = fin ? 'Finished' : 'In your wallet';
@@ -576,8 +584,7 @@ function drawWrap(view, s) {
     // Gig 3 is the last (Rajesh 20 Nov): a thank-you, and the Pub Menu for more.
     const last = onSetlist?.at === 'pickle';
     $('wrap-after').replaceChildren(...(onSetlist?.only
-      ? (last ? [el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old china! 🍻 I’m still building: the Pub Menu has more.'),
-        Object.assign(el('a', 'btn primary judges-on', 'The Pub Menu →'), { href: judgePage.replace(/\/judge$/, '/menu') })]
+      ? (last ? [thanks(), Object.assign(el('a', 'btn primary judges-on', 'Meet the Regulars →'), { href: judgePage.replace(/\/judge$/, '/agents') })]
         : [Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })])
       : [Object.assign(el('p', 'wrap-next'), {})]));
     if (!onSetlist?.only) $('wrap-after').firstChild.append(...(finishedNext || []));
