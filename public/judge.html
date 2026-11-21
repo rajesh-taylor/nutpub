@@ -82,15 +82,17 @@
     .again { margin-bottom: -4px !important; font: 400 14px/1 var(--poster); letter-spacing: .2em; color: #c4521a; }
     .said { font-size: 14px; color: #8a2a0a; }
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 12px/1.5 var(--mono); color: #4a3a1c; }
-    /* The Pub Noticeboard strip (session 43 as The Regulars; renamed and above the posters, session 45): the wall's width, amber dashed. */
-    .regulars-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; width: 100%; max-width: 1200px; box-sizing: border-box; justify-self: center; margin-top: 0; padding: 14px 18px; background: var(--midnight); border: 1.5px dashed rgb(232 168 69 / .7); border-radius: 6px; text-decoration: none; }
-    .regulars-strip b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: #e8a845; padding-top: 3px; }
-    .regulars-strip span { flex: 1 1 320px; font: 400 16px/1.45 "IBM Plex Sans", var(--body); color: rgb(239 227 200 / .92); }
-    .regulars-strip i { font: 400 20px/1 var(--poster); font-style: normal; letter-spacing: .1em; color: #e8a845; padding-top: 3px; }
-    .regulars-strip:hover { border-color: #e8a845; background: rgb(232 168 69 / .08); }
-    .regulars-strip:hover i { color: var(--cream); }
-    .regulars-strip:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
-    @media (max-width: 900px) { .regulars-strip { max-width: 420px; } }
+    /* Two tiles under the posters (Rajesh 21 Nov, session 45): The Kitchen and the Pub Noticeboard, for after the gigs, or
+       for developers who skip them. Amber dashed, as the Regulars strip was; side by side, stacked on a phone. */
+    .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; }
+    .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 16px 20px; background: var(--midnight); border: 1.5px dashed rgb(232 168 69 / .7); border-radius: 6px; text-decoration: none; }
+    .tile b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: #e8a845; padding-top: 3px; }
+    .tile span { grid-column: 1; font: 400 16px/1.45 "IBM Plex Sans", var(--body); color: rgb(239 227 200 / .92); }
+    .tile i { grid-column: 2; grid-row: 1 / span 2; font: 400 28px/1 var(--poster); font-style: normal; color: #e8a845; }
+    .tile:hover { border-color: #e8a845; background: rgb(232 168 69 / .08); }
+    .tile:hover i { color: var(--cream); }
+    .tile:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+    @media (max-width: 900px) { .tiles { grid-template-columns: minmax(0, 1fr); max-width: 420px; } }
     .judge footer { padding-block: 56px calc(40px + env(safe-area-inset-bottom, 0px)); }
     .judge footer p { margin: 0; padding-top: 22px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .judge footer a { color: var(--smoke); text-decoration: none; }
@@ -234,8 +236,6 @@
       <b>Judges</b>
       <span class="jl-say"><span>Three gigs below. You’ll be the artist and a fan.</span></span>
     </div>
-    <!-- Session 43, renamed and moved above the posters in session 45 (Rajesh 21 Nov): the Pub Noticeboard, AI agents at the NutPub. -->
-    <a class="regulars-strip" href="/noticeboard"><b>Pub Noticeboard</b><span>Your AI agent can buy a ticket too: over the 402 today, finding gigs over MCP soon.</span><i>Read the board →</i></a>
 
     <div class="wall">
       <article class="poster" data-gig="longy">
@@ -281,6 +281,11 @@
       </article>
 
     </div>
+    <!-- Session 45 (Rajesh 21 Nov): the way on after the gigs, under the posters so judges head to gig 1 first. -->
+    <nav class="tiles" aria-label="More">
+      <a class="tile" href="/kitchen"><b>The Kitchen</b><span>What’s cooking: what’s served, what’s on order, and the recipes.</span><i aria-hidden="true">→</i></a>
+      <a class="tile" href="/noticeboard"><b>Pub Noticeboard</b><span>Pinned by the bar: a ticket bought by a script today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
+    </nav>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
       <p class="billing-note">Without them, it’d be karaoke.</p>
