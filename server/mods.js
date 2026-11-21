@@ -7,7 +7,7 @@
 import { one, all, run, sql, batch, kv } from './db.js';
 import { json, body, randomHex, now } from './http.js';
 
-const MAX_MODS = 5;
+const MAX_MODS = 3; // one main mod and two helpers (Rajesh 21 Nov)
 export const ICONS = ['🎸', '🎤', '🥁', '🎹', '🎷', '🎺', '🎻', '🎧', '🎶', '🥜', '₿'];
 const iconOf = (v, fallback = ICONS[0]) => (ICONS.includes(v) ? v : fallback);
 const utf8 = new TextEncoder();

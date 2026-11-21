@@ -659,7 +659,7 @@ $('mod-make').onclick = async () => {
     $('mod-name').value = '';
     status(`${m.name}'s link is ready: copy it and send it to them privately.`, 'ok');
     drawMods();
-  } catch (err) { status(err.message === 'too_many' ? '5 moderators at most.' : `Not made: ${err.message}`, 'bad'); }
+  } catch (err) { status(err.message === 'too_many' ? '3 moderators at most: one main mod and two helpers.' : `Not made: ${err.message}`, 'bad'); }
 };
 
 // ---- The show: page 2 (a plain link). Inside the old demo page it switches the tab instead.
