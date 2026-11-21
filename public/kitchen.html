@@ -234,6 +234,9 @@
       };
       for (const b of btns) b.onclick = () => show(b.getAttribute('aria-pressed') === 'true' ? '' : b.dataset.show);
       all.onclick = () => show('');
+      // /kitchen#after (or #built, #proposed) opens filtered: the README's honest list links here (session 48).
+      const fromHash = () => { const k = location.hash.slice(1); if (btns.some((b) => b.dataset.show === k)) show(k); };
+      fromHash(); addEventListener('hashchange', fromHash);
     }
   </script>
 </body>
