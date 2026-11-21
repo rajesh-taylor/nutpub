@@ -38,7 +38,6 @@
     @keyframes home-shine-byline { 0%, 50% { background-position: 100% 0; } 78.5% { background-position: 0 0; } 78.51%, 100% { background-position: 100% 0; } }
     @media (prefers-reduced-motion: reduce) { .home-sign .shine { display: none; } }
     @media (max-width: 700px) { .nut-menu { top: 10px; right: max(6px, env(safe-area-inset-right, 0px)); } .menu-btn { padding: 0; border: 0; } .menu-btn b { display: none; } .menu-btn svg { height: 22px; } .home-sign { margin-top: 0; } .home-byline { margin-top: -10px; font-size: 12px; letter-spacing: .16em; } .lines .lead { font-size: 16px; } .not-phone { display: none; } } /* a phone (Rajesh 20 Nov): the pint alone, small, top right; the sign and byline up where the Menu box was */
-    .judge main > .home-start { margin: 6px 0 0; width: 100%; max-width: 1200px; justify-self: center; box-sizing: border-box; text-align: left; }
     .lines { display: grid; gap: 8px; }
     .judge main > h1, .judge main > .lines { width: 100%; max-width: 1200px; justify-self: center; } /* as wide as the three posters (Rajesh 19 Nov) */
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
@@ -91,10 +90,11 @@
     .tile i { grid-column: 2; grid-row: 1 / span 2; font: 400 28px/1 var(--poster); font-style: normal; color: #e8a845; }
     .tile:hover { border-color: #e8a845; background: rgb(232 168 69 / .08); }
     .tile:hover i { color: var(--cream); }
+    .tile .chip { display: inline-block; margin-left: 10px; vertical-align: 3px; padding: 4px 8px 2px; border: 1px solid #e8a845; border-radius: 3px; font: 400 14px/1 var(--poster); letter-spacing: .1em; color: #e8a845; } /* a nod to fish 'n' chips (Rajesh 21 Nov) */
     .tile:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
     @media (max-width: 900px) { .tiles { grid-template-columns: minmax(0, 1fr); max-width: 420px; } }
     .judge footer { padding-block: 56px calc(40px + env(safe-area-inset-bottom, 0px)); }
-    .judge footer p { margin: 0; padding-top: 22px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
+    .judge footer p { margin: 0; text-align: center; padding-top: 22px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 11px/1 "IBM Plex Sans", var(--body); letter-spacing: .2em; text-transform: uppercase; }
     .judge footer a { color: var(--smoke); text-decoration: none; }
     .judge footer a:hover { color: var(--cream); text-decoration: underline; }
     /* Supporting acts (from the old home page, 15 Nov): the laurels in the posters' colours, paper and rust, not gold. */
@@ -231,11 +231,6 @@
       <!-- Rajesh 20 Nov (late): the gold line alone; "Artists & Musicians • Fans • Pubs" gone too (evening). -->
       <p class="lead what">A night out using Cashu. From the ticket, door entry, first round, 402 streaming payments, comments &amp; tips and takings back to your own wallet.</p>
     </div>
-    <!-- Session 45 (Rajesh 21 Nov): how a judge starts, one line; the posters say the rest (no button: read the posters). -->
-    <div class="judge-line home-start" id="home-start">
-      <b>Judges</b>
-      <span class="jl-say"><span>Three gigs below. You’ll be the artist and a fan.</span></span>
-    </div>
 
     <div class="wall">
       <article class="poster" data-gig="longy">
@@ -284,7 +279,7 @@
     <!-- Session 45 (Rajesh 21 Nov): the way on after the gigs, under the posters so judges head to gig 1 first. -->
     <nav class="tiles" aria-label="More">
       <a class="tile" href="/kitchen"><b>The Kitchen</b><span>What’s cooking: what’s served, what’s on order, and the recipes.</span><i aria-hidden="true">→</i></a>
-      <a class="tile" href="/noticeboard"><b>Pub Noticeboard</b><span>Pinned by the bar: a ticket bought by a script today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
+      <a class="tile" href="/noticeboard"><b>Pub Noticeboard <small class="chip">Fish n’ MCP</small></b><span>Pinned by the bar: a ticket bought by a script today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
     </nav>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
