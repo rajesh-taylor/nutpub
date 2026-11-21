@@ -804,11 +804,14 @@ body.wallet-card .show-line .status:empty { display: none; }
 body.wallet-card .stat small:not(.fine), body.wallet-card .goal .goal-head { font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); }
 body.wallet-card .goal .goal-list { font-family: var(--poster); letter-spacing: .08em; text-transform: uppercase; }
 /* A mic above each goal with a short stem down to the track, no circle (as on the tippers screen, 12 Nov): cream, amber once met. */
-.goal .notch.mic { top: auto; bottom: calc(100% + 4px); width: 22px; height: 22px; margin: 0; transform: translateX(-50%); display: block; background: none; border-radius: 0; box-shadow: none; color: var(--cream); z-index: 1; }
+.goal .notch.mic { top: auto; bottom: calc(100% + 4px); width: 22px; height: 22px; margin: 0; transform: translateX(-50%); display: block; background: none; border-radius: 0; box-shadow: none; color: rgb(239 227 200 / .45); z-index: 1; } /* a goal still ahead: dim */
 .goal .notch.mic svg { display: block; width: 100%; height: 100%; fill: currentColor; }
-.goal .notch.mic::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: rgb(239 227 200 / .7); }
+.goal .notch.mic::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: rgb(239 227 200 / .45); }
 .goal .notch.mic.met { background: none; color: var(--cream); }
 .goal .notch.mic.met::after { background: var(--cream); }
+/* Reached (Rajesh 21 Nov, session 47): the mic lights up cream with a small sage tick, the "done" colour. */
+.goal .notch.mic.met::before { content: ""; position: absolute; right: -8px; top: -6px; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6.2l2 2 4-4.4' fill='none' stroke='%23050914' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 9px no-repeat; }
 .goal i.track:has(.mic), body.wallet-card .goal i.track:has(.mic) { margin-top: 34px; }
 body.wallet-card .goal i.track { margin-right: 13px; margin-left: 2px; }
 body.wallet-card .goal i.track { margin-top: 12px; margin-bottom: 12px; }
@@ -826,12 +829,12 @@ body.wallet-card .show-line .status { color: var(--cream); transition: opacity .
 body.wallet-card .show-line .status.fade { opacity: 0; }
 body.wallet-card .bottom .purse .goal { grid-template-areas: "head head" "sum sum" "track track" "list list" "more more"; }
 
-/* All goals met: the list folds away; two big buttons, ₿ and a card tip (Stripe's violet, calmed to sit with our
-   midnight and gold; it does nothing yet, as with "£ with card"). */
+/* All goals met: the list folds away; two big buttons, ₿ and a card tip (dim and outlined since session 47: it does
+   nothing yet, as with "£ with card"). */
 .goal .goal-more-row { grid-area: more; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .goal .goal-more-row[hidden] { display: none; }
-.goal .goal-more-row .goal-more { margin: 0; height: 52px; padding: 0 22px; font-size: 20px; }
-.goal .goal-card { height: 52px; padding: 0 22px; border: 1px solid #7d78c8; border-radius: 6px; background: rgb(125 120 200 / .16); color: #c9c6f0; font: 400 20px/1 var(--poster); letter-spacing: .1em; text-transform: uppercase; cursor: default; }
+.goal .goal-more-row .goal-more { margin: 0; height: 52px; padding: 0 22px; font-size: 17px; }
+.goal .goal-card { height: 52px; padding: 0 22px; border: 1px solid var(--line); border-radius: 6px; background: none; color: rgb(239 227 200 / .5); font: 600 17px/1 var(--body); letter-spacing: 0; cursor: default; } /* not wired yet: dim, as Tip with Stripe (session 47) */
 /* A narrow window on a computer: as on a phone, the picture edge to edge and the cards 16 px in. */
 @media (max-width: 899px) {
   body.wallet-card main { max-width: none; padding: 0 0 24px; } /* the body already keeps 16 px each side */
@@ -902,7 +905,7 @@ body.wallet-card.confirmed .bottom > .save-ticket { width: min(100%, 420px); }
   body.wallet-card .bottom .purse .goal { grid-template-columns: minmax(0, 1fr); grid-template-areas: "unit" "head" "sum" "track" "list" "more"; }
   body.wallet-card .bottom .purse .goal .unit { justify-self: start; margin-bottom: 8px; }
   .goal .goal-more-row { flex-wrap: nowrap; }
-  .goal .goal-more-row > * { flex: 1 1 0; min-width: 0; height: 52px; padding: 0 6px; font-size: 17px; justify-content: center; white-space: nowrap; }
+  .goal .goal-more-row > * { flex: 1 1 0; min-width: 0; height: 52px; padding: 0 6px; font-size: 15px; justify-content: center; white-space: nowrap; }
 }
 
 /* The currency switch: names only on the phone card, where the flags run the full width. */
@@ -1473,3 +1476,10 @@ abbr[data-means]:hover::after, abbr[data-means]:focus::after {
 /* Cellar (session 46): the artist's first tab, what's set once; a hairline sets it apart from the night's three. */
 .board-head .tabs .tab-cellar { position: relative; }
 .board-head .tabs .tab-cellar::after { content: ""; position: absolute; top: 30%; bottom: 30%; right: -17px; width: 1px; background: rgb(239 227 200 / .22); }
+
+/* An in-page question (session 47), in place of the browser's confirm box: Show Time's End night and Open now. */
+dialog.ask { width: min(100% - 32px, 440px); padding: 22px 22px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--midnight); color: var(--cream); text-align: left; box-shadow: 0 20px 50px rgb(0 0 0 / .6); }
+dialog.ask::backdrop { background: rgb(5 9 20 / .72); }
+dialog.ask p { margin: 0 0 18px; font-size: 17px; line-height: 1.45; }
+dialog.ask .ask-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+dialog.ask .btn { min-width: 110px; }

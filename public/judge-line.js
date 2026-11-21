@@ -33,8 +33,15 @@ export async function judgeLine(r, page) {
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
   const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at the venue's TV page (Chat & Big Time Charlies) before End night
   const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
+  // Gig 1's Cellar step: the words sheet opened and shut once; leaving for Plan gig counts too (Open again then skips Cellar).
+  const CELLAR = 'nutpub-cellar-seen';
+  const cellarSeen = () => { try { return !!localStorage.getItem(CELLAR); } catch { return false; } };
+  const seeCellar = () => { try { localStorage.setItem(CELLAR, '1'); } catch {} };
+  if (tv && page === 'cellar') document.getElementById('words-sheet')?.addEventListener('close', () => { seeCellar(); said = ''; draw(); });
+  if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  const steps = pickle ? 8 : g2 ? 7 : tv ? 6 : 5;
+  const steps = pickle ? 8 : g2 ? 7 : tv ? 11 : 5; // gig 1: 1 Cellar, 2 Plan gig, 3 Start show, 4–9 the fan's page, 10 End night, 11 Takings (session 47)
+  const o = tv ? 1 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
     const key = n + [].concat(story).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note + text;
     if (said === key) return;
@@ -66,7 +73,9 @@ export async function judgeLine(r, page) {
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
   const TOLD = list.at === 'longy' ? {
-    setup: 'Longy’s playing Peggy Sue’s tonight, but it’s online only: a £20 ticket for fans at home.',
+    // Session 47 (Rajesh 21 Nov): gig 1 opens on Cellar, the only gig that shows it.
+    cellar: 'Longy’s playing Peggy Sue’s tonight, online only. Cellar holds what he sets once, like the 12 words that back up the key his takings lock to.',
+    setup: 'Plan gig is tonight’s: a £20 ticket for fans at home.',
     start: 'Show time. Fans are waiting at home, wallets in their browsers.',
     fan: 'You’re a fan at home now: no app, no account. A real fan tops up the browser wallet from any Lightning or Cashu wallet; here test sats are already in it.',
     end: 'Every sat tonight went straight to Longy’s key. The NutPub only checked it.',
@@ -132,6 +141,8 @@ export async function judgeLine(r, page) {
     // Cellar (session 46): not a step of the night; a judge who looks in is told so.
     if (page === 'cellar') {
       document.getElementById('head-fan')?.style.setProperty('display', 'none');
+      // Gig 1 (Rajesh 21 Nov, session 47): a look at the 12 words, no typing, then on to Plan gig.
+      if (tv) return say(1, cellarSeen() ? 'Now click 1 · Plan gig, up above.' : 'Press Write down your 12 words, have a look, then Not now.', '', '', { story: TOLD.cellar });
       return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream and moderators.` });
     }
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
@@ -234,16 +245,22 @@ export async function judgeLine(r, page) {
     const fanBtn = document.getElementById('head-fan');
     if (fanBtn) fanBtn.style.display = page === 'show' && on && !closed ? '' : 'none';
     // Session 46: what's set once moved to Cellar, the first tab; Plan gig keeps tonight.
-    if (page === 'setup') say(1, `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
-    else if (page === 'show') {
-      if (closed) say(tv ? 6 : 5, 'The night’s over. Click 3 · Your takings, at the top.');
-      else if (!on) say(2, 'Press Start show, the amber button below.', '', '', { story: TOLD.start });
-      else if (!fanDone()) say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
-      else if (tv && !tvSeen()) say(4, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
-      else say(tv ? 5 : 4, 'The fan’s list is all ticked: press End night, the amber button below.', '', '', { story: TOLD.end });
-    } else if (!closed) say(tv ? 5 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+    if (page === 'setup') say(1 + o, tv ? 'Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a gander before you click 2 · Show Time, up above.'
+      : `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
+    else if (page === 'show' && tv) { // gig 1 (session 47): the pub's TV is part of the fan's steps now
+      if (closed) say(11, 'The night’s over. Click 3 · Your takings, at the top.');
+      else if (!on) say(3, 'Press Start show, the amber button below.', '', '', { story: TOLD.start });
+      else if (!fanDone()) say(4, 'Press Fan’s page ↗, top right, and follow the strip there: steps 4 to 9. Then come back here.', '', '', { story: TOLD.fan });
+      else say(10, 'The fan’s list is all ticked: press End night, the amber button below.', '', '', { story: TOLD.end });
+    } else if (page === 'show') {
+      if (closed) say((tv ? 6 : 5) + o, 'The night’s over. Click 3 · Your takings, at the top.');
+      else if (!on) say(2 + o, 'Press Start show, the amber button below.', '', '', { story: TOLD.start });
+      else if (!fanDone()) say(3 + o, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
+      else if (tv && !tvSeen()) say(4 + o, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
+      else say((tv ? 5 : 4) + o, 'The fan’s list is all ticked: press End night, the amber button below.', '', '', { story: TOLD.end });
+    } else if (!closed) say(tv ? 10 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
     // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.
-    else say(tv ? 6 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
+    else say(tv ? 11 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

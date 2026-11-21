@@ -153,13 +153,32 @@ async function preview() {
 const freeNow = info.show.stream.mode === 'free' ? await api('GET', '/api/admin/free-stream').catch(() => null) : null;
 const unpaid = () => !!freeNow && !freeNow.covered;
 $('unpaid-note').hidden = !unpaid();
+// Rajesh 21 Nov (session 47): the browser's own confirm box looked out of place (and some browsers cancel it unseen),
+// so the question asks in the page's own look: the safe answer outlined, the one that goes ahead amber.
+function ask(text, yes, no = 'Not yet') {
+  return new Promise((done) => {
+    const d = Object.assign(document.createElement('dialog'), { className: 'ask' });
+    d.innerHTML = '<p></p><div class="ask-btns"><button type="button" class="btn quiet"></button><button type="button" class="btn primary"></button></div>';
+    d.querySelector('p').textContent = text;
+    const [n, y] = d.querySelectorAll('button');
+    n.textContent = no;
+    y.textContent = yes;
+    const end = (answer) => { d.close(); d.remove(); done(answer); };
+    n.onclick = () => end(false);
+    y.onclick = () => end(true);
+    d.addEventListener('cancel', (e) => { e.preventDefault(); end(false); }); // Esc
+    document.body.append(d);
+    d.showModal();
+    n.focus();
+  });
+}
 for (const b of buttons) {
-  b.onclick = () => {
+  b.onclick = async () => {
     const s = b.dataset.stage;
     if (['open', 'on'].includes(s) && unpaid()) { $('unpaid-note').hidden = false; $('unpaid-note').classList.add('flash'); return; }
-    if (s === 'closed' && !confirm('End night? Every phone goes to Cheers and everyone watching stops.')) return;
+    if (s === 'closed' && !(await ask('End night? Every phone goes to Cheers and everyone watching stops.', 'End night'))) return;
     if (s === 'open' && now.opensAt && Date.now() / 1000 < now.opensAt
-      && !confirm(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`)) return;
+      && !(await ask(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`, 'Open it now'))) return;
     (async () => {
       if (s === 'closed' && NOSHOW && mintUrl) {
         lastOrders = true;

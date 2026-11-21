@@ -102,8 +102,7 @@
     .billing::after { transform: scaleX(-1); }
     /* Supporting acts: the two big laurels either side of the small rows, never more than twice their size. */
     .lineup { text-align: center; margin-top: 72px; min-width: 0; width: 100%; max-width: 1068px; justify-self: center; } /* the laurels keep their width as the posters widen */
-    .lineup .billing { margin-bottom: 8px; }
-    .billing-note { margin: 0 0 28px; font: italic 15px/1.4 Georgia, "Times New Roman", serif; color: var(--smoke); } /* Rajesh 19 Nov */
+    .lineup .billing { margin-bottom: 28px; } /* no line under it since session 47 (Rajesh 21 Nov) */
     .acts { --lw: min(calc((min(100vw, 1100px) - 32px - 88px) / 11), 140px); display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px; }
     /* Rajesh 20 Nov (no footer now): two rows, bigger, the two big laurels either side; NUT-12 joins the top row with the blind-signed tickets. */
     @media (min-width: 861px) {
@@ -137,7 +136,13 @@
     @media (max-width: 860px) {
       .acts { --lw: min(28vw, 150px); flex-wrap: wrap; justify-content: center; }
       .wreath-l { display: none; } .wreath-s { display: inline; }
+    } /* closed in session 47: it was left open, so every rule after it only applied under 860 px */
     @media (max-width: 760px) { .lineup { display: none; } }
+    /* Line icons on the two tiles (session 47, Rajesh picked them from the A/B; the arrows stay). */
+    .tiles .tile { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .tile-ico { display: block; grid-column: 1; grid-row: 1 / span 2; width: 52px; height: 52px; color: var(--cream); }
+    .tiles .tile b, .tiles .tile span { grid-column: 2; }
+    .tiles .tile i { grid-column: 3; }
     @media (max-width: 900px) { .wall { grid-template-columns: minmax(0, 1fr); max-width: 420px; gap: 40px; } .poster img { aspect-ratio: 4 / 5; } }
   </style>
 </head>
@@ -277,12 +282,11 @@
     </div>
     <!-- Session 45 (Rajesh 21 Nov): the way on after the gigs, under the posters so judges head to gig 1 first. -->
     <nav class="tiles" aria-label="More">
-      <a class="tile" href="/kitchen"><b>The Kitchen</b><span>What’s cooking: what’s served, what’s on order, and the recipes.</span><i aria-hidden="true">→</i></a>
-      <a class="tile" href="/noticeboard"><b>Pub Noticeboard <small class="chip">MCP</small></b><span>Pinned by the bar: a ticket bought by a script today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
+      <a class="tile" href="/kitchen"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 31 C9 31 8 23 13.5 21 C12.5 14 20 11 24 15.5 C26 10 34 10.5 35 17 C41 17 42.5 25 36 27.5 V31 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="15" y="31" width="21" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20.5 31 V39 M25.5 31 V39 M30.5 31 V39" stroke="currentColor" stroke-width="1.2" opacity=".6"/></svg><b>The Kitchen</b><span>What’s cooking: what’s served, what’s on order, and the recipes.</span><i aria-hidden="true">→</i></a>
+      <a class="tile" href="/noticeboard"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="29" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 36 L11 43 M35 36 L37 43" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="10" y="12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-5 16.5 17.5)"/><rect x="26" y="13" width="12" height="15" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(4 32 20.5)"/><path d="M13 27 H20 M28 18 H35 M28 21.5 H35 M28 25 H33" stroke="currentColor" stroke-width="1.2" opacity=".6"/><circle cx="16.5" cy="12.5" r="1.9" fill="#c4521a"/><circle cx="32" cy="13.4" r="1.9" fill="#c4521a"/></svg><b>Pub Noticeboard <small class="chip">402</small></b><span>Pinned by the bar: a ticket bought by a script today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
     </nav>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
-      <p class="billing-note">Without them, it’d be karaoke.</p>
       <div class="acts">
       <div class="heads">
         <a class="big" href="https://github.com/cashubtc/coco"><svg viewBox="0 0 200 200" aria-hidden="true"><use filter="url(#worn)" class="wreath-l" href="#wreath"/><use filter="url(#worn)" class="wreath-s" href="#wreathS"/><use href="#stars"/></svg><span class="txt"><span class="n">Coco</span></span></a>
@@ -306,7 +310,7 @@
       </div>
     </section>
   </main>
-  <!-- Rajesh 21 Nov: the footer back (it was off from 20 Nov); the Pub Noticeboard names refueler.io for the MCP server. -->
+  <!-- Rajesh 21 Nov: the footer back (it was off from 20 Nov): who made it. -->
   <footer><p><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p></footer>
   <script type="module">
     // Each card makes a stage of its own (POST /api/stages/judge) and opens it; this browser remembers it, so the card

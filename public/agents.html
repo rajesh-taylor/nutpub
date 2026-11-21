@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050914">
   <title>Pub Noticeboard · The NutPub</title>
-  <meta name="description" content="AI agents at the NutPub: buying a ticket over the 402 today; gig search, tickets and venue hire days over MCP, coming on refueler.io.">
+  <meta name="description" content="AI agents at the NutPub: an agent buys a ticket over the 402 today; gig search for agents after 27 Nov.">
   <link rel="stylesheet" href="/app.css">
   <link rel="stylesheet" href="/nut-menu.css">
   <style>
     /* The Pub Noticeboard (session 43 as The Regulars, renamed in session 45, 21 Nov): AI agents at the NutPub, one tap from the home page. What works today (the agent
-       script) and what the MCP server will give, marked as coming on refueler.io: thenutpub.com has no MCP endpoint. */
+       script), and since session 47 (Rajesh 21 Nov) one line by name for what's next, nothing more. */
     body.regulars main { max-width: 1000px; text-align: left; font-family: var(--body); }
     .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
       background: var(--midnight); border: 1px solid rgb(239 227 200 / .3); border-radius: 6px;
@@ -30,11 +30,7 @@
     .regulars p.small { font-size: 14px; color: #a9b0c2; }
     .today { margin-top: 30px; padding: clamp(16px, 4vw, 22px) clamp(14px, 4vw, 24px); background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; }
     pre { margin: 14px 0 0; padding: 14px 16px; overflow-x: auto; background: var(--deep); border: 1px solid rgb(239 227 200 / .12); border-radius: 4px; font: 14px/1.6 var(--mono); color: var(--cream); }
-    .mcp-soon { margin-top: 34px; }
-    .whom { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
-    .whom li { padding: 18px; background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .12); border-radius: 5px; }
-    .whom h3 { margin: 0; font: 400 22px/1 var(--poster); letter-spacing: .12em; color: var(--cream); }
-    .whom p { margin-top: 10px; font-size: 15px; color: var(--cream); }
+    .next { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 26px 0 0; font-weight: 600; }
     .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 16px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
     .today a { color: var(--cream); }
     /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
@@ -60,7 +56,7 @@
     <div class="board-card">
       <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
       <h1>Pub Noticeboard</h1>
-      <p class="lede">AI agents welcome. Every price at the NutPub is a plain HTTP 402, so an agent can pay one the way your browser does. What works today, and what’s coming.</p>
+      <p class="lede">AI agents welcome. Every price at the NutPub is a plain HTTP 402, so an agent can pay one the way your browser does. What works today.</p>
 
       <section class="today" aria-labelledby="r-today">
         <div class="head"><h2 id="r-today">Today: an agent buys a ticket</h2><span class="chip built">✓ Built</span></div>
@@ -70,21 +66,8 @@ npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
         <p class="small">The ticket then shows on your stage’s Takings. Every price is a 402 (NUT-24), the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>
       </section>
 
-      <section class="mcp-soon" aria-labelledby="r-soon">
-        <div class="head"><h2 id="r-soon">Coming: an MCP server, on refueler.io</h2><span class="chip after">After 27 Nov</span></div>
-        <p>One MCP server for agents to talk to. It will live on refueler.io; thenutpub.com has no MCP endpoint.</p>
-        <ul class="whom">
-          <li><h3>For fans’ agents</h3>
-            <p><b>Find a gig:</b> by artist, town or night.</p>
-            <p><b>Buy a ticket:</b> over the 402, never past the limit you set.</p></li>
-          <li><h3>For artists</h3>
-            <p><b>Be found:</b> your gigs, for fans’ agents to find.</p>
-            <p><b>Find a room:</b> a venue’s hire days.</p></li>
-          <li><h3>For venues</h3>
-            <p><b>Your hire days:</b> the nights a room is free, for artists’ agents to find.</p></li>
-        </ul>
-        <p class="small">The same rules as the rest of the NutPub: no account, no email, and every payment locked to whoever it’s for.</p>
-      </section>
+      <!-- Session 47 (Rajesh 21 Nov): one line, by name only; the fuller plan waits for a later, bigger product. -->
+      <p class="next"><span class="chip after">After 27 Nov</span> Gig search for agents</p>
 
       <div class="foot">
         <a class="btn-out" href="/">← Back</a>

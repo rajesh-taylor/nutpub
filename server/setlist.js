@@ -75,7 +75,7 @@ const GIGS = {
       { after: 15, text: 'That bass line 🔥', sats: 210, nostr: 'bassface_ben', nutzap: true },
       { after: 17, text: 'Watching from Manchester 🐝' },
       { after: 20, text: 'Turn it up!' },
-      { after: 22, text: 'Those backing vocals 👌', sats: 2100, nostr: 'pier_kim', nutzap: true },
+      { after: 22, text: '😈🚂', sats: 2100, nostr: 'pier_kim', nutzap: true },
       { after: 25, text: 'Hello from Amsterdam 🇳🇱' },
       { after: 27, text: 'First time paying by the minute. Love it', sats: 1000 },
       { after: 30, text: 'Real music, real singer songwriters 🇬🇧', sats: 50000 },

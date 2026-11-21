@@ -34,6 +34,15 @@ export async function proofStates(proofs) {
   if (!res.ok) throw Object.assign(new Error(data.detail || `mint said ${res.status}`), { status: res.status });
   return Ys.map((Y) => data.states?.find((s) => s.Y === Y)?.state);
 }
+// The public test mint now and then drops a request when tips come quickly (Rajesh 21 Nov, gig 1's taps): ask once
+// more, after a breath, before telling the fan it isn't answering. A plain refusal (4xx) is final.
+async function proofStatesAgain(proofs) {
+  try { return await proofStates(proofs); } catch (e) {
+    if (e.status && e.status !== 429 && e.status < 500) throw e;
+    await new Promise((ok) => setTimeout(ok, 600));
+    return proofStates(proofs);
+  }
+}
 
 // One line per 402, refusal and payment, so a phone that "didn't pay" can be traced. Never the token itself.
 const log = (c, what) => console.log(`${c.req.method} ${c.url.pathname} ${what}`);
@@ -123,7 +132,7 @@ export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner =
     // spend it after this, so unspent now means the owner's to collect.
     let states;
     try {
-      states = await proofStates(proofs);
+      states = await proofStatesAgain(proofs);
     } catch (e) {
       const msg = String(e.message || e);
       if (e.status) return refuse(c, 400, 'mint_refused', msg);

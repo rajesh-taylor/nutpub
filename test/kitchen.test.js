@@ -34,5 +34,7 @@ test('no other projects, no Refueler products, no fees, no MCP endpoint on thenu
     assert.ok(!/thenutpub\.com\/(mcp|sse)/.test(page), `${name} names an MCP endpoint here`);
   }
   assert.match(regulars, /refueler\.io/);
-  assert.match(regulars, /thenutpub\.com has no MCP endpoint/);
+  // Session 47 (Rajesh 21 Nov): the Noticeboard names what's next by name only, with no MCP plan.
+  assert.ok(!/MCP/.test(regulars), 'the Noticeboard talks about MCP');
+  assert.match(regulars, /Gig search for agents/);
 });

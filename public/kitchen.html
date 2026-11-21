@@ -23,11 +23,20 @@
     .kitchen h1 { margin: 6px 0 0; text-align: center; font: 400 clamp(54px, 15vw, 84px)/1 var(--poster); letter-spacing: .06em; color: var(--cream); }
     .kitchen .lede { margin: 8px auto 0; max-width: 620px; text-align: center; font-size: clamp(16px, 4.2vw, 18px); line-height: 1.5; color: rgb(239 227 200 / .88); }
     .key { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin: 20px 0 0; padding: 0; list-style: none; }
-    .key li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #c9cfdc; }
+    /* The key is also a filter (session 47): press one to show only those, again to show all. */
+    .key button { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid transparent; border-radius: 6px; background: none; font: 14px/1.2 var(--body); color: var(--smoke); cursor: pointer; text-align: left; }
+    .key button b { font-weight: 600; color: var(--cream); font-variant-numeric: tabular-nums; }
+    .key button:hover { border-color: var(--line); }
+    .key button[aria-pressed="true"] { border-color: rgb(239 227 200 / .5); background: rgb(239 227 200 / .06); color: var(--cream); }
+    .key button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .key .all { color: var(--smoke); text-decoration: underline; text-underline-offset: 3px; }
+    .key .all[hidden] { display: none; }
     .chip { flex: none; white-space: nowrap; font: 600 12px/1 var(--body); letter-spacing: .02em; padding: 4px 8px; border-radius: 3px; }
-    .chip.built { border: 1px solid var(--cream); color: var(--cream); background: rgb(239 227 200 / .08); }
+    /* Session 47 (Rajesh 21 Nov): the status reads at a glance. Built: solid sage (the "done" colour, not one to press);
+       After 27 Nov: a cream outline; Proposed: dashed and dim. */
+    .chip.built { border: 1px solid var(--ok); color: var(--deep); background: var(--ok); }
     .chip.after { border: 1px solid rgb(239 227 200 / .4); color: var(--cream); }
-    .chip.proposed { border: 1px dashed var(--smoke); color: var(--smoke); }
+    .chip.proposed { border: 1px dashed rgb(186 181 167 / .7); color: var(--smoke); }
     .part { margin-top: 34px; }
     .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--cream); }
     .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(239 227 200 / .25); }
@@ -74,11 +83,12 @@
       <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
       <h1>The Kitchen</h1>
       <p class="lede">What the NutPub does, ticked off, and the Cashu NUTs and Nostr NIPs behind each part.</p>
-      <ul class="key" aria-label="What the chips mean">
-        <li><span class="chip built">✓ Built</span>live on thenutpub.com now</li>
-        <li><span class="chip after">After 27 Nov</span>the two weeks after NutNovember</li>
-        <li><span class="chip proposed">Proposed</span>still working out how</li>
-      </ul>
+      <div class="key" role="group" aria-label="What the chips mean; press one to show only those">
+        <button type="button" data-show="built" aria-pressed="false"><span class="chip built">✓ Built</span><span>live on thenutpub.com now <b></b></span></button>
+        <button type="button" data-show="after" aria-pressed="false"><span class="chip after">After 27 Nov</span><span>the two weeks after NutNovember <b></b></span></button>
+        <button type="button" data-show="proposed" aria-pressed="false"><span class="chip proposed">Proposed</span><span>still working out how <b></b></span></button>
+        <button type="button" class="all" hidden>Show all</button>
+      </div>
 
       <section class="part" aria-labelledby="k-tickets">
         <h2 id="k-tickets">Tickets</h2>
@@ -207,5 +217,24 @@
     </div>
     <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>
   </main>
+  <script>
+    // The Kitchen's key as a filter (session 47): how many of each, and press one to see only those.
+    {
+      const items = [...document.querySelectorAll('.kcard, .soon-tile')];
+      const kind = (el) => ['built', 'after', 'proposed'].find((k) => el.querySelector(`.chip.${k}`));
+      const btns = [...document.querySelectorAll('.key [data-show]')];
+      const all = document.querySelector('.key .all');
+      for (const b of btns) b.querySelector('b').textContent = `(${items.filter((i) => kind(i) === b.dataset.show).length})`;
+      const show = (want) => {
+        for (const b of btns) b.setAttribute('aria-pressed', String(b.dataset.show === want));
+        for (const i of items) i.hidden = !!want && kind(i) !== want;
+        for (const p of document.querySelectorAll('.part')) p.hidden = !!want && !p.querySelector('.kcard:not([hidden]), .soon-tile:not([hidden])');
+        for (const u of document.querySelectorAll('.part ul')) u.hidden = !!want && !u.querySelector('li:not([hidden])');
+        all.hidden = !want;
+      };
+      for (const b of btns) b.onclick = () => show(b.getAttribute('aria-pressed') === 'true' ? '' : b.dataset.show);
+      all.onclick = () => show('');
+    }
+  </script>
 </body>
 </html>
