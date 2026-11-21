@@ -1,4 +1,4 @@
-// The Kitchen and The Regulars (session 43): what they may and may not say. Every card on the Kitchen has exactly one
+// The Kitchen and the Pub Noticeboard (session 43, as The Regulars): what they may and may not say. Every card on the Kitchen has exactly one
 // tick chip of the three; neither page names another project, a Refueler product, a fee, or an MCP endpoint here.
 import test from 'node:test';
 import assert from 'node:assert/strict';

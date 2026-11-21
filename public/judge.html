@@ -39,8 +39,6 @@
     @media (prefers-reduced-motion: reduce) { .home-sign .shine { display: none; } }
     @media (max-width: 700px) { .nut-menu { top: 10px; right: max(6px, env(safe-area-inset-right, 0px)); } .menu-btn { padding: 0; border: 0; } .menu-btn b { display: none; } .menu-btn svg { height: 22px; } .home-sign { margin-top: 0; } .home-byline { margin-top: -10px; font-size: 12px; letter-spacing: .16em; } .lines .lead { font-size: 16px; } .not-phone { display: none; } } /* a phone (Rajesh 20 Nov): the pint alone, small, top right; the sign and byline up where the Menu box was */
     .judge main > .home-start { margin: 6px 0 0; width: 100%; max-width: 1200px; justify-self: center; box-sizing: border-box; text-align: left; }
-    .home-start .said { flex: 1 1 100%; margin: 0; color: #f0a37a; }
-    @media (max-width: 600px) { .home-start .btn { flex: 1 1 100%; margin: 0; text-align: center; } }
     .lines { display: grid; gap: 8px; }
     .judge main > h1, .judge main > .lines { width: 100%; max-width: 1200px; justify-self: center; } /* as wide as the three posters (Rajesh 19 Nov) */
     .lines p { margin: 0; font: 14px/1.55 var(--mono); color: var(--smoke); }
@@ -84,8 +82,8 @@
     .again { margin-bottom: -4px !important; font: 400 14px/1 var(--poster); letter-spacing: .2em; color: #c4521a; }
     .said { font-size: 14px; color: #8a2a0a; }
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 12px/1.5 var(--mono); color: #4a3a1c; }
-    /* The Regulars strip (session 43): under the posters, the wall's width, amber dashed like the Pub Menu's Happy Hour. */
-    .regulars-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; width: 100%; max-width: 1200px; box-sizing: border-box; justify-self: center; margin-top: 6px; padding: 14px 18px; background: var(--midnight); border: 1.5px dashed rgb(232 168 69 / .7); border-radius: 6px; text-decoration: none; }
+    /* The Pub Noticeboard strip (session 43 as The Regulars; renamed and above the posters, session 45): the wall's width, amber dashed. */
+    .regulars-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; width: 100%; max-width: 1200px; box-sizing: border-box; justify-self: center; margin-top: 0; padding: 14px 18px; background: var(--midnight); border: 1.5px dashed rgb(232 168 69 / .7); border-radius: 6px; text-decoration: none; }
     .regulars-strip b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: #e8a845; padding-top: 3px; }
     .regulars-strip span { flex: 1 1 320px; font: 400 16px/1.45 "IBM Plex Sans", var(--body); color: rgb(239 227 200 / .92); }
     .regulars-strip i { font: 400 20px/1 var(--poster); font-style: normal; letter-spacing: .1em; color: #e8a845; padding-top: 3px; }
@@ -204,9 +202,8 @@
     <details class="nut-menu">
       <summary aria-label="Menu"><span class="menu-btn"><svg class="pint" viewBox="0 0 40 56" aria-hidden="true"><path d="M7.5 16 H32.5 L30.5 50 H9.5 Z" fill="#d9953a" opacity=".6"/><path d="M6 6 H34 L31 52 H9 Z" fill="none" stroke="#e8a845" stroke-width="2.8" stroke-linejoin="round"/><path d="M6 7 Q9 1 15 4 Q20 0 25 4 Q31 1 34 7 Z" fill="#efe3c8"/></svg><b>Menu</b></span></summary>
       <ul>
-        <li><a href="/menu"><b>Pub Menu</b><small>What each part of the night is made of</small></a></li>
         <li><a href="/kitchen"><b>The Kitchen</b><small>What’s built, what’s next, and the specs</small></a></li>
-        <li><a href="/agents"><b>The Regulars</b><small>AI agents at the NutPub</small></a></li>
+        <li><a href="/noticeboard"><b>Pub Noticeboard</b><small>AI agents at the NutPub</small></a></li>
         <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener"><b>GitHub ↗</b><small>The code, Apache-2.0</small></a></li>
       </ul>
     </details>
@@ -230,18 +227,15 @@
     <h1 class="sr">The NutPub</h1>
     <div class="lines intro">
       <!-- Rajesh 20 Nov (late): the gold line alone; "Artists & Musicians • Fans • Pubs" gone too (evening). -->
-      <p class="lead what">A whole night out in Cashu, from the ticket, door entry, first round, 402 stream payments, comments &amp; tips and the takings back to your own wallet.</p>
+      <p class="lead what">A night out using Cashu. From the ticket, door entry, first round, 402 streaming payments, comments &amp; tips and takings back to your own wallet.</p>
     </div>
-    <!-- Session 45 (Rajesh 21 Nov): how a judge starts. The Judges line begins here, as on every page after it: one line
-         of story, one action, one button. It starts gig 1, as poster 1's button does (Carry on, once this browser has one). -->
+    <!-- Session 45 (Rajesh 21 Nov): how a judge starts, one line; the posters say the rest (no button: read the posters). -->
     <div class="judge-line home-start" id="home-start">
       <b>Judges</b>
-      <span class="jl-say">
-        <span class="jl-story">Three gigs, one after another. You’re the artist and a fan, in two tabs, with test sats already in the wallet.</span>
-        <span>A laptop is all you need; a phone helps in gig 3.</span>
-      </span>
-      <button type="button" class="btn primary" id="home-go">Start gig 1 →</button>
+      <span class="jl-say"><span>Three gigs below. You’ll be the artist and a fan.</span></span>
     </div>
+    <!-- Session 43, renamed and moved above the posters in session 45 (Rajesh 21 Nov): the Pub Noticeboard, AI agents at the NutPub. -->
+    <a class="regulars-strip" href="/noticeboard"><b>Pub Noticeboard</b><span>Your AI agent can buy a ticket too: over the 402 today, finding gigs over MCP soon.</span><i>Read the board →</i></a>
 
     <div class="wall">
       <article class="poster" data-gig="longy">
@@ -287,8 +281,6 @@
       </article>
 
     </div>
-    <!-- Session 43 (Rajesh 21 Nov): one tap to The Regulars, AI agents at the NutPub; not a fourth gig, no stage. -->
-    <a class="regulars-strip" href="/agents"><b>The Regulars</b><span>Your AI agent can buy a ticket too: over the 402 today, finding gigs over MCP soon.</span><i>Read the notes →</i></a>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
       <p class="billing-note">Without them, it’d be karaoke.</p>
@@ -315,7 +307,7 @@
       </div>
     </section>
   </main>
-  <!-- Rajesh 21 Nov: the footer back (it was off from 20 Nov); The Regulars names refueler.io for the MCP server. -->
+  <!-- Rajesh 21 Nov: the footer back (it was off from 20 Nov); the Pub Noticeboard names refueler.io for the MCP server. -->
   <footer><p><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p></footer>
   <script type="module">
     // Each card makes a stage of its own (POST /api/stages/judge) and opens it; this browser remembers it, so the card
@@ -326,11 +318,10 @@
     const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', pickle: 'Start the night at the venue' };
     const el = (tag, props) => Object.assign(document.createElement(tag), props);
 
-    // own: the Judges line's button (session 45), pressed instead of the poster's; it says what's happening itself.
-    async function start(gig, card, own) {
-      const all = [...card.querySelectorAll('button'), ...(own ? [own] : [])];
+    async function start(gig, card) {
+      const all = [...card.querySelectorAll('button')];
       for (const b of all) b.disabled = true;
-      const pressed = own || card.querySelector('button.go:not(.out)') || card.querySelector('button.go');
+      const pressed = card.querySelector('button.go:not(.out)') || card.querySelector('button.go');
       const label = pressed.textContent;
       pressed.textContent = 'Setting up the stage…'; // a few seconds: the gig's photos are copied onto it
       for (const s of document.querySelectorAll('.said')) s.remove();
@@ -342,7 +333,7 @@
         location.href = out.url;
       } catch (e) {
         const said = el('p', { className: 'said', role: 'status', textContent: e.message });
-        if (own) own.after(said); else card.querySelector('.btns').after(said);
+        card.querySelector('.btns').after(said);
         for (const b of all) b.disabled = false;
         pressed.textContent = label;
       }
@@ -363,18 +354,6 @@
             el('a', { className: 'go', href: `${location.protocol}//${id}.${location.host}/`, textContent: 'Open again' }),
             el('button', { type: 'button', className: 'go out', textContent: 'Start fresh', onclick: () => start(gig, card) })]
           : [el('button', { type: 'button', className: 'go', textContent: START[gig], onclick: () => start(gig, card) })]));
-      }
-      // The Judges line's button: gig 1, or back to this browser's gig 1 stage (session 45).
-      const go = document.getElementById('home-go');
-      const one = stages.longy;
-      document.querySelector('#home-start .said')?.remove();
-      go.disabled = false;
-      if (one && /^[a-z][a-z0-9]{5}$/.test(one)) {
-        go.textContent = 'Carry on with gig 1 →';
-        go.onclick = () => { location.href = `${location.protocol}//${one}.${location.host}/`; };
-      } else {
-        go.textContent = 'Start gig 1 →';
-        go.onclick = () => start('longy', document.querySelector('[data-gig="longy"]'), go);
       }
     }
     draw();

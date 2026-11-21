@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/nut-menu.css">
   <style>
     /* The Kitchen (session 43, 21 Nov): what the NutPub does, a tick chip each, for judges and developers. Reached from
-       the Pub Menu. Rajesh 21 Nov: short lines; ideas not built yet get a name and their specs, never the how. */
+       the home page's menu (the Pub Menu left the menus in session 45). Rajesh 21 Nov: short lines; ideas not built yet get a name and their specs, never the how. */
     @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
     body.kitchen main { max-width: 1136px; text-align: left; font-family: "IBM Plex Sans", var(--body); }
     .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
@@ -65,14 +65,13 @@
         <summary aria-label="Menu"><span class="menu-btn"><svg class="pint" viewBox="0 0 40 56" aria-hidden="true"><path d="M7.5 16 H32.5 L30.5 50 H9.5 Z" fill="#d9953a" opacity=".6"/><path d="M6 6 H34 L31 52 H9 Z" fill="none" stroke="#e8a845" stroke-width="2.8" stroke-linejoin="round"/><path d="M6 7 Q9 1 15 4 Q20 0 25 4 Q31 1 34 7 Z" fill="#efe3c8"/></svg><b>Menu</b></span></summary>
         <ul>
           <li><a href="/"><b>The three gigs</b><small>Home: start here</small></a></li>
-          <li><a href="/menu"><b>Pub Menu</b><small>What each part of the night is made of</small></a></li>
-          <li><a href="/agents"><b>The Regulars</b><small>AI agents at the NutPub</small></a></li>
+          <li><a href="/noticeboard"><b>Pub Noticeboard</b><small>AI agents at the NutPub</small></a></li>
           <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener"><b>GitHub ↗</b><small>The code, Apache-2.0</small></a></li>
         </ul>
       </details>
     </div>
     <div class="board-card">
-      <a class="top" href="/menu">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span> · Pub Menu</a>
+      <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
       <h1>The Kitchen</h1>
       <p class="lede">What the NutPub does, ticked off, and the Cashu NUTs and Nostr NIPs behind each part.</p>
       <ul class="key" aria-label="What the chips mean">
@@ -202,7 +201,8 @@
       </section>
 
       <div class="foot">
-        <a class="btn-out" href="/menu">← The Pub Menu</a>
+        <a class="btn-out" href="/">← The three gigs</a>
+        <a class="btn-out" href="/noticeboard">Pub Noticeboard →</a>
       </div>
     </div>
     <p class="made"><a href="https://refueler.io" target="_blank" rel="noreferrer noopener">A Refueler Labs project</a></p>

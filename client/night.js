@@ -317,7 +317,7 @@ function paint() {
   $('done-moved').textContent = last?.amount ? `Moved ${n(last.amount)} sats${last.fee ? ` · the mint kept ${n(last.fee)}` : ''}` : 'Moved to your own wallet.';
   $('finish').hidden = !done;
   $('finish-go').hidden = !s.over;
-  $('finish-note').textContent = s.over ? (onSetlist?.only ? (onSetlist.at === 'pickle' ? 'Then meet the Regulars.' : 'Then back to the three gigs.') : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
+  $('finish-note').textContent = s.over ? (onSetlist?.only ? (onSetlist.at === 'pickle' ? 'Then read the Pub Noticeboard.' : 'Then back to the three gigs.') : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
   const toMove = s.waiting + s.held + s.late;
   $('move').disabled = !toMove;
@@ -562,13 +562,13 @@ function printSlip(g) {
   $('r-slip').replaceChildren(...slip(g));
   print();
 }
-// Gig 3's thank-you (Rajesh 20 Nov), its cockney glossed for judges abroad; then the Regulars (21 Nov).
+// Gig 3's thank-you (Rajesh 20 Nov), its cockney glossed for judges abroad; then the Pub Noticeboard (21 Nov).
 function thanks() {
   const p = el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old ');
   const china = Object.assign(document.createElement('abbr'), { textContent: 'china', tabIndex: 0 });
   china.dataset.means = 'Cockney rhyming slang: china plate, mate';
   p.append(china,
-    '! 🍻 Before you go, meet the Regulars: AI agents buy tickets here too.');
+    '! 🍻 Before you go, read the Pub Noticeboard: AI agents buy tickets here too.');
   return p;
 }
 function drawWrap(view, s) {
@@ -586,7 +586,7 @@ function drawWrap(view, s) {
     // Gig 3 is the last (Rajesh 20 Nov): a thank-you, and the Pub Menu for more.
     const last = onSetlist?.at === 'pickle';
     $('wrap-after').replaceChildren(...(onSetlist?.only
-      ? (last ? [thanks(), Object.assign(el('a', 'btn primary judges-on', 'Meet the Regulars →'), { href: judgePage.replace(/\/judge$/, '/agents') })]
+      ? (last ? [thanks(), Object.assign(el('a', 'btn primary judges-on', 'Read the board →'), { href: judgePage.replace(/\/judge$/, '/noticeboard') })]
         : [Object.assign(el('a', 'btn primary judges-on', 'Judges: on to the next gig →'), { href: judgePage })])
       : [Object.assign(el('p', 'wrap-next'), {})]));
     if (!onSetlist?.only) $('wrap-after').firstChild.append(...(finishedNext || []));

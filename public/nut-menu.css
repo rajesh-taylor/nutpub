@@ -1,6 +1,6 @@
 /* The menu: a pint with the word, so judges see it opens something (Rajesh 15 Nov); a card under it, one row per
-   place, its name and what's there (19 Nov). On every reading page since 21 Nov: home, Pub Menu, the Kitchen and the
-   Regulars. Home places it absolutely (judge.html); the other pages give it a row of its own above their card. */
+   place, its name and what's there (19 Nov). On every reading page since 21 Nov: home, the Kitchen and the Pub
+   Noticeboard (the Pub Menu left the menus in session 45). Home places it absolutely (judge.html); the other pages give it a row of its own above their card. */
 @font-face { font-family: "IBM Plex Sans"; font-weight: 100 700; font-display: swap; src: url(/fonts/IBMPlexSans-var-latin.woff2) format("woff2"); }
 .nut-menu { z-index: 5; text-align: right; }
 .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }

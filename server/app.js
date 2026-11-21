@@ -55,9 +55,10 @@ route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
 route('GET', '/setup', page('setup.html'));
 route('GET', '/judge', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('judge.html')(c))); // Judge for yourself: the three gig cards (thenutpub.com only)
-route('GET', '/menu', page('menu.html')); // Pub Menu: what each part of the night is made of, for judges and the curious
+route('GET', '/menu', page('menu.html')); // Pub Menu: off every menu since session 45 (the Kitchen says it); kept for old links
 route('GET', '/kitchen', page('kitchen.html')); // The Kitchen (session 43): what the NutPub does, a tick chip each, from the Pub Menu
-route('GET', '/agents', page('agents.html')); // The Regulars (session 43): AI agents, the 402 today and MCP on refueler.io, from home
+route('GET', '/agents', page('agents.html')); // The Pub Noticeboard (session 43 as The Regulars): AI agents, the 402 today and MCP on refueler.io
+route('GET', '/noticeboard', page('agents.html')); // its name since session 45 (Rajesh 21 Nov); /agents kept for old links
 route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
 route('GET', '/takings', page('night-takings.html'));

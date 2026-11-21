@@ -40,7 +40,7 @@ Every gig ends on **Your takings**: move the night's earnings to [Cashu.me](http
 
 No phone? Every phone step has a laptop button. The demo never uses the laptop's camera.
 
-Two more pages: [The Kitchen](https://thenutpub.com/kitchen) (everything the NutPub does, with a tick chip each) and [The Regulars](https://thenutpub.com/agents) (AI agents at the NutPub).
+Two more pages: [The Kitchen](https://thenutpub.com/kitchen) (everything the NutPub does, with a tick chip each) and the [Pub Noticeboard](https://thenutpub.com/noticeboard) (AI agents at the NutPub).
 
 ---
 
