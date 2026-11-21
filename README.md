@@ -89,7 +89,6 @@ The ticket is then on your stage: after End night, Your takings counts it. The s
 - **One gig page,** at the venue or at home, on a phone or a laptop.
 - **Tips with words:** a comment and sats, sent together. Sign in with Nostr for your name in the chat and one-tap Nutzaps.
 - **Tickets as passkeys:** saved in the phone's password manager; **Find my ticket** brings one back.
-- **Move to your phone:** on a laptop, your leftover sats leave the browser wallet as an animated QR, straight into the Cashu wallet on your phone (Cashu.me, Minibits, macadamia). No server in between.
 
 ### For venues
 
@@ -112,18 +111,17 @@ Every price is an HTTP **402 Payment Required** (NUT-24), the same idea as x402.
 | Spec | Used for |
 |---|---|
 | NUT-00 to 04 | Ecash; test sats; the blind-signed venue ticket |
-| NUT-07 | Whether a coin is spent (the poured drink; sats landed on your phone) |
+| NUT-07 | Whether a coin is spent (the poured drink) |
 | NUT-10 · NUT-11 | Locking each payment to its owner |
 | NUT-12 | The gig's proof that it signed the ticket |
-| NUT-16 | Animated QR codes (UR): your sats moved to your phone |
-| NUT-16 *(proposed)* | The drink handed over as the coin itself |
+| NUT-16 *(proposed)* | Animated QR codes: the drink handed over as the coin itself |
 | NUT-18 | Payment requests |
 | NUT-24 | HTTP 402: tickets, each minute of video, tips, replays |
 | NIP-07 · 46 · 44 · 98 | Nostr sign-in, from an extension or a signer app |
 | NIP-61 | Nutzaps |
 | BIP-39 · BIP-32 | The artist's 12 words |
 
-Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, copied unchanged from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309) into `vendor/cashu-ts-nut16`, with the spec's test vectors as tests. Move to your phone uses NUT-16 as phone wallets read it today (UR codes, made with [bc-ur](https://github.com/gandlafbtc/bc-ur), the library Cashu.me uses); once phone wallets read the proposed format, I switch it over.
+Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, copied unchanged from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309) into `vendor/cashu-ts-nut16`, with the spec's test vectors as tests.
 
 ---
 
@@ -187,6 +185,7 @@ From 27 Nov:
 - Passkeys that seal the ticket
 - Give a ticket away
 - Move the takings to your phone by QR
+- Send sats to any Lightning wallet, for fans and artists (needs a real mint: the test mint's Lightning is pretend)
 - Show splits paid as the fan pays
 - A replay pass, for someone who wasn't there
 - An MCP server on refueler.io: gig search, tickets and venue hire days, for fans' agents, artists and venues

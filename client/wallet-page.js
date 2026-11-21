@@ -1,6 +1,5 @@
 // The wallet page: this browser's wallet. Balance, Take sats home (all of it as one note for any Cashu wallet) and
-// Receive ecash (a note from another wallet, this mint only). On a laptop or tablet, Move to my phone comes first: the
-// note as an animated QR for the phone's own Cashu wallet (phone-qr.js, session 44).
+// Receive ecash (a note from another wallet, this mint only).
 // Topping up is on the viewer page, where the sats get spent.
 import { getTokenMetadata } from '@cashu/cashu-ts';
 import { openWallet } from './wallet.js';
@@ -23,13 +22,10 @@ fetch('/api/show').then((r) => r.json()).then(({ show }) => {
   small.textContent = ` · ${HOME ? 'watching online' : 'venue ticket'}${show?.artist ? ` · ${show.artist}` : ''}`;
   $('role').append(small);
 }).catch(() => {});
-let onPhone = null; // Move to my phone, while its card is open: { token, sats, player, timer, landed }
-let noteSats = 0; // the note out, in sats
 const show = async () => {
   const n = await wallet.balance();
-  // While the QR plays, the big number is the sats on their way (the browser's own balance is 0 by then).
-  $('balance').textContent = (onPhone && !onPhone.landed ? onPhone.sats : n).toLocaleString('en-GB');
-  $('cashu-me').disabled = $('to-phone').disabled = !n && !$('token').value; // nothing here, and no note out waiting to be moved
+  $('balance').textContent = n.toLocaleString('en-GB');
+  $('cashu-me').disabled = !n && !$('token').value; // nothing here, and no note out waiting to be moved
 };
 await show();
 wallet.on('proofs:saved', show);
@@ -77,7 +73,6 @@ async function note() {
   if ($('token').value) return $('token').value;
   const out = await wallet.takeHome();
   if (!out) return null;
-  noteSats = out.amount;
   $('token').value = out.token;
   $('takeout').hidden = false;
   $('paste').hidden = true;
@@ -111,87 +106,4 @@ $('copy').addEventListener('click', async () => {
   $('token').hidden = false;
   try { await navigator.clipboard.writeText($('token').value); say('Copied.'); }
   catch { $('token').select(); say('Select and copy the note above.'); }
-});
-
-// ---- Move to my phone (session 44). A phone can't scan its own screen, so it shows on a laptop or tablet, first.
-const WIDE = matchMedia('(min-width: 700px) and (min-height: 560px)');
-const layout = () => {
-  $('to-phone').hidden = $('to-phone-note').hidden = !WIDE.matches;
-  $('cashu-me').classList.toggle('primary', !WIDE.matches);
-  $('cashu-me-note').hidden = WIDE.matches;
-};
-layout();
-WIDE.addEventListener('change', layout);
-
-// The card: the note plays as QR frames until the mint says its coins are spent (NUT-07), then Landed.
-function phoneCard(landed) {
-  document.body.classList.toggle('phone-on', !!onPhone);
-  $('phone-qr').hidden = !onPhone;
-  if (!onPhone) return;
-  $('phone-title').textContent = landed ? 'On your phone' : 'Scan with your phone';
-  $('phone-code').hidden = $('phone-wait').hidden = $('phone-copy').hidden = $('phone-close').hidden = $('phone-mint').hidden = landed;
-  document.querySelector('.phone-mark').hidden = landed;
-  $('phone-landed').hidden = $('phone-back').hidden = !landed;
-  $('phone-how').textContent = landed ? 'Nothing’s left in this browser.'
-    : 'On your phone, open Cashu.me, Minibits or macadamia, tap Scan and hold it up to this screen. Keep this page open.';
-  if (landed) {
-    const tick = Object.assign(document.createElement('b'), { textContent: '✓ ' });
-    $('phone-landed').replaceChildren(tick, `${onPhone.sats.toLocaleString('en-GB')} sats sent to your phone’s wallet.`);
-    Object.assign($('phone-back'), { href: $('back').href, textContent: $('back').textContent });
-  }
-}
-async function watchPhone() {
-  const now = onPhone;
-  if (!now || now.landed) return;
-  if (!document.hidden) {
-    try {
-      if (await wallet.landed(now.token)) {
-        if (onPhone !== now) return;
-        now.landed = true;
-        now.player.stop();
-        $('token').value = ''; // spent: nothing out waiting any more
-        phoneCard(true);
-        say('');
-        return show();
-      }
-    } catch {} // no answer from the mint this time: ask again
-  }
-  if (onPhone === now) now.timer = setTimeout(watchPhone, 2500);
-}
-function closePhone() {
-  if (!onPhone) return;
-  onPhone.player?.stop();
-  clearTimeout(onPhone.timer);
-  const landed = onPhone.landed;
-  onPhone = null;
-  phoneCard(false);
-  // Closed before it landed: the note waits here, as after Move to Cashu.me, with Copy beside it.
-  if (!landed && $('token').value) $('takeout').hidden = false;
-  show();
-}
-$('to-phone').addEventListener('click', async () => {
-  $('to-phone').disabled = true;
-  try {
-    const [token, { playNote }] = await Promise.all([note(), import('./phone-qr.js')]);
-    if (!token) { say('Nothing in your wallet to move.'); return show(); }
-    const coins = await wallet.coinsIn(token);
-    onPhone = { token, sats: noteSats, landed: false, timer: null, player: null };
-    $('takeout').hidden = true; // the card has its own Copy
-    phoneCard(false);
-    onPhone.player = playNote($('phone-code'), token, coins);
-    say('');
-    $('phone-qr').scrollIntoView({ block: 'center', behavior: 'smooth' });
-    watchPhone();
-  } catch (e) {
-    say(`Couldn’t move them: ${e.message}`);
-  }
-  show();
-});
-$('phone-close').addEventListener('click', closePhone);
-// Copy instead: the same note, into any Cashu wallet by hand. The card keeps watching, so a paste on the phone lands too.
-$('phone-copy').addEventListener('click', async () => {
-  const token = onPhone?.token;
-  if (!token) return;
-  try { await navigator.clipboard.writeText(token); say('Copied: paste it into any Cashu wallet.'); }
-  catch { closePhone(); $('token').hidden = false; $('token').select(); say('Select and copy the note above.'); }
 });

@@ -1458,22 +1458,3 @@ abbr[data-means]:hover::after, abbr[data-means]:focus::after {
   font: 400 13px/1.35 "IBM Plex Sans", system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-align: left;
   white-space: normal; pointer-events: none;
 }
-/* Move to my phone (session 44): on a laptop or tablet, the wallet as one note playing as an animated QR, for the Cashu
-   wallet on the fan's phone. While it plays, only the balance, the card and the status show. */
-body.wallet.phone-on #move, body.wallet.phone-on .buttons, body.wallet.phone-on #paste, body.wallet.phone-on #takeout,
-body.wallet.phone-on #where-note { display: none !important; }
-body.wallet.phone-on .big { font-size: 64px; }
-.phone-qr { max-width: 420px; margin: 8px auto 16px; }
-.phone-card { display: grid; justify-items: center; gap: 10px; padding: 18px 18px 14px; border: 1px solid rgb(217 149 58 / .45); border-radius: 12px; background: var(--midnight); }
-.phone-card h2 { margin: 0; font: 400 28px/1.05 var(--poster); letter-spacing: .08em; }
-.phone-card p { margin: 0; font-size: 15px; line-height: 1.45; max-width: 34ch; }
-.phone-code { width: min(300px, 70vw); aspect-ratio: 1; border-radius: 10px; background: var(--cream); image-rendering: pixelated; display: block; }
-.phone-card .phone-mark { font: 400 15px/1 var(--poster); letter-spacing: .16em; color: var(--smoke); }
-.phone-mark span { color: #f7931a; }
-.phone-card .phone-wait { color: var(--smoke); display: flex; gap: 8px; align-items: center; font-size: 14px; }
-.phone-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); animation: phone-blink 1.2s ease-in-out infinite; }
-@keyframes phone-blink { 50% { opacity: .25; } }
-@media (prefers-reduced-motion: reduce) { .phone-dot { animation: none; } }
-.phone-card .phone-landed { font-size: 17px; font-weight: 600; }
-.phone-landed b { color: var(--amber); }
-.phone-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
