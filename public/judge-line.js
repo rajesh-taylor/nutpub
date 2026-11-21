@@ -43,13 +43,13 @@ export async function judgeLine(r, page) {
   const steps = pickle ? 8 : g2 ? 7 : tv ? 9 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
   const o = tv ? 2 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
-    const key = n + [].concat(story).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note + text;
+    const key = n + [].concat(story, text).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note;
     if (said === key) return;
     said = key;
     const words = Object.assign(document.createElement('span'), { className: 'jl-say' });
     if (story) { const st = Object.assign(document.createElement('span'), { className: 'jl-story' }); st.append(...[].concat(story)); words.append(st); }
     if (note) words.append(Object.assign(document.createElement('span'), { className: 'jl-story', textContent: note })); // what the page shows below (gig 3's step 8)
-    words.append(Object.assign(document.createElement('span'), { textContent: text }));
+    { const t = document.createElement('span'); t.append(...[].concat(text)); words.append(t); } // text may hold a word with its meaning (abbr)
     line.replaceChildren(Object.assign(document.createElement('b'), { textContent: n ? `Judges · ${n} of ${steps}` : 'Judges' }), words);
     if (extra) line.append(extra);
     if (btn) line.append(Object.assign(document.createElement('a'), { className: 'btn primary', href, textContent: btn }));
@@ -72,6 +72,8 @@ export async function judgeLine(r, page) {
     takings: 'Below: tonight’s takings, a no-show’s beer token, Longy’s since last orders, and after Finish gig, the night’s receipt under Past gigs.',
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
+  // British slang with its meaning on hover or a tap, as the Kitchen's dicky bird (app.css abbr[data-means]).
+  const gander = () => { const g = Object.assign(document.createElement('abbr'), { textContent: 'gander', tabIndex: 0 }); g.dataset.means = 'British slang: a look, as a goose (a gander) cranes its long neck to see'; return g; };
   const TOLD = list.at === 'longy' ? {
     // Session 47 (Rajesh 21 Nov): gig 1 opens on Cellar, the only gig that shows it.
     cellar: 'Longy’s playing Peggy Sue’s tonight, online only. Cellar holds what he sets once, like the 12 words that back up the key his takings lock to.',
@@ -245,7 +247,7 @@ export async function judgeLine(r, page) {
     const fanBtn = document.getElementById('head-fan');
     if (fanBtn) fanBtn.style.display = page === 'show' && on && !closed ? '' : 'none';
     // Session 46: what's set once moved to Cellar, the first tab; Plan gig keeps tonight.
-    if (page === 'setup') say(1 + o, tv ? 'Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a gander before you click 2 · Show Time, up above.'
+    if (page === 'setup') say(1 + o, tv ? ['Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a ', gander(), ' before you click 2 · Show Time, up above.']
       : `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show' && tv) { // gig 1 (session 47): the pub's TV is part of the fan's steps now
       if (closed) say(9, 'The night’s over. Click 3 · Your takings, at the top.');
