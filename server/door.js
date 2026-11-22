@@ -250,7 +250,13 @@ export function mountDoor(route, admin, pass) {
     return { ticket: !!t, ticketKind: t?.kind ?? null, ticketSats: t?.sats ?? 0, ticketAt: t?.at ?? null, passkey: (t?.keys ?? 0) > 0,
       blind: b?.blind ?? null, sig: b ? JSON.parse(b.signed) : null, inside, drink: d ? { id: d.id, poured: !!d.collected_at } : null };
   };
-  route('GET', '/api/door/me', pass, async (c) => json({ ...(await heldBy(c.pass)), soldOut: await roomFull(c) }));
+  // On the page's first load only (not /api/tick): this ticket's passkeys by id (WebAuthn's own, not secret), so the
+  // page can tell the password manager they're the only ones for it (client/passkey.js, tidyPasskeys).
+  route('GET', '/api/door/me', pass, async (c) => {
+    const held = await heldBy(c.pass);
+    const passkeyIds = held.passkey ? (await all('SELECT id FROM passkeys WHERE pass = ? ORDER BY created', c.pass)).map((r) => r.id) : [];
+    return json({ ...held, passkeyIds, soldOut: await roomFull(c) });
+  });
 
   // The drink as the coin itself (gig 3, 17 Nov): this phone's own drink, the locked token it paid, for its animated
   // NUT-16 QR. It's locked to the bar's key (and to the artist's after last orders), so showing it to the phone that

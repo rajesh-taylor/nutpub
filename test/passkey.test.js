@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { useDb, run } from '../server/db.js';
-import { b64u, derToRaw, readAuthData, checkCreate, checkGet, makeChallenge, challengeOk, mountPasskeys } from '../server/passkey.js';
+import { b64u, derToRaw, readAuthData, checkCreate, checkGet, makeChallenge, challengeOk, mountPasskeys, devHost } from '../server/passkey.js';
+import { withStage } from '../server/db.js';
 
 const utf8 = new TextEncoder();
 const sha256 = async (b) => new Uint8Array(await crypto.subtle.digest('SHA-256', b));
@@ -157,4 +158,24 @@ test('a ticket kept with a passkey comes back with Find my ticket, once per chal
   assert.equal((await call('POST', '/api/passkey/check', await (await phone()).get(await challenge(call)))).error, 'no_ticket');
   await run('DELETE FROM tickets'); // New night
   assert.equal((await call('POST', '/api/passkey/check', await p.get(await challenge(call)))).error, 'no_ticket');
+});
+
+// Session 50: development on a stage's own <id>.localhost (plain http only), so gig 3's Save and Find my ticket can be
+// tried locally. The live site never takes a localhost origin, and one stage never takes another's name.
+test('development: passkeys on localhost and on this stage\'s <id>.localhost, never another stage\'s', async () => {
+  assert.equal(devHost('http://localhost:8811', ''), 'localhost');
+  assert.equal(devHost('http://k7q2zp.localhost:8811', 'k7q2zp'), 'k7q2zp.localhost');
+  assert.equal(devHost('http://k7q2zp.localhost:8811', 'a1b2c3'), null);
+  assert.equal(devHost('http://k7q2zp.localhost:8811', ''), null);
+  for (const o of ['https://k7q2zp.localhost', 'http://k7q2zp.localhost.evil.example', 'http://evil.example', 'http://a.b.localhost']) assert.equal(devHost(o, 'k7q2zp'), null, o);
+  const DEV = { origin: 'https://k7q2zp.thenutpub.com', rpId: 'k7q2zp.thenutpub.com', dev: true };
+  const LOCAL = { origin: 'http://k7q2zp.localhost:8811', rpId: 'k7q2zp.localhost' };
+  const p = await phone();
+  const stage = { id: 'k7q2zp' };
+  const kept = await withStage(stage, async () => checkCreate(await p.create('c1', LOCAL), { ...DEV, challenge: 'c1' }));
+  await withStage(stage, async () => checkGet(await p.get('c2', LOCAL), kept, { ...DEV, challenge: 'c2' }));
+  // Not in development (https): a localhost origin is the wrong origin.
+  await assert.rejects(withStage(stage, async () => checkGet(await p.get('c3', LOCAL), kept, { ...DEV, dev: false, challenge: 'c3' })), /wrong_origin/);
+  // Another stage, in development: refused too.
+  await assert.rejects(withStage({ id: 'a1b2c3' }, async () => checkGet(await p.get('c4', LOCAL), kept, { ...DEV, challenge: 'c4' })), /wrong_origin/);
 });

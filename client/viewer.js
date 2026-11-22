@@ -5,7 +5,7 @@ import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 import { stepAt } from '../server/totp.js';
 import { seedFor, keepSeed, seedText, blindFor, signedTicket, proofAt, inAt } from './ticket.js';
-import { passkeysWork, warm, makePasskey, checkPasskey } from './passkey.js';
+import { passkeysWork, warm, makePasskey, checkPasskey, tidyPasskeys, handleOf, keepHandle } from './passkey.js';
 import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
 import { pintGlass, playCoin } from './pint.js';
 
@@ -162,6 +162,7 @@ let ticketHere = 0; // what this browser's ticket cost: it counts as support too
 let resumeAt = 0; // this pass's first unpaid piece
 let liveSpentSoFar = 0;
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
+const gonePass = me.status === 403 ? pass : null; // the server doesn't know it: its ticket's passkeys go (tidyKeys)
 if (me.status === 403) pass = await getPass(true);
 else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar, tipped: tippedHere = 0 } = await me.json());
 spentHere += liveSpentSoFar;
@@ -1496,11 +1497,24 @@ $('door-word-btn').onclick = async () => {
 $('door-word-back').onclick = () => { doorWord = null; render(); };
 $('keep-skip').onclick = () => { keepSkipped = true; render(); };
 // Keep it with a passkey: the password manager lists it by the artist and the date.
+// A venue ticket: "Longy · The Fickle Pickle · ticket · 21 Nov", one passkey per ticket (session 39).
+function passkeyName() {
+  const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '';
+  return (door.ticketKind === 'room' ? [show.artist, venueName(), 'ticket', day] : ['NutPub ticket', show.artist, shortDay(show.date && `${show.date}T12:00:00Z`)]).filter(Boolean).join(' · ');
+}
+// Passkeys kept tidy (session 50): each time the page opens with a ticket, its passkeys get today's name and are the
+// only ones for its user ID; once the server says the ticket (or the pass) is gone, none are, so the password manager
+// drops them. Only where the browser can (passkey.js). A fan who never opens the page again keeps theirs.
+function tidyKeys() {
+  if (!PASSKEYS) return;
+  if (gonePass) for (const id of [seedText(gonePass, KEEP), handleOf(gonePass)]) tidyPasskeys(id, []);
+  // None on the server (a save the server never took): the password manager's copy goes too.
+  if (door.ticket === true && Array.isArray(door.passkeyIds)) tidyPasskeys(door.ticketKind === 'room' ? seedText(pass, KEEP) : handleOf(pass), door.passkeyIds, passkeyName());
+  else if (door.ticket === false) for (const id of [seedText(pass, KEEP), handleOf(pass)]) tidyPasskeys(id, []);
+}
 $('keep-btn').onclick = async () => {
   try {
-    // A venue ticket: "Longy · The Fickle Pickle · ticket · 21 Nov", one passkey per ticket (session 39).
-    const day = show.date ? new Date(`${show.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' }) : '';
-    const name = (door.ticketKind === 'room' ? [show.artist, venueName(), 'ticket', day] : ['NutPub ticket', show.artist, shortDay(show.date && `${show.date}T12:00:00Z`)]).filter(Boolean).join(' · ');
+    const name = passkeyName();
     if (!(await makePasskey(pass, name, door.ticketKind === 'room' ? seedFor(pass, KEEP) : null))) { keepTried = true; return render(); }
     door.passkey = true;
     render();
@@ -1515,6 +1529,7 @@ $('find').onclick = async () => {
     try {
       localStorage.setItem(`nutpub-pass${keep}`, t.pass);
       if (t.kind === 'room' && t.seed) keepSeed(t.pass, t.seed, keep); // the passkey's user ID: the ticket's 32 bytes
+      if (t.kind === 'home' && t.seed) keepHandle(t.pass, t.seed); // a Watch online ticket's: its name kept current
     } catch { return say('This browser can’t keep the ticket (private window?).'); }
     location.replace(`${location.pathname}${t.kind === 'home' ? '?as=home' : ''}`);
   } catch (e) { say(e.message); }
@@ -2036,6 +2051,7 @@ async function tick() {
   chat(now);
 }
 render();
+tidyKeys();
 document.body.classList.add('ready'); // the page shows once it knows what to show (no flash of Doors before the ticket)
 tick().catch(() => {}).finally(nextTick);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tick().catch(() => {}).finally(nextTick); });

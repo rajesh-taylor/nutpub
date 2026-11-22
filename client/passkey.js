@@ -57,6 +57,36 @@ export async function makePasskey(pass, name, id = null) {
     clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.getAuthenticatorData()) }) }));
 }
 
+// ---- Passkeys kept tidy (WebAuthn Signal API, session 50): the page tells the password manager what the NutPub still
+// knows, so a passkey whose night is over goes and a ticket's passkey keeps its current name. Each method only where
+// the browser has it (Safari 26, Chrome 132; not Firefox), fired and never awaited (Safari 26.0–26.1 never answered
+// one of them), every error swallowed: a missing signal never stops the page.
+export function signal(method, options) {
+  try {
+    const f = globalThis.PublicKeyCredential?.[method];
+    if (typeof f !== 'function') return false;
+    Promise.resolve(f.call(globalThis.PublicKeyCredential, options)).catch(() => {});
+    return true;
+  } catch { return false; }
+}
+const here = () => globalThis.location?.hostname;
+// Find my ticket picked a passkey the NutPub no longer knows (its night is over): forget it.
+export const forgetPasskey = (credentialId, rpId = here()) => signal('signalUnknownCredential', { rpId, credentialId });
+// The ticket page, opened: `ids` are the only passkeys for this ticket's user ID (none once the ticket's gone), and
+// `name` what the password manager lists them as. userId: the 32 bytes, or their base64url.
+export function tidyPasskeys(userId, ids, name = '', rpId = here()) {
+  if (!userId || !rpId) return;
+  const id = typeof userId === 'string' ? userId : b64u(userId);
+  signal('signalAllAcceptedCredentials', { rpId, userId: id, allAcceptedCredentialIds: ids });
+  if (ids.length && name) signal('signalCurrentUserDetails', { rpId, userId: id, name, displayName: name });
+}
+// Find my ticket on another browser: it keeps the Watch online ticket's user ID too, so the page can keep its name.
+export const keepHandle = (pass, id) => { try { localStorage.setItem('nutpub-handle', JSON.stringify({ [pass]: typeof id === 'string' ? id : b64u(id) })); } catch {} };
+// A Watch online ticket's user ID, if this browser holds one for this pass (handleFor, keepHandle).
+export function handleOf(pass) {
+  try { const h = JSON.parse(localStorage.getItem('nutpub-handle') || '{}')?.[pass]; return typeof h === 'string' ? h : null; } catch { return null; }
+}
+
 // The passkey check: Find my ticket (any of this site's passkeys). Gives back the ticket's pass and kind ('room' |
 // 'home') from the server, and the passkey's user ID from the phone itself (seed: the venue ticket's 32 bytes). Null if
 // the fan closed the sheet.
@@ -67,8 +97,11 @@ export async function checkPasskey() {
     cred = await navigator.credentials.get({ publicKey: { challenge: unb64u(challenge), rpId: location.hostname, userVerification: 'preferred', timeout: 120000 } });
   } catch (e) { if (cancelled(e)) return null; throw e; }
   const r = cred.response;
-  const found = await said(await fetch('/api/passkey/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-    challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature) }) }));
+  const res = await fetch('/api/passkey/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+    challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature) }) });
+  // "For another night": only when the server says so plainly, never on a lost connection.
+  if (res.status === 404 && (await res.clone().json().catch(() => ({}))).error === 'no_ticket') forgetPasskey(cred.id);
+  const found = await said(res);
   const seed = r.userHandle ? new Uint8Array(r.userHandle) : null;
   return { ...found, seed: seed?.length === 32 ? seed : null };
 }

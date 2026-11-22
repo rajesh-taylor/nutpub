@@ -145,8 +145,9 @@ The NutPub is a working concept on a test mint, not a production service.
 
 **Not built yet:** the ideas for after NutNovember, by name, are on [the Kitchen's After 27 Nov list](https://thenutpub.com/kitchen#after).
 
+**A limit:** a ticket's passkey is renamed or forgotten only when the fan opens that gig's page again. A closed stage nobody revisits leaves its passkey in the password manager, and Firefox can't be told at all.
+
 **What I'm testing next:**
-- 22–23 Nov · Passkeys kept tidy: a ticket's passkey forgotten when the ticket goes or its stage closes
 - 24 Nov · A cold run: all three gigs on a laptop that has never seen the site
 - 25 Nov · A real broadcast from OBS, then its 7-day replay (the example gigs play recordings)
 - 25 Nov · The Doorman's List scanning a ticket on a real phone, on the live site

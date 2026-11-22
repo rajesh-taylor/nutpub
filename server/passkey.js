@@ -63,10 +63,19 @@ export function readAuthData(bytes) {
   return out;
 }
 
+// Development only (plain http): a page on localhost, or on this stage's own <id>.localhost, makes and checks passkeys
+// for that name. Another stage's name is refused, as on the live site.
+export function devHost(origin, stage = stageDb()?.id ?? '') {
+  const m = /^http:\/\/(?:([a-z0-9]+)\.)?localhost(?::\d+)?$/.exec(String(origin));
+  if (!m) return null;
+  if (m[1] && m[1] !== stage) return null;
+  return m[1] ? `${m[1]}.localhost` : 'localhost';
+}
+
 // What both ceremonies check: the browser's own record (type, challenge, origin) and the site's hash.
 async function common({ clientDataJSON, authenticatorData }, want) {
   const cd = JSON.parse(new TextDecoder().decode(b64u.dec(clientDataJSON)));
-  if (want.dev && /^http:\/\/localhost(:\d+)?$/.test(cd.origin)) want = { ...want, origin: cd.origin, rpId: 'localhost' };
+  if (want.dev) { const host = devHost(cd.origin); if (host) want = { ...want, origin: cd.origin, rpId: host }; }
   if (cd.type !== want.type) throw new Error('wrong_type');
   if (cd.challenge !== want.challenge) throw new Error('wrong_challenge');
   if (cd.origin !== want.origin || cd.crossOrigin === true) throw new Error('wrong_origin');
