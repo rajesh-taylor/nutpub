@@ -36,6 +36,8 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 **Cellar:** what an artist sets once: name and page, the 12 words, photos, the stream.
 ![Cellar: the artist's name, page, 12 words and live stream](docs/img/cellar.jpg)
 
+**Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings.
+
 <img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: 0 in of 1 sold, ready to scan" width="260" align="right">
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.

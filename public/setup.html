@@ -281,6 +281,10 @@
     .board .mod-row input { margin: 0; font-size: 14px; }
     .board .mod-row .btn, .board .mod-add .btn { font-size: 15px; padding: 8px 12px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
+    /* Session 55b: a mod by invite says how they sign in; an invite still waiting shows its icon (picked when invited). */
+    .board .mod-row .said { font-size: 15px; color: var(--cream); }
+    .board .mod-row .said.wait { color: var(--smoke); }
+    .board .mod-row .mod-icon-now { font-size: 20px; padding: 0 9px; }
     /* Producers (session 55): a name, then the invite's link (Copy, Share…) or ✓ once they've said yes. */
     .board .crew-row { display: grid; grid-template-columns: minmax(80px, auto) minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; }
     .board .crew-row b { font: 600 16px/1.2 var(--body); color: var(--cream); }
@@ -291,7 +295,7 @@
     @media (max-width: 700px) { .board .crew-row { grid-template-columns: 1fr auto auto; } .board .crew-row b, .board .crew-row input, .board .crew-row .said { grid-column: 1 / -1; } }
     .board .mod-add .field { flex: 1; margin: 0; }
     .board .mod-add select, .board .mod-add .btn { height: 44px; } /* the same height as the Name box beside it */
-    @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly] { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
+    @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly], .board .mod-row .said { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
     .board .key-row input { margin-top: 0; flex: 1; }
     .board .key-row .btn { font-size: 15px; padding: 8px 12px; }
     .board .mini { margin-top: 18px; padding-bottom: 18px; text-align: center; }
@@ -689,17 +693,6 @@
             <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">Keep the key and the code private: anyone with them can stream as you.</p>
           </section>
 
-          <section class="panel wide" data-room="cellar" data-artist>
-            <h2>Images</h2>
-            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Two tall photos for phones, two wide ones for screens. Drop one in, or click. A JPEG, PNG or WebP, up to 5 MB.</p>
-            <div class="slots">
-              <div class="slot tall" data-slot="tall1"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
-              <div class="slot tall" data-slot="tall2"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
-              <div class="slot wide" data-slot="wide1"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
-              <div class="slot wide" data-slot="wide2"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
-            </div>
-          </section>
-
           <!-- Cellar: show producers (session 55): people the artist trusts to run the night, invited with a link that works
                once, for 7 days; their own passkey on thenutpub.com after that. Shown on an artist's stage, not Longy's own. -->
           <section class="panel wide" id="crew-card" data-room="cellar" data-artist hidden>
@@ -711,9 +704,23 @@
 
           <section class="panel wide" data-room="cellar" data-artist>
             <h2>Moderators</h2>
-            <p class="switch-note">A private link each, for people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never your pages, your takings or your stream key. Up to three.</p>
+            <p class="switch-note">For people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never your pages, your takings or your stream key. Up to three.</p>
+            <!-- Session 55b: Invite a moderator: a link that works once, for 7 days, opening the gig page; they say yes with
+                 Nostr there, or a mod passkey on thenutpub.com. Links made before keep working until cancelled. -->
             <div class="mod-rows" id="mod-rows"></div>
-            <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Sam" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">+ Make a link</button></div>
+            <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Kat" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">Invite a moderator</button></div>
+          </section>
+
+          <!-- Images sit just above Pre-roll, the other photos and videos (Rajesh 22 Nov). -->
+          <section class="panel wide" data-room="cellar" data-artist>
+            <h2>Images</h2>
+            <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Two tall photos for phones, two wide ones for screens. Drop one in, or click. A JPEG, PNG or WebP, up to 5 MB.</p>
+            <div class="slots">
+              <div class="slot tall" data-slot="tall1"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot tall" data-slot="tall2"><label><span>+ Tall</span><span><small>1080 × 1920</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot wide" data-slot="wide1"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+              <div class="slot wide" data-slot="wide2"><label><span>+ Wide</span><span><small>1920 × 1080</small></span><input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn quiet drop" aria-label="Remove this photo" hidden>✕</button></div>
+            </div>
           </section>
 
           <!-- Pre-roll (Rajesh 21 Nov): videos and photos lined up before the show, played until Start show. Drawn, not

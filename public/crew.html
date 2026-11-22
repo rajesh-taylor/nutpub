@@ -46,11 +46,12 @@
       <p class="said" id="inv-said" role="status" hidden></p>
     </section>
 
-    <!-- No invite, or a used one: the passkey brings back the gigs you work on. -->
+    <!-- No invite, or a used one: the passkey brings back the gigs you work on. Rajesh 22 Nov: "Go to your gigs" here,
+         the crew's way in (artists keep "Back to your gigs" on /judge and the home page). -->
     <section class="card" id="back" hidden>
-      <h1 id="back-head">Back to your gigs</h1>
+      <h1 id="back-head">Your gigs</h1>
       <p class="say" id="back-say">Producers and moderators: your passkey signs you in to the gigs you work on.</p>
-      <button type="button" class="btn primary" id="back-go">Back to your gigs</button>
+      <button type="button" class="btn primary" id="back-go">Go to your gigs</button>
       <div id="back-list"></div>
       <p class="said" id="back-said" role="status" hidden></p>
     </section>
@@ -97,8 +98,8 @@
           try {
             const out = await joinCrew({ stage, code }, how, invite.role);
             if (out?.url) { location.replace(out.url); return; }
-            if (out) say('inv-said', 'Done, but the gig didn’t answer: press Back to your gigs.');
-          } catch (e) { say('inv-said', e.message || 'That didn’t work: try again.'); }
+            if (out) { say('inv-said', 'Done, but the gig didn’t answer: press Go to your gigs.'); showBack(); }
+          } catch (e) { say('inv-said', e.message || 'That didn’t work: try again.'); if (/Go to your gigs/.test(e.message || '')) showBack(); }
           $('inv-make').disabled = $('inv-use').disabled = false;
           warm();
         };
@@ -111,7 +112,9 @@
         try {
           const out = await backToGigs();
           const there = into && out?.stages.find((s) => s.stage === into);
-          if (there || out?.stages.length === 1) { location.href = (there || out.stages[0]).url; return; }
+          if (there || (!into && out?.stages.length === 1)) { location.href = (there || out.stages[0]).url; return; }
+          // From "I'm a mod" on a gig this passkey doesn't open (session 55b): say so, rather than open another gig.
+          if (out && into) say('back-said', 'That passkey doesn’t open the gig you came from. Press Go to your gigs again and pick the passkey you made for it (“The NutPub · Mod · …”), or open one of these.');
           if (out && !out.stages.length) say('back-said', 'No gigs open on this passkey now. An artist can invite you again from their Cellar.');
           else if (out) $('back-list').replaceChildren(gigsList(out.stages));
         } catch (e) { say('back-said', e.message || 'That didn’t work: try again.'); }

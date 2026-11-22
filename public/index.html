@@ -183,8 +183,8 @@
 
     <!-- The live chat: tips with a message are highlighted. Over the picture once the set plays on a phone. -->
     <section class="chat" id="chat" aria-label="Live chat" hidden>
-      <div class="chat-top"><p class="chat-head">Live chat</p><p class="nostr-in" id="nostr-in" hidden></p><p class="pin" id="pin" hidden><span aria-hidden="true">📌</span> <span id="pin-text"></span></p></div>
-      <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><button type="button" class="btn quiet" id="pin-btn" hidden>Pin a message</button><small id="mod-say"></small></div>
+      <div class="chat-top"><p class="chat-head">Live chat</p><p class="im-mod" id="im-mod" hidden><a id="im-mod-link" href="/crew">I’m a mod</a></p><p class="nostr-in" id="nostr-in" hidden></p><p class="pin" id="pin" hidden><span aria-hidden="true">📌</span> <span id="pin-text"></span></p></div>
+      <div class="mod-bar" id="mod-bar" hidden><b id="mod-who"></b><button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button><button type="button" class="btn quiet" id="pin-btn" hidden>Pin a message</button><button type="button" class="linkish mod-out" id="mod-out" hidden>Sign out</button><small id="mod-say"></small></div>
       <p class="slow-note" id="slow-note" hidden>Slow mode: one message every 30 seconds.</p>
       <div class="goal" id="goal" hidden><small class="goal-head">Stretch goals</small><b id="goal-sum"></b><i class="track" id="goal-track"><b id="goal-bar"></b></i><span class="goal-list" id="goal-label"></span><p class="goal-thanks" id="goal-thanks" hidden></p><span class="goal-more-row" id="goal-more-row" hidden><button type="button" class="coin btc goal-more" id="goal-more">Tip in ₿itcoin</button><button type="button" class="goal-card" id="goal-card" title="Card tips through Stripe: not wired up yet">Tip with Card</button></span></div>
       <ol class="feed" id="feed" aria-live="polite"></ol>
@@ -233,6 +233,16 @@
       </div>
       <a class="btn primary wide try-venue" id="try-venue" href="?" hidden>Now try the venue ticket</a>
     </div>
+    <!-- A moderator's invite (session 55b), from the artist's Cellar, over the gig page: say yes with Nostr here, or make a mod passkey. -->
+    <section class="card mod-invite" id="mod-invite" role="dialog" aria-labelledby="mi-head" hidden>
+      <p class="mi-chip" id="mi-chip"></p>
+      <h2 class="mi-head" id="mi-head"></h2>
+      <p class="mi-say" id="mi-say">Look after the chat at the gigs: delete messages, slow it down, post links.</p>
+      <p class="mi-btns" id="mi-btns"><button type="button" class="mi-nostr" id="mi-nostr">Nostr Sign In</button><a class="btn primary" id="mi-passkey" href="#">Make your mod passkey</a></p>
+      <p class="mi-fine" id="mi-fine">Nostr: your key stays in your extension or signer app. Passkey: kept by your password manager on thenutpub.com.</p>
+      <p class="mi-said" id="mi-said" role="status" hidden></p>
+      <button type="button" class="mi-later" id="mi-later">Not now</button>
+    </section>
   </main>
 
   <!-- Closing time. -->

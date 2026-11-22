@@ -538,8 +538,16 @@ $('make-stream').onclick = async () => {
   catch (err) { status(`Stream not made: ${err.message}`, 'bad'); }
   $('make-stream').disabled = false;
 };
-const copy = (id, what) => async () => {
-  try { await navigator.clipboard.writeText($(id).value); status(`${what} copied.`, 'ok'); } catch { status(`Couldn't copy the ${what.toLowerCase()}.`, 'bad'); }
+// A Copy button says so where it is (session 55b's snag from 55: the status line can be off-screen): ✓ Copied, for 2 s.
+function copied(btn) {
+  if (!btn) return;
+  btn.dataset.label ??= btn.textContent;
+  btn.textContent = '✓ Copied';
+  clearTimeout(btn.copiedTimer);
+  btn.copiedTimer = setTimeout(() => { btn.textContent = btn.dataset.label; }, 2000);
+}
+const copy = (id, what) => async (e) => {
+  try { await navigator.clipboard.writeText($(id).value); copied(e?.currentTarget); status(`${what} copied.`, 'ok'); } catch { status(`Couldn't copy the ${what.toLowerCase()}.`, 'bad'); }
 };
 $('copy-server').onclick = copy('live-server', 'Server');
 $('copy-key').onclick = copy('live-key', 'Key');
@@ -556,53 +564,91 @@ const iconPicker = (icons, value) => {
   return sel;
 };
 let pinShown = null;
-async function drawMods() {
-  const { mods: list, icons, pin } = await api('GET', '/api/admin/mods');
-  const keys = modKeys();
-  if (pinShown === null || document.activeElement !== $('pin-text')) { $('pin-text').value = pin; pinShown = pin; }
-  if (!$('mod-icon').options.length) $('mod-icon').replaceWith(Object.assign(iconPicker(icons, icons[0]), { id: 'mod-icon' }));
-  const used = list.map((m) => m.icon);
-  if (!$('mod-name').value) $('mod-icon').value = icons.find((i) => !used.includes(i)) || icons[0]; // a new icon for each new mod
-  $('mod-rows').replaceChildren(...list.map((m) => {
-    const row = Object.assign(document.createElement('div'), { className: 'mod-row' });
-    const icon = iconPicker(icons, m.icon);
-    icon.setAttribute('aria-label', `${m.name}'s icon`);
-    icon.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { icon: icon.value }); status(`${m.name}'s icon changed.`, 'ok'); };
-    const main = Object.assign(document.createElement('label'), { className: 'mod-main', title: 'The main mod can also change the pinned message' });
-    const radio = Object.assign(document.createElement('input'), { type: 'radio', name: 'mod-main', checked: !!m.main });
-    radio.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { main: true }); status(`${m.name} is the main mod.`, 'ok'); drawMods(); };
-    main.append(radio, 'Main');
-    main.hidden = list.length < 2; // one mod is the main mod anyway
-    // An example gig's mod (Aaron of Essex, setlist.js) has no link: his lines are scripted (Rajesh 19 Nov).
-    const link = Object.assign(document.createElement('input'), { readOnly: true, value: keys[m.id] ? modLink(keys[m.id]) : m.seed ? `Scripted for this example gig: ${m.name}’s lines come in by themselves.` : 'Made on another browser: cancel it and make a new one to see the link.' });
-    link.setAttribute('aria-label', `${m.name}'s moderator link`);
-    const copyBtn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Copy', disabled: !keys[m.id] });
-    copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link.value); status(`${m.name}'s link copied. Send it to them privately.`, 'ok'); } catch { link.select(); } };
-    const cancel = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Cancel' });
-    cancel.onclick = async () => {
-      if (!confirm(`Cancel ${m.name}'s link? It stops working at once.`)) return;
-      await api('DELETE', `/api/admin/mods/${m.id}`);
-      keepModKey(m.id, null);
-      status(`${m.name}'s link is cancelled.`, 'ok');
-      drawMods();
-    };
-    row.append(icon, Object.assign(document.createElement('b'), { textContent: m.name }), link, main, copyBtn, cancel);
-    return row;
-  }));
-  $('mod-make').disabled = list.length >= 5;
-}
-// ---- Producers (session 55): an invite each, a link that works once, for 7 days (thenutpub.com/crew#i=<stage>.<code>).
-// The server keeps its SHA-256; this browser keeps the link so it can be copied again until it's used.
+// Invites (producers' and, since 55b, mods'): the server keeps their SHA-256; this browser keeps each link so it can be
+// copied again until it's used.
 const CREW_LINKS = 'nutpub-crew-links';
 const crewLinks = () => { try { return JSON.parse(localStorage.getItem(CREW_LINKS) || '{}'); } catch { return {}; } };
 const keepCrewLink = (id, link) => { const all = crewLinks(); if (link) all[id] = link; else delete all[id]; try { localStorage.setItem(CREW_LINKS, JSON.stringify(all)); } catch {} };
 const frontDoor = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`; // thenutpub.com, from <id>.thenutpub.com
 const untilDay = (ms) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+// Session 55b: the rows are every mod (the example gig's scripted one, links made before, mods by invite) and then the
+// invites still waiting. crewOn: this is an artist's stage, where moderators come by invite (Longy's own keeps links).
+let crewOn = false;
+const modInviteLink = (code) => `${location.origin}${show?.page ? `/${show.page}` : ''}?as=home#invite=${code}`; // this gig's own address, as the artist sees it
+async function drawMods() {
+  const [{ mods: list, icons, pin, max = 3 }, crew] = await Promise.all([api('GET', '/api/admin/mods'), api('GET', '/api/admin/crew').catch(() => null)]);
+  crewOn = !!crew;
+  const waiting = (crew?.crew || []).filter((m) => m.role === 'mod' && !m.joined);
+  const keys = modKeys();
+  const links = crewLinks();
+  if (pinShown === null || document.activeElement !== $('pin-text')) { $('pin-text').value = pin; pinShown = pin; }
+  if (!$('mod-icon').options.length) $('mod-icon').replaceWith(Object.assign(iconPicker(icons, icons[0]), { id: 'mod-icon' }));
+  const used = [...list, ...waiting].map((m) => m.icon);
+  if (!$('mod-name').value) $('mod-icon').value = icons.find((i) => !used.includes(i)) || icons[0]; // a new icon for each new mod
+  const el = (tag, props) => Object.assign(document.createElement(tag), props);
+  const drop = (text, ask, path, done, after = () => {}) => {
+    const b = el('button', { type: 'button', className: 'btn quiet', textContent: text });
+    b.onclick = async () => {
+      if (!confirm(ask)) return;
+      await api('DELETE', path);
+      after();
+      status(done, 'ok');
+      drawMods();
+    };
+    return b;
+  };
+  const rows = list.map((m) => {
+    const row = el('div', { className: 'mod-row' });
+    const icon = iconPicker(icons, m.icon);
+    icon.setAttribute('aria-label', `${m.name}'s icon`);
+    icon.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { icon: icon.value }); status(`${m.name}'s icon changed.`, 'ok'); };
+    const main = el('label', { className: 'mod-main', title: 'The main mod can also change the pinned message' });
+    const radio = el('input', { type: 'radio', name: 'mod-main', checked: !!m.main });
+    radio.onchange = async () => { await api('POST', `/api/admin/mods/${m.id}`, { main: true }); status(`${m.name} is the main mod.`, 'ok'); drawMods(); };
+    main.append(radio, 'Main');
+    main.hidden = list.length < 2; // one mod is the main mod anyway
+    const name = el('b', { textContent: m.name });
+    // By invite: how they sign in, and Remove (their crew row: their passkey or npub stops opening the gig).
+    if (m.via === 'passkey' || m.via === 'nostr') {
+      row.append(icon, name, el('span', { className: 'said', textContent: m.via === 'nostr' ? '✓ Signs in with Nostr' : '✓ Signs in with a passkey' }), main, el('span'),
+        drop('Remove', `Remove ${m.name}? They're signed out at once and can't moderate this gig again without a new invite.`, `/api/admin/crew/${m.crew}`, `${m.name} is removed.`));
+      return row;
+    }
+    // An example gig's mod (Aaron of Essex, setlist.js) has no link: his lines are scripted (Rajesh 19 Nov). A link made
+    // before 55b keeps working until it's cancelled.
+    const link = el('input', { readOnly: true, value: keys[m.id] ? modLink(keys[m.id]) : m.seed ? `Scripted for this example gig: ${m.name}’s lines come in by themselves.` : 'Made on another browser: cancel it and invite them instead.' });
+    link.setAttribute('aria-label', `${m.name}'s moderator link`);
+    const copyBtn = el('button', { type: 'button', className: 'btn quiet', textContent: 'Copy', disabled: !keys[m.id] });
+    copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link.value); copied(copyBtn); status(`${m.name}'s link copied. Send it to them privately.`, 'ok'); } catch { link.select(); } };
+    const cancel = drop('Cancel', `Cancel ${m.name}'s link? It stops working at once.`, `/api/admin/mods/${m.id}`, `${m.name}'s link is cancelled.`, () => keepModKey(m.id, null));
+    row.append(icon, name, link, main, copyBtn, cancel);
+    return row;
+  });
+  // Invites still waiting: the link (kept in this browser until it's used), Copy, Share…, Cancel.
+  for (const m of waiting) {
+    const row = el('div', { className: 'mod-row' });
+    const link = links[m.id];
+    const what = link ? Object.assign(el('input', { readOnly: true, value: link }), { ariaLabel: `${m.name}'s invite` })
+      : el('span', { className: 'said wait', textContent: `Invited · until ${untilDay(m.until)} · made on another browser: cancel it and invite again to see the link.` });
+    const copyBtn = el('button', { type: 'button', className: 'btn quiet', textContent: 'Copy', hidden: !link });
+    copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link); copied(copyBtn); status(`${m.name}'s invite copied. Send it however you like: it works once, until ${untilDay(m.until)}.`, 'ok'); } catch { what.select?.(); } };
+    const share = el('button', { type: 'button', className: 'btn quiet', textContent: 'Share…', hidden: !link || !navigator.share });
+    share.onclick = () => navigator.share({ title: 'The NutPub', text: show?.artist ? `Moderate ${show.artist}’s chat on the NutPub` : 'Moderate my chat on the NutPub', url: link }).catch(() => {});
+    const cancel = drop('Cancel', `Cancel ${m.name}'s invite? The link stops working at once.`, `/api/admin/crew/${m.id}`, `${m.name}'s invite is cancelled.`, () => keepCrewLink(m.id, null));
+    row.append(el('span', { className: 'mod-icon-now', textContent: m.icon || '', title: `${m.name}'s icon` }), el('b', { textContent: m.name }), what, share, copyBtn, cancel);
+    rows.push(row);
+  }
+  $('mod-rows').replaceChildren(...rows);
+  $('mod-make').textContent = crewOn ? 'Invite a moderator' : '+ Make a link';
+  $('mod-make').disabled = list.length + waiting.length >= max;
+}
+// ---- Producers (session 55): an invite each, a link that works once, for 7 days (thenutpub.com/crew#i=<stage>.<code>).
+// The server keeps its SHA-256; this browser keeps the link so it can be copied again until it's used.
 async function drawCrew() {
   const { crew: list, max } = await api('GET', '/api/admin/crew');
   const links = crewLinks();
   const producers = list.filter((m) => m.role === 'producer');
-  for (const id of Object.keys(links)) if (!producers.some((m) => String(m.id) === id && !m.joined)) keepCrewLink(id, null); // used or gone
+  for (const id of Object.keys(links)) if (!list.some((m) => String(m.id) === id && !m.joined)) keepCrewLink(id, null); // used or gone (a mod's invite too)
   const el = (tag, props) => Object.assign(document.createElement(tag), props);
   $('crew-rows').replaceChildren(...producers.map((m) => {
     const row = el('div', { className: 'crew-row' });
@@ -611,7 +657,7 @@ async function drawCrew() {
       : link ? Object.assign(el('input', { readOnly: true, value: link }), { ariaLabel: `${m.name}'s invite` })
         : el('span', { className: 'said wait', textContent: `Invited · until ${untilDay(m.until)} · made on another browser: cancel it and invite again to see the link.` });
     const copy = el('button', { type: 'button', className: 'btn quiet', textContent: 'Copy', hidden: m.joined || !link });
-    copy.onclick = async () => { try { await navigator.clipboard.writeText(link); status(`${m.name}'s invite copied. Send it however you like: it works once, until ${untilDay(m.until)}.`, 'ok'); } catch { what.select?.(); } };
+    copy.onclick = async () => { try { await navigator.clipboard.writeText(link); copied(copy); status(`${m.name}'s invite copied. Send it however you like: it works once, until ${untilDay(m.until)}.`, 'ok'); } catch { what.select?.(); } };
     const share = el('button', { type: 'button', className: 'btn quiet', textContent: 'Share…', hidden: m.joined || !link || !navigator.share });
     share.onclick = () => navigator.share({ title: 'The NutPub', text: show?.artist ? `Produce ${show.artist}’s gigs on the NutPub` : 'Produce my gigs on the NutPub', url: link }).catch(() => {});
     const drop = el('button', { type: 'button', className: 'btn quiet', textContent: m.joined ? 'Remove' : 'Cancel' });
@@ -678,7 +724,7 @@ async function drawDoorQr(show = !$('door-link-qr').hidden) {
   }
 }
 $('qr-door').onclick = () => drawDoorQr($('door-link-qr').hidden);
-$('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); status('Door scanner link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
+$('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); copied($('copy-door')); status('Door scanner link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
 $('new-door').onclick = async () => {
   const made = $('new-door').textContent === 'New one';
   if (made && !confirm('Make a new door scanner? The old one stops working at once.')) return;
@@ -704,10 +750,17 @@ $('mod-make').onclick = async () => {
   const name = $('mod-name').value.trim();
   if (!name) return $('mod-name').focus();
   try {
-    const m = await api('POST', '/api/admin/mods', { name, icon: $('mod-icon').value });
-    keepModKey(m.id, m.key);
-    $('mod-name').value = '';
-    status(`${m.name}'s link is ready: copy it and send it to them privately.`, 'ok');
+    if (crewOn) { // an artist's stage (session 55b): an invite that opens the gig page, once, for 7 days
+      const m = await api('POST', '/api/admin/crew', { role: 'mod', name, icon: $('mod-icon').value });
+      keepCrewLink(m.id, modInviteLink(m.code));
+      $('mod-name').value = '';
+      status(`${m.name}'s invite is ready: copy it and send it however you like. It works once, until ${untilDay(m.until)}. Whoever opens it first becomes your moderator.`, 'ok');
+    } else {
+      const m = await api('POST', '/api/admin/mods', { name, icon: $('mod-icon').value });
+      keepModKey(m.id, m.key);
+      $('mod-name').value = '';
+      status(`${m.name}'s link is ready: copy it and send it to them privately.`, 'ok');
+    }
     drawMods();
   } catch (err) { status(err.message === 'too_many' ? '3 moderators at most: one main mod and two helpers.' : `Not made: ${err.message}`, 'bad'); }
 };

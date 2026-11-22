@@ -70,24 +70,25 @@ export async function sign(s, template) {
   return s.signEvent(template);
 }
 
-// Sign in: the key, the profile, then one signed note for this site (NIP-98), sent with the pass.
-export async function signIn(pass, s = null) {
+// Sign in: the key, the profile, then one signed note for this site (NIP-98), sent with the pass. `extra` goes with it
+// (session 55b: a moderator's invite, { invite }, said yes to with this sign-in).
+export async function signIn(pass, s = null, extra = {}) {
   s = s || (await extension(0));
   if (!s) throw new Error('No Nostr extension in this browser.');
   const pubkey = await s.getPublicKey();
   const profile = await fetchProfile(pubkey);
   const auth = await sign(s, { kind: 27235, created_at: Math.floor(Date.now() / 1000), content: '',
     tags: [['u', `${location.origin}/api/nostr`], ['method', 'POST']] });
-  const r = await fetch('/api/nostr', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ auth, profile }) });
+  const r = await fetch('/api/nostr', { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ auth, profile, ...extra }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.detail || 'Nostr sign-in didn’t work.');
-  return j; // { name, npub }
+  return j; // { name, npub, mod? }: mod, if this npub moderates this gig
 }
 
 // Nostr Connect: a nostrconnect:// link for the fan's signer app (as a QR, or a tap on a phone). `done` settles once
 // the app says yes and the sign-in is checked; `cancel` stops waiting. `onAuth`: some apps (nsec.app) first send a
 // page of their own to confirm in; we open it.
-export async function connect(pass, { onAuth } = {}) {
+export async function connect(pass, { onAuth, extra = {} } = {}) {
   const [{ BunkerSigner, createNostrConnectURI }, { generateSecretKey, getPublicKey }, { SimplePool }] = await nip46();
   const sk = generateSecretKey();
   const uri = createNostrConnectURI({ clientPubkey: getPublicKey(sk), relays: CONNECT_RELAYS,
@@ -98,7 +99,7 @@ export async function connect(pass, { onAuth } = {}) {
     const s = await BunkerSigner.fromURI(sk, uri, { pool, onauth: onAuth }, stop.signal);
     remote = s;
     save({ sk: hex(sk), bp: s.bp });
-    try { return await signIn(pass, s); } catch (e) { forget(); throw e; }
+    try { return await signIn(pass, s, extra); } catch (e) { forget(); throw e; }
   })();
   return { uri, done, cancel: () => { stop.abort(); try { pool.destroy(); } catch {} } };
 }

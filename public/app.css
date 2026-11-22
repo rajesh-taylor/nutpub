@@ -293,8 +293,9 @@ body.hold-doors[data-stage="doors"] .big-play, body.hold-doors[data-stage="doors
    The colours are for the colour session. */
 .feed li.mod { background: rgb(90 169 255 / .14); }
 .feed li.mod .from { color: #7db9ff; }
+.feed li.mod .from.nostr { color: #b98cff; } /* a mod signed in with Nostr (session 55b): purple, like any Nostr name */
 /* Nostr sign-in (12 Nov): a signed-in fan's name in Nostr's purple, so it reads apart from guests and mods. Look: for design. */
-.feed .from.nostr { color: #b98cff; }
+.feed .from.nostr { color: #b98cff; display: inline; margin: 0; font-size: inherit; white-space: normal; } /* not the old .nostr row's flex (session 55b: it broke the line after a purple name) */
 .nostr-in { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 /* In the Live chat header (Rajesh 12 Nov), at the right, beside the title. */
 body[data-as="home"] .chat-top { flex-wrap: wrap; row-gap: 6px; }
@@ -329,6 +330,7 @@ body[data-as="home"]:not(.wallet-card) .chat-top .nostr-in .nostr-btn { padding:
 .mod-bar .btn { font-size: 13px; padding: 5px 10px; }
 .mod-bar .btn[aria-pressed="true"] { border-color: #7db9ff; color: #7db9ff; }
 .mod-bar small { flex-basis: 100%; color: var(--smoke); font-size: 13px; }
+.mod-bar .mod-out { margin-left: auto; font-size: 13px; color: var(--smoke); }
 .mod-bar small:empty { display: none; }
 .slow-note { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 .feed .mod-tag { font: 600 11px/1 var(--body); letter-spacing: .02em; color: var(--deep); background: #7db9ff; border-radius: 3px; padding: 3px 5px; vertical-align: 1px; }
@@ -1493,3 +1495,25 @@ dialog.ask .btn { min-width: 110px; }
 body[data-crew="producer"] [data-artist] { display: none !important; }
 body:not([data-crew="producer"]) [data-producer] { display: none !important; }
 .crew-chip { align-self: center; padding: 4px 10px; border: 1px solid rgb(239 227 200 / .4); border-radius: 4px; font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); white-space: nowrap; }
+
+/* A moderator's invite on the gig page (session 55b): Nostr Sign In (the chat's own purple) or a mod passkey. */
+.mod-invite { position: fixed; z-index: 60; left: 50%; top: 50%; transform: translate(-50%, -50%); box-sizing: border-box; width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  display: grid; gap: 10px; margin: 0; padding: 22px 24px; text-align: left; background: var(--raised); border-color: rgb(239 227 200 / .28); box-shadow: 0 0 0 100vmax rgb(0 0 0 / .6); }
+.mod-invite .mi-later { justify-self: start; padding: 0; border: 0; background: none; color: var(--smoke); font: 500 14px/1.3 var(--body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mod-invite .mi-chip { margin: 0; font: 600 13px/1.2 var(--body); color: var(--smoke); }
+.mod-invite .mi-head { margin: 0; font: 400 30px/1.05 var(--poster); letter-spacing: .05em; }
+.mod-invite .mi-say { margin: 0; font-size: 16px; line-height: 1.45; }
+.mod-invite .mi-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 4px 0 0; }
+.mod-invite .mi-btns[hidden] { display: none; }
+.mod-invite .mi-nostr { padding: 11px 16px; border: 1px solid rgb(239 227 200 / .4); border-radius: 4px; background: none; color: var(--cream); font: 600 16px/1 var(--body); cursor: pointer; }
+.mod-invite .mi-nostr::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #b98cff; vertical-align: 1px; }
+.mod-invite .mi-nostr:hover { filter: brightness(1.12); }
+.mod-invite .mi-nostr:focus-visible { outline: 2px solid #b98cff; outline-offset: 2px; }
+.mod-invite .mi-nostr:disabled { opacity: .5; cursor: default; }
+.mod-invite .mi-fine { margin: 0; font-size: 13px; line-height: 1.5; color: var(--smoke); }
+.mod-invite .mi-said { margin: 0; font-size: 14px; color: #f0b27a; }
+/* At the top of the chat, for fans: a passkey mod's way back in, quiet, beside Nostr Sign In (Rajesh 22 Nov). */
+.im-mod { margin: 0 0 6px; font-size: 13px; }
+.im-mod a { color: var(--smoke); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+body[data-as="home"] .chat-top .im-mod { order: 2; margin: 0 0 0 auto; }
+body[data-as="home"] .chat-top .im-mod:not([hidden]) + .nostr-in { margin-left: 0; }

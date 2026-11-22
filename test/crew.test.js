@@ -260,3 +260,158 @@ test('a producer’s key is nothing on another stage, and Longy’s own stage ha
   const req = new Request('https://p7q2m4.thenutpub.com/api/admin/sold', { headers: { 'X-Admin': key } });
   assert.equal((await withStage(other, () => serve(req, env))).status, 403);
 });
+
+// ---- Moderators by invite (session 55b): the link opens the gig page; yes with a passkey (thenutpub.com/crew, a mod key
+// per browser, sent as X-Mod) or with Nostr Sign In there (the invite tied to their npub). Remove and the 12 words'
+// lock-out sign them out; links made before keep working; the example gig's scripted mod stays.
+import { schnorr } from '@noble/curves/secp256k1.js';
+import { hexToBytes } from '@noble/curves/utils.js';
+import { eventId, AUTH_KIND } from '../server/nostr.js';
+
+const modInvite = (name = 'Kat', icon = '🎤') => call('POST', '/api/admin/crew', { role: 'mod', name, icon });
+// A fan's browser on the gig's address: its own pass, and whatever headers it sends.
+async function fan(method, path, data, headers = {}) {
+  const req = new Request(`https://${STAGE}.thenutpub.com${path}`, { method, headers: { 'Content-Type': 'application/json', ...headers }, body: data ? JSON.stringify(data) : undefined });
+  const res = await withStage(stage, () => serve(req, env));
+  return { status: res.status, ...(await res.json().catch(() => ({}))) };
+}
+const newPass = async () => (await fan('POST', '/api/pass')).pass;
+// Nostr Sign In's note, signed as an extension would (BIP-340 Schnorr, NIP-98), for this gig's address.
+const NSK = hexToBytes('11'.repeat(32));
+const NPK = [...schnorr.getPublicKey(NSK)].map((b) => b.toString(16).padStart(2, '0')).join('');
+async function note(sk = NSK, at = Math.floor(Date.now() / 1000)) {
+  const e = { pubkey: [...schnorr.getPublicKey(sk)].map((b) => b.toString(16).padStart(2, '0')).join(''), kind: AUTH_KIND, created_at: at, content: '',
+    tags: [['u', `https://${STAGE}.thenutpub.com/api/nostr`], ['method', 'POST']] };
+  e.id = await eventId(e);
+  e.sig = [...schnorr.sign(hexToBytes(e.id), sk, crypto.getRandomValues(new Uint8Array(32)))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return e;
+}
+async function passkeyMod(name = 'Kat') {
+  const inv = await modInvite(name);
+  const p = await phone();
+  const yes = await door('POST', '/api/crew', { stage: STAGE, code: inv.code, ...(await p.create(await makeChallenge())), name: 'The NutPub · Mod · 22 Nov ’26' });
+  assert.equal(yes.status, 200, JSON.stringify(yes));
+  const code = new URL(yes.url).hash.match(/^#c=([0-9a-f]{32})$/)[1];
+  const out = await call('POST', '/api/crew/handoff', { code }, '');
+  return { inv, p, yes, ...out };
+}
+
+test('a mod’s invite: an icon, three mods at most (invites waiting count), checked on the gig page without spending it', async () => {
+  const inv = await modInvite();
+  assert.equal(inv.status, 200);
+  assert.equal(inv.icon, '🎤');
+  const info = await fan('POST', '/api/mod/invite', { code: inv.code });
+  assert.deepEqual([info.role, info.name, info.icon], ['mod', 'Kat', '🎤']);
+  assert.equal((await fan('POST', '/api/mod/invite', { code: inv.code })).status, 200); // still good: nothing spent
+  assert.equal((await fan('POST', '/api/mod/invite', { code: '0'.repeat(32) })).status, 403);
+  const prod = await invite('Jo');
+  assert.equal((await fan('POST', '/api/mod/invite', { code: prod.code })).status, 403); // a producer's isn't a mod's
+  await withStage(stage, async () => { const { run } = await import('../server/db.js'); await run("INSERT INTO mods (name, key_hash, created) VALUES ('Old link', 'h1', 'now')"); });
+  assert.equal((await modInvite('Sam')).status, 200);
+  assert.equal((await modInvite('Ali')).status, 409); // Kat waiting, the old link, Sam waiting
+  assert.equal((await call('POST', '/api/admin/crew', { role: 'mod', name: 'Me' }, (await producer('Pat')).key)).status, 403); // not a producer's
+});
+
+test('yes with a passkey: a mod key of its own, the mod’s tools, never the artist’s', async () => {
+  const { key, role, p } = await passkeyMod();
+  assert.equal(role, 'mod');
+  assert.match(key, /^[0-9a-f]{32}$/);
+  const me = await fan('GET', '/api/mod/me', null, { 'X-Mod': key });
+  assert.deepEqual([me.status, me.name, me.icon, me.main], [200, 'Kat', '🎤', true]);
+  const row = await withStage(stage, () => one('SELECT key_hash FROM mods WHERE name = ?', 'Kat'));
+  assert.match(row.key_hash, /^crew:/); // never a SHA-256, so no link matches it
+  assert.equal(await withStage(stage, () => one('SELECT COUNT(*) AS n FROM crew_keys WHERE hash = ?', key).then((r) => r.n)), 0); // the hash only
+  const pass = await newPass();
+  const said = await fan('POST', '/api/message', { text: 'Merch at thenutpub.com' }, { 'X-Pass': pass, 'X-Mod': key });
+  assert.equal(said.status, 200, JSON.stringify(said));
+  const tick = await fan('GET', '/api/tick?mod=1', null, { 'X-Pass': pass, 'X-Mod': key });
+  assert.equal(tick.mod, true);
+  assert.deepEqual(tick.messages.map((m) => [m.who, m.mod, m.icon]), [['Kat', true, '🎤']]);
+  assert.equal((await call('GET', '/api/admin/sold', null, key)).status, 403); // a mod key opens none of the artist's pages
+  const { mods } = await call('GET', '/api/admin/mods');
+  assert.deepEqual(mods.map((m) => [m.name, m.via]), [['Kat', 'passkey']]);
+  const back = await door('POST', '/api/stages/back', await p.get(await makeChallenge()));
+  assert.deepEqual(back.stages.map((s) => s.role), ['mod']);
+  // "I'm a mod" signs them back in with a key of their own; Sign out ends that browser's key only.
+  const code = new URL(back.stages[0].url).hash.match(/^#c=([0-9a-f]{32})$/)[1];
+  const second = await call('POST', '/api/crew/handoff', { code }, '');
+  assert.equal(second.role, 'mod');
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': second.key })).via, 'passkey');
+  assert.equal((await fan('DELETE', '/api/mod/me', null, { 'X-Mod': key })).status, 200);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': key })).status, 403);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': second.key })).status, 200);
+});
+
+test('yes with Nostr Sign In on the gig page: the invite tied to the npub, which is the mod sign-in from then on', async () => {
+  const inv = await modInvite();
+  const pass = await newPass();
+  const n = await note();
+  const yes = await fan('POST', '/api/nostr', { auth: n, invite: inv.code }, { 'X-Pass': pass });
+  assert.equal(yes.status, 200, JSON.stringify(yes));
+  assert.deepEqual(yes.mod, { name: 'Kat', icon: '🎤', main: true });
+  assert.equal((await fan('POST', '/api/nostr', { auth: n }, { 'X-Pass': pass })).status, 400); // a note works once
+  assert.equal((await fan('POST', '/api/nostr', { auth: await note(hexToBytes('22'.repeat(32))), invite: inv.code }, { 'X-Pass': await newPass() })).status, 403); // spent
+  assert.equal((await withStage(stage, () => one('SELECT npub FROM crew WHERE id = ?', inv.id))).npub, NPK);
+  const me = await fan('GET', '/api/mod/me', null, { 'X-Pass': pass });
+  assert.deepEqual([me.status, me.name, me.nostr], [200, 'Kat', true]);
+  await fan('POST', '/api/message', { text: 'Hello all' }, { 'X-Pass': pass });
+  const tick = await fan('GET', '/api/tick?mod=1', null, { 'X-Pass': pass });
+  assert.equal(tick.mod, true);
+  assert.deepEqual(tick.messages.map((m) => [m.who, m.mod, m.nostr]), [['Kat', true, true]]); // purple, with the Mod tag
+  // Next night, another device: Nostr Sign In alone brings the mod back.
+  const other = await newPass();
+  const again = await fan('POST', '/api/nostr', { auth: await note(NSK, Math.floor(Date.now() / 1000) + 1) }, { 'X-Pass': other }); // a new note (the same second's would be the same note)
+  assert.equal(again.mod?.name, 'Kat');
+  assert.equal((await fan('GET', '/api/nostr', null, { 'X-Pass': other })).mod?.name, 'Kat');
+  // Someone else's npub is a fan.
+  const stranger = await newPass();
+  assert.equal((await fan('POST', '/api/nostr', { auth: await note(hexToBytes('33'.repeat(32))) }, { 'X-Pass': stranger })).mod, undefined);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Pass': stranger })).status, 403);
+  assert.deepEqual((await call('GET', '/api/admin/mods')).mods.map((m) => m.via), ['nostr']);
+});
+
+test('Remove signs a mod out at once, by passkey or by Nostr; links made before keep working', async () => {
+  const pk = await passkeyMod('Kat');
+  const inv = await modInvite('Sam', '🥁');
+  const pass = await newPass();
+  await fan('POST', '/api/nostr', { auth: await note(), invite: inv.code }, { 'X-Pass': pass });
+  const old = await withStage(stage, async () => { const { run } = await import('../server/db.js'); await run("INSERT INTO mods (name, key_hash, created) VALUES ('Old link', ?, 'now')", await sha('c'.repeat(32))); return 'c'.repeat(32); });
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': old })).status, 200);
+  const { mods } = await call('GET', '/api/admin/mods');
+  for (const m of mods.filter((x) => x.crew)) assert.equal((await call('DELETE', `/api/admin/crew/${m.crew}`)).status, 200);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': pk.key })).status, 403);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Pass': pass })).status, 403);
+  assert.equal((await fan('GET', '/api/tick?mod=1', null, { 'X-Pass': pass })).mod, false);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': old })).status, 200); // the old link still works
+  assert.deepEqual((await call('GET', '/api/admin/mods')).mods.map((m) => [m.name, m.via, !!m.main]), [['Old link', 'link', true]]);
+  assert.equal(front.prepare("SELECT COUNT(*) AS n FROM key_stages WHERE stage = ? AND role = 'mod'").get(STAGE).n, 0);
+});
+
+test('the 12 words’ lock-out signs mods by invite out too, and the scripted mod becomes the main mod', async () => {
+  const pk = await passkeyMod('Kat');
+  const inv = await modInvite('Sam', '🥁');
+  const pass = await newPass();
+  await fan('POST', '/api/nostr', { auth: await note(), invite: inv.code }, { 'X-Pass': pass });
+  await withStage(stage, async () => {
+    const { run } = await import('../server/db.js');
+    await run("INSERT INTO mods (name, key_hash, created) VALUES ('Aaron of Essex', 'seed:x', 'now')");
+    await clearCrew();
+  });
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Mod': pk.key })).status, 403);
+  assert.equal((await fan('GET', '/api/mod/me', null, { 'X-Pass': pass })).status, 403);
+  assert.deepEqual((await call('GET', '/api/admin/mods')).mods.map((m) => [m.name, m.via, !!m.main]), [['Aaron of Essex', 'seed', true]]);
+});
+
+test('on localhost a stage’s own address (<id>.localhost) passes the Nostr check; another stage’s does not', async () => {
+  const at = Math.floor(Date.now() / 1000);
+  const local = async (u, host) => {
+    const e = { pubkey: NPK, kind: AUTH_KIND, created_at: at, content: '', tags: [['u', u], ['method', 'POST']] };
+    e.id = await eventId(e);
+    e.sig = [...schnorr.sign(hexToBytes(e.id), NSK)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const pass = (await withStage(stage, () => serve(new Request(`http://${host}/api/pass`, { method: 'POST' }), env)).then((r) => r.json())).pass;
+    const req = new Request(`http://${host}/api/nostr`, { method: 'POST', headers: { 'X-Pass': pass, 'Content-Type': 'application/json' }, body: JSON.stringify({ auth: e }) });
+    return (await withStage(stage, () => serve(req, env))).status;
+  };
+  assert.equal(await local(`http://${STAGE}.localhost:8818/api/nostr`, `${STAGE}.localhost:8818`), 200);
+  assert.equal(await local('http://p7q2m4.localhost:8818/api/nostr', `${STAGE}.localhost:8818`), 400);
+});

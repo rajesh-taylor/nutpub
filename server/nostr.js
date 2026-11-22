@@ -4,11 +4,17 @@
 // HTTP auth, kind 27235), and the page sends along the fan's own profile (kind 0), which they signed when they made
 // it. Both signatures are checked here (BIP-340 Schnorr), so a name can't be borrowed from someone else's profile.
 // Kept: the phone's pass, the public key and the name, for the night; New night and closing the gig delete it.
+// Session 55b: a moderator's invite can be said yes to with this same sign-in (the note and the invite's code in one
+// request), which ties the invite to their npub; from then on this sign-in makes them a mod on that gig (mods.js). Since
+// it now opens a mod's tools, a sign-in note works once (its id kept for the 2 minutes it could be used).
+// No new signing and nothing encrypted: the same NIP-98 note, checked the same way.
 import { schnorr } from '@noble/curves/secp256k1.js';
 import { hexToBytes } from '@noble/curves/utils.js';
 import { bech32 } from '@scure/base';
-import { one, run } from './db.js';
+import { one, run, kv } from './db.js';
 import { json, body, now } from './http.js';
+import { joinWithNostr } from './crew.js';
+import { modByPubkey } from './mods.js';
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const HEX128 = /^[0-9a-f]{128}$/;
@@ -58,23 +64,42 @@ export const shortNpub = (pubkey) => { const n = npub(pubkey); return `${n.slice
 export const nostrOf = (pass) => one('SELECT pubkey, name FROM nostr WHERE pass = ?', pass);
 export const handle = (row) => (row ? row.name || shortNpub(row.pubkey) : null);
 
+// A sign-in note is spent once: its id is kept while it could still pass the time check (SKEW either side).
+export async function spendNote(id, at = Math.floor(Date.now() / 1000)) {
+  const seen = (await kv.get('nostr-seen', [])).filter((s) => s.at > at - 2 * SKEW);
+  if (seen.some((s) => s.id === id)) return false;
+  await kv.set('nostr-seen', [...seen, { id, at }].slice(-200));
+  return true;
+}
+// What the page is told about this Nostr key: its name, and whether it's one of this gig's moderators.
+const meOf = async (pubkey, name) => {
+  const mod = await modByPubkey(pubkey);
+  return { name: name || shortNpub(pubkey), npub: npub(pubkey), ...(mod ? { mod: { name: mod.name, icon: mod.icon, main: !!mod.main } } : {}) };
+};
+const INVITE_GONE = { error: 'invite', detail: 'This invite has been used or has run out: ask the artist for a new one.' };
+
 export function mountNostr(route, pass) {
   route('GET', '/api/nostr', pass, async (c) => {
     const row = await nostrOf(c.pass);
-    return json(row ? { name: handle(row), npub: npub(row.pubkey) } : {});
+    return json(row ? await meOf(row.pubkey, handle(row)) : {});
   });
   route('POST', '/api/nostr', pass, async (c) => {
     const b = await body(c);
     // As for passkeys: the live site is https; `wrangler dev` hands the Worker http, and there localhost is allowed.
     const live = `https://${c.url.host}/api/nostr`;
     const dev = c.url.protocol === 'http:';
-    const why = await checkAuth(b?.auth, (u) => u === live || (dev && /^http:\/\/localhost(:\d+)?\/api\/nostr$/.test(u)));
+    // On localhost a stage is <id>.localhost: its own address counts too (session 55b found only plain localhost did).
+    const why = await checkAuth(b?.auth, (u) => u === live || (dev && (u === `http://${c.url.host}/api/nostr` || /^http:\/\/localhost(:\d+)?\/api\/nostr$/.test(u))));
     if (why) return json({ error: why, detail: 'Your Nostr sign-in didn’t check out: try again.' }, 400);
+    if (!(await spendNote(b.auth.id))) return json({ error: 'used', detail: 'That Nostr sign-in was used already: try again.' }, 400);
     const pubkey = b.auth.pubkey;
+    // A mod's invite, said yes to with this sign-in: spent and tied to this npub, or the sign-in goes no further.
+    if (b.invite != null && !(await joinWithNostr(String(b.invite), pubkey))) return json(INVITE_GONE, 403);
     const name = await profileName(b.profile, pubkey);
     await run('INSERT INTO nostr (pass, pubkey, name, at) VALUES (?, ?, ?, ?) ON CONFLICT (pass) DO UPDATE SET pubkey = excluded.pubkey, name = excluded.name, at = excluded.at',
       c.pass, pubkey, name || null, now());
-    return json({ name: name || shortNpub(pubkey), npub: npub(pubkey) });
+    if (b.invite != null) console.log('mod joined with Nostr');
+    return json(await meOf(pubkey, name));
   });
   route('DELETE', '/api/nostr', pass, async (c) => {
     await run('DELETE FROM nostr WHERE pass = ?', c.pass);

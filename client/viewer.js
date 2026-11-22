@@ -34,14 +34,26 @@ try {
   MOD_KEY = new URLSearchParams(location.hash.slice(1)).get('mod') || localStorage.getItem('nutpub-mod');
   if (MOD_KEY) localStorage.setItem('nutpub-mod', MOD_KEY);
 } catch {}
-if (/(^|[#&])mod=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
-let MOD = null; // { name, slow } once the server knows the key
+// Session 55b: a moderator's invite from the artist's Cellar opens here (…#invite=<code>), kept for this tab only, and
+// taken out of the address bar too. Said yes to with Nostr Sign In here, or with a passkey on thenutpub.com/crew.
+let INVITE = null;
+try {
+  INVITE = new URLSearchParams(location.hash.slice(1)).get('invite') || sessionStorage.getItem('nutpub-mod-invite');
+  if (INVITE) sessionStorage.setItem('nutpub-mod-invite', INVITE);
+} catch {}
+if (/(^|[#&])(mod|invite)=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+let MOD = null; // { name, icon, main, slow, nostr? } once the server knows the key (or, below, the Nostr sign-in)
 if (MOD_KEY && top === self) {
   const r = await fetch('/api/mod/me', { headers: { 'X-Mod': MOD_KEY } }).catch(() => null);
   if (r?.ok) MOD = await r.json();
-  else if (r?.status === 403) { try { localStorage.removeItem('nutpub-mod'); } catch {} }
+  else if (r?.status === 403) { try { localStorage.removeItem('nutpub-mod'); } catch {} MOD_KEY = null; }
 }
-const modH = () => (MOD ? { 'X-Mod': MOD_KEY } : {});
+// A Nostr mod (session 55b) is a mod through this page's pass, signed in with their npub: no key of their own.
+const NOSTR_MOD = 'nutpub-mod-nostr';
+// An artist's stage (<id>.thenutpub.com), where mods come by invite; thenutpub.com, where their passkeys live.
+const STAGE_ID = /^(?=[a-z0-9]*\d)[a-z][a-z0-9]{5}$/.test(location.hostname.split('.')[0]) ? location.hostname.split('.')[0] : null;
+const FRONT = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`;
+const modH = () => (MOD ? { 'X-Pass': pass, ...(MOD_KEY ? { 'X-Mod': MOD_KEY } : {}) } : {});
 
 // Every line this page says, in one place (the EN/DE table comes on the languages evening).
 const T = {
@@ -164,6 +176,15 @@ let liveSpentSoFar = 0;
 const me = await fetch('/api/pass/me', { headers: { 'X-Pass': pass } });
 const gonePass = me.status === 403 ? pass : null; // the server doesn't know it: its ticket's passkeys go (tidyKeys)
 if (me.status === 403) pass = await getPass(true);
+// A Nostr mod's browser: this pass signed in with their npub. Asked only where one has been before (NOSTR_MOD).
+let nostrModHere = false;
+try { nostrModHere = !!localStorage.getItem(NOSTR_MOD); } catch {}
+if (!MOD && nostrModHere && top === self) {
+  const r = await fetch('/api/mod/me', { headers: { 'X-Pass': pass } }).catch(() => null);
+  if (r?.ok) MOD = await r.json();
+  else if (r?.status === 403) { try { localStorage.removeItem(NOSTR_MOD); } catch {} }
+}
+if (MOD) { INVITE = null; try { sessionStorage.removeItem('nutpub-mod-invite'); sessionStorage.removeItem('nutpub-mod-again'); } catch {} } // a mod already
 else ({ spent: spentHere, next: resumeAt, live: liveSpentSoFar, tipped: tippedHere = 0 } = await me.json());
 spentHere += liveSpentSoFar;
 // The mint's fee on live minutes: it leaves the wallet too, so it counts towards the limit. Only this browser knows it.
@@ -731,7 +752,7 @@ const NUTZAPS = () => (show.nutzaps || [{ sats: 21, emoji: '⚡' }, { sats: 210,
 let nostrMe = null;
 function nutzapButton() {
   const row = $('nutzaps');
-  row.hidden = !(nostrMe && zapTo && !MOD && NUTZAPS().length);
+  row.hidden = !(nostrMe && zapTo && NUTZAPS().length); // mods signed in with Nostr too (session 55b)
   if (row.hidden) return;
   $('nutzap-btns').replaceChildren(...NUTZAPS().map(({ sats: n, emoji }) => Object.assign(document.createElement('button'), {
     type: 'button', className: 'btn nutzap', textContent: `${emoji} ${n.toLocaleString('en-GB')}`,
@@ -757,12 +778,12 @@ async function nutzap(b, n) {
         tags: [...proofs.map((p) => ['proof', JSON.stringify(p)]), ['u', health.mint.url], ['p', zapTo.pubkey], ['alt', `A Nutzap for ${show.artist || 'the artist'} at The NutPub`]] });
     } catch {}
     if (!event) { // not signed: the sats are locked to the artist already, so they go as a plain tip
-      const res = await fetch(`/api/tip/${n}`, { headers: { 'X-Pass': pass, 'X-Cashu': token, ...said() } });
+      const res = await fetch(`/api/tip/${n}`, { headers: { 'X-Pass': pass, 'X-Cashu': token, ...said(), ...modH() } });
       if (res.ok) { sent(); tipped(res); }
       say(res.ok ? 'Not signed, so it went as a plain tip, without your name.' : await refusal(res), res.ok);
       return;
     }
-    const res = await fetch(url, { method: 'POST', headers: { 'X-Pass': pass, 'X-Cashu': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ event }) });
+    const res = await fetch(url, { method: 'POST', headers: { 'X-Pass': pass, 'X-Cashu': token, 'Content-Type': 'application/json', ...modH() }, body: JSON.stringify({ event }) });
     if (res.ok) {
       sent(); tipped(res);
       publish(event, zapTo.relays).catch(() => {}); // in public, where any Nostr app can see it
@@ -1711,10 +1732,11 @@ function withLinks(text) {
 function modBar(slow) {
   $('slow-note').hidden = !slow || !!MOD;
   $('mod-bar').hidden = !MOD;
+  $('im-mod').hidden = !!MOD || !STAGE_ID || top !== self || show.comments === false; // fans: "I'm a mod" (session 55b)
   if (!MOD) return;
-  $('nostr-in').hidden = true; // mods have their own names
   $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
   $('pin-btn').hidden = !MOD.main;
+  $('mod-out').hidden = MOD.via !== 'passkey'; // a Nostr mod signs out of Nostr; a link stays the mod's own
   $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}`;
   $('slow-btn').setAttribute('aria-pressed', !!slow);
   $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
@@ -1734,10 +1756,15 @@ $('pin-btn').onclick = async () => {
   const r = await fetch('/api/mod/pin', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) pin((await r.json()).pin); else say((await r.json().catch(() => ({}))).detail || 'Not pinned.');
 };
+$('mod-out').onclick = async () => { // this browser only: "I'm a mod" brings them back
+  await fetch('/api/mod/me', { method: 'DELETE', headers: modH() }).catch(() => {});
+  try { localStorage.removeItem('nutpub-mod'); } catch {}
+  location.reload();
+};
 $('slow-btn').onclick = async () => {
   const on = $('slow-btn').getAttribute('aria-pressed') !== 'true';
   const r = await fetch('/api/mod/slow', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) });
-  if (r.ok) modBar((await r.json()).slow); else say('Slow mode not changed: is your mod link still on?');
+  if (r.ok) modBar((await r.json()).slow); else say('Slow mode not changed: are you still a mod on this gig?');
 };
 function chat(r) {
   for (const m of r.messages) {
@@ -1768,7 +1795,7 @@ function chat(r) {
       del.setAttribute('aria-label', 'Delete this message');
       del.onclick = async () => {
         const r = await fetch(`/api/mod/messages/${m.id}`, { method: 'DELETE', headers: modH() });
-        if (r.ok) li.remove(); else say('Not deleted: is your mod link still on?');
+        if (r.ok) li.remove(); else say('Not deleted: are you still a mod on this gig?');
       };
       li.append(del);
     }
@@ -1948,29 +1975,63 @@ $('say').onsubmit = async (e) => {
 const TOUCH = matchMedia('(pointer: coarse)').matches;
 let waiting = null; // a Nostr Connect waiting for the fan's app
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+// Session 55b: mods see it too (a passkey mod may sign in with Nostr as well: a purple name and Nutzaps). A Nostr sign-in
+// whose npub moderates this gig makes this page a mod's: it reloads as one. Signing out of it makes it a fan's again.
 function nostrLine(me) {
   const line = $('nostr-in');
-  line.hidden = !!MOD;
+  line.hidden = false;
   line.classList.remove('connecting');
   nostrMe = me?.name ? me : null;
   nutzapButton();
+  if (me?.mod && !MOD && top === self) return becomeMod();
   const btn = (text, onclick, className = 'linkish') => el('button', { type: 'button', className, textContent: text, onclick });
   if (me?.name) {
     line.replaceChildren(el('b', { textContent: me.name, title: me.npub || '' }), ' · ',
-      btn('Sign out', async () => { await signOut(pass).catch(() => {}); nostrLine({}); }));
+      btn('Sign out', async () => {
+        await signOut(pass).catch(() => {});
+        if (MOD?.nostr) { try { localStorage.removeItem(NOSTR_MOD); } catch {} location.reload(); return; }
+        nostrLine({});
+      }));
     return;
   }
-  const b = btn('Nostr Sign In', async () => {
-    b.disabled = true;
-    if (!window.nostr) { await connectPanel().catch((e) => { say(e?.message || 'Nostr Connect didn’t start.'); nostrLine({}); }); return; }
-    try { nostrLine(await signIn(pass)); } catch (e) { say(e?.message || 'Nostr sign-in cancelled.'); b.disabled = false; }
-  }, 'nostr-btn');
+  const b = btn('Nostr Sign In', () => nostrGo(b), 'nostr-btn');
   line.replaceChildren(b);
 }
+// Nostr Sign In, from the chat's button or a mod's invite (then it says yes to the invite too).
+async function nostrGo(b) {
+  b.disabled = true;
+  const extra = INVITE ? { invite: INVITE } : {};
+  // Already signed in through a signer app here (Amber, nsec.app): that app signs the invite's note, no new QR.
+  const kept = !window.nostr && connected() ? await signer().catch(() => null) : null;
+  if (kept) {
+    say('Say yes in your signer app…');
+    try { nostrLine(await signIn(pass, kept, extra)); } catch (e) { inviteSaid(e?.message); say(e?.message || 'Nostr sign-in didn’t work.'); }
+    b.disabled = false;
+    return;
+  }
+  if (!window.nostr) {
+    if (INVITE) { $('mod-invite').hidden = true; showTab('chat'); $('nostr-in').scrollIntoView({ block: 'center', behavior: 'smooth' }); } // the QR is in the chat
+    await connectPanel(extra).catch((e) => { inviteSaid(e?.message); say(e?.message || 'Nostr Connect didn’t start.'); nostrLine({}); });
+    b.disabled = false;
+    return;
+  }
+  try { nostrLine(await signIn(pass, null, extra)); } catch (e) { inviteSaid(e?.message); say(e?.message || 'Nostr sign-in cancelled.'); }
+  b.disabled = false;
+}
+// This page, as a mod's: once per tab, so a server that disagrees can't keep it reloading.
+function becomeMod() {
+  try {
+    localStorage.setItem(NOSTR_MOD, '1');
+    sessionStorage.removeItem('nutpub-mod-invite');
+    if (sessionStorage.getItem('nutpub-mod-again')) return;
+    sessionStorage.setItem('nutpub-mod-again', '1');
+  } catch {}
+  location.reload();
+}
 // Nostr Connect, waiting for the fan's signer app. Words for fans: no "NIP", no "bunker".
-async function connectPanel() {
+async function connectPanel(extra = {}) {
   const line = $('nostr-in');
-  const c = await connect(pass, { onAuth: (url) => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); } });
+  const c = await connect(pass, { extra, onAuth: (url) => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); } });
   waiting = c;
   const btn = (text, onclick, className = 'linkish') => el('button', { type: 'button', className, textContent: text, onclick });
   const status = el('span', { className: 'nostr-wait', textContent: 'Waiting for your signer app…' });
@@ -1995,10 +2056,41 @@ async function connectPanel() {
     if (waiting === c) nostrLine(me);
   } catch (e) {
     if (waiting !== c) return; // cancelled
+    inviteSaid(e?.message);
     say(e?.message?.includes('closed') ? 'Nostr Connect stopped waiting: try again.' : e?.message || 'Nostr sign-in didn’t work.');
     nostrLine({});
   } finally { if (waiting === c) waiting = null; }
 }
+// ---- A moderator's invite (session 55b), opened on the gig page: Nostr Sign In says yes here (the invite goes with the
+// sign-in, and their npub becomes their mod sign-in); Make your mod passkey goes to thenutpub.com/crew with it.
+const inviteSaid = (text) => { if (!$('mod-invite').hidden && text) { $('mi-said').textContent = text; $('mi-said').hidden = false; } };
+if (INVITE && top === self && STAGE_ID) {
+  const r = await fetch('/api/mod/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: INVITE }) }).catch(() => null);
+  const info = r?.ok ? await r.json() : null;
+  const artist = info?.artist || show.artist || 'the artist';
+  $('mod-invite').hidden = false;
+  if (info) {
+    $('mi-chip').textContent = `Invited by ${artist} · ${[info.icon, info.name].filter(Boolean).join(' ')}`;
+    $('mi-head').textContent = `Moderate ${artist}’s chat`;
+    $('mi-passkey').href = `${FRONT}/crew#i=${STAGE_ID}.${INVITE}`;
+    $('mi-nostr').onclick = (e) => nostrGo(e.currentTarget);
+    $('mi-later').onclick = () => { // the invite stays good: open the link again to say yes
+      INVITE = null;
+      try { sessionStorage.removeItem('nutpub-mod-invite'); } catch {}
+      $('mod-invite').hidden = true;
+    };
+  } else {
+    $('mi-later').textContent = 'Close';
+    $('mi-later').onclick = () => { $('mod-invite').hidden = true; };
+    INVITE = null;
+    try { sessionStorage.removeItem('nutpub-mod-invite'); } catch {}
+    $('mi-chip').hidden = $('mi-btns').hidden = $('mi-fine').hidden = true;
+    $('mi-head').textContent = 'This invite has gone';
+    $('mi-say').textContent = `This invite has been used or has run out: ask ${artist} for a new one.`;
+  }
+}
+// Fans: "I'm a mod", quietly under the chat: a passkey mod's way back in (thenutpub.com/crew, then straight back here).
+if (STAGE_ID) $('im-mod-link').href = `${FRONT}/crew#in=${STAGE_ID}`;
 nostrLine({});
 if (connected()) whoAmI(pass).then(nostrLine);
 else extension().then(async (n) => { if (n) nostrLine(await whoAmI(pass)); });
@@ -2019,8 +2111,13 @@ function nextTick() {
 async function tick() {
   // The phone only needs its door state while the door hasn't scanned it, or the bar hasn't poured its drink.
   const waiting = (show.door?.on && door.ticketKind === 'room' && !door.checkedAt) || (door.drink && !door.drink.poured);
-  const now = await fetch(`/api/tick?after=${lastMsg}${shownAt ? `&shown=${encodeURIComponent(shownAt)}` : ''}${waiting ? '&door=1' : ''}`,
-    { headers: { 'X-Pass': pass } }).then((r) => r.json());
+  const now = await fetch(`/api/tick?after=${lastMsg}${shownAt ? `&shown=${encodeURIComponent(shownAt)}` : ''}${waiting ? '&door=1' : ''}${MOD ? '&mod=1' : ''}`,
+    { headers: { 'X-Pass': pass, ...modH() } }).then((r) => r.json());
+  if (MOD && now.mod === false) { // removed by the artist (or the 12 words' lock-out): signed out at once
+    try { localStorage.removeItem('nutpub-mod'); localStorage.removeItem(NOSTR_MOD); sessionStorage.removeItem('nutpub-mod-again'); } catch {}
+    location.reload();
+    return;
+  }
   if (shownAt && now.show) { Object.assign(show, now.show); words(); }
   shownAt = now.updated;
   tickEvery = now.every || 2;

@@ -168,7 +168,7 @@ export function mountSet(route) {
     cashuGate((c) => c.amount, (c) => `A Nutzap of ${c.amount} sats`, { lockTo: artistKey, kind: 'tip' }),
     async (c) => {
       await run('INSERT INTO tips (pass, sats, at) VALUES (?, ?, ?)', c.pass, c.paid, now());
-      const id = await addMessage(c.pass, c.zap.content, c.paid);
+      const id = await addMessage(c.pass, c.zap.content, c.paid, await modOf(c)); // a mod's Nutzap shows as the mod (session 55b)
       await recordNutzap(c.lockedId, id, c.zap, handle(c.fan));
       return json({ tipped: c.paid, total: await tipped(c.pass) });
     });

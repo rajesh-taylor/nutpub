@@ -30,7 +30,9 @@ const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' '
 export async function addMessage(pass, text, sats = 0, mod = null, as = null) {
   const t = clip(text);
   if (!t && !sats) return null;
-  const nostr = mod ? null : as || handle(await nostrOf(pass)); // signed in with Nostr: their name goes with the message (as: a scripted line's)
+  // Signed in with Nostr: their name goes with the message (as: a scripted line's). A mod's line shows the name the
+  // artist gave them; signed in with Nostr too (session 55b), it's purple like any Nostr name.
+  const nostr = as || handle(await nostrOf(pass));
   return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr) VALUES (?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.
@@ -319,7 +321,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
       messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
-        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}) })),
+        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}), ...(m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}) })),
       slow, pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
@@ -336,12 +338,13 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
   route('GET', '/api/tick', async (c) => {
     const q = c.url.searchParams;
     const { show, updated } = await current(c);
-    const [stage, stageAt, live, chat, door, top] = await Promise.all([
+    const [stage, stageAt, live, chat, door, top, mod] = await Promise.all([
       stageNow(show), kv.get('stageAt'), liveNow(show.page), chatSince(c, Number(q.get('after')) || 0),
       q.get('door') ? heldBy(c.req.headers.get('X-Pass') || '') : null,
       q.get('top') ? topTippers() : null,
+      q.get('mod') ? modOf(c) : undefined, // a mod's page asks: still a mod? (Remove signs them out at once, session 55b)
     ]);
-    return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top, lightning: show.lightning || '' } : {}) }); // the TV page: the artist's own Lightning address under its QR (session 45)
+    return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top, lightning: show.lightning || '' } : {}), ...(mod === undefined ? {} : { mod: !!mod }) }); // the TV page: the artist's own Lightning address under its QR (session 45)
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, crew, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));

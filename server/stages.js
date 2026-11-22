@@ -184,7 +184,7 @@ async function gigsOf(c, artist) {
 // sheet (so a dead invite never leaves a passkey), then spent with the invitee's passkey: one made there, or one they
 // already have (a producer for two artists keeps one passkey). The stage keeps the invite's SHA-256 (crew.js).
 const INVITE_GONE = () => json({ error: 'invite', detail: 'This invite has been used or has run out: ask the artist for a new one.' }, 403);
-const ALREADY = () => json({ error: 'already', detail: 'Your passkey already opens this gig: press Back to your gigs.' }, 409);
+const ALREADY = () => json({ error: 'already', detail: 'Your passkey already opens this gig: press Go to your gigs.' }, 409);
 const inviteOf = (b) => ({ stage: String(b?.stage || ''), code: String(b?.code || '') });
 async function inviteLive(env, { stage, code }) {
   if (!STAGE_ID.test(stage) || !CODE.test(code)) return null;
