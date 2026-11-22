@@ -2,7 +2,9 @@
 // session 42's padlock and two sheets, so an artist backs the key up while setting up, before any gig. The same browser
 // storage as Takings (the nutpub-takings wallet, nutpub-takings-checked), so both pages agree. Bringing the key back
 // from typed words stays on Your takings, beside the money. No new encryption: wallet.js and words.js as they are.
-import { openWallet, wordsHere } from './wallet.js';
+// Session 54: the words' recovery key goes on record with the gig (client/recover.js), and once two words are checked
+// this browser forgets the words: the paper is then the only copy, so a stolen browser can't win the gig back with them.
+import { openWallet, wordsFor, forgetWords } from './wallet.js';
 
 const CHECKED = 'nutpub-takings-checked';
 const $ = (id) => document.getElementById(id);
@@ -33,21 +35,34 @@ export async function cellarWords(adminKey) {
     if (r.ok) pubkey = publicKeyHex;
   }
 
+  const wordsNow = async () => wordsFor(pubkey && await artist.coco.keyring.getKeyPair(pubkey), pubkey);
   async function backup() {
     const pair = pubkey && await artist.coco.keyring.getKeyPair(pubkey);
     if (!pubkey) return 'none';
     if (!pair) return 'away';
+    if (wordsFor(pair, pubkey)) return recall(CHECKED) ? 'shut' : 'open';
+    if (recall(CHECKED)) return 'kept'; // checked, then forgotten
     if (pair.derivationIndex == null) return 'brought';
-    if (!wordsHere()) return 'old';
-    return recall(CHECKED) ? 'shut' : 'open';
+    return 'old';
   }
+  // The words' key on record with the gig (once), then, if they're checked, forgotten here. Kept if the gig didn't answer.
+  async function settle() {
+    const w = await wordsNow();
+    if (!w) return;
+    const { recordWords } = await import('./recover.js');
+    if ((await recordWords(w, adminKey)) && recall(CHECKED)) forgetWords();
+  }
+  let recovered = false;
+  try { recovered = sessionStorage.getItem('nutpub-recovered') === '1'; } catch {}
   async function draw(note = '') {
     const kind = await backup();
     const line = $('words-line');
     const words = (...parts) => { const s = document.createElement('span'); s.append(...parts); return s; };
     const b = (t) => Object.assign(document.createElement('b'), { textContent: t });
-    if (kind === 'open') line.replaceChildren(padlock(false), words(b('Not backed up yet.'), ' Only this browser can open your bitcoin.'), button('Write down your 12 words', 'primary', showWords));
+    if (kind === 'open' && recovered) line.replaceChildren(padlock(false), words(b('Your old words open nothing now.'), ' Write these down: the next payments lock to them.'), button('Write down your 12 words', 'primary', showWords));
+    else if (kind === 'open') line.replaceChildren(padlock(false), words(b('Not backed up yet.'), ' Only this browser can open your bitcoin.'), button('Write down your 12 words', 'primary', showWords));
     else if (kind === 'shut') line.replaceChildren(padlock(true), words(b('Backed up with your 12 words.'), note ? ` ${note}` : ''), button('Show my words', 'quiet', showWords));
+    else if (kind === 'kept') line.replaceChildren(padlock(true), words(b('Backed up with your 12 words.'), ' This browser has forgotten them: your paper is the only copy.'));
     else if (kind === 'brought') line.replaceChildren(padlock(true), words(b('Backed up with your 12 words.')));
     else if (kind === 'old') line.replaceChildren(padlock(false), words('This stage was made before the 12 words: only this browser can open your bitcoin. Move it after each gig.'));
     else if (kind === 'away') {
@@ -58,8 +73,8 @@ export async function cellarWords(adminKey) {
 
   // Sheet 1, the words; sheet 2, two of them checked (picked at random each time), as on Your takings.
   let toCheck = [];
-  function showWords() {
-    const list = (wordsHere() || '').split(' ');
+  async function showWords() {
+    const list = ((await wordsNow()) || '').split(' ');
     if (list.length !== 12) return;
     $('words-list').replaceChildren(...list.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
     $('words-sheet').showModal();
@@ -78,13 +93,17 @@ export async function cellarWords(adminKey) {
   $('check-again').onclick = () => { $('check-sheet').close(); showWords(); };
   $('check-form').onsubmit = async (e) => {
     e.preventDefault();
-    const list = (wordsHere() || '').split(' ');
+    const list = ((await wordsNow()) || '').split(' ');
     const wrong = toCheck.filter((at, i) => ($(i ? 'check-b' : 'check-a').value.trim().toLowerCase() !== list[at - 1]));
     if (wrong.length === 2) { $('check-err').textContent = `Words ${wrong[0]} and ${wrong[1]} aren't right. Look at your paper again.`; return; }
     if (wrong.length) { $('check-err').textContent = `Word ${wrong[0]} isn't right. Look at your paper again.`; return; }
     remember(CHECKED, '1');
     $('check-sheet').close();
+    try { sessionStorage.removeItem('nutpub-recovered'); } catch {}
+    recovered = false;
+    await settle();
     await draw('Keep the paper somewhere safe.');
   };
+  await settle();
   await draw();
 }

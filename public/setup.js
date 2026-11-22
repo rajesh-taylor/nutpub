@@ -701,6 +701,8 @@ try {
   }
   api('GET', '/api/admin/door-link').then((d) => { doorLink(d.made); if (judgeStage && $('door-on').checked && !$('copy-door').disabled) drawDoorQr(true); }).catch(() => {});
 } catch (err) {
+  // An artist's stage, signed out (session 54): its front page has both ways in, Back to your gigs and the 12 words.
+  if (err.status === 403 && /^(?=[a-z0-9]*\d)[a-z][a-z0-9]{5}$/.test(location.hostname.split('.')[0])) { location.replace('/'); throw err; }
   $('locked').hidden = false;
   if (err.status !== 403) $('signin-note').textContent = `Couldn't reach the server: ${err.message}`;
   else if (key) $('signin-note').textContent = 'That link didn’t work. Check it and try again.';

@@ -30,14 +30,36 @@ async function seed(name) {
     const now = read();
     if (now) return now;
     try {
-      if (words) localStorage.setItem(`${name}-words`, words);
+      // Words kept for an added key (the 12 words' sheet, session 54: named in -words-key) are never written over:
+      // they're the artist's next backup. This seed's own words then aren't kept (nothing shows them).
+      let named = null;
+      try { named = localStorage.getItem(`${name}-words-key`); } catch {}
+      if (words && !named) localStorage.setItem(`${name}-words`, words);
       localStorage.setItem(`${name}-seed`, made);
     } catch {}
     return made;
   })());
   return unhex(s);
 }
+// The wallet's seed made now, if it isn't yet (Coco asks for it only when it first needs it).
+export const ensureSeed = (name) => seed(name);
 export const wordsHere = (name = TAKINGS) => { try { return localStorage.getItem(`${name}-words`); } catch { return null; } };
+// Which key the words kept here make (session 54). Words this browser's seed came from make keys of its own (Coco's
+// derivation index); words given by the 12 words' sheet (client/recover.js) make an added key, named here.
+// wordsFor: the words, if they back this key; else null. Once checked, the words are forgotten (forgetWords): the
+// paper is then the only copy, so a stolen browser can't open the gig with them.
+const WORDS_KEY = `${TAKINGS}-words-key`;
+export function keepWords(words, pubkey) {
+  try { localStorage.setItem(`${TAKINGS}-words`, words); localStorage.setItem(WORDS_KEY, pubkey); localStorage.removeItem(`${TAKINGS}-checked`); } catch {}
+}
+export function wordsFor(pair, pubkey) {
+  const words = wordsHere();
+  if (!words || !pair) return null;
+  let named = null;
+  try { named = localStorage.getItem(WORDS_KEY); } catch {}
+  return (named ? named === pubkey : pair.derivationIndex != null) ? words : null;
+}
+export function forgetWords() { try { localStorage.removeItem(`${TAKINGS}-words`); localStorage.removeItem(WORDS_KEY); } catch {} }
 
 const loadPledges = () => { try { return JSON.parse(localStorage.getItem('nutpub-pledges') || '[]'); } catch { return []; } };
 const savePledges = (list) => { try { localStorage.setItem('nutpub-pledges', JSON.stringify(list)); } catch {} };

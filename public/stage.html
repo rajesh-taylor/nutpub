@@ -56,6 +56,19 @@
     .stage h1.wait { font-size: 30px; color: var(--smoke); }
     .how { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--smoke); }
     .out { margin: auto 0; }
+    /* Session 54: Lost every device? The 12 words open the gig here. */
+    .lost { max-width: 420px; margin: 18px auto 0; text-align: left; }
+    .lost > .lost-link { display: block; margin: 0 auto; }
+    .lost-link { background: none; border: 0; padding: 0; font: 15px var(--body); color: #e8a845; text-decoration: underline; cursor: pointer; }
+    .lost-link:focus-visible, .lost textarea:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .lost form { display: grid; gap: 10px; margin-top: 12px; }
+    .lost label { font-size: 15px; color: var(--cream); }
+    .lost textarea { width: 100%; box-sizing: border-box; font: 16px/1.5 ui-monospace, Menlo, monospace; padding: 10px 12px; border: 1px solid rgb(239 227 200 / .35); border-radius: 6px; background: var(--deep); color: var(--cream); resize: none; }
+    .lost .go { border: 0; width: 100%; cursor: pointer; }
+    .lost .go:disabled { opacity: .6; cursor: default; }
+    .lost .fine { margin: 0; font-size: 13px; color: var(--smoke); }
+    .lost .err { margin: 0; font-size: 15px; color: #e0675b; }
+    .lost .err:empty { display: none; }
     .out p { color: var(--smoke); }
     .out a { color: #e8a845; }
     /* A judge's stage (/judge): one gig, no setlist. The way back to the three cards, small, under the buttons. */
@@ -124,6 +137,16 @@
       <a class="go" id="to-gig" href="/" hidden>Open the gig as a fan →</a>
       <p class="to-gig-note" id="to-gig-note" hidden>Find my ticket is there.</p>
       <p><a id="back" href="/">Back to your gigs</a></p>
+      <div class="lost" id="lost" hidden>
+        <button type="button" class="lost-link" id="lost-open" aria-expanded="false" aria-controls="lost-form">Lost every device? Use your 12 words</button>
+        <form id="lost-form" hidden novalidate>
+          <label for="lost-words">Your 12 words, in order</label>
+          <textarea id="lost-words" rows="3" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></textarea>
+          <p class="err" id="lost-err" role="alert"></p>
+          <button type="submit" class="go" id="lost-go">Open my gig</button>
+          <p class="fine">Your words stay in this browser. Every other browser is signed out of this gig, your old passkeys stop opening it, and you get new 12 words.</p>
+        </form>
+      </div>
     </div>
   </main>
   <script type="module">
@@ -157,6 +180,34 @@
         document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Your artist passkey opens it here.';
         document.getElementById('back').href = `${front}/judge#back`;
       }
+      // Session 54: every device lost (no passkey, no browser): the gig's 12 words open it here (client/recover.js).
+      const $ = (id) => document.getElementById(id);
+      $('lost').hidden = !/^(?=[a-z0-9]*\d)[a-z][a-z0-9]{5}$/.test(location.hostname.split('.')[0]); // an artist's stage, not thenutpub.com itself
+      $('lost-open').onclick = () => { const open = $('lost-form').hidden; $('lost-form').hidden = !open; $('lost-open').setAttribute('aria-expanded', String(open)); if (open) $('lost-words').focus(); };
+      $('lost-words').addEventListener('paste', (e) => { // a pasted list (numbered, one a line) shows as one line of words
+        const t = e.clipboardData?.getData('text');
+        if (!t) return;
+        e.preventDefault();
+        e.target.value = t.toLowerCase().normalize('NFKD').split(/[^a-z]+/).filter(Boolean).join(' ');
+      });
+      $('lost-words').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('lost-form').requestSubmit(); } });
+      $('lost-form').onsubmit = async (e) => {
+        e.preventDefault();
+        $('lost-err').textContent = '';
+        $('lost-go').disabled = true;
+        const label = $('lost-go').textContent;
+        try {
+          const { openWithWords } = await import('/js/recover.js');
+          const out = await openWithWords($('lost-words').value, { say: (t) => { $('lost-go').textContent = t; } });
+          $('lost-words').value = '';
+          try { if (out.found) sessionStorage.setItem('nutpub-recovered-found', String(out.found)); } catch {}
+          location.replace('/cellar');
+        } catch (err) {
+          $('lost-err').textContent = err.message || 'That didn’t work: try again.';
+          $('lost-go').disabled = false;
+          $('lost-go').textContent = label;
+        }
+      };
     }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.
     const list = r?.setlist;

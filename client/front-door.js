@@ -62,9 +62,9 @@ export async function makeArtist(claims = []) {
 }
 
 // Back to your gigs: any of this site's artist passkeys, then its open stages ({ stage, gig, artist, venue, state,
-// url }), newest first. This browser keeps the passkey's link code too, so a gig started here joins it. Null if the
-// sheet was closed.
-export async function backToGigs() {
+// url }), newest first. claims: [{ stage, claim }], gigs opened with their 12 words (session 54): they join it first.
+// This browser keeps the passkey's link code too, so a gig started here joins it. Null if the sheet was closed.
+export async function backToGigs(claims = []) {
   const challenge = await take();
   let cred;
   try {
@@ -72,7 +72,7 @@ export async function backToGigs() {
   } catch (e) { if (cancelled(e)) return null; throw e; }
   const r = cred.response;
   const res = await fetch('/api/stages/back', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-    challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature) }) });
+    challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature), claims }) });
   // A passkey the NutPub no longer knows: the password manager is told (as Find my ticket does), and so is this browser.
   if (res.status === 404 && (await res.clone().json().catch(() => ({}))).error === 'no_stage') {
     forgetPasskey(cred.id);

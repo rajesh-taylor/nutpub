@@ -2,7 +2,7 @@
 // opens its own wallet in this browser ('nutpub-takings' for the artist, 'nutpub-bar' for the bar), the same wallets
 // as the artist's and the bar's own pages, so Collect and Pour sign with the key that lives here. The server only
 // lists the locked payments and marks one collected when the mint says it's spent.
-import { openWallet, wordsHere } from './wallet.js';
+import { openWallet, wordsFor, forgetWords } from './wallet.js';
 import { unlockAudio, trombone, clink } from './sound.js';
 import { money } from '../server/money.js';
 
@@ -23,7 +23,12 @@ async function api(method, path, body) {
   return data;
 }
 
-try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = false; throw new Error('signed out'); }
+try { await api('GET', '/api/admin/drinks'); } catch (e) {
+  // An artist's stage, signed out (session 54): its front page has both ways in, Back to your gigs and the 12 words.
+  if (e.status === 403 && /^(?=[a-z0-9]*\d)[a-z][a-z0-9]{5}$/.test(location.hostname.split('.')[0])) location.replace('/');
+  else $('locked').hidden = false;
+  throw new Error('signed out');
+}
 $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
@@ -68,12 +73,22 @@ $('key-switch').onclick = async () => {
 const CHECKED = 'nutpub-takings-checked';
 const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const recall = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+// Session 54: the words back the key only if they make it (wordsFor); once checked they're put on record with the gig
+// and forgotten here (as Cellar does), so the paper is the only copy.
+const wordsNow = async () => wordsFor(state.pubkey && await artist.coco.keyring.getKeyPair(state.pubkey), state.pubkey);
 async function backup(pubkey) {
   const pair = pubkey && await artist.coco.keyring.getKeyPair(pubkey);
   if (!pair) return 'away';
+  if (wordsFor(pair, pubkey)) return recall(CHECKED) ? 'shut' : 'open';
+  if (recall(CHECKED)) return 'brought'; // checked, then forgotten: backed up all the same
   if (pair.derivationIndex == null) return 'brought';
-  if (!wordsHere()) return 'old';
-  return recall(CHECKED) ? 'shut' : 'open';
+  return 'old';
+}
+async function settleWords() {
+  const w = await wordsNow();
+  if (!w) return;
+  const { recordWords } = await import('./recover.js');
+  if ((await recordWords(w, key)) && recall(CHECKED)) forgetWords();
 }
 const linkButton = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', className: 'link', textContent: text, onclick });
 async function drawLock() {
@@ -90,8 +105,8 @@ async function drawLock() {
 
 // Sheet 1, the words; sheet 2, two of them checked (picked at random each time).
 let toCheck = [];
-function showWords() {
-  const words = (wordsHere() || '').split(' ');
+async function showWords() {
+  const words = ((await wordsNow()) || '').split(' ');
   if (words.length !== 12) return;
   $('words-list').replaceChildren(...words.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
   $('words-sheet').showModal();
@@ -111,13 +126,14 @@ $('words-done').onclick = async () => {
 $('check-again').onclick = () => { $('check-sheet').close(); showWords(); };
 $('check-form').onsubmit = async (e) => {
   e.preventDefault();
-  const words = (wordsHere() || '').split(' ');
+  const words = ((await wordsNow()) || '').split(' ');
   const wrong = toCheck.filter((at, i) => ($(i ? 'check-b' : 'check-a').value.trim().toLowerCase() !== words[at - 1]));
   if (wrong.length === 2) { $('check-err').textContent = `Words ${wrong[0]} and ${wrong[1]} aren't right. Look at your paper again.`; return; }
   if (wrong.length) { $('check-err').textContent = `Word ${wrong[0]} isn't right. Look at your paper again.`; return; }
   remember(CHECKED, '1');
   $('check-sheet').close();
-  $('key-status').textContent = 'Backed up. Keep the paper somewhere safe.';
+  await settleWords();
+  $('key-status').textContent = 'Backed up. Keep the paper somewhere safe: this browser has forgotten them.';
   await drawLock();
 };
 
@@ -128,6 +144,12 @@ $('check-form').onsubmit = async (e) => {
 $('back-open').onclick = () => { $('back-err').textContent = ''; $('back-sheet').showModal(); $('back-words').focus(); };
 $('back-cancel').onclick = () => $('back-sheet').close();
 $('back-sheet').addEventListener('close', () => { $('back-words').value = ''; });
+$('back-words').addEventListener('paste', (e) => { // a pasted list (numbered, one a line) shows as one line of words
+  const t = e.clipboardData?.getData('text');
+  if (!t) return;
+  e.preventDefault();
+  e.target.value = t.toLowerCase().normalize('NFKD').split(/[^a-z]+/).filter(Boolean).join(' ');
+});
 $('back-words').addEventListener('keydown', (e) => { // Enter brings it back (the words never need a new line)
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('back-form').requestSubmit(); }
 });
@@ -141,6 +163,8 @@ $('back-form').onsubmit = async (e) => {
   if (at < 0) { $('back-err').textContent = 'These words are for a different stage.'; return; }
   await artist.coco.keyring.addKeyPair(keyAt(seed, at).secretKey);
   $('back-sheet').close();
+  import('./recover.js').then((m) => m.recordWords(typed.words, key)).catch(() => {}); // a gig with no words on record gets these
+
   const say = (t) => { $('key-status').textContent = t; };
   say('Your bitcoin is back in this browser. Looking for sats collected before…');
   await refresh();
@@ -198,6 +222,7 @@ fetch('/api/rate').then((r) => r.json()).then((r) => { rate = r; drawUnit(); pai
 
 // ---- The numbers. Everything locked to the artist since the gig began, by kind; Move takes all that's waiting.
 let state = { waiting: [], drinks: [], lastOrdersAt: null, pubkey: null };
+let settled = false;
 let sums = null; // what paint() draws
 const afterLastOrders = () => state.lastOrdersAt && Date.now() / 1000 > state.lastOrdersAt + 5;
 // Drinks nobody poured, waiting under the bar's key once last orders has gone: the artist's to collect (session 40).
@@ -210,6 +235,7 @@ async function refresh() {
   info = await fetch('/api/show').then((r) => r.json());
   const pubkey = await artistKeyHere(locked.pubkey);
   state = { waiting: locked.waiting, drinks, lastOrdersAt: locked.lastOrdersAt, pubkey };
+  if (!settled) { settled = true; await settleWords().catch(() => {}); } // once a visit: the words on record, forgotten once checked
   await drawLock();
   const { show } = info;
   const all = (k) => (takings.locked[k]?.waiting || 0) + (takings.locked[k]?.collected || 0);

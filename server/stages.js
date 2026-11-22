@@ -111,6 +111,18 @@ async function takeClaim(stage, claim) {
   if (!STAGE_ID.test(stage) || !CODE.test(claim)) return false;
   return !!(await one('DELETE FROM stage_claims WHERE stage = ? AND hash = ? RETURNING stage', stage, await sha(claim)));
 }
+// Claim codes sent with a passkey (made, or used for Back to your gigs): each stage still open joins it. Ten at most.
+async function takeClaims(env, key, claims) {
+  const linked = [];
+  for (const x of [].concat(claims || []).slice(0, 10)) {
+    const stage = String(x?.stage || '');
+    if (!(await takeClaim(stage, String(x?.claim || '')))) continue;
+    if (!(await one('SELECT 1 AS x FROM stages WHERE id = ?', stage))) continue;
+    await linkStage(env, key, stage);
+    linked.push(stage);
+  }
+  return linked;
+}
 // What the password manager lists it as, from the page: "NutPub · Artist · 22 Nov". Plain text, 60 characters at most.
 const nameOf = (text) => String(text || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60) || 'NutPub · Artist';
 const newStage = async () => {
@@ -133,14 +145,7 @@ export function mountStageDoor(route) {
     const key = { id: k.id, name: nameOf(b.name) };
     await run('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
       k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now());
-    const linked = [];
-    for (const x of [].concat(b.claims || []).slice(0, 10)) {
-      const stage = String(x?.stage || '');
-      if (!(await takeClaim(stage, String(x?.claim || '')))) continue;
-      if (!(await one('SELECT 1 AS x FROM stages WHERE id = ?', stage))) continue;
-      await linkStage(c.env, key, stage);
-      linked.push(stage);
-    }
+    const linked = await takeClaims(c.env, key, b.claims);
     console.log(`artist passkey made${linked.length ? `, with ${linked.join(', ')}` : ''}`);
     return json({ link: await newLink(k.id), name: key.name, linked });
   });
@@ -202,12 +207,14 @@ export function mountStageDoor(route) {
     try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if (!(await spend(b.challenge))) return old();
     await run('UPDATE artist_keys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
+    // A gig opened with its 12 words (session 54) comes back onto the passkey with its claim code.
+    const linked = await takeClaims(c.env, k, b.claims);
     const rows = await all('SELECT s.id FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', k.id);
     const stages = [];
     for (const { id } of rows) {
       const w = await stageStub(c.env, id).welcome().catch(() => null);
       if (w?.code) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, url: stageLink(c, id, w.code) });
     }
-    return json({ stages, name: k.name, link: await newLink(k.id) });
+    return json({ stages, name: k.name, link: await newLink(k.id), linked });
   });
 }

@@ -72,6 +72,12 @@
     dialog.wsheet input { width: 100%; box-sizing: border-box; font: 17px/1.5 var(--mono); padding: 10px 12px; border: 1px solid rgb(239 227 200 / .35); border-radius: 6px; background: var(--deep); color: var(--cream); }
     dialog.wsheet input:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
     dialog.wsheet .err { margin: 10px 0 0; color: #e0675b; font-size: 14px; }
+    /* Session 54: Lost or stolen device? */
+    .board .lost-row { margin: 0; }
+    .board .lost-row .link, .board .lost-row button { background: none; border: 0; padding: 0; font: 14px var(--body); color: var(--smoke); text-decoration: underline; cursor: pointer; }
+    dialog.wsheet .lost-list { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 4px; font-size: 15px; }
+    dialog.wsheet textarea { width: 100%; box-sizing: border-box; margin-top: 6px; font: 16px/1.5 ui-monospace, Menlo, monospace; padding: 10px 12px; border: 1px solid rgb(239 227 200 / .35); border-radius: 6px; background: #050b17; color: var(--cream); resize: none; }
+    dialog.wsheet textarea:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
     dialog.wsheet .err:empty { display: none; }
     .board .wide { grid-column: 1 / -1; }
     .board .split-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: center; margin: 0 0 10px; font-size: 15px; }
@@ -340,9 +346,52 @@
         const line = document.getElementById('passkey-line');
         const front = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`;
         const span = (...kids) => { const x = document.createElement('span'); x.append(...kids); return x; };
-        if (r.passkey?.name) line.replaceChildren(span(Object.assign(document.createElement('b'), { className: 'ok-tick', textContent: '✓ ' }), `${r.passkey.name}. Opens this gig on any device.`));
-        else line.replaceChildren(span('None yet: this gig opens in this browser only.'), Object.assign(document.createElement('a'), { className: 'btn quiet', href: `${front}/judge#passkey`, textContent: 'Make one on thenutpub.com' }));
+        const tick = () => Object.assign(document.createElement('b'), { className: 'ok-tick', textContent: '✓ ' });
+        // Session 54: opened with the 12 words, this browser holds a claim code: the next passkey adds the gig again.
+        let claim = null;
+        try { claim = JSON.parse(localStorage.getItem('nutpub-claim') || 'null'); } catch {}
+        if (r.passkey?.name) { try { localStorage.removeItem('nutpub-claim'); } catch {} claim = null; }
+        const make = `${front}/judge${claim?.claim ? `#claim=${claim.stage}.${claim.claim}.${r.setlist?.at || ''}` : '#passkey'}`;
+        if (r.passkey?.name) line.replaceChildren(span(tick(), `${r.passkey.name}. Opens this gig on any device.`));
+        else line.replaceChildren(span('None yet: this gig opens in this browser only.'), Object.assign(document.createElement('a'), { className: 'btn quiet', href: make, textContent: claim ? 'Add it to your passkey on thenutpub.com' : 'Make one on thenutpub.com' }));
+        let recovered = false;
+        try { recovered = sessionStorage.getItem('nutpub-recovered') === '1'; } catch {}
+        if (recovered) {
+          let found = 0;
+          try { found = Number(sessionStorage.getItem('nutpub-recovered-found') || 0); } catch {}
+          document.getElementById('passkey-said').replaceChildren(tick(), `Your 12 words opened this gig. Every other browser is signed out of it, and your old passkeys no longer open it.${found ? ` ${found.toLocaleString('en-GB')} sats collected before are back in this browser too.` : ''}`);
+          document.getElementById('passkey-said').hidden = false;
+        }
         document.getElementById('passkey-card').hidden = false;
+        // Lost or stolen device? The same 12 words, from here (client/recover.js): this browser stays in, every other goes.
+        const $ = (id) => document.getElementById(id);
+        $('lost-open').onclick = () => { $('lost-err').textContent = ''; $('lost-sheet').showModal(); $('lost-words').focus(); };
+        $('lost-cancel').onclick = () => $('lost-sheet').close();
+        $('lost-sheet').addEventListener('close', () => { $('lost-words').value = ''; });
+        $('lost-words').addEventListener('paste', (e) => { // a pasted list (numbered, one a line) shows as one line of words
+          const t = e.clipboardData?.getData('text');
+          if (!t) return;
+          e.preventDefault();
+          e.target.value = t.toLowerCase().normalize('NFKD').split(/[^a-z]+/).filter(Boolean).join(' ');
+        });
+        $('lost-words').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('lost-form').requestSubmit(); } });
+        $('lost-form').onsubmit = async (e) => {
+          e.preventDefault();
+          $('lost-err').textContent = '';
+          $('lost-go').disabled = true;
+          const label = $('lost-go').textContent;
+          try {
+            const { openWithWords } = await import('/js/recover.js');
+            const out = await openWithWords($('lost-words').value, { say: (t) => { $('lost-go').textContent = t; } });
+            try { if (out.found) sessionStorage.setItem('nutpub-recovered-found', String(out.found)); } catch {}
+            $('lost-sheet').close();
+            location.reload();
+          } catch (err) {
+            $('lost-err').textContent = err.message || 'That didn’t work: try again.';
+            $('lost-go').disabled = false;
+            $('lost-go').textContent = label;
+          }
+        };
       }
       import('/judge-line.js').then((m) => m.judgeLine(r, document.body.dataset.room === 'cellar' ? 'cellar' : 'setup')).catch(() => {}); // a judge's stage: the one next thing to do
     </script>
@@ -394,7 +443,9 @@
           <!-- Cellar: the artist's passkey (session 53): which one opens this stage, or none yet. Filled from /api/admin/setlist. -->
           <section class="panel wide" id="passkey-card" data-room="cellar" hidden>
             <h2>Artist passkey</h2>
+            <p class="words-line" id="passkey-said" role="status" hidden></p>
             <div class="words-line" id="passkey-line" role="status"></div>
+            <p class="lost-row"><button type="button" class="link" id="lost-open">Lost or stolen device?</button></p>
           </section>
 
           <!-- Cellar: the 12 words (session 42's sheets, as on Your takings). The key is made here the first time. -->
@@ -683,6 +734,23 @@
         <p class="muted" style="font-size: 14px;">Anyone with these words can take your bitcoin. They stay in this browser: the NutPub never sees them.</p>
         <button type="button" class="btn primary" id="words-done">I've written them down</button>
         <button type="button" class="btn quiet last" id="words-later">Not now</button>
+      </dialog>
+      <!-- Session 54: Lost or stolen device? The gig's 12 words lock every other device out (client/recover.js). -->
+      <dialog class="wsheet" id="lost-sheet" aria-labelledby="lost-h">
+        <h2 id="lost-h">Lock out other devices</h2>
+        <ol class="lost-list">
+          <li>Every other browser is signed out of this gig.</li>
+          <li>Other passkeys stop opening it.</li>
+          <li>New 12 words: the next payments lock to a new key.</li>
+        </ol>
+        <form id="lost-form" novalidate>
+          <label class="muted" for="lost-words">Your 12 words, in order: only the paper can do this.</label>
+          <textarea id="lost-words" rows="3" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></textarea>
+          <p class="err" id="lost-err" role="alert"></p>
+          <button type="submit" class="btn primary" id="lost-go">Lock them out</button>
+        </form>
+        <p class="muted" style="font-size: 14px; margin-top: 12px;">If your passkey syncs (iCloud, Google), take the stolen phone off that account too: the NutPub can’t tell your phone from the thief’s.</p>
+        <button type="button" class="btn quiet last" id="lost-cancel">Not now</button>
       </dialog>
       <dialog class="wsheet" id="check-sheet" aria-labelledby="check-h">
         <h2 id="check-h">Check two words</h2>

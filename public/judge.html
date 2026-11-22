@@ -390,16 +390,33 @@
       draw();
     };
     // Made later: the stages this browser already started (and still open) join the passkey.
-    const claims = () => { const open = new Set(Object.values(read())); return Object.entries(readJ(CLAIMS)).filter(([id]) => open.has(id)).map(([stage, claim]) => ({ stage, claim })); };
+    const claims = () => Object.entries(readJ(CLAIMS)).filter(([id]) => ID.test(id)).map(([stage, claim]) => ({ stage, claim }));
+    const spent = (ids) => { try { const c = readJ(CLAIMS); for (const id of ids || []) delete c[id]; localStorage.setItem(CLAIMS, JSON.stringify(c)); } catch {} };
+    // Session 54: a gig opened with its 12 words sends its claim code here (Cellar's "Add it to your passkey"): kept
+    // with this browser's claims, so the passkey made or used next adds it.
+    let claimed = false;
+    {
+      const m = /^#claim=([a-z][a-z0-9]{5})\.([0-9a-f]{32})\.?([a-z]*)$/.exec(location.hash);
+      if (m) {
+        claimFor(m[1], m[2]);
+        if (START[m[3]]) keep(m[3], m[1]);
+        claimed = true;
+        history.replaceState(null, '', location.pathname);
+      }
+    }
     const make = act(async () => {
       const out = await makeArtist(claims());
       if (!out) return; // the sheet was closed
-      try { const c = readJ(CLAIMS); for (const id of out.linked) delete c[id]; localStorage.setItem(CLAIMS, JSON.stringify(c)); } catch {}
+      spent(out.linked);
+      if (claimed && out.linked.length) note = 'Your gig is on your passkey again.';
+      claimed = false;
       gigs = null;
     });
     const back = act(async () => {
-      const out = await backToGigs();
+      const out = await backToGigs(claims());
       if (!out) return;
+      spent(out.linked);
+      claimed = false;
       const opened = (s) => { if (s.gig && START[s.gig]) keep(s.gig, s.stage); };
       if (out.stages.length === 1) { opened(out.stages[0]); location.href = out.stages[0].url; return; }
       gigs = out.stages.length ? gigsList(out.stages, opened) : null;
@@ -433,6 +450,7 @@
         kids.push(el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'This browser can’t keep a passkey: your gigs stay in this browser.' })));
       }
       if (gigs) kids.push(el('p', { className: 's0-chip', textContent: 'Your gigs' }), gigs);
+      if (claimed && (now === 'made' || now === 'back')) kids.push(el('p', { className: 's0-said', role: 'status', textContent: 'Press Back to your gigs to add your gig to your passkey again.' }));
       if (note) kids.push(el('p', { className: 's0-said', role: 'status', textContent: note }));
       if (now !== 'none') kids.push(been());
       box.replaceChildren(...kids);
@@ -443,8 +461,8 @@
     if (passkeysWork()) warm(); // a challenge ahead, so the passkey sheet opens straight from the tap
     draw();
     // From Cellar's Make one (#passkey) or a stage opened elsewhere (#back): the button to press, in view.
-    if (location.hash === '#passkey' || location.hash === '#back') {
-      const b = document.getElementById(location.hash === '#back' ? 'come-back' : 'make-passkey');
+    if (location.hash === '#passkey' || location.hash === '#back' || claimed) {
+      const b = document.getElementById(location.hash === '#back' || (claimed && document.getElementById('step0').dataset.state !== 'new' && document.getElementById('step0').dataset.state !== 'skipped') ? 'come-back' : 'make-passkey');
       b?.scrollIntoView({ block: 'center' }); b?.focus({ preventScroll: true });
     }
 
@@ -468,7 +486,7 @@
     drawCards();
     // Stages close 7 days after they're made (Rajesh 15 Nov): a closed one is forgotten, and its card offers Start again.
     (async () => {
-      const ids = Object.values(read()).filter((id) => ID.test(id));
+      const ids = [...new Set([...Object.values(read()), ...Object.keys(readJ(CLAIMS))])].filter((id) => ID.test(id));
       if (!ids.length) return;
       const r = await fetch(`/api/stages/open?ids=${ids.join(',')}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (!r) return;

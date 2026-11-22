@@ -87,7 +87,7 @@ export async function judgeLine(r, page) {
   const TOLD = list.at === 'longy' ? {
     // Session 47 (Rajesh 21 Nov): gig 1 opens on Cellar, the only gig that shows it.
     // Session 53: the passkey gets him in; the 12 words guard the money.
-    cellar: 'Longy’s playing Peggy Sue’s tonight, online only. His passkey gets him in. The 12 words guard the money.',
+    cellar: 'Longy’s playing Peggy Sue’s tonight, online only. His passkey gets him in. The 12 words guard the money, and win the gig back if a device goes.',
     setup: 'Plan gig is tonight’s: a £20 ticket for fans at home.',
     start: 'Show time. Fans are waiting at home, wallets in their browsers.',
     fan: 'You’re a fan at home now: no app, no account. A real fan tops up the browser wallet from any Lightning or Cashu wallet; here test sats are already in it.',

@@ -7,7 +7,12 @@ try { key = localStorage.getItem('nutpub-admin'); } catch {}
 const api = (method, url, body) => fetch(url, { method, headers: { 'X-Admin': key || '', 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) })
   .then(async (r) => { if (!r.ok) throw Object.assign(new Error(r.statusText), { status: r.status }); return r.json(); });
 
-try { await api('GET', '/api/admin/drinks'); } catch { $('locked').hidden = false; throw new Error('signed out'); }
+try { await api('GET', '/api/admin/drinks'); } catch (e) {
+  // An artist's stage, signed out (session 54): its front page has both ways in, Back to your gigs and the 12 words.
+  if (e.status === 403 && /^(?=[a-z0-9]*\d)[a-z][a-z0-9]{5}$/.test(location.hostname.split('.')[0])) location.replace('/');
+  else $('locked').hidden = false;
+  throw new Error('signed out');
+}
 $('page').hidden = false;
 const info = await fetch('/api/show').then((r) => r.json());
 $('home').src = `${info.path}?as=home`;

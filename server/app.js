@@ -9,6 +9,7 @@ import { json, chain, body } from './http.js';
 import { mountSet } from './set.js';
 import { mountDoor, barKey } from './door.js';
 import { mountTakings, artistKey } from './takings.js';
+import { mountRecover } from './recover.js';
 import { mountPhoto, photoUrl, photoUrls } from './photo.js';
 import { mountLive, useStream } from './live.js';
 import { mountReplay } from './replay.js';
@@ -151,6 +152,7 @@ mountPasskeys(route, pass);
 mountNostr(route, pass);
 mountNutzaps(route, admin, artistKey);
 mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
+mountRecover(route, admin); // the 12 words win the gig back (stages only, session 54)
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

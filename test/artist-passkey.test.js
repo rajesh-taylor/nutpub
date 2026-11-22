@@ -194,3 +194,20 @@ test('the old stage passkeys move across: each opens its one stage', async () =>
   assert.deepEqual(db.prepare('SELECT id, name, synced FROM artist_keys').all().map((r) => ({ ...r })), [{ id: 'old-key', name: 'My NutPub stage', synced: 1 }]);
   assert.deepEqual(opens('old-key'), ['aw57e9']);
 });
+
+test('a gig opened with its 12 words joins the passkey used next, by its claim code (session 54)', async () => {
+  const p = await phone();
+  await make(p);
+  const g = await judge('pickle'); // no link: a claim comes back, as the 12 words give one
+  assert.match(g.claim, /^[0-9a-f]{32}$/);
+  const wrong = await call('POST', '/api/stages/back', { ...(await p.get(await makeChallenge())), claims: [{ stage: g.stage, claim: '0'.repeat(32) }] });
+  assert.deepEqual(wrong.linked, []);
+  const r = await call('POST', '/api/stages/back', { ...(await p.get(await makeChallenge())), claims: [{ stage: g.stage, claim: g.claim }] });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.linked, [g.stage]);
+  assert.deepEqual(opens(p.id), [g.stage]);
+  assert.deepEqual(r.stages.map((s) => s.stage), [g.stage]);
+  // Spent once used.
+  const again = await call('POST', '/api/stages/back', { ...(await p.get(await makeChallenge())), claims: [{ stage: g.stage, claim: g.claim }] });
+  assert.deepEqual(again.linked, []);
+});

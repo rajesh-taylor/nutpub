@@ -92,6 +92,7 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | NIP-07 · 46 · 44 · 98 | Nostr sign-in, from an extension or a signer app |
 | NIP-61 | Nutzaps |
 | BIP-39 · BIP-32 | The artist's 12 words |
+| Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
 
 Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, copied unchanged from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309) into `vendor/cashu-ts-nut16`, with the spec's test vectors as tests.
 
@@ -135,7 +136,8 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 **It can't:**
 - spend a payment: it never holds the artist's or the bar's private key
 - tell which purchase a ticket at the door came from, or who came in: no name, email or address is asked for
-- see the artist's 12 words, or bring them back: they never leave the artist's browser
+- see the artist's 12 words, or bring them back: they never leave the artist's browser, which forgets them once they're checked
+- open a gig without its 12 words or a passkey that opens it: the words sign a one-time challenge, the gig checks it
 
 ---
 

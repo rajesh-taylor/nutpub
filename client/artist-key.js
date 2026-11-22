@@ -16,6 +16,12 @@ async function keyHere(adminKey, have, wallet, route) {
 export async function artistKeyHere(adminKey) {
   const show = await fetch('/api/show').then((r) => r.json());
   const artist = await keyHere(adminKey, show.artistKey, 'nutpub-takings', '/api/admin/artist-key');
+  // The words' recovery key on record with the gig straight away (session 54), so the words can win it back later.
+  if (artist && !show.artistKey) {
+    const { wordsHere } = await import('./wallet.js');
+    const w = wordsHere();
+    if (w) await import('./recover.js').then((m) => m.recordWords(w, adminKey)).catch(() => {});
+  }
   if (show.show?.drinks) await keyHere(adminKey, show.barKey, 'nutpub-bar', '/api/admin/bar-key');
   return artist;
 }
