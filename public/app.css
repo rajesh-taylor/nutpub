@@ -1274,7 +1274,11 @@ body.one.full .strip .say-sats input { width: 104px; font-size: 18px; color: var
 body.one.full .strip .say-sats input::placeholder { color: transparent; }
 body.one.full .strip .say-sats:focus-within { box-shadow: none; border-color: var(--amber); }
 body.one.full.todo-tip .strip .say-sats { border-color: var(--amber); box-shadow: 0 0 0 4px rgb(217 149 58 / .22); }
-body.one.full .strip .say-tools { position: static; transform: none; }
+body.one.full .strip .say-tools { position: static; transform: none; gap: 10px; }
+/* Session 51: £/$ and send as tall as the comment and Tip boxes beside them. */
+body.one.full .strip .say-tools .coin { height: 46px; min-width: 46px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; font-size: 18px; }
+body.one.full .strip .say-tools .coin:disabled { font-size: 15px; }
+@media (max-width: 699px) { body.one.full .strip .say-tools { gap: 6px; } body.one.full .strip .say-tools .coin { min-width: 40px; padding: 0 8px; } }
 @media (max-width: 699px) { body.one.full .strip .say-sats { gap: 6px; padding: 0 8px; } body.one.full .strip .say-sats input { width: 70px; } body.one.full .strip .say-sats::after { display: none; } }
 /* The venue's page: the list is a row of its own over the ticket, the door QR and the drink. */
 body.one .tab-ticket > #tt-todo { grid-column: 1 / -1; }

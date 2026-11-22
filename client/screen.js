@@ -72,6 +72,10 @@ function goals(tipped, all, thanks) {
   const next = list.find((g) => tipped < g.at) || top;
   const allMet = tipped >= top.at;
   const done = allMet && !!thanks;
+  // Session 51 (Rajesh): once every goal's met the band goes, so it never reads as "no more tips needed", and the chat
+  // and Superfans get the room. Only the artist's thanks stays, if there is one.
+  $('goals').hidden = allMet && !done;
+  $('goals').classList.toggle('thanks-only', done);
   $('goal-sum').textContent = allMet ? `${short(tipped)} sats · all met` : `${short(tipped)} / ${short(next.at)} sats`;
   $('thanks').hidden = !done;
   $('thanks').textContent = done ? thanks : '';
@@ -105,7 +109,7 @@ async function tick() {
     updated = now.updated || '';
     const name = now.show.artist || now.show.title || 'tonight';
     $('artist').textContent = name;
-    document.title = `Tips · ${name}`;
+    document.title = `Pub TV · ${name}`;
     // The artist's own Lightning address under the QR (Rajesh 21 Nov), else the gig page's address.
     $('where').textContent = now.lightning ? `⚡ ${now.lightning}` : `${location.host}${location.pathname.replace(/\/screen$/, '')}`;
     $('qr').src = `/api/show/qr.svg?u=${encodeURIComponent(updated)}`;

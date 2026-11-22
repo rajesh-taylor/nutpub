@@ -112,6 +112,7 @@ export async function openWallet(mintUrl, name = 'nutpub') {
     // A request with a P2PK lock (every NutPub payment) is locked to exactly that key: no locktime, no refund keys,
     // so once sent it's the artist's alone.
     async pay(creq) {
+      this.lastFee = 0; // this payment's, never the last one's (session 51: the fee line after a tip)
       const { nut10: lock, amount } = decodePaymentRequest(creq);
       if (lock?.kind === 'P2PK') {
         // A drink also carries a locktime and a refund key (the artist's): copied exactly, or the gate refuses it.

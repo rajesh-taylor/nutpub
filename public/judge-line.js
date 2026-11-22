@@ -31,13 +31,23 @@ export async function judgeLine(r, page) {
   const FOUNTAIN = 'https://fountain.fm/artist/YPv5hRTJVHSoWeB86g6m';
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
-  const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at the venue's TV page (Chat & Big Time Charlies) before End night
+  const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at Pub TV, the venue's TV page, before End night
   const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
   // Gig 1's Cellar step: the words sheet opened and shut once; leaving for Plan gig counts too (Open again then skips Cellar).
   const CELLAR = 'nutpub-cellar-seen';
   const cellarSeen = () => { try { return !!localStorage.getItem(CELLAR); } catch { return false; } };
   const seeCellar = () => { try { localStorage.setItem(CELLAR, '1'); } catch {} };
   if (tv && page === 'cellar') document.getElementById('words-sheet')?.addEventListener('close', () => { seeCellar(); said = ''; draw(); });
+  // Gig 1's words sheet (session 51): the judges' next press is Not now, so it's the yellow one, first; "I've written
+  // them down" goes quiet (pressed, it asks for two typed words). Real artists keep the words first.
+  if (tv && page === 'cellar') {
+    const done = document.getElementById('words-done'), later = document.getElementById('words-later');
+    if (done && later) {
+      later.className = 'btn primary';
+      done.className = 'btn quiet last';
+      done.before(later);
+    }
+  }
   if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
   const steps = pickle ? 8 : g2 ? 7 : tv ? 9 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
@@ -244,12 +254,12 @@ export async function judgeLine(r, page) {
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     // Fan's page ↗ only while the show's on (Rajesh 20 Nov): not on Plan gig, not before Start show, not after End night.
-    const fanBtn = document.getElementById('head-fan');
-    if (fanBtn) fanBtn.style.display = page === 'show' && on && !closed ? '' : 'none';
+    const headFan = document.getElementById('head-fan'); // not "fanBtn": that name, above, makes gig 3's door-word button (session 51)
+    if (headFan) headFan.style.display = page === 'show' && on && !closed ? '' : 'none';
     // Session 46: what's set once moved to Cellar, the first tab; Plan gig keeps tonight.
     if (page === 'setup') say(1 + o, tv ? ['Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a ', gander(), ' before you click 2 · Show Time, up above.']
       : `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
-    else if (page === 'show' && tv) { // gig 1 (session 47): the pub's TV is part of the fan's steps now
+    else if (page === 'show' && tv) { // gig 1 (session 47): Pub TV is part of the fan's steps now
       if (closed) say(9, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(4, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(5, 'Press Fan’s page ↗, top right, and follow the strip there: steps 5 to 7. Then come back here.', '', '', { story: TOLD.fan });
@@ -258,7 +268,7 @@ export async function judgeLine(r, page) {
       if (closed) say((tv ? 6 : 5) + o, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2 + o, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3 + o, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
-      else if (tv && !tvSeen()) say(4 + o, 'Press the Chat & Big Time Charlies widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on the pub’s TVs too.' });
+      else if (tv && !tvSeen()) say(4 + o, 'Press the Pub TV widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on Pub TV too.' });
       else say((tv ? 5 : 4) + o, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
     } else if (!closed) say(tv ? 8 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
     // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.

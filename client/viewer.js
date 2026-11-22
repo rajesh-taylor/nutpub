@@ -75,7 +75,7 @@ const T = {
 // What just happened. On the home page it fades after 10 s: read once, it needn't stay.
 let sayTimer = null;
 // `shine`: good news about sats: Bitcoin orange, a shimmer, and it stays 30 s so it gets seen.
-const say = (text, shine = false) => {
+const say = (text, shine = false, ms = 0) => { // ms: how long it stays (session 51: a thank-you, 8 s, not a shine's 30)
   clearTimeout(sayTimer);
   $('status').classList.remove('fade');
   $('status').classList.toggle('shine', shine);
@@ -84,7 +84,7 @@ const say = (text, shine = false) => {
     sayTimer = setTimeout(() => {
       $('status').classList.add('fade');
       sayTimer = setTimeout(() => { $('status').textContent = ''; $('status').classList.remove('fade', 'shine'); }, 800);
-    }, shine ? 30_000 : 10_000);
+    }, ms || (shine ? 30_000 : 10_000));
   }
 };
 const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${n === 1 ? '' : 's'}`;
@@ -387,6 +387,7 @@ function controls(on) {
 // and each 402 paid buys a token that outlasts the next payment: stop paying and the picture stops. hls.js puts the
 // newest token in every playlist request; the segments' links come with their own signature.
 let liveOn = false;
+let nightOver = false; // End night pressed (takeStage): the date line stops saying when it starts (session 51, the replay page)
 let Hls = null;
 let hls = null;
 let liveToken = '';
@@ -710,7 +711,7 @@ async function tip(button) {
   try {
     const res = await paidFetch('/api/tip', said());
     if (res.ok) { sent(); tipped(res); }
-    if (res.ok) thank(T.tipDone(show.tip.label || 'Tip')); else say(await refusal(res));
+    if (res.ok) thank(T.tipDone(show.tip.label || 'Tip') + feeNote()); else say(await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
   }
@@ -765,7 +766,7 @@ async function nutzap(b, n) {
     if (res.ok) {
       sent(); tipped(res);
       publish(event, zapTo.relays).catch(() => {}); // in public, where any Nostr app can see it
-      thank(`Nutzapped ${reads(n)}: in the chat with your name.`);
+      thank(`Nutzapped ${reads(n)}: in the chat with your name.${feeNote()}`);
     } else say(await refusal(res));
   } catch (e) {
     say(/insufficient|not enough|balance/i.test(e.message) ? T.empty : e.message);
@@ -797,7 +798,7 @@ $('own-form').onsubmit = async (e) => {
   try {
     const res = await paidFetch(`/api/tip/${n}`, said());
     if (res.ok) {
-      sent(); tipped(res); thank(T.ownDone(reads(n)));
+      sent(); tipped(res); thank(T.ownDone(reads(n)) + feeNote());
       if (document.body.classList.contains('full')) { $('own-pay').textContent = T.thanks; setTimeout(() => ownForm(false), 1500); } else ownForm(false);
     } else say(await refusal(res));
   } catch (err) {
@@ -809,9 +810,11 @@ $('own-form').onsubmit = async (e) => {
 // The thank-you is the tipper's alone: small, by the comment box, for a few seconds (Rajesh 14 Nov: no pop-up on the
 // picture; the tip itself shows in the chat). Full screen: the amount box says it. No box on screen: the status line.
 let thanksTimer = 0;
+// Session 51: the mint's own fee for the swap, when it took one, said after the thank-you (it leaves the wallet too).
+const feeNote = () => { const f = wallet.lastFee; return f > 0 ? ` The mint took ${sats(f)} as its fee.` : ''; };
 function thank(text) {
-  if (document.body.classList.contains('full')) return ONE ? say(text, true) : undefined; // the strip has no room under the box
-  if (!$('say').offsetParent) return say(text, true);
+  if (document.body.classList.contains('full')) return ONE ? say(text, true, 8000) : undefined; // the strip has no room under the box
+  if (!$('say').offsetParent) return say(text, true, 8000);
   clearTimeout(thanksTimer);
   $('say-thanks').textContent = text;
   $('say-thanks').hidden = false;
@@ -944,7 +947,8 @@ function whenLine() {
   const zone = show.date ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', timeZoneName: 'short' }).formatToParts(new Date(`${show.date}T12:00:00Z`)).find((x) => x.type === 'timeZoneName').value.replace('+0', '') : 'UK time';
   let line;
   // One start time (10 Nov): the stream's.
-  if (liveOn) line = ['Live now', show.lastOrders && `ends ${show.lastOrders} ${zone}`];
+  if (nightOver) line = [day && `Played ${day}`]; // the replay page, or a night that's over: no start time to wait for
+  else if (liveOn) line = ['Live now', show.lastOrders && `ends ${show.lastOrders} ${zone}`];
   else line = [day, show.streams && `starts ${show.streams} ${zone}`];
   // Each part stays whole on a narrow phone: the line breaks between parts, never inside "show starts 21:30".
   const text = line.filter(Boolean).map((x) => String(x).replace(/ /g, '\u00a0')).join(' · ');
@@ -999,7 +1003,10 @@ const GIG3 = judge && judgeGig === 'pickle' && AS === 'room'; // the venue's pag
 // so judges don't press play on the wrong player.
 const HOLD = judge && judgeGig === 'pickle' && AS === 'home' && IN_SHOW;
 const PASSKEYS = passkeysWork() && !TICKET_VIEW && (GIG3 || (top === self && !judge));
-let keepSkipped = false; // gig 3's Not now
+// Gig 3's Not now, kept for this ticket through a reload (session 51: Show Time reloaded, and the fan's phone asked again).
+const SKIP = 'nutpub-keep-skip';
+const skipMark = () => (pass ? String(pass).slice(0, 12) : '');
+let keepSkipped = (() => { try { return !!skipMark() && localStorage.getItem(SKIP) === skipMark(); } catch { return false; } })();
 // The passkey comes first, straight after paying: one button, "Press to save ticket now". Only after a cancel or a failure does the ticket show without it, so nobody is stuck at the door.
 let keepTried = false;
 // Wallet cards are held back from fans before 27 Nov (12 Nov): a card can't get anyone in (Apple won't let us change
@@ -1015,6 +1022,7 @@ let opensAt = null;
 let skew = 0; // the server's clock less this phone's, so every countdown ends together
 function takeStage(s) {
   opened = s.stage === 'open' || s.stage === 'on';
+  nightOver = s.stage === 'closed';
   opensAt = s.opensAt || null;
   if (s.now) skew = s.now - Date.now();
   if (s.freeUntil !== undefined) freeUntil = s.freeUntil;
@@ -1173,7 +1181,7 @@ function render() {
   // ticket left the page blank under the video, the Save button hidden with the rest).
   body.classList.toggle('ticket-steps', !ONE && room && (keepFirst || (passOn && !door.checkedAt)));
   // The first render picks the tab: the Ticket tab while the venue's page has no ticket or its door QR is still to show.
-  if (ONE && tab === null) showTab(TICKET_VIEW || confirmed || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
+  if (ONE && tab === null) showTab(TICKET_VIEW || confirmed || keepOn || (room && (!ticket || (passOn && !door.checkedAt))) ? 'ticket' : 'chat');
   if (ONE && confirmed && tab !== 'ticket') showTab('ticket'); // bought ahead: the receipt is the page
   $('door-pass').classList.toggle('in', !!door.checkedAt);
   // A door word instead of the QR (No scanner?), until they're let in or its ten minutes run out.
@@ -1302,21 +1310,21 @@ function todoItems() {
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
   }
   // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers, 9 steps. 1 the 12 words, 2 on to
-  // Plan gig, 3 Plan gig, 4 Start show; here 5 the ticket, 6 one big tip in full screen (both goals), 7 the pub's TV; 8, 9.
+  // Plan gig, 3 Plan gig, 4 Start show; here 5 the ticket, 6 one big tip in full screen (both goals), 7 Pub TV; 8, 9.
   // One tip, not several: the test mint stumbled on quick ones, and 50,000 passes both goals at once.
   if (show.stream.mode === 'ticket') {
     const tv = `${location.pathname.replace(/\/$/, '')}/screen`;
     const list = [{ done: !!door.ticket, text: 'Buy the ticket: press Watch online, below the video', did: 'Bought the ticket', short: 'Buy the ticket',
         story: 'One 402 buys the ticket, paid from the wallet in this browser. Nostr users can sign in at the top of the chat.' },
       { done: !!todo.tipFull, story: 'Tips fill Longy’s stretch goals: an encore, then the debut of his latest song.',
-        html: `Go full screen ${FULL_ICON} (bottom right of the video), type encore! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button`,
-        text: 'Go full screen, type encore! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button',
-        now: 'Type encore!, put 50,000 in the sats box beside it, then press the yellow ➤ button',
-        did: 'Tipped 50,000: both stretch goals met', short: 'Full screen: encore!, 50,000', tip: true },
-      { done: !!todo.tv2, story: 'Tips and the chat go up on the pub’s TVs too: your encore!, and both stretch goals met.',
-        text: 'Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it',
-        html: `Press Open the pub’s TV: it opens in a new tab. Have a look, then come back here and press Seen it. <a class="btn quiet" data-todo="tv" href="${tv}" target="_blank" rel="noopener">Open the pub’s TV ↗</a> <button type="button" class="btn primary" data-todo="tv2">Seen it</button>`,
-        now: 'Now leave full screen: the button, bottom right', did: 'Saw the pub’s TV', short: 'The pub’s TV' }];
+        html: `Go full screen ${FULL_ICON} (bottom right of the video), type Yes! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button`,
+        text: 'Go full screen, type Yes! in the comment box, put 50,000 in the sats box beside it, then press the yellow ➤ button',
+        now: 'Type Yes!, put 50,000 in the sats box beside it, then press the yellow ➤ button',
+        did: 'Tipped 50,000: both stretch goals met', short: 'Full screen: Yes!, 50,000', tip: true },
+      { done: !!todo.tv2, story: 'Tips and the chat go up on Pub TV too: your Yes! is there.',
+        text: 'Press Open Pub TV: it opens in a new tab. Have a look, then come back here and press Seen it',
+        html: `Press Open Pub TV: it opens in a new tab. Have a look, then come back here and press Seen it. <a class="btn quiet" data-todo="tv" href="${tv}" target="_blank" rel="noopener">Open Pub TV ↗</a> <button type="button" class="btn primary" data-todo="tv2">Seen it</button>`,
+        now: 'Now leave full screen: the button, bottom right', did: 'Saw Pub TV', short: 'Pub TV' }];
     return Object.assign(list, { base: 4, total: 9 });
   }
   // Gig 2 (Rajesh 20 Nov): one thing a step. Play and stop; play again once the countdown's done; the Network tab a step
@@ -1495,7 +1503,7 @@ $('door-word-btn').onclick = async () => {
   render();
 };
 $('door-word-back').onclick = () => { doorWord = null; render(); };
-$('keep-skip').onclick = () => { keepSkipped = true; render(); };
+$('keep-skip').onclick = () => { keepSkipped = true; try { if (skipMark()) localStorage.setItem(SKIP, skipMark()); } catch {} render(); };
 // Keep it with a passkey: the password manager lists it by the artist and the date.
 // A venue ticket: "Longy · The Fickle Pickle · ticket · 21 Nov", one passkey per ticket (session 39).
 function passkeyName() {
@@ -1915,13 +1923,15 @@ $('say').onsubmit = async (e) => {
   if (box.value.trim() && !n) { say(T.refused.too_small); box.focus(); return; }
   if (n) {
     $('say-send').disabled = $('say-free').disabled = true;
+    $('say-send').textContent = '…'; // session 51: the mint can take a few seconds; the button says it's on its way
     try {
       const res = await paidFetch(`/api/tip/${n}`, said());
-      if (res.ok) { sent(); tipped(res); box.value = ''; thank(T.ownDone(reads(n))); } else say(await refusal(res));
+      if (res.ok) { sent(); tipped(res); box.value = ''; thank(T.ownDone(reads(n)) + feeNote()); } else say(await refusal(res));
     } catch (err) {
       say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
     }
     $('say-send').disabled = $('say-free').disabled = false;
+    $('say-send').textContent = '➤';
     balance();
     return;
   }

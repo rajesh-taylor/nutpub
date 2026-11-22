@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
-  <title>Tips · The NutPub</title>
+  <title>Pub TV · The NutPub</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* The venue's big screen, read from across the room. The home page's sign at the home page's size; the QR on the
        left, as big as the room needs ("Scan to tip Longy"); then Top tippers, then the Chat, in columns (session 45); the
        stretch goals along the bottom, as on the gig page. Text near-white (250), no gold backdrops. Smallest use: a tablet. */
     body.screen-page { --white: rgb(250 250 250); background: var(--midnight); padding: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
-    .screen-top { position: relative; padding: 2vh 5vw 0; text-align: center; }
+    .screen-top { position: relative; padding: .4vh 5vw 0; text-align: center; } /* the sign higher (session 51) */
     .screen-sign { position: relative; width: min(972px, 60vw, 92vh); margin: 0 auto; line-height: 0; }
     .screen-sign svg { display: block; width: 100%; height: auto; overflow: visible; }
     .screen-sign .board text { font: 700 80px Georgia, "Times New Roman", serif; fill: url(#gold); }
@@ -23,9 +23,10 @@
     .screen-full { position: absolute; top: 2vh; right: 2vw; }
     .screen-judge { display: flex; gap: 14px; align-items: baseline; justify-content: center; width: fit-content; max-width: 92vw; margin: 1.5vh auto 0; padding: 8px 16px; border: 1px solid rgb(239 227 200 / .28); border-radius: 8px; background: var(--raised); font: 16px/1.4 var(--body); color: var(--cream); } /* judges only (Rajesh 19 Nov) */
     .screen-judge b { flex: none; font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--smoke); } /* as the judges' line (session 47) */
+    .screen-judge { border-color: rgb(217 149 58 / .75); box-shadow: 0 0 0 3px rgb(217 149 58 / .16), 0 0 26px rgb(217 149 58 / .22); } /* a soft glow: the quietest thing on the TV was the judges' one instruction (session 51) */
     /* Three columns (Rajesh 21 Nov, session 45): the QR, Top tippers, Chat, each list in rows under its heading. The
        chat a little wider; it fills its column's height, newest at the bottom, as in the full screen and the chat box. */
-    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 3.5vw; align-items: start; padding: 5vh 6vw 1vh; }
+    .screen-main { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 3.5vw; align-items: start; padding: 5vh 6vw 6vh; } /* 6vh at the bottom (session 51): a TV's edge can clip the last line */
     .screen-main > section { min-width: 0; }
     #top-box { grid-column: 2; } #feed-box { grid-column: 3; align-self: stretch; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     #feed-box[hidden] { display: none; }
@@ -41,19 +42,25 @@
     .screen-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
     .screen-list li { display: flex; align-items: baseline; gap: 1.6vw; padding: 1vh 0; border-bottom: 1px solid rgb(239 227 200 / .1); min-width: 0; }
     .screen-list .who { display: block; border: 0; border-radius: 0; flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--white); }
-    .screen-list .who.nostr { color: #b98cff; font-size: inherit; margin: 0; } /* app.css's .nostr (the sign-in row) made it 12px (session 45) */ /* a Nostr name, as in the chat; the look is for screen v2.0 */
+    /* Names as people write them, in Plex, not block capitals (session 51: homelier); amounts and headings stay Bebas. */
+    .screen-list .who { font: 600 .8em/1.25 var(--body); letter-spacing: 0; }
+    .screen-list .who.nostr { color: #b98cff; font-size: .8em; margin: 0; } /* app.css's .nostr (the sign-in row) made it 12px (session 45) */ /* a Nostr name, as in the chat; the look is for screen v2.0 */
     .screen-list .sats { flex: none; color: var(--amber); }
     .screen-list .zap { flex: none; font: 400 .6em/1 var(--poster); letter-spacing: .12em; text-transform: uppercase; color: #fff; background: #8e30eb; border-radius: 4px; padding: .35em .5em .25em; align-self: center; } /* a Nutzap */
     .screen-list .words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(250 250 250 / .8); font-family: var(--body); letter-spacing: 0; }
-    .screen-top3 li { font: 400 clamp(22px, min(2.4vw, 4.6vh), 64px)/1 var(--poster); letter-spacing: .04em; }
+    .screen-top3 li { font: 400 clamp(18px, min(1.8vw, 3.2vh), 44px)/1.15 var(--poster); letter-spacing: .04em; } /* Superfans as big as the chat (session 51) */
     .screen-top3 li .who { flex: 1 1 auto; min-width: 0; max-width: none; }
     .screen-top3 li { gap: 1vw; }
     .screen-top3 li .n { flex: none; width: .8em; color: var(--amber); } /* the rank close to the name (Rajesh 21 Nov) */
     .screen-top3 li .sats { margin-left: auto; }
     /* Chat: the name and sats on one line, the words under them (two lines at most). */
-    .screen-feed li { flex-wrap: wrap; row-gap: .4vh; font: 400 clamp(18px, min(1.8vw, 3.2vh), 44px)/1.15 var(--poster); letter-spacing: .04em; }
-    .screen-feed li .who { max-width: 70%; }
-    .screen-feed li .words { flex: 1 1 100%; font-size: .8em; line-height: 1.3; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+    /* One line of talk, as in the chat (session 51, Rajesh): name, tip, words run on and wrap, two lines at most. */
+    .screen-feed li { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font: 400 clamp(18px, min(1.8vw, 3.2vh), 44px)/1.3 var(--poster); letter-spacing: .04em; }
+    .screen-feed li > span { display: inline; margin-right: .45em; }
+    .screen-feed li .who { display: inline; max-width: none; white-space: normal; }
+    .screen-feed li .who.nostr { margin-right: .45em; } /* the Nostr rule above sets margin 0 */
+    .screen-feed li .zap { display: inline-block; vertical-align: .15em; }
+    .screen-feed li .words { font-size: .8em; white-space: normal; margin-right: 0; }
     .screen-feed li.cue:nth-last-child(n+5) { opacity: .55; } /* the oldest scripted lines, at the top, dimmed; real lines stay bright */
     .screen-feed li.new { animation: in .8s ease-out; }
     @keyframes in { from { transform: translateY(30%); } } /* a new line comes up from below (session 45) */
@@ -73,6 +80,8 @@
     .screen-goals .mic.met span { color: var(--amber); }
     .screen-goals .list { display: none; margin: 0; font: 400 18px/1.4 var(--poster); letter-spacing: .06em; color: var(--white); }
     .screen-goals .list .met { color: var(--amber); }
+    .screen-goals.thanks-only { height: auto; padding-block: 1.5vh max(2.5vh, calc(env(safe-area-inset-bottom) + 12px)); } /* all met: the artist's thanks alone (session 51) */
+    .screen-goals.thanks-only .head { display: none; }
     .screen-goals .thanks { margin: 0; text-align: center; font: 400 clamp(26px, 3.4vw, 76px)/1.1 var(--poster); letter-spacing: .04em; color: var(--amber); }
     @media (prefers-reduced-motion: reduce) { .screen-sign .shine { display: none; } .screen-feed li.new { animation: none; } }
     @media (orientation: portrait) { body.screen-page { height: auto; min-height: 100dvh; overflow: visible; } .screen-sign { width: min(92vw, 640px); }
@@ -98,14 +107,14 @@
       <svg class="shine" viewBox="0 10 800 170" aria-hidden="true"><text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6">THENUTPU</text></svg>
     </div>
     <button type="button" class="btn quiet screen-full" id="full" hidden>Full screen</button>
-    <p class="screen-judge" id="screen-judge" hidden><b>Judges</b>Venues leave this page on the TVs around the room. Close this tab to go back to Show Time.</p>
+    <p class="screen-judge" id="screen-judge" hidden><b>Judges</b>Leave the Pub TV widget on screens around the venue. Close this tab to go back to Show Time.</p>
   </header>
   <div class="screen-main">
     <div class="screen-left">
       <div class="screen-qr"><img id="qr" src="/api/show/qr.svg" alt="QR code to the gig page"></div>
       <p class="screen-scan">Scan to tip <span id="artist"></span><b id="where"></b></p>
     </div>
-    <section id="top-box" hidden><h2>Top tippers</h2><ol class="screen-list screen-top3" id="top"></ol></section>
+    <section id="top-box" hidden><h2>Superfans</h2><ol class="screen-list screen-top3" id="top"></ol></section>
     <section id="feed-box" hidden><h2>Chat</h2><ol class="screen-list screen-feed" id="feed" aria-live="polite"></ol></section>
   </div>
   <section class="screen-goals" id="goals" hidden>

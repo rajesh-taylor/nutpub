@@ -46,6 +46,7 @@ const GIGS = {
       // Inside his 30-second clip, so they all come the first time through.
       { after: 18, text: 'Dublin 🇮🇪' }, { after: 20.5, text: 'Lisbon 🇵🇹', nostr: 'satsback_sara' },
       { after: 23, text: 'Tokyo 🇯🇵' }, { after: 25.5, text: 'São Paulo 🇧🇷' },
+      { after: 26.5, text: 'Big up the A13 Massive! 🛣️' }, // Rajesh 22 Nov (session 51): a local, the road to Westcliff
       { after: 28, text: 'Go on Longy! 🎸🎤', nostr: 'Rod Stuart (not that one)' }], // Rajesh 21 Nov: his full name
   },
   frankie: {
@@ -115,7 +116,7 @@ const GIGS = {
       tip: { label: 'Tip Longy', price: 2100 }, lightning: 'longy@fountain.fm', // his own address, under the TV page's QR (session 45)
       nutzaps: [{ sats: 21, emoji: '⚡' }, { sats: 210, emoji: '🎸' }, { sats: 2100, emoji: '🎤' }],
     },
-    pin: 'At The Fickle Pickle: your ticket includes a drink on Longy. At home the stream is free: tips welcome.',
+    pin: 'At The Fickle Pickle: your ticket includes a drink on Longy.',
     // Rajesh 20 Nov (session 40): judges watch about 5 seconds, so the chat is busy from the first second: Nostr names,
     // a few one-off Nutzaps, guests and a whale. Scripted tips are words in the chat only (Takings counts real coins).
     cues: [{ after: 1, text: 'Go on Longy! 🎸' },
@@ -154,7 +155,7 @@ const GIGS = {
       free: { viewers: 30 }, hours: 3,
       tip: { label: 'Tip Frankie', price: 2100 }, lightning: 'frankieperoni@fountain.fm',
     },
-    pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie. At home the stream is free: tips welcome.' },
+    pin: 'At The Fickle Pickle: show your ticket at the door, your first drink is on Frankie.' },
 };
 // The home page offers three gigs (Rajesh 19 Nov: gig 4 folded into gig 3; stages.js JUDGE_GIGS). `yours` stays last on
 // an artist's own setlist (Put on a gig, parked until after 27 Nov).
