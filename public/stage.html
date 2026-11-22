@@ -123,7 +123,7 @@
       <p id="theirs-text">This stage belongs to an artist. Is it yours?</p>
       <a class="go" id="to-gig" href="/" hidden>Open the gig as a fan →</a>
       <p class="to-gig-note" id="to-gig-note" hidden>Find my ticket is there.</p>
-      <p><a id="back" href="/">Back to your stage</a></p>
+      <p><a id="back" href="/">Back to your gigs</a></p>
     </div>
   </main>
   <script type="module">
@@ -152,9 +152,10 @@
         document.getElementById('to-gig').href = s.path;
         document.getElementById('to-gig').hidden = document.getElementById('to-gig-note').hidden = false;
       }
+      // Session 53: the artist's passkey opens it here (Back to your gigs, on /judge).
       if (s.judge) {
-        document.getElementById('theirs-text').textContent = 'This gig was set up in another browser.';
-        Object.assign(document.getElementById('back'), { href: `${front}/judge`, textContent: '← The three gigs' });
+        document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Your artist passkey opens it here.';
+        document.getElementById('back').href = `${front}/judge#back`;
       }
     }
     // The setlist: each gig ticks off at Finish gig; the one on now is in red, and the buttons open it.

@@ -1,11 +1,12 @@
-// The front door (thenutpub.com only): Put on a gig makes an artist a stage of their own, sealed with a passkey;
-// Back to your stage finds it again with that passkey, on any phone or laptop its password manager syncs to. No email,
-// no account: D1 keeps the list of stages and each one's passkey (its public key), nothing about the person.
+// The front door (thenutpub.com only): the artist's passkey (session 53) is made once, on thenutpub.com, and opens every
+// stage it starts; Back to your gigs finds them again with it, on any phone or laptop its password manager syncs to. No
+// email, no account: D1 keeps the list of stages, each passkey's public key and which stages it opens, nothing about
+// the person. Judges meet it as step 0 on /judge; skipped, a judge's stages open in the browser that made them only.
 // The stage itself is a Durable Object (stage.js) at <id>.thenutpub.com; its setup key never leaves it except through
 // a one-time code (handoff.js) that its own page trades for the key, as Sign in on your phone does.
 import { SITE_URL } from './config.js';
-import { one, run, sql, batch, stageDb } from './db.js';
-import { json, body, now } from './http.js';
+import { one, all, run, sql, batch, stageDb } from './db.js';
+import { json, body, now, randomHex } from './http.js';
 import { checkCreate, checkGet, challengeOk, spend, site } from './passkey.js';
 
 // While the stages run on the test mint (and the free plan), at most this many at once: 50 until NutNovember's judging
@@ -38,12 +39,19 @@ export async function closeOldStages(env, at = Date.now(), stub = stageStub) {
   const closed = [];
   for (const { id } of results) {
     try { await stub(env, id).shut(); } catch (e) { console.log(`stage ${id} not closed: ${String(e.message || e).slice(0, 200)}`); continue; }
-    await env.DB.batch([env.DB.prepare('DELETE FROM stage_keys WHERE stage = ?').bind(id), env.DB.prepare('DELETE FROM stages WHERE id = ?').bind(id)]);
+    await env.DB.batch(forget(env, id));
     closed.push(id);
   }
   if (closed.length) console.log(`stages closed: ${closed.join(', ')}`);
+  // A passkey with no stage left is forgotten 7 days after it was last used (its page then tells the password manager).
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM artist_links WHERE key IN (SELECT id FROM artist_keys WHERE COALESCE(used, created) < ? AND id NOT IN (SELECT key FROM key_stages))').bind(cutoff),
+    env.DB.prepare('DELETE FROM artist_keys WHERE COALESCE(used, created) < ? AND id NOT IN (SELECT key FROM key_stages)').bind(cutoff)]);
   return closed;
 }
+// A closed stage, off the front door's lists: its passkeys' links to it, its claim, the stage itself.
+const forget = (env, id) => ['stage_keys', 'key_stages', 'stage_claims'].map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE stage = ?`).bind(id))
+  .concat(env.DB.prepare('DELETE FROM stages WHERE id = ?').bind(id));
 // Every stage taken (Rajesh 19 Nov: our own testing filled all 50): the oldest one made over an hour ago closes to make
 // room, as it would at 7 days. Never one made in the last hour, so a judge mid-run keeps theirs.
 export async function makeRoom(env, at = Date.now(), stub = stageStub) {
@@ -51,7 +59,7 @@ export async function makeRoom(env, at = Date.now(), stub = stageStub) {
   const oldest = await env.DB.prepare('SELECT id FROM stages WHERE created < ? ORDER BY created LIMIT 1').bind(hourAgo).first();
   if (!oldest) return false;
   try { await stub(env, oldest.id).shut(); } catch (e) { console.log(`stage ${oldest.id} not closed: ${String(e.message || e).slice(0, 200)}`); return false; }
-  await env.DB.batch([env.DB.prepare('DELETE FROM stage_keys WHERE stage = ?').bind(oldest.id), env.DB.prepare('DELETE FROM stages WHERE id = ?').bind(oldest.id)]);
+  await env.DB.batch(forget(env, oldest.id));
   console.log(`stage closed to make room: ${oldest.id}`);
   return true;
 }
@@ -70,11 +78,74 @@ function stageLink(c, id, code) {
 }
 const fail = (e) => json({ error: 'passkey', detail: String(e.message || e) }, 400);
 const old = () => json({ error: 'old_challenge' }, 400);
+const sha = async (text) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))].map((b) => b.toString(16).padStart(2, '0')).join('');
+const CODE = /^[0-9a-f]{32}$/;
+
+// ---- The artist's passkey (session 53). One passkey, many stages: key_stages says which. Starting a stage shouldn't
+// ask for the passkey again, so the browser that made it (or signed in with it) keeps a link code: sent with a new
+// stage, it adds that stage to the passkey, and does nothing else. Opening a stage elsewhere always takes the passkey.
+export const LINKS_PER_KEY = 10; // browsers holding a link for one passkey: the newest ten
+async function keyOfLink(link) {
+  if (!CODE.test(String(link || ''))) return null;
+  return one('SELECT k.id, k.name FROM artist_links l JOIN artist_keys k ON k.id = l.key WHERE l.hash = ?', await sha(link));
+}
+async function newLink(key) {
+  const link = randomHex(16);
+  await run('INSERT INTO artist_links (hash, key, created) VALUES (?, ?, ?)', await sha(link), key, now());
+  await run('DELETE FROM artist_links WHERE key = ? AND hash NOT IN (SELECT hash FROM artist_links WHERE key = ? ORDER BY created DESC LIMIT ?)', key, key, LINKS_PER_KEY);
+  return link;
+}
+// The stage is told it has a passkey, and its name, so Cellar can say so.
+async function linkStage(env, key, stage) {
+  await run("INSERT OR IGNORE INTO key_stages (key, stage, role, created) VALUES (?, ?, 'artist', ?)", key.id, stage, now());
+  try { await stageStub(env, stage).passkey(key.name); } catch (e) { console.log(`stage ${stage} not told of its passkey: ${String(e.message || e).slice(0, 200)}`); }
+}
+// A stage started before its passkey was made: its browser keeps a claim code beside the stage's id (/judge, this
+// site), so the passkey made later adds it. Spent once used; the stage's id alone (it's in every fan's link) adds nothing.
+async function newClaim(stage) {
+  const claim = randomHex(16);
+  await run('INSERT OR REPLACE INTO stage_claims (stage, hash) VALUES (?, ?)', stage, await sha(claim));
+  return claim;
+}
+async function takeClaim(stage, claim) {
+  if (!STAGE_ID.test(stage) || !CODE.test(claim)) return false;
+  return !!(await one('DELETE FROM stage_claims WHERE stage = ? AND hash = ? RETURNING stage', stage, await sha(claim)));
+}
+// What the password manager lists it as, from the page: "NutPub · Artist · 22 Nov". Plain text, 60 characters at most.
+const nameOf = (text) => String(text || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60) || 'NutPub · Artist';
+const newStage = async () => {
+  let id = newStageId();
+  while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
+  return id;
+};
 
 export function mountStageDoor(route) {
   const front = (c) => (stageDb().id ? json({ error: 'not_found' }, 404) : null); // on thenutpub.com only
 
-  // Put on a gig: the passkey made on the phone, then a stage of its own.
+  // Make your artist passkey (step 0 on /judge): the passkey made in this browser, then a link code for it. Stages this
+  // browser started before (their claim codes) join it.
+  route('POST', '/api/artist', front, async (c) => {
+    const b = await body(c);
+    if (!(await challengeOk(b?.challenge))) return old();
+    let k;
+    try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
+    if (!(await spend(b.challenge))) return old();
+    const key = { id: k.id, name: nameOf(b.name) };
+    await run('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now());
+    const linked = [];
+    for (const x of [].concat(b.claims || []).slice(0, 10)) {
+      const stage = String(x?.stage || '');
+      if (!(await takeClaim(stage, String(x?.claim || '')))) continue;
+      if (!(await one('SELECT 1 AS x FROM stages WHERE id = ?', stage))) continue;
+      await linkStage(c.env, key, stage);
+      linked.push(stage);
+    }
+    console.log(`artist passkey made${linked.length ? `, with ${linked.join(', ')}` : ''}`);
+    return json({ link: await newLink(k.id), name: key.name, linked });
+  });
+
+  // Put on a gig (parked on the home page since 15 Nov): the artist's passkey made, then a stage of its own.
   route('POST', '/api/stages', front, async (c) => {
     const b = await body(c);
     if (!(await challengeOk(b?.challenge))) return old();
@@ -82,30 +153,34 @@ export function mountStageDoor(route) {
     try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if ((await full()) && !(await makeRoom(c.env))) return FULL();
     if (!(await spend(b.challenge))) return old();
-    let id = newStageId();
-    while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
+    const id = await newStage();
     const at = now();
+    const key = { id: k.id, name: nameOf(b.name) };
     await batch([sql('INSERT INTO stages (id, created) VALUES (?, ?)', id, at),
-      sql('INSERT INTO stage_keys (id, stage, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        k.id, id, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, at)]);
+      sql('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, at)]);
     const code = await stageStub(c.env, id).setup(id);
+    await linkStage(c.env, key, id);
     console.log(`stage made: ${id}`);
-    return json({ stage: id, url: stageLink(c, id, code) });
+    return json({ stage: id, url: stageLink(c, id, code), link: await newLink(k.id) });
   });
 
-  // A gig card on /judge: a stage with just that gig, and no passkey (Rajesh 14 Nov: every stage passkey had the same
-  // name, so judges couldn't tell theirs apart). The stage's page keeps its setup key in this browser, as after Put on
-  // a gig, and /judge remembers the stage's address: Open again goes straight back.
+  // A gig card on /judge: a stage with just that gig. The stage's page keeps its setup key in this browser, and /judge
+  // remembers the stage's address: Open again goes straight back. With this browser's link code (X-Artist-Link) the
+  // stage joins the artist's passkey; without one, a claim code comes back for a passkey made later. A wrong or old
+  // link adds nothing: the stage is made all the same.
   route('POST', '/api/stages/judge', front, async (c) => {
     const gig = String((await body(c))?.gig || '');
     if (!JUDGE_GIGS.includes(gig)) return json({ error: 'no_gig' }, 400);
+    const sent = c.req.headers.get('X-Artist-Link');
+    const key = await keyOfLink(sent);
     if ((await full()) && !(await makeRoom(c.env))) return FULL();
-    let id = newStageId();
-    while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
+    const id = await newStage();
     await run('INSERT INTO stages (id, created) VALUES (?, ?)', id, now());
     const code = await stageStub(c.env, id).setup(id, gig);
-    console.log(`judge stage made: ${id} (${gig})`);
-    return json({ stage: id, url: stageLink(c, id, code) });
+    if (key) await linkStage(c.env, key, id);
+    console.log(`judge stage made: ${id} (${gig})${key ? ', with its passkey' : ''}`);
+    return json({ stage: id, url: stageLink(c, id, code), linked: !!key, ...(key ? {} : { claim: await newClaim(id) }), ...(sent && !key ? { link: 'unknown' } : {}) });
   });
 
   // /judge's cards: which of this browser's stages are still open (closed ones offer Start only).
@@ -116,18 +191,23 @@ export function mountStageDoor(route) {
     return json({ open });
   });
 
-  // Back to your stage: the passkey check, then a one-time sign-in link to it.
+  // Back to your gigs: the passkey check, then its open stages, newest first, each with a one-time sign-in link, and a
+  // link code for this browser. One stage: the page goes straight in.
   route('POST', '/api/stages/back', front, async (c) => {
     const b = await body(c);
     if (!(await challengeOk(b?.challenge))) return old();
-    const k = await one('SELECT id, stage, pubkey AS publicKey, alg, count FROM stage_keys WHERE id = ?', String(b?.id || ''));
-    if (!k) return json({ error: 'no_stage', detail: 'That passkey isn’t a stage’s: pick the one called “My NutPub stage”.' }, 404);
+    const k = await one('SELECT id, name, pubkey AS publicKey, alg, count FROM artist_keys WHERE id = ?', String(b?.id || ''));
+    if (!k) return json({ error: 'no_stage', detail: 'That passkey doesn’t open any gigs now: pick the one called “NutPub · Artist”.' }, 404);
     let auth;
     try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if (!(await spend(b.challenge))) return old();
-    await run('UPDATE stage_keys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
-    const code = await stageStub(c.env, k.stage).handoff();
-    if (!code) return json({ error: 'no_stage', detail: 'That stage has closed.' }, 404);
-    return json({ stage: k.stage, url: stageLink(c, k.stage, code) });
+    await run('UPDATE artist_keys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
+    const rows = await all('SELECT s.id FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', k.id);
+    const stages = [];
+    for (const { id } of rows) {
+      const w = await stageStub(c.env, id).welcome().catch(() => null);
+      if (w?.code) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, url: stageLink(c, id, w.code) });
+    }
+    return json({ stages, name: k.name, link: await newLink(k.id) });
   });
 }

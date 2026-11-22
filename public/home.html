@@ -93,6 +93,8 @@
     .link { padding: 0; border: 0; background: none; font: inherit; color: #e8a845; text-decoration: underline; cursor: pointer; }
     .link:disabled { opacity: .5; cursor: default; }
     .two .door-said { font-size: 15px; color: var(--cream); max-width: 300px; }
+    .your-gigs { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; max-width: 340px; text-align: left; }
+    .your-gigs li { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 15px; color: var(--cream); }
     @media (max-width: 760px) { .lineup { display: none; } .home .wordmark { max-width: 300px; margin-top: 24px; } .home .tag { font-size: 13px; letter-spacing: .14em; margin-bottom: 24px; } }
     .home .foot { margin: 32px 0 8px; }
     .home .foot a { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; opacity: .8; text-decoration: none; }
@@ -184,8 +186,9 @@
             <a id="put-on" class="put-on" href="/judge">Judge for yourself</a>
             <p class="small-print">Doors: whenever you like · Entry: free · Sats: pretend · Applause: real</p>
           </section>
-          <!-- Back to your stage: parked with Put on a gig until after 27 Nov (Rajesh 15 Nov); front-door.js still uses it. -->
-          <p class="been" hidden>Been before? <button type="button" id="come-back" class="link">Back to your stage</button></p>
+          <!-- Back to your gigs (session 53): the artist's passkey, then its gigs (front-door.js). Put on a gig stays parked. -->
+          <p class="been">Been before? <button type="button" id="come-back" class="link">Back to your gigs</button></p>
+          <div id="your-gigs"></div>
           <p id="door-said" class="door-said" role="status" hidden></p>
         </div>
         <div class="fans"><h2>The Punters</h2><p class="line">Buy tickets and live stream access</p><p class="line">No apps. No tracking.</p><a class="btn primary" href="/longy">Try it with test sats</a></div>

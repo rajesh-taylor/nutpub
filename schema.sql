@@ -82,3 +82,17 @@ CREATE TABLE IF NOT EXISTS stages (id TEXT PRIMARY KEY, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS stage_keys (id TEXT PRIMARY KEY, stage TEXT NOT NULL, pubkey TEXT NOT NULL, alg INTEGER NOT NULL,
   count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
 CREATE INDEX IF NOT EXISTS stage_keys_stage ON stage_keys (stage);
+-- The artist's passkey (session 53, 22 Nov): one passkey on thenutpub.com opens every stage it starts. stage_keys (one
+-- passkey, one stage) was copied into these and nothing reads it now. artist_keys: the passkey's public key and the name
+-- the page gave it ("NutPub · Artist · 22 Nov"), nothing about the person. key_stages: which stages it opens, and as what
+-- (artist; producer and mod after session 55). artist_links: a link code per browser (its SHA-256), which can only add
+-- the stage that browser starts, never open one. stage_claims: a stage started before its passkey was made, and the
+-- SHA-256 of the code its browser keeps, so the passkey made later adds it. Added: scripts/artist-keys-migration.sql
+CREATE TABLE IF NOT EXISTS artist_keys (id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pubkey TEXT NOT NULL,
+  alg INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
+CREATE TABLE IF NOT EXISTS key_stages (key TEXT NOT NULL, stage TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'artist',
+  created TEXT NOT NULL, PRIMARY KEY (key, stage));
+CREATE INDEX IF NOT EXISTS key_stages_stage ON key_stages (stage);
+CREATE TABLE IF NOT EXISTS artist_links (hash TEXT PRIMARY KEY, key TEXT NOT NULL, created TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS artist_links_key ON artist_links (key);
+CREATE TABLE IF NOT EXISTS stage_claims (stage TEXT PRIMARY KEY, hash TEXT NOT NULL);

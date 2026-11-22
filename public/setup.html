@@ -46,6 +46,7 @@
     .board .cellar-intro { margin: 0 0 20px; max-width: 60ch; font-size: 16px; color: var(--smoke); }
     .board .words-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; font-size: 15px; color: var(--cream); }
     .board .words-line svg { flex: none; }
+    .board .words-line .ok-tick { color: var(--ok); }
     .board .words-line .btn { font-size: 15px; padding: 9px 14px; }
     .board .chip-soon { font: 600 12px/1 var(--body); letter-spacing: .02em; padding: 4px 8px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; color: var(--cream); }
     .board .chip-soon.after { border: 1px solid rgb(239 227 200 / .4); color: var(--cream); } /* as the Kitchen's After 27 Nov chip */
@@ -334,12 +335,21 @@
       try { key = localStorage.getItem('nutpub-admin'); } catch {}
       const r = key && await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.path) { const a = document.getElementById('head-fan'); a.href = r.fan || r.path; a.hidden = false; }
+      // Cellar's Artist passkey row (session 53): not on Longy's own stage (no passkey field there).
+      if (r && 'passkey' in r) {
+        const line = document.getElementById('passkey-line');
+        const front = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`;
+        const span = (...kids) => { const x = document.createElement('span'); x.append(...kids); return x; };
+        if (r.passkey?.name) line.replaceChildren(span(Object.assign(document.createElement('b'), { className: 'ok-tick', textContent: '✓ ' }), `${r.passkey.name}. Opens this gig on any device.`));
+        else line.replaceChildren(span('None yet: this gig opens in this browser only.'), Object.assign(document.createElement('a'), { className: 'btn quiet', href: `${front}/judge#passkey`, textContent: 'Make one on thenutpub.com' }));
+        document.getElementById('passkey-card').hidden = false;
+      }
       import('/judge-line.js').then((m) => m.judgeLine(r, document.body.dataset.room === 'cellar' ? 'cellar' : 'setup')).catch(() => {}); // a judge's stage: the one next thing to do
     </script>
   </header>
   <div class="page">
     <main>
-      <p class="cellar-intro" data-room="cellar">What stays the same from gig to gig: who you are, your 12 words, your photos, your stream and your moderators.</p>
+      <p class="cellar-intro" data-room="cellar">What stays the same from gig to gig: you, your passkey, your 12 words, photos, stream and moderators.</p>
       <div class="top" data-room="night">
         <div style="flex: 1 1 320px;">
           <!-- With two or more saved shows, a drop-down that loads one. -->
@@ -379,6 +389,12 @@
               <label class="field" id="field-artist">Artist<input data-path="artist" maxlength="60"></label>
               <label class="field" id="field-page">Your page <span id="site-host" style="color: var(--cream);"></span><input data-path="page" maxlength="40" autocapitalize="off" spellcheck="false"></label>
             </div>
+          </section>
+
+          <!-- Cellar: the artist's passkey (session 53): which one opens this stage, or none yet. Filled from /api/admin/setlist. -->
+          <section class="panel wide" id="passkey-card" data-room="cellar" hidden>
+            <h2>Artist passkey</h2>
+            <div class="words-line" id="passkey-line" role="status"></div>
           </section>
 
           <!-- Cellar: the 12 words (session 42's sheets, as on Your takings). The key is made here the first time. -->

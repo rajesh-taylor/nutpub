@@ -86,7 +86,8 @@ export async function judgeLine(r, page) {
   const gander = () => { const g = Object.assign(document.createElement('abbr'), { textContent: 'gander', tabIndex: 0 }); g.dataset.means = 'British slang: a look, as a goose (a gander) cranes its long neck to see'; return g; };
   const TOLD = list.at === 'longy' ? {
     // Session 47 (Rajesh 21 Nov): gig 1 opens on Cellar, the only gig that shows it.
-    cellar: 'Longy’s playing Peggy Sue’s tonight, online only. Cellar holds what he sets once, like the 12 words that back up the key his takings lock to.',
+    // Session 53: the passkey gets him in; the 12 words guard the money.
+    cellar: 'Longy’s playing Peggy Sue’s tonight, online only. His passkey gets him in. The 12 words guard the money.',
     setup: 'Plan gig is tonight’s: a £20 ticket for fans at home.',
     start: 'Show time. Fans are waiting at home, wallets in their browsers.',
     fan: 'You’re a fan at home now: no app, no account. A real fan tops up the browser wallet from any Lightning or Cashu wallet; here test sats are already in it.',

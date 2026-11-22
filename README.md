@@ -5,7 +5,7 @@
 ## Try it
 
 1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop. A phone helps in gig 3, but isn't needed.
-2. Press **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet.
+2. Make your artist passkey (or press Not now), then **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet. The passkey opens all three gigs on another laptop: **Back to your gigs**.
 3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3.
 
 Test mint, test sats: they have no value. I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.

@@ -144,6 +144,29 @@
     .tiles .tile b, .tiles .tile span { grid-column: 2; }
     .tiles .tile i { grid-column: 3; }
     @media (max-width: 900px) { .wall { grid-template-columns: minmax(0, 1fr); max-width: 420px; gap: 40px; } .poster img { aspect-ratio: 4 / 5; } }
+    /* Step 0 (session 53): the artist's passkey, before gig 1, as a judges' line of its own. Amber only on Make. */
+    .step0 { width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; display: grid; gap: 12px; padding: 16px 20px 14px; border: 1px solid rgb(239 227 200 / .28); border-radius: 8px; background: rgb(17 28 51 / .92); color: var(--cream); }
+    .step0 .s0-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+    .step0 .s0-chip { font: 600 13px/1 var(--body); letter-spacing: .02em; color: var(--smoke); white-space: nowrap; }
+    .step0 .s0-chip .here { color: var(--amber); }
+    .step0 .s0-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+    .step0 .s0-say { flex: 1 1 420px; min-width: 0; display: grid; gap: 4px; font-size: 17px; line-height: 1.35; }
+    .step0 .s0-story { font-size: 15px; line-height: 1.45; color: var(--smoke); }
+    .step0 .s0-act { font-weight: 500; }
+    .step0 .s0-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-left: auto; }
+    .step0 .btn { font-size: 16px; padding: 11px 18px; white-space: nowrap; }
+    .step0 .s0-link { padding: 0; border: 0; background: none; font: 500 15px/1.3 var(--body); color: var(--cream); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .step0 .s0-link:disabled, .step0 .btn:disabled { opacity: .5; cursor: default; }
+    .step0 .s0-fine { margin: 0; font-size: 13px; line-height: 1.45; color: var(--smoke); max-width: 80ch; }
+    .step0 .s0-ok { color: var(--ok); font-weight: 600; }
+    .step0 .s0-been { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; color: var(--smoke); }
+    .step0 .s0-said { margin: 0; font-size: 15px; color: #f0b27a; }
+    .step0 .your-gigs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .step0 .your-gigs li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
+    .step0 .your-gigs li:last-child { border-bottom: 0; }
+    .step0 .your-gigs .btn { padding: 8px 16px; }
+    .step0[data-state="made"] .s0-been, .step0[data-state="back"] .s0-been { display: none; }
+    @media (max-width: 700px) { .step0 { padding: 14px 14px 12px; } .step0 .s0-btns { margin-left: 0; } .step0 .s0-say { font-size: 16px; } }
   </style>
 </head>
 <body class="judge">
@@ -236,12 +259,15 @@
       <p class="lead what">A night out using Cashu. From the ticket, door entry, first round, 402 streaming payments, comments &amp; tips and takings back to your own wallet.</p>
     </div>
 
+    <!-- Step 0 (session 53, Rajesh 22 Nov): the artist's passkey, as real artists will get it. Drawn by the script below. -->
+    <section class="step0" id="step0" aria-label="Your artist passkey" hidden></section>
+
     <div class="wall">
       <article class="poster" data-gig="longy">
         <span class="tape" style="left: 22px; transform: rotate(-8deg);" aria-hidden="true"></span><span class="tape" style="right: 22px; transform: rotate(7deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-longy-tall.jpg"><img src="/img/card-longy-wide.jpg" alt="Longy playing at Peggy Sue's Music Bar"></picture>
         <div class="inner">
-          <p class="kicker"><span>1 · <span class="here">Start here</span></span><span class="dev">Laptop</span></p>
+          <p class="kicker"><span>1<span class="start-here"> · <span class="here">Start here</span></span></span><span class="dev">Laptop</span></p>
           <h2 class="who">Longy</h2>
           <p class="where">Peggy Sue’s Music Bar</p>
           <dl><dt>Venue</dt><dd>–</dd><dt>Online</dt><dd>£20</dd></dl>
@@ -315,11 +341,18 @@
   <script type="module">
     // Each card makes a stage of its own (POST /api/stages/judge) and opens it; this browser remembers it, so the card
     // then offers Open again (the stage's page still has its key in this browser) and Start fresh (a new stage).
+    // Step 0 (session 53): the artist's passkey first. Made, each new stage joins it (this browser's link code); skipped,
+    // the stages stay in this browser, each with a claim code, so a passkey made later adds them.
+    import { passkeysWork, warm, artistHere, artistLink, dropLink, skipped, skip, makeArtist, backToGigs, gigsList } from '/js/front-door.js';
     const KEEP = 'nutpub-judge-stages';
-    const read = () => { try { return JSON.parse(localStorage.getItem(KEEP) || '{}') || {}; } catch { return {}; } };
+    const CLAIMS = 'nutpub-judge-claims'; // { stageId: claim }: stages started before the passkey
+    const readJ = (k) => { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch { return {}; } };
+    const read = () => readJ(KEEP);
     const keep = (gig, id) => { try { localStorage.setItem(KEEP, JSON.stringify({ ...read(), [gig]: id })); } catch {} };
+    const claimFor = (id, claim) => { try { localStorage.setItem(CLAIMS, JSON.stringify({ ...readJ(CLAIMS), [id]: claim })); } catch {} };
     const START = { longy: 'Start Longy’s gig', frankie: 'Start Frankie’s gig', pickle: 'Start the night at the venue' };
-    const el = (tag, props) => Object.assign(document.createElement(tag), props);
+    const el = (tag, props, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+    const ID = /^[a-z][a-z0-9]{5}$/;
 
     async function start(gig, card) {
       const all = [...card.querySelectorAll('button')];
@@ -329,9 +362,12 @@
       pressed.textContent = 'Setting up the stage…'; // a few seconds: the gig's photos are copied onto it
       for (const s of document.querySelectorAll('.said')) s.remove();
       try {
-        const r = await fetch('/api/stages/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gig }) });
+        const link = artistLink();
+        const r = await fetch('/api/stages/judge', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(link ? { 'X-Artist-Link': link } : {}) }, body: JSON.stringify({ gig }) });
         const out = await r.json().catch(() => ({}));
         if (!r.ok || !out.url) throw new Error(out.detail || 'That didn’t work: try again.');
+        if (out.link === 'unknown') dropLink(); // the server forgot the passkey: step 0 asks again
+        if (out.claim) claimFor(out.stage, out.claim);
         keep(gig, out.stage);
         location.href = out.url;
       } catch (e) {
@@ -342,9 +378,79 @@
       }
     }
 
+    // ---- Step 0. Words: Rajesh edits them (the drawing "NutPub Passkey Plan").
+    const box = document.getElementById('step0');
+    let gigs = null; // Back to your gigs' answer, with more than one gig: listed here
+    let note = '';
+    const state = () => (artistLink() ? (artistHere().how === 'back' ? 'back' : 'made') : !passkeysWork() ? 'none' : skipped() ? 'skipped' : 'new');
+    const busy = (on) => { for (const b of box.querySelectorAll('button')) b.disabled = on; };
+    const act = (fn) => async () => {
+      note = ''; busy(true);
+      try { await fn(); } catch (e) { note = e.message || 'That didn’t work: try again.'; }
+      draw();
+    };
+    // Made later: the stages this browser already started (and still open) join the passkey.
+    const claims = () => { const open = new Set(Object.values(read())); return Object.entries(readJ(CLAIMS)).filter(([id]) => open.has(id)).map(([stage, claim]) => ({ stage, claim })); };
+    const make = act(async () => {
+      const out = await makeArtist(claims());
+      if (!out) return; // the sheet was closed
+      try { const c = readJ(CLAIMS); for (const id of out.linked) delete c[id]; localStorage.setItem(CLAIMS, JSON.stringify(c)); } catch {}
+      gigs = null;
+    });
+    const back = act(async () => {
+      const out = await backToGigs();
+      if (!out) return;
+      const opened = (s) => { if (s.gig && START[s.gig]) keep(s.gig, s.stage); };
+      if (out.stages.length === 1) { opened(out.stages[0]); location.href = out.stages[0].url; return; }
+      gigs = out.stages.length ? gigsList(out.stages, opened) : null;
+      if (!out.stages.length) note = 'No gigs open on this passkey now: practice gigs close 7 days after they’re made.';
+    });
+    const been = () => el('p', { className: 's0-been' }, 'Been before? ', el('button', { type: 'button', className: 's0-link', id: 'come-back', textContent: 'Back to your gigs', onclick: back }));
+    function draw() {
+      const now = state();
+      box.dataset.state = now;
+      const chip = (start) => el('span', { className: 's0-chip' }, start ? '0 · ' : '0 · Your artist passkey', ...(start ? [el('span', { className: 'here', textContent: 'Start here' })] : []));
+      const kids = [];
+      if (now === 'new') {
+        kids.push(el('div', { className: 's0-row' },
+          el('div', { className: 's0-say' }, chip(true),
+            el('span', { className: 's0-story', textContent: 'Every artist starts here. No email, no password: one passkey opens all your gigs.' }),
+            el('span', { className: 's0-act', textContent: 'Press Make your artist passkey, then Continue.' })),
+          el('div', { className: 's0-btns' },
+            el('button', { type: 'button', className: 'btn primary', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: make }),
+            el('button', { type: 'button', className: 's0-link', textContent: 'Not now & continue', onclick: () => { skip(); note = ''; draw(); } }))),
+          el('p', { className: 's0-fine', textContent: 'A passkey for thenutpub.com, kept by your password manager. The NutPub keeps its public key and which gigs it opens.' }));
+      } else if (now === 'made' || now === 'back') {
+        const name = artistHere().name || 'NutPub · Artist';
+        kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false),
+          el('span', {}, el('span', { className: 's0-ok', textContent: '✓ ' }), now === 'made'
+            ? `Saved as “${name}”. It opens the three gigs below, on any device.`
+            : `Signed in with “${name}”. Gigs you start here join it too.`))));
+      } else if (now === 'skipped') {
+        kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'Not now. Your gigs stay in this browser.' })),
+          el('div', { className: 's0-btns' }, el('button', { type: 'button', className: 's0-link', id: 'make-passkey', textContent: 'Make one', onclick: make }))));
+      } else {
+        kids.push(el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'This browser can’t keep a passkey: your gigs stay in this browser.' })));
+      }
+      if (gigs) kids.push(el('p', { className: 's0-chip', textContent: 'Your gigs' }), gigs);
+      if (note) kids.push(el('p', { className: 's0-said', role: 'status', textContent: note }));
+      if (now !== 'none') kids.push(been());
+      box.replaceChildren(...kids);
+      box.hidden = false;
+      // Gig 1 says Start here once step 0 is done or skipped.
+      document.querySelector('[data-gig="longy"] .start-here').hidden = now === 'new';
+    }
+    if (passkeysWork()) warm(); // a challenge ahead, so the passkey sheet opens straight from the tap
+    draw();
+    // From Cellar's Make one (#passkey) or a stage opened elsewhere (#back): the button to press, in view.
+    if (location.hash === '#passkey' || location.hash === '#back') {
+      const b = document.getElementById(location.hash === '#back' ? 'come-back' : 'make-passkey');
+      b?.scrollIntoView({ block: 'center' }); b?.focus({ preventScroll: true });
+    }
+
     // Drawn from what this browser remembers, every time the page shows: the browser's Back button brings it back from
     // its cache as it was left ("Setting up the stage…", the buttons off), so it's drawn again then (Rajesh 14 Nov).
-    function draw() {
+    function drawCards() {
       const stages = read();
       for (const card of document.querySelectorAll('[data-gig]')) {
         const gig = card.dataset.gig;
@@ -352,25 +458,26 @@
         const btns = card.querySelector('.btns');
         card.querySelector('.said')?.remove();
         btns.style.cssText = 'display: grid; gap: 8px;';
-        btns.replaceChildren(...(id && /^[a-z][a-z0-9]{5}$/.test(id)
+        btns.replaceChildren(...(id && ID.test(id)
           ? [el('p', { className: 'again', textContent: 'Your stage from earlier' }),
             el('a', { className: 'go', href: `${location.protocol}//${id}.${location.host}/`, textContent: 'Open again' }),
             el('button', { type: 'button', className: 'go out', textContent: 'Start fresh', onclick: () => start(gig, card) })]
           : [el('button', { type: 'button', className: 'go', textContent: START[gig], onclick: () => start(gig, card) })]));
       }
     }
-    draw();
+    drawCards();
     // Stages close 7 days after they're made (Rajesh 15 Nov): a closed one is forgotten, and its card offers Start again.
     (async () => {
-      const ids = Object.values(read()).filter((id) => /^[a-z][a-z0-9]{5}$/.test(id));
+      const ids = Object.values(read()).filter((id) => ID.test(id));
       if (!ids.length) return;
       const r = await fetch(`/api/stages/open?ids=${ids.join(',')}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (!r) return;
       const kept = Object.fromEntries(Object.entries(read()).filter(([, id]) => r.open.includes(id)));
-      try { localStorage.setItem(KEEP, JSON.stringify(kept)); } catch {}
-      draw();
+      const claimsKept = Object.fromEntries(Object.entries(readJ(CLAIMS)).filter(([id]) => r.open.includes(id)));
+      try { localStorage.setItem(KEEP, JSON.stringify(kept)); localStorage.setItem(CLAIMS, JSON.stringify(claimsKept)); } catch {}
+      drawCards();
     })();
-    addEventListener('pageshow', (e) => { if (e.persisted) draw(); });
+    addEventListener('pageshow', (e) => { if (e.persisted) { drawCards(); draw(); } });
   </script>
 </body>
 </html>

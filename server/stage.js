@@ -4,13 +4,14 @@
 import { DurableObject } from 'cloudflare:workers';
 import schema from '../schema.sql';
 import { configure, SITE_URL } from './config.js';
-import { sqliteStage, withStage } from './db.js';
+import { sqliteStage, withStage, kv } from './db.js';
 import { randomHex } from './http.js';
 import { serve } from './app.js';
 import { useStream, stopPractice, closeStream } from './live.js';
 import { makeHandoff } from './handoff.js';
 import { closeNights } from './closing.js';
 import { setlist } from './setlist.js';
+import { currentShow, stageNow } from './shows.js';
 
 // The stage's own id and setup key, in its kv table. Never 'stage': that's the gig's doors/open/on/closed.
 const SELF = 'stage-self';
@@ -56,6 +57,23 @@ export class Stage extends DurableObject {
   async handoff() {
     const db = this.ready();
     return db ? withStage(db, () => makeHandoff()) : null;
+  }
+  // The artist's passkey opens this stage (stages.js, session 53): its name, for Cellar's Artist passkey row.
+  async passkey(name) {
+    const db = this.ready();
+    if (db) await withStage(db, () => kv.set('artist-passkey', { name: String(name || ''), at: new Date().toISOString() }));
+  }
+  // Back to your gigs: what the list says about this stage (artist · venue · on now), and a fresh one-time code.
+  async welcome() {
+    const db = this.ready();
+    if (!db) return null;
+    return withStage(db, async () => {
+      const { show } = await currentShow();
+      const list = await kv.get('setlist', null);
+      const now = await stageNow(show);
+      const state = list?.only && list.done?.includes(list.at) ? 'done' : now === 'closed' ? 'over' : now === 'on' ? 'on' : 'soon';
+      return { gig: list?.only ? list.at : null, artist: show.artist || '', venue: String(show.venue || '').split(',')[0].trim(), state, code: await makeHandoff() };
+    });
   }
   async close(at) {
     const db = this.ready();

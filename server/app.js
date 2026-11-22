@@ -125,7 +125,9 @@ route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((awai
 route('GET', '/api/admin/setlist', admin, attempt(async (c) => {
   const list = await setlist(c.env);
   const { path } = await current(c);
-  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path, closes: closesAt(stageDb()?.made) };
+  // passkey: the artist's passkey that opens this stage (Cellar's row), null if none yet; not on Longy's own stage.
+  const passkey = stageDb()?.id ? await kv.get('artist-passkey', null) : undefined;
+  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path, closes: closesAt(stageDb()?.made), passkey };
 }));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
 route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
@@ -148,7 +150,7 @@ mountGoogleWallet(route);
 mountPasskeys(route, pass);
 mountNostr(route, pass);
 mountNutzaps(route, admin, artistKey);
-mountStageDoor(route); // Put on a gig, and Back to your stage (thenutpub.com only)
+mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {
