@@ -510,7 +510,7 @@
             el('button', { type: 'button', className: 's0-link', textContent: 'Not now & continue', onclick: () => { skip(); note = ''; draw(); } }))),
           el('p', { className: 's0-fine', textContent: 'A passkey for thenutpub.com, kept by your password manager. The NutPub keeps its public key and which gigs it opens.' }));
       } else if (now === 'made' || now === 'back' || now === 'added') {
-        const name = artistHere().name || 'NutPub · Artist';
+        const name = artistHere().name || 'The NutPub · Artist';
         kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false),
           el('span', {}, el('span', { className: 's0-ok', textContent: '✓ ' }), now === 'made'
             ? `Saved as “${name}”. It opens the three gigs below, on any device.`

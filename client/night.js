@@ -33,6 +33,8 @@ $('page').hidden = false;
 const health = await fetch('/api/health').then((r) => r.json());
 let info = await fetch('/api/show').then((r) => r.json());
 const setlistReply = await api('GET', '/api/admin/setlist').catch(() => null);
+// A show producer (session 55, Rajesh 22 Nov): the takings are the artist's alone, totals included. Show Time instead.
+if (setlistReply?.role === 'producer') { location.replace('/show'); await new Promise(() => {}); }
 const onSetlist = setlistReply?.setlist || false;
 // A practice stage closes 7 days after it's made (stages.js), test sats not moved with it: Takings says when.
 if (setlistReply?.closes) {

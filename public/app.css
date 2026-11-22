@@ -1487,3 +1487,9 @@ dialog.ask::backdrop { background: rgb(5 9 20 / .72); }
 dialog.ask p { margin: 0 0 18px; font-size: 17px; line-height: 1.45; }
 dialog.ask .ask-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
 dialog.ask .btn { min-width: 110px; }
+
+/* ---- A show producer's pages (session 55): what is the artist's alone isn't drawn (the server refuses it anyway), and
+   a chip by the tabs says who's signed in. */
+body[data-crew="producer"] [data-artist] { display: none !important; }
+body:not([data-crew="producer"]) [data-producer] { display: none !important; }
+.crew-chip { align-self: center; padding: 4px 10px; border: 1px solid rgb(239 227 200 / .4); border-radius: 4px; font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--cream); white-space: nowrap; }

@@ -182,10 +182,10 @@
   <header class="board-head">
     <a class="btn quiet head-back" href="/">← Back</a>
     <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
-    <span class="role artist">Artist wallet</span>
+    <span class="role artist" data-artist>Artist wallet</span>
     <nav class="tabs" aria-label="The artist's pages">
       <a class="tab-cellar" href="/cellar">Cellar</a>
-      <a href="/setup">1 · Plan <span class="tab-long">your </span>gig</a>
+      <a href="/setup">1 · Plan <span class="tab-long" data-artist>your </span>gig</a>
       <a href="/show">2 · Show Time</a>
       <a class="on" href="/takings" aria-current="page">3 · <span class="tab-long">Your </span>takings</a>
     </nav>
@@ -196,6 +196,8 @@
       try { key = localStorage.getItem('nutpub-admin'); } catch {}
       const r = key && await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.path) { const a = document.getElementById('head-fan'); a.href = r.fan || r.path; a.hidden = false; }
+      // A show producer (session 55): their chip by the tabs; the artist's own parts aren't drawn (app.css, data-artist).
+      if (r?.role === 'producer') { document.body.dataset.crew = 'producer'; document.querySelector('.board-head .tabs').after(Object.assign(document.createElement('span'), { className: 'crew-chip', textContent: `Producer · ${r.crew || ''}`.trim() })); }
       import('/judge-line.js').then((m) => m.judgeLine(r, 'takings')).catch(() => {}); // a judge's stage: the one next thing to do
     </script>
   </header>
@@ -219,11 +221,11 @@
         <p class="stale" id="stale" hidden></p>
       </div>
 
-      <div class="key-warn" id="key-warn" hidden>
+      <div class="key-warn" id="key-warn" data-artist hidden>
         <span>Your bitcoin is locked to another web browser. Open Your takings there, or bring it here with your 12 words.</span>
         <span class="btns"><button type="button" class="btn primary" id="back-open">Bring back with my 12 words</button><button type="button" class="btn quiet" id="key-new">Make a new key here</button></span>
       </div>
-      <p class="key-status" id="key-status" role="status"></p>
+      <p class="key-status" id="key-status" role="status" data-artist></p>
 
       <!-- Before Move: what came in, one button. -->
       <section class="box" id="btc" aria-labelledby="btc-h" hidden>
@@ -241,11 +243,11 @@
           <div class="tile" id="t-replay" hidden><span class="t">Replays</span><span class="v" id="v-replay">0</span><span class="s" id="s-replay"></span></div>
           <div class="tile" id="t-drinks"><span class="t">Unpoured drinks</span><span class="v" id="v-drinks">0</span><span class="s" id="s-drinks"></span></div>
         </div>
-        <div class="move-row" id="move-row">
+        <div class="move-row" id="move-row" data-artist>
           <button type="button" class="btn primary move" id="move">Move to my own wallet</button>
           <p class="lock" id="lock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9953a" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" id="lock-body"/><path d="M8 11V7a4 4 0 0 1 8 0v4" id="lock-arm"/></svg><span id="lock-text">Only this browser can open your bitcoin. Move it after the gig, or the next day.</span></p>
         </div>
-        <div class="finish" id="finish" hidden>
+        <div class="finish" id="finish" data-artist hidden>
           <p><b>Done with this gig?</b><span id="finish-note">Plan gig opens for the next one, same settings.</span></p>
           <button type="button" class="btn primary" id="finish-go">Finish gig</button>
         </div>
@@ -253,7 +255,7 @@
       </section>
 
       <!-- After Move: the code, Copy and Open my wallet app; the page sees it land by itself. -->
-      <section class="box now" id="moved" aria-labelledby="moved-h" hidden>
+      <section class="box now" id="moved" aria-labelledby="moved-h" data-artist hidden>
         <h2 id="moved-h">Bitcoin <span class="nb" aria-hidden="true">₿</span> · ready to move</h2>
         <p class="moved-amount" id="moved-amount"></p>
         <p class="note" id="moved-fee"></p>
@@ -271,7 +273,7 @@
       </section>
 
       <!-- The ending: everything moved, the till receipt; Finish gig folds it and stamps it PAID OUT. -->
-      <section id="wrap" aria-labelledby="wrap-h" hidden>
+      <section id="wrap" aria-labelledby="wrap-h" data-artist hidden>
         <div class="wrap-head">
           <h2 id="wrap-h">That's a wrap</h2>
           <span class="wrap-tag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d9953a" stroke-width="2.4" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span id="wrap-tag">In your wallet</span></span>
@@ -290,7 +292,7 @@
       </section>
       <!-- Under the bitcoin (Rajesh 15 Nov): card money next, then the receipts; Your recordings has the right column. -->
       <div class="under">
-    <section class="box card-box" aria-labelledby="card-h">
+    <section class="box card-box" aria-labelledby="card-h" data-artist>
       <div class="box-head" style="align-items: center;">
         <h2 id="card-h">Card · soon</h2>
         <img src="/badges/powered-by-stripe.svg" alt="Powered by Stripe">
@@ -299,17 +301,17 @@
       <p class="stripe-room">Kept free for Stripe: card sales, payouts, Connect.</p>
     </section>
 
-    <section class="past" id="past" aria-labelledby="past-h" hidden>
+    <section class="past" id="past" aria-labelledby="past-h" data-artist hidden>
       <h2 id="past-h">Past gigs</h2>
       <div id="past-list"></div>
     </section>
-    <p class="keep-line" id="keep-line">Tickets, chat and messages are deleted 7 days after the night. Your money never is.</p>
+    <p class="keep-line" id="keep-line" data-artist>Tickets, chat and messages are deleted 7 days after the night. Your money never is.</p>
       </div>
     </div>
 
     <div class="side">
     <!-- Your recordings (session 30): each broadcast Stream recorded, to download as an MP4 or delete; gone after 7 days. -->
-    <section class="box recs" id="recs" aria-labelledby="recs-h">
+    <section class="box recs" id="recs" aria-labelledby="recs-h" data-artist>
       <h2 id="recs-h">Your recordings</h2>
       <div id="recs-list"></div>
       <p class="note" id="recs-note">Stream records every time you go live. Each recording is kept 7 days, then deleted for good.</p>

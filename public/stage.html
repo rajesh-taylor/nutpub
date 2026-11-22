@@ -164,7 +164,20 @@
         .then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.key) { key = r.key; try { localStorage.setItem('nutpub-admin', key); } catch {} }
     }
+    // Session 55: a producer from thenutpub.com/crew, with their own one-time code (#c=), traded once for a key of their
+    // own (never the setup key), then Show Time. A browser already signed in here as the artist stays the artist's.
+    const crewCode = new URLSearchParams(location.hash.slice(1)).get('c');
+    if (crewCode) {
+      history.replaceState(null, '', location.pathname);
+      const was = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
+      if (was?.role !== 'artist') {
+        const c = await fetch('/api/crew/handoff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: crewCode }) })
+          .then((x) => (x.ok ? x.json() : null)).catch(() => null);
+        if (c?.role === 'producer') { try { localStorage.setItem('nutpub-admin', c.key); } catch {} location.replace('/show'); await new Promise(() => {}); }
+      }
+    }
     const r = key && (await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null));
+    if (r?.role === 'producer') { location.replace('/show'); await new Promise(() => {}); } // a producer's way in is Show Time
     document.getElementById(r ? 'mine' : 'theirs').hidden = false;
     if (!r?.setlist?.only) document.getElementById('wait').hidden = true; // a judge's stage keeps it until Plan gig opens
     // Another browser (a fan, or a judge's second phone, Rajesh 21 Nov): the way to the gig, where Find my ticket is.

@@ -14,7 +14,7 @@ const COMPRESSED = /^0[23][0-9a-f]{64}$/; // a 33-byte compressed secp256k1 publ
 
 const totals = (list) => ({ sats: list.reduce((s, p) => s + p.sats, 0), count: list.length });
 
-export function mountTakings(route, admin) {
+export function mountTakings(route, admin) { // the artist's alone: a show producer sees no takings, not even the totals (Rajesh 22 Nov, session 55)
   // The takings page sends the public key it made. The private key never leaves that browser.
   route('PUT', '/api/admin/artist-key', admin, async (c) => {
     const pubkey = String((await body(c))?.pubkey || '').toLowerCase();

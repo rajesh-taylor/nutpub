@@ -83,8 +83,8 @@ export const recordNutzap = (locked, message, ev, name) => run(
   locked, message, ev.pubkey, name || null, JSON.stringify(ev), new Date().toISOString());
 
 // Show Time's "Turn on Nutzaps": the artist's signed note, checked and kept; GET says whether it's on.
-export function mountNutzaps(route, admin, artistKey) {
-  route('GET', '/api/admin/nutzap-info', admin, async () => json({ on: await nutzapInfo(await artistKey()) }));
+export function mountNutzaps(route, admin, artistKey, crew = admin) { // crew: the artist or their producer (session 55)
+  route('GET', '/api/admin/nutzap-info', crew, async () => json({ on: await nutzapInfo(await artistKey()) }));
   route('PUT', '/api/admin/nutzap-info', admin, async (c) => {
     const ev = (await body(c))?.event;
     const key = await artistKey();

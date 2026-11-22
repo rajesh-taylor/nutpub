@@ -591,6 +591,56 @@ async function drawMods() {
   }));
   $('mod-make').disabled = list.length >= 5;
 }
+// ---- Producers (session 55): an invite each, a link that works once, for 7 days (thenutpub.com/crew#i=<stage>.<code>).
+// The server keeps its SHA-256; this browser keeps the link so it can be copied again until it's used.
+const CREW_LINKS = 'nutpub-crew-links';
+const crewLinks = () => { try { return JSON.parse(localStorage.getItem(CREW_LINKS) || '{}'); } catch { return {}; } };
+const keepCrewLink = (id, link) => { const all = crewLinks(); if (link) all[id] = link; else delete all[id]; try { localStorage.setItem(CREW_LINKS, JSON.stringify(all)); } catch {} };
+const frontDoor = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`; // thenutpub.com, from <id>.thenutpub.com
+const untilDay = (ms) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+async function drawCrew() {
+  const { crew: list, max } = await api('GET', '/api/admin/crew');
+  const links = crewLinks();
+  const producers = list.filter((m) => m.role === 'producer');
+  for (const id of Object.keys(links)) if (!producers.some((m) => String(m.id) === id && !m.joined)) keepCrewLink(id, null); // used or gone
+  const el = (tag, props) => Object.assign(document.createElement(tag), props);
+  $('crew-rows').replaceChildren(...producers.map((m) => {
+    const row = el('div', { className: 'crew-row' });
+    const link = links[m.id];
+    const what = m.joined ? el('span', { className: 'said', textContent: '✓ Signs in with a passkey' })
+      : link ? Object.assign(el('input', { readOnly: true, value: link }), { ariaLabel: `${m.name}'s invite` })
+        : el('span', { className: 'said wait', textContent: `Invited · until ${untilDay(m.until)} · made on another browser: cancel it and invite again to see the link.` });
+    const copy = el('button', { type: 'button', className: 'btn quiet', textContent: 'Copy', hidden: m.joined || !link });
+    copy.onclick = async () => { try { await navigator.clipboard.writeText(link); status(`${m.name}'s invite copied. Send it however you like: it works once, until ${untilDay(m.until)}.`, 'ok'); } catch { what.select?.(); } };
+    const share = el('button', { type: 'button', className: 'btn quiet', textContent: 'Share…', hidden: m.joined || !link || !navigator.share });
+    share.onclick = () => navigator.share({ title: 'The NutPub', text: show?.artist ? `Produce ${show.artist}’s gigs on the NutPub` : 'Produce my gigs on the NutPub', url: link }).catch(() => {});
+    const drop = el('button', { type: 'button', className: 'btn quiet', textContent: m.joined ? 'Remove' : 'Cancel' });
+    drop.onclick = async () => {
+      if (!confirm(m.joined ? `Remove ${m.name}? They're signed out at once and their passkey stops opening this gig.` : `Cancel ${m.name}'s invite? The link stops working at once.`)) return;
+      await api('DELETE', `/api/admin/crew/${m.id}`);
+      keepCrewLink(m.id, null);
+      status(m.joined ? `${m.name} is removed.` : `${m.name}'s invite is cancelled.`, 'ok');
+      drawCrew();
+    };
+    row.append(el('b', { textContent: m.name }), what, copy, share, drop);
+    return row;
+  }));
+  $('crew-make').disabled = producers.length >= (max?.producer || 2);
+  $('crew-card').hidden = false;
+}
+$('crew-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('crew-make').click(); } });
+$('crew-make').onclick = async () => {
+  const name = $('crew-name').value.trim();
+  if (!name) return $('crew-name').focus();
+  try {
+    const m = await api('POST', '/api/admin/crew', { role: 'producer', name });
+    keepCrewLink(m.id, `${frontDoor}/crew#i=${m.stage}.${m.code}`);
+    $('crew-name').value = '';
+    status(`${m.name}'s invite is ready: copy it and send it however you like. It works once, until ${untilDay(m.until)}. Whoever opens it first becomes your producer.`, 'ok');
+    drawCrew();
+  } catch (err) { status(err.message === 'too_many' ? 'Two producers at most.' : `Not made: ${err.message}`, 'bad'); }
+};
+
 // Scan at the door needs the venue's yes: turning it on asks first (a click that's cancelled leaves it off, unsaved).
 $('door-on').addEventListener('click', (e) => {
   if ($('door-on').checked && !judgeStage && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
@@ -674,6 +724,14 @@ try {
   site = (await fetch('/api/health').then((r) => r.json())).site || location.origin;
   await templates();
   const first = await api('GET', '/api/show');
+  // A show producer (session 55): the artist's own parts aren't drawn (app.css, data-artist); the server keeps them as stored.
+  const producer = first.role === 'producer';
+  if (producer) {
+    document.body.dataset.crew = 'producer';
+    const who = first.show.artist || 'the artist';
+    $('crew-intro').textContent = `The stream is here. ${who === 'the artist' ? 'The artist’s' : `${who}’s`} passkey, 12 words, photos and crew stay with ${who}.`;
+    $('next-gig').querySelector('p').textContent = `This gig is over. ${who === 'the artist' ? 'The artist moves' : `${who} moves`} the money and presses Finish gig on Takings; then Plan gig opens for the next one, same settings. Or give the next gig its date here.`;
+  }
   saved(first);
   judgeStage = !!first.judge;
   // Rajesh 19 Nov: on a judge's stage the drink is Longy's deal with the venue, already in the ticket: no Drink at bar card.
@@ -696,7 +754,8 @@ try {
   $('phone-in-row').hidden = false;
   drawMods().catch(() => {});
   // Cellar (session 46): the artist's key, made here the first time, and its 12 words (client/cellar.js).
-  if (document.body.dataset.room === 'cellar') {
+  if (document.body.dataset.room === 'cellar' && !producer) drawCrew().catch(() => {}); // stages only: Longy's own has no crew (404)
+  if (document.body.dataset.room === 'cellar' && !producer) {
     import('/js/cellar.js').then((m) => m.cellarWords(key)).catch((e) => { $('words-line').textContent = `Couldn’t open this browser’s wallet: ${e.message || e}`; });
   }
   api('GET', '/api/admin/door-link').then((d) => { doorLink(d.made); if (judgeStage && $('door-on').checked && !$('copy-door').disabled) drawDoorQr(true); }).catch(() => {});

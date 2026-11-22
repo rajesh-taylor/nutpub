@@ -217,7 +217,7 @@ async function download(uid, name) {
   return { status: 'ready', url: `${d.url.replace(uid, token)}?filename=${encodeURIComponent(name)}` };
 }
 
-export function mountLive(route, admin, pass) {
+export function mountLive(route, admin, pass, crew = admin) { // crew: the artist or their producer (session 55)
   route('GET', '/api/admin/recordings', admin, async () => {
     try { return json(await recordingList(closesAt(stageDb()?.made))); } catch (e) { return json({ error: String(e.message || e) }, 502); }
   });
@@ -284,26 +284,28 @@ export function mountLive(route, admin, pass) {
 
   // The artist's own look at the stream on Show Time, before and during the show: no seat, no charge. Renewed every
   // minute; the token lasts two.
-  route('GET', '/api/admin/live/preview', admin, async (c) => {
+  route('GET', '/api/admin/live/preview', crew, async (c) => {
     const show = await showOf(c);
     if (!show.live.playback || !(await liveNow(show.page))) return json({ off: true });
     return json({ url: await liveLink(show, seconds() + 2 * MINUTE), every: MINUTE });
   });
 
   // Make (or read back) the artist's stream: its server and key go into the show, on the host's pages only.
-  route('POST', '/api/admin/live', admin, async (c) => {
+  route('POST', '/api/admin/live', crew, async (c) => {
     const { show } = await current(c);
     if (!show.page) return json({ error: 'Give the artist a name first: the stream is made for their page.' }, 400);
     try {
       const input = await liveInput(show.page);
-      return json(await saveShow({ ...show, live: { server: input.rtmps.url, key: input.rtmps.streamKey, playback: input.playback?.hls || show.live.playback } }));
+      const out = await saveShow({ ...show, live: { server: input.rtmps.url, key: input.rtmps.streamKey, playback: input.playback?.hls || show.live.playback } });
+      // A producer's copy has no splits or Lightning address in it (session 55).
+      return json(c.producer && (await c.producer) ? { ...out, show: { ...out.show, lightning: '', splits: [] } } : out);
     } catch (e) {
       return json({ error: String(e.message || e) }, 502);
     }
   });
 
   // The Larix link and its QR. Host only: both carry the stream key.
-  route('GET', '/api/admin/live/larix', admin, async (c) => {
+  route('GET', '/api/admin/live/larix', crew, async (c) => {
     const { show } = await current(c);
     if (!show.live.server || !show.live.key) return json({ error: 'No stream yet: press Make my stream.' }, 409);
     const link = larixLink(show.live, `NutPub · ${show.artist || show.page}`);

@@ -8,8 +8,8 @@ import { cashuGate } from './gate.js';
 import { showOf, freeStatus } from './shows.js';
 import { NUTPUB_KEY } from './config.js';
 
-export function mountUpfront(route, admin) {
-  route('GET', '/api/admin/free-stream', admin, async (c) => json(await freeStatus(await showOf(c))));
+export function mountUpfront(route, admin, crew = admin) { // crew: the artist or their producer (session 55)
+  route('GET', '/api/admin/free-stream', crew, async (c) => json(await freeStatus(await showOf(c))));
 
   route('GET', '/api/admin/free-stream/pay', admin,
     async (c) => {

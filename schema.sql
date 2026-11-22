@@ -102,3 +102,10 @@ CREATE TABLE IF NOT EXISTS stage_claims (stage TEXT PRIMARY KEY, hash TEXT NOT N
 -- code a device with the passkey shows for 5 minutes (until, in ms), spent once. Added: scripts/add-device-migration.sql
 -- (no index on artist here: stages run this file on tables made before the column).
 CREATE TABLE IF NOT EXISTS artist_adds (hash TEXT PRIMARY KEY, artist TEXT NOT NULL, until INTEGER NOT NULL);
+-- Session 55 (22 Nov): the artist's crew, invited from Cellar: show producers (and moderators, session 55b). Stages only.
+-- invite: the SHA-256 of the one-time link's code while it waits (until: ms, 7 days); who: the passkey's artist on
+-- thenutpub.com once they've said yes; code/code_until: a one-time sign-in code (5 minutes) from Back to your gigs.
+-- crew_keys: the SHA-256 of the key each of their browsers holds (the newest three each), never the setup key.
+CREATE TABLE IF NOT EXISTS crew (id INTEGER PRIMARY KEY, role TEXT NOT NULL, name TEXT NOT NULL, icon TEXT,
+  invite TEXT UNIQUE, until INTEGER, who TEXT, npub TEXT, mod INTEGER, code TEXT, code_until INTEGER, created TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS crew_keys (hash TEXT PRIMARY KEY, crew INTEGER NOT NULL, created TEXT NOT NULL);

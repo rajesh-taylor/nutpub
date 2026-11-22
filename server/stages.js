@@ -73,10 +73,11 @@ export function newStageId() {
   return LETTERS[r[0] % 26] + [...r.slice(1, 5)].map((b) => ALNUM[b % 36]).join('') + String(r[5] % 10);
 }
 
-// The stage's address, as the browser sees this site (the page's own Origin), and its sign-in link.
-function stageLink(c, id, code) {
+// The stage's address, as the browser sees this site (the page's own Origin), and its sign-in link. A crew member's
+// (session 55) carries their own one-time code (#c=), which the gig trades for a key of their own, never the setup key.
+function stageLink(c, id, code, hash = 'h') {
   const from = new URL(c.req.headers.get('Origin') || c.url.origin);
-  return `${from.protocol}//${id}.${from.host}/#h=${code}`;
+  return `${from.protocol}//${id}.${from.host}/#${hash}=${code}`;
 }
 const fail = (e) => json({ error: 'passkey', detail: String(e.message || e) }, 400);
 const old = () => json({ error: 'old_challenge' }, 400);
@@ -130,7 +131,7 @@ async function takeClaims(env, key, claims) {
   return linked;
 }
 // What the password manager lists it as, from the page: "NutPub · Artist · 22 Nov". Plain text, 60 characters at most.
-const nameOf = (text) => String(text || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60) || 'NutPub · Artist';
+const nameOf = (text) => String(text || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60) || 'The NutPub · Artist';
 const newStage = async () => {
   let id = newStageId();
   while (await one('SELECT 1 AS x FROM stages WHERE id = ?', id)) id = newStageId();
@@ -166,20 +167,44 @@ async function takeAddCode(code, at = Date.now()) {
 }
 const ADD_GONE = () => json({ error: 'add', detail: 'That code has been used or has run out: make a new one on your other device.' }, 403);
 // The artist's open stages, newest first, each with a one-time sign-in link (Back to your gigs, and a device just added).
+// role (session 55): artist, or producer for someone else's gigs; a crew member the artist has removed drops off here.
 async function gigsOf(c, artist) {
-  const rows = await all('SELECT s.id FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', artist);
+  const rows = await all('SELECT s.id, ks.role FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', artist);
   const stages = [];
-  for (const { id } of rows) {
-    const w = await stageStub(c.env, id).welcome().catch(() => null);
-    if (w?.code) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, url: stageLink(c, id, w.code) });
+  for (const { id, role } of rows) {
+    const crew = role !== 'artist';
+    const w = await stageStub(c.env, id).welcome(crew ? artist : null).catch(() => undefined);
+    if (crew && w === null) { await run('DELETE FROM key_stages WHERE key = ? AND stage = ?', artist, id); continue; }
+    if (w?.code || w?.crew) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, role, url: w.crew ? stageLink(c, id, w.crew, 'c') : stageLink(c, id, w.code) });
   }
   return stages;
+}
+
+// ---- Crew (session 55): an invite made in Cellar, opened on thenutpub.com/crew#i=<stage>.<code>. Checked before the
+// sheet (so a dead invite never leaves a passkey), then spent with the invitee's passkey: one made there, or one they
+// already have (a producer for two artists keeps one passkey). The stage keeps the invite's SHA-256 (crew.js).
+const INVITE_GONE = () => json({ error: 'invite', detail: 'This invite has been used or has run out: ask the artist for a new one.' }, 403);
+const ALREADY = () => json({ error: 'already', detail: 'Your passkey already opens this gig: press Back to your gigs.' }, 409);
+const inviteOf = (b) => ({ stage: String(b?.stage || ''), code: String(b?.code || '') });
+async function inviteLive(env, { stage, code }) {
+  if (!STAGE_ID.test(stage) || !CODE.test(code)) return null;
+  if (!(await one('SELECT 1 AS x FROM stages WHERE id = ?', stage))) return null;
+  return stageStub(env, stage).invite(code).catch(() => null);
+}
+async function joinWith(c, artist, inv) {
+  if (await one('SELECT 1 AS x FROM key_stages WHERE key = ? AND stage = ?', artist, inv.stage)) return { no: ALREADY() };
+  const joined = await stageStub(c.env, inv.stage).joinCrew(inv.code, artist).catch(() => null);
+  if (joined?.already) return { no: ALREADY() };
+  if (!joined) return { no: INVITE_GONE() };
+  await run('INSERT OR IGNORE INTO key_stages (key, stage, role, created) VALUES (?, ?, ?, ?)', artist, inv.stage, joined.role, now());
+  const w = await stageStub(c.env, inv.stage).welcome(artist).catch(() => null);
+  return { role: joined.role, url: w?.crew ? stageLink(c, inv.stage, w.crew, 'c') : null };
 }
 // The passkey check that Back to your gigs and Add a passkey on another device share: the passkey, as stored, or a reply.
 async function checkArtist(c, b) {
   if (!(await challengeOk(b?.challenge))) return { no: old() };
   const k = await one(`SELECT k.id, k.name, k.pubkey AS publicKey, k.alg, k.count, COALESCE(k.artist, k.id) AS artist FROM artist_keys k WHERE k.id = ?`, String(b?.id || ''));
-  if (!k) return { no: json({ error: 'no_stage', detail: 'That passkey doesn’t open any gigs now: pick the one called “NutPub · Artist”.' }, 404) };
+  if (!k) return { no: json({ error: 'no_stage', detail: 'That passkey doesn’t open any gigs now: pick one called “The NutPub · …” or “NutPub · Artist”.' }, 404) };
   let auth;
   try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return { no: fail(e) }; }
   if (!(await spend(b.challenge))) return { no: old() };
@@ -189,6 +214,39 @@ async function checkArtist(c, b) {
 
 export function mountStageDoor(route) {
   const front = (c) => (stageDb().id ? json({ error: 'not_found' }, 404) : null); // on thenutpub.com only
+
+  // thenutpub.com/crew, on open: is the invite still good, and what for ({ role, name, artist, until })? Spends nothing.
+  route('POST', '/api/crew/invite', front, async (c) => {
+    const info = await inviteLive(c.env, inviteOf(await body(c)));
+    return info ? json(info) : INVITE_GONE();
+  });
+  // Yes to the invite: a passkey made here (how 'make', the default) or one they have (how 'use'), then straight to the
+  // gig with a one-time sign-in code. A link code for this browser too, as for an artist's passkey.
+  route('POST', '/api/crew', front, async (c) => {
+    const b = await body(c);
+    const inv = inviteOf(b);
+    if (!(await inviteLive(c.env, inv))) return INVITE_GONE();
+    let artist; let name; let id;
+    if (b?.how === 'use') {
+      const { k, no } = await checkArtist(c, b);
+      if (no) return no;
+      ({ artist, name, id } = k);
+    } else {
+      if (!(await challengeOk(b?.challenge))) return old();
+      let k;
+      try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
+      if (!(await spend(b.challenge))) return old();
+      ({ id } = k);
+      artist = k.id;
+      name = nameOf(b.name);
+      await run('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created, artist) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        k.id, name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now(), k.id);
+    }
+    const out = await joinWith(c, artist, inv);
+    if (out.no) return out.no;
+    console.log(`crew joined: ${out.role} on ${inv.stage}`);
+    return json({ url: out.url, role: out.role, name, link: await newLink(id) });
+  });
 
   // Make your artist passkey (step 0 on /judge): the passkey made in this browser, then a link code for it. Stages this
   // browser started before (their claim codes) join it. With an add code (session 54b), it joins the artist whose

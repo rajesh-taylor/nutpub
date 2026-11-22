@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <meta name="robots" content="noindex">
+  <title>Crew · The NutPub</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    /* thenutpub.com/crew (session 55): a show producer's (and, from 55b, a moderator's) way in. An invite from an artist's
+       Cellar opens here (#i=<stage>.<code>): their own passkey, then straight to the gig. Without one: Back to your gigs. */
+    body.crew { text-align: left; }
+    .crew main { max-width: 560px; padding-block: 40px 48px; display: grid; gap: 18px; }
+    .crew .mark { margin: 0; text-align: center; font: 400 40px/1 var(--poster); letter-spacing: .08em; }
+    .crew .card { display: grid; gap: 14px; padding: 20px 22px; border: 1px solid rgb(239 227 200 / .28); border-radius: 8px; background: var(--raised); }
+    .crew .chip { margin: 0; font: 600 13px/1 var(--body); letter-spacing: .02em; color: var(--smoke); }
+    .crew h1 { margin: 0; font: 400 34px/1.05 var(--poster); letter-spacing: .05em; text-wrap: balance; }
+    .crew .say { margin: 0; font-size: 17px; line-height: 1.45; }
+    .crew .btn { justify-self: start; font-size: 17px; padding: 12px 20px; }
+    .crew .btn:disabled { opacity: .5; cursor: default; }
+    .crew .fine { margin: 0; font-size: 14px; line-height: 1.5; color: var(--smoke); }
+    .crew .link { justify-self: start; padding: 0; border: 0; background: none; font: 500 15px/1.3 var(--body); color: var(--cream); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .crew .link:disabled { opacity: .5; cursor: default; }
+    .crew .said { margin: 0; font-size: 15px; color: #f0b27a; }
+    .crew .your-gigs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .crew .your-gigs li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
+    .crew .your-gigs li:last-child { border-bottom: 0; }
+    .crew .your-gigs .btn { padding: 8px 16px; font-size: 15px; }
+    .crew .home { justify-self: center; font-size: 14px; color: var(--smoke); }
+    .crew .home a { color: var(--cream); }
+  </style>
+</head>
+<body class="crew">
+  <main>
+    <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
+
+    <!-- An invite (#i=…): drawn once it's checked. -->
+    <section class="card" id="invite" hidden>
+      <p class="chip" id="inv-chip"></p>
+      <h1 id="inv-head"></h1>
+      <p class="say" id="inv-say"></p>
+      <button type="button" class="btn primary" id="inv-make"></button>
+      <p class="fine">A passkey for thenutpub.com, kept by your password manager: Apple, Google or Proton Pass. No email, no password. Proton from Chrome on a Mac: pick Use a phone or tablet.</p>
+      <button type="button" class="link" id="inv-use">Have a NutPub passkey already? Use it</button>
+      <p class="said" id="inv-said" role="status" hidden></p>
+    </section>
+
+    <!-- No invite, or a used one: the passkey brings back the gigs you work on. -->
+    <section class="card" id="back" hidden>
+      <h1 id="back-head">Back to your gigs</h1>
+      <p class="say" id="back-say">Producers and moderators: your passkey signs you in to the gigs you work on.</p>
+      <button type="button" class="btn primary" id="back-go">Back to your gigs</button>
+      <div id="back-list"></div>
+      <p class="said" id="back-said" role="status" hidden></p>
+    </section>
+
+    <p class="home"><a href="/">The NutPub</a></p>
+  </main>
+  <script type="module">
+    import { passkeysWork, warm, inviteCheck, joinCrew, backToGigs, gigsList } from '/js/front-door.js';
+    const $ = (id) => document.getElementById(id);
+    const say = (id, text) => { $(id).textContent = text || ''; $(id).hidden = !text; };
+    const args = new URLSearchParams(location.hash.slice(1));
+    const [stage, code] = String(args.get('i') || '').split('.');
+    const into = args.get('in'); // "I'm a mod" on a gig page (55b): straight back to that gig
+    const WORDS = {
+      producer: { head: (a) => `Produce ${a}’s gigs`, say: (a) => `Run the nights on the NutPub: Plan gig, Show Time, the stream and Pub TV. The money and the 12 words stay with ${a}.`, make: 'Make your producer passkey' },
+      mod: { head: (a) => `Moderate ${a}’s chat`, say: () => 'Look after the chat at the gigs: delete messages, slow it down, post links.', make: 'Make your mod passkey' },
+    };
+
+    function showBack(head, text) {
+      if (head) $('back-head').textContent = head;
+      if (text) $('back-say').textContent = text;
+      $('back').hidden = false;
+    }
+    if (!passkeysWork()) {
+      showBack('Passkeys needed', 'This browser can’t make or use passkeys: open the link in Safari, Chrome or Firefox.');
+      $('back-go').hidden = true;
+    } else {
+      warm(); // a challenge ahead, so the sheet opens straight from the tap (Safari wants it right after a tap)
+      let invite = null;
+      if (stage && code) {
+        try { invite = await inviteCheck(stage, code); } catch (e) { showBack('This invite has gone', e.message); }
+      } else showBack();
+      if (invite) {
+        const w = WORDS[invite.role] || WORDS.producer;
+        const artist = invite.artist || 'the artist';
+        $('inv-chip').textContent = `Invited by ${artist}`;
+        $('inv-head').textContent = w.head(artist);
+        $('inv-say').textContent = w.say(artist);
+        $('inv-make').textContent = w.make;
+        $('invite').hidden = false;
+        const yes = (how) => async () => {
+          say('inv-said', '');
+          $('inv-make').disabled = $('inv-use').disabled = true;
+          try {
+            const out = await joinCrew({ stage, code }, how, invite.role);
+            if (out?.url) { location.replace(out.url); return; }
+            if (out) say('inv-said', 'Done, but the gig didn’t answer: press Back to your gigs.');
+          } catch (e) { say('inv-said', e.message || 'That didn’t work: try again.'); }
+          $('inv-make').disabled = $('inv-use').disabled = false;
+          warm();
+        };
+        $('inv-make').onclick = yes('make');
+        $('inv-use').onclick = yes('use');
+      }
+      $('back-go').onclick = async () => {
+        say('back-said', '');
+        $('back-go').disabled = true;
+        try {
+          const out = await backToGigs();
+          const there = into && out?.stages.find((s) => s.stage === into);
+          if (there || out?.stages.length === 1) { location.href = (there || out.stages[0]).url; return; }
+          if (out && !out.stages.length) say('back-said', 'No gigs open on this passkey now. An artist can invite you again from their Cellar.');
+          else if (out) $('back-list').replaceChildren(gigsList(out.stages));
+        } catch (e) { say('back-said', e.message || 'That didn’t work: try again.'); }
+        $('back-go').disabled = false;
+        warm();
+      };
+    }
+  </script>
+</body>
+</html>

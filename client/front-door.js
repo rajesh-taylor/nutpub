@@ -26,9 +26,14 @@ export const skipped = () => read(SKIP) === '1';
 export const skip = (on = true) => write(SKIP, on ? '1' : null);
 
 // The name the password manager lists (Rajesh 22 Nov): one passkey per person, never one per gig, so no gig and no
-// count in it; the date is the day it was made. After 27 Nov the artist's name comes first ("Longy · …"). One added
-// from another device carries its number (Rajesh 22 Nov, session 54b): "NutPub · Artist · 22 Nov · 2".
-export const passkeyName = (at = new Date(), nth = 1) => `NutPub · Artist · ${at.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}${nth > 1 ? ` · ${nth}` : ''}`;
+// count in it; the date is the day it was made, with its year (Rajesh 22 Nov, session 55: "The NutPub · Producer ·
+// 22 Nov ’26"). After 27 Nov the artist's name comes first ("Longy · …"). One added from another device carries its
+// number (session 54b): "The NutPub · Artist · 22 Nov ’26 · 2". role: Artist, Producer or Mod.
+export const passkeyName = (at = new Date(), nth = 1, role = 'Artist') => {
+  const day = at.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+  const year = at.toLocaleDateString('en-GB', { year: '2-digit', timeZone: 'Europe/London' });
+  return `The NutPub · ${role} · ${day} ’${year}${nth > 1 ? ` · ${nth}` : ''}`;
+};
 
 // Make your artist passkey. claims: [{ stage, claim }], stages this browser started before it (they join it).
 // add (session 54b): the code another device showed: the passkey joins that artist, and their open gigs come back
@@ -116,13 +121,65 @@ export async function checkCode(code) {
   return { ok: res.ok, n: (await res.json().catch(() => ({}))).n };
 }
 
-// One line a gig: "Longy · Peggy Sue’s Music Bar · on now", then Open.
+// ---- Crew (session 55): an invite from an artist's Cellar, opened at thenutpub.com/crew#i=<stage>.<code>.
+// Still good, and what for? { role, name, artist, until }, or throws with the reason. Spends nothing.
+export async function inviteCheck(stage, code) {
+  return said(await fetch('/api/crew/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stage, code }) }));
+}
+// Yes to it: make a passkey (how 'make') or use one this person has (how 'use'), then { url, role, name }: the gig's
+// address with a one-time sign-in code. Null if the sheet was closed. role: 'producer' (session 55) or 'mod' (55b).
+export async function joinCrew({ stage, code }, how, role) {
+  const challenge = await take();
+  let cred; let sent;
+  if (how === 'use') {
+    try {
+      cred = await navigator.credentials.get({ publicKey: { challenge: unb64u(challenge), rpId: location.hostname, userVerification: 'preferred', timeout: 120000 } });
+    } catch (e) { if (cancelled(e)) return null; throw e; }
+    const r = cred.response;
+    sent = { how, challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature) };
+  } else {
+    const had = artistHere() || {};
+    const uid = b64u(crypto.getRandomValues(new Uint8Array(32)));
+    const name = passkeyName(new Date(), 1, role === 'mod' ? 'Mod' : 'Producer');
+    try {
+      cred = await navigator.credentials.create({ publicKey: {
+        rp: { name: 'The NutPub', id: location.hostname },
+        user: { id: unb64u(uid), name, displayName: name },
+        challenge: unb64u(challenge),
+        pubKeyCredParams: [-7, -8, -257].map((alg) => ({ type: 'public-key', alg })),
+        excludeCredentials: had.id ? [{ type: 'public-key', id: unb64u(had.id) }] : [],
+        authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'preferred' },
+        attestation: 'none', timeout: 120000,
+      } });
+    } catch (e) {
+      if (e?.name === 'InvalidStateError') throw new Error('This browser has a NutPub passkey already: press Use it.');
+      if (cancelled(e)) return null;
+      throw e;
+    }
+    const r = cred.response;
+    sent = { how: 'make', challenge, id: cred.id, alg: r.getPublicKeyAlgorithm(), publicKey: b64u(r.getPublicKey()),
+      clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.getAuthenticatorData()), name };
+  }
+  const res = await fetch('/api/crew', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stage, code, ...sent }) });
+  const err = res.ok ? null : (await res.clone().json().catch(() => ({}))).error;
+  // A new passkey the NutPub didn't keep (the invite went under the sheet): the password manager is told.
+  if (how !== 'use' && (err === 'invite' || err === 'already')) forgetPasskey(cred.id);
+  if (how === 'use' && err === 'no_stage') forgetPasskey(cred.id);
+  const out = await said(res);
+  const had = artistHere();
+  keep({ how: how === 'use' ? 'back' : 'crew', ...(had?.id === cred.id ? had : {}), id: cred.id, link: out.link, name: out.name });
+  skip(false);
+  return out;
+}
+
+// One line a gig: "Longy · Peggy Sue’s Music Bar · on now", then Open. Someone else's gig says what you are there
+// (session 55): "Longy · Peggy Sue’s · on now · producer".
 const STATE = { on: 'on now', over: 'over', done: 'done', soon: 'not started' };
 export function gigsList(stages, onOpen = () => {}) {
   const ul = Object.assign(document.createElement('ul'), { className: 'your-gigs' });
   for (const s of stages) {
     const li = document.createElement('li');
-    const words = [s.artist, s.venue, STATE[s.state]].filter(Boolean).join(' · ');
+    const words = [s.artist, s.venue, STATE[s.state], s.role && s.role !== 'artist' ? s.role : ''].filter(Boolean).join(' · ');
     const a = Object.assign(document.createElement('a'), { className: 'btn primary', href: s.url, textContent: 'Open' });
     a.addEventListener('click', () => onOpen(s));
     li.append(Object.assign(document.createElement('span'), { textContent: words || 'A gig' }), a);

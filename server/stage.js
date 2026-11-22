@@ -12,6 +12,7 @@ import { makeHandoff } from './handoff.js';
 import { closeNights } from './closing.js';
 import { setlist } from './setlist.js';
 import { currentShow, stageNow } from './shows.js';
+import { inviteInfo, joinCrew, crewCode } from './crew.js';
 
 // The stage's own id and setup key, in its kv table. Never 'stage': that's the gig's doors/open/on/closed.
 const SELF = 'stage-self';
@@ -63,17 +64,30 @@ export class Stage extends DurableObject {
     const db = this.ready();
     if (db) await withStage(db, () => kv.set('artist-passkey', { name: String(name || ''), at: new Date().toISOString() }));
   }
-  // Back to your gigs: what the list says about this stage (artist · venue · on now), and a fresh one-time code.
-  async welcome() {
+  // Back to your gigs: what the list says about this stage (artist · venue · on now), and a fresh one-time code. With
+  // `who` (session 55), for a crew member: their own sign-in code (crew.js), never the setup key's; null if removed.
+  async welcome(who = null) {
     const db = this.ready();
     if (!db) return null;
     return withStage(db, async () => {
+      const crew = who ? await crewCode(who) : null;
+      if (who && !crew) return null;
       const { show } = await currentShow();
       const list = await kv.get('setlist', null);
       const now = await stageNow(show);
       const state = list?.only && list.done?.includes(list.at) ? 'done' : now === 'closed' ? 'over' : now === 'on' ? 'on' : 'soon';
-      return { gig: list?.only ? list.at : null, artist: show.artist || '', venue: String(show.venue || '').split(',')[0].trim(), state, code: await makeHandoff() };
+      return { gig: list?.only ? list.at : null, artist: show.artist || '', venue: String(show.venue || '').split(',')[0].trim(), state,
+        ...(crew ? { crew: crew.code, role: crew.role } : { code: await makeHandoff() }) };
     });
+  }
+  // An invite from Cellar (session 55), from thenutpub.com/crew: what it's for, then, with the invitee's passkey, spent.
+  async invite(code) {
+    const db = this.ready();
+    return db ? withStage(db, () => inviteInfo(code)) : null;
+  }
+  async joinCrew(code, who) {
+    const db = this.ready();
+    return db ? withStage(db, () => joinCrew(code, who)) : null;
   }
   async close(at) {
     const db = this.ready();

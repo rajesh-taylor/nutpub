@@ -47,12 +47,12 @@ export async function seedMods(list = []) {
   await oneMain();
 }
 
-export function mountMods(route, admin) {
+export function mountMods(route, admin, crew = admin) { // crew: the artist or their producer (session 55)
   const mod = async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'This mod link has been cancelled.' }, 403));
 
   // ---- The artist, on Plan gig.
-  route('GET', '/api/admin/mods', admin, async () => json({ mods: await all("SELECT id, name, icon, main, created, key_hash LIKE 'seed:%' AS seed FROM mods ORDER BY id"), icons: ICONS, pin: await pinned() }));
-  route('PUT', '/api/admin/pin', admin, async (c) => json({ pin: await setPin((await body(c))?.text) }));
+  route('GET', '/api/admin/mods', crew, async () => json({ mods: await all("SELECT id, name, icon, main, created, key_hash LIKE 'seed:%' AS seed FROM mods ORDER BY id"), icons: ICONS, pin: await pinned() }));
+  route('PUT', '/api/admin/pin', crew, async (c) => json({ pin: await setPin((await body(c))?.text) }));
   route('POST', '/api/admin/mods', admin, async (c) => {
     const b = await body(c);
     const name = String(b?.name ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 24);

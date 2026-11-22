@@ -23,6 +23,7 @@ import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountStageDoor, closesAt } from './stages.js';
+import { mountCrew, producerOf } from './crew.js';
 import { setlist, finished, again, cue, cueTimes, lastOrdersNow } from './setlist.js';
 import { keepMoved } from './closing.js';
 import { current, publicShow, replayPrice, freeStatus, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
@@ -56,6 +57,7 @@ route('GET', '/demo', redirect('/setup')); // the four-tab demo page, before the
 // The night's pages: 1 Show setup, 2 Doors, 3 The show, 4 End night (/takings).
 route('GET', '/setup', page('setup.html'));
 route('GET', '/cellar', page('setup.html')); // Cellar (session 46): the same page, showing what an artist sets once
+route('GET', '/crew', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('crew.html')(c))); // producers' and mods' way in (thenutpub.com only, session 55)
 route('GET', '/judge', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('judge.html')(c))); // Judge for yourself: the three gig cards (thenutpub.com only)
 route('GET', '/menu', page('menu.html')); // Pub Menu: off every menu since session 45 (the Kitchen says it); kept for old links
 route('GET', '/kitchen', page('kitchen.html')); // The Kitchen (session 43): what the NutPub does, a tick chip each, from the Pub Menu
@@ -81,6 +83,14 @@ route('GET', '/api/health', async (c) => {
 // ---- The host's pages (/setup.html#k=<admin key>): the account holder's settings for the show.
 const isAdmin = (c) => !!adminKey() && c.req.headers.get('X-Admin') === adminKey();
 const admin = (c) => (isAdmin(c) ? null : json({ error: 'forbidden' }, 403));
+// Session 55: the artist (the setup key) or their show producer (a key of their own, crew.js). Only the routes on the
+// producer's list take `crew`; every other admin route stays the artist's alone.
+const roleOf = async (c) => (isAdmin(c) ? 'artist' : (await producerOf(c)) ? 'producer' : null);
+const crew = async (c) => ((await roleOf(c)) ? null : json({ error: 'forbidden' }, 403));
+const keep = async (c) => ((await roleOf(c)) === 'producer' ? { keep: true } : {}); // a producer's save keeps the artist's own fields
+const unsplit = (show) => ({ ...show, lightning: '', splits: [] }); // empty, so the page's own code runs as for the artist
+// What a save sends back: a producer's copy has no splits or Lightning address in it.
+const forRole = async (c, out) => ((await roleOf(c)) === 'producer' ? { ...out, show: unsplit(out.show) } : out);
 const attempt = (fn) => async (c) => {
   try { return json(await fn(c)); } catch (e) { return json({ error: String(e.message || e) }, 400); }
 };
@@ -89,12 +99,15 @@ const attempt = (fn) => async (c) => {
 // to one). The artist's Lightning address and the stream's server and key go to the host's pages only.
 route('GET', '/api/show', async (c) => {
   const now = await current(c);
+  const role = await roleOf(c);
+  // A producer's pages: the stream's details, never the splits or the artist's Lightning address.
+  const shown = role === 'artist' ? now.show : role === 'producer' ? unsplit(now.show) : publicShow(now.show);
   const [photo, photos, artist, bar] = await Promise.all([photoUrl(), photoUrls(), artistKey(), barKey()]);
   // judge: a stage made by a gig card on /judge, where nothing asks for a passkey (Rajesh 14 Nov).
   const list = stageDb().id ? await kv.get('setlist', null) : null;
   const judge = !!list?.only;
   // gig: which judge's gig ('pickle' is gig 3, the night at the venue: its one optional passkey step, session 39).
-  return json({ ...now, show: isAdmin(c) ? now.show : publicShow(now.show), photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(isAdmin(c) ? { free: await freeStatus(now.show) } : {}) });
+  return json({ ...now, show: shown, photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(role ? { free: await freeStatus(now.show), role } : {}) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -103,9 +116,9 @@ route('GET', '/api/show/qr.svg', async (c) => {
   return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
 });
 // With the replay's price and the free stream's (session 35): Plan gig's cards follow each save.
-route('PUT', '/api/admin/show', admin, attempt(async (c) => {
-  const now = await saveShow(await body(c));
-  return { ...now, replay: await replayPrice(now.show), free: await freeStatus(now.show) };
+route('PUT', '/api/admin/show', crew, attempt(async (c) => {
+  const now = await saveShow(await body(c), await keep(c));
+  return forRole(c, { ...now, replay: await replayPrice(now.show), free: await freeStatus(now.show) });
 }));
 // Finish gig. On a stage it also ticks the gig off the setlist and opens the next one (setlist.js).
 // The page sends what its Move took out (the amount and the mint's fee), for the gig's receipt; it's only kept on the
@@ -118,41 +131,49 @@ route('POST', '/api/admin/setlist/again', admin, attempt(async (c) => {
   return { setlist: list, path: (await current(c)).path };
 }));
 // Gig 3 on a judge's stage: End night calls last orders first (setlist.js, session 40).
-route('POST', '/api/admin/last-orders', admin, attempt(async () => ({ lastOrders: await lastOrdersNow() })));
+route('POST', '/api/admin/last-orders', crew, attempt(async () => ({ lastOrders: await lastOrdersNow() })));
 // An example gig's chat line, due now in a viewer's set (setlist.js): posted once, whoever asks first.
 route('POST', '/api/cue', attempt(async (c) => ({ posted: await cue(Number((await body(c))?.n)) })));
 // `fan`: the fan's page as the judge should first see it: Longy's and Frankie's online (Rajesh 15 Nov: the venue's page
 // put the venue ticket first, so judges bought it to get in); gig 3's at the venue.
-route('GET', '/api/admin/setlist', admin, attempt(async (c) => {
+route('GET', '/api/admin/setlist', crew, attempt(async (c) => {
   const list = await setlist(c.env);
   const { path } = await current(c);
   // passkey: the artist's passkey that opens this stage (Cellar's row), null if none yet; not on Longy's own stage.
   const passkey = stageDb()?.id ? await kv.get('artist-passkey', null) : undefined;
-  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path, closes: closesAt(stageDb()?.made), passkey };
+  // role: which of the artist's pages this browser sees (session 55); crew: the producer's name, for their chip.
+  const role = await roleOf(c);
+  return { setlist: list, path, fan: ['longy', 'frankie'].includes(list?.at) ? `${path}?as=home` : path, closes: closesAt(stageDb()?.made), passkey: role === 'artist' ? passkey : undefined, role, ...(role === 'producer' ? { crew: (await producerOf(c)).name } : {}) };
 }));
 mountHandoff(route, admin); // Sign in on your phone: a one-time QR on Plan gig
-route('GET', '/api/admin/templates', admin, attempt(() => listTemplates()));
-route('POST', '/api/admin/templates', admin, attempt(async (c) => { const b = await body(c); return saveTemplate(b?.name, b?.show); }));
-route('POST', '/api/admin/templates/load', admin, attempt(async (c) => loadTemplate((await body(c))?.name)));
-route('POST', '/api/admin/templates/delete', admin, attempt(async (c) => deleteTemplate((await body(c))?.name)));
+route('GET', '/api/admin/templates', crew, attempt(() => listTemplates()));
+// A producer's template keeps the artist's splits in it, so the artist loading it later loses nothing.
+route('POST', '/api/admin/templates', crew, attempt(async (c) => {
+  const b = await body(c);
+  const own = (await keep(c)).keep ? (({ artist, page, lightning, splits }) => ({ artist, page, lightning, splits }))((await current(c)).show) : {};
+  return saveTemplate(b?.name, { ...b?.show, ...own });
+}));
+route('POST', '/api/admin/templates/load', crew, attempt(async (c) => forRole(c, await loadTemplate((await body(c))?.name, await keep(c)))));
+route('POST', '/api/admin/templates/delete', crew, attempt(async (c) => deleteTemplate((await body(c))?.name)));
 
 let PHOTOS;
 const pass = mountSet(route);
-mountDoor(route, admin, pass);
+mountDoor(route, admin, pass, crew);
 mountTakings(route, admin);
 mountPhoto(route, admin, () => PHOTOS);
-mountLive(route, admin, pass);
+mountLive(route, admin, pass, crew);
 mountReplay(route, pass);
-mountUpfront(route, admin);
+mountUpfront(route, admin, crew);
 mountRate(route);
-mountMods(route, admin);
+mountMods(route, admin, crew);
 mountWallet(route);
 mountGoogleWallet(route);
 mountPasskeys(route, pass);
 mountNostr(route, pass);
-mountNutzaps(route, admin, artistKey);
+mountNutzaps(route, admin, artistKey, crew);
 mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
 mountRecover(route, admin); // the 12 words win the gig back (stages only, session 54)
+mountCrew(route, admin); // show producers by invite (stages only, session 55)
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

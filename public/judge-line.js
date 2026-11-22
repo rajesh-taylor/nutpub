@@ -156,7 +156,7 @@ export async function judgeLine(r, page) {
       document.getElementById('head-fan')?.style.setProperty('display', 'none');
       // Gig 1 (Rajesh 21 Nov, session 47): a look at the 12 words, no typing, then on to Plan gig.
       if (tv) return say(cellarSeen() ? 2 : 1, cellarSeen() ? 'Now click 1 · Plan gig, up above.' : 'Press Write down your 12 words, have a look, then Not now.', '', '', { story: TOLD.cellar });
-      return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream and moderators.` });
+      return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream, producers and moderators.` });
     }
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
     if (!s) return;

@@ -83,9 +83,9 @@
     <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
     <nav class="tabs" aria-label="The artist's pages">
       <a class="tab-cellar" href="/cellar">Cellar</a>
-      <a href="/setup">1 · Plan <span class="tab-long">your </span>gig</a>
+      <a href="/setup">1 · Plan <span class="tab-long" data-artist>your </span>gig</a>
       <a class="on" href="/show" aria-current="page">2 · Show Time</a>
-      <a href="/takings">3 · <span class="tab-long">Your </span>takings</a>
+      <a href="/takings" data-artist>3 · <span class="tab-long">Your </span>takings</a>
     </nav>
     <!-- The fan's page, one click from every artist page (Rajesh 15 Nov), in a tab of its own. -->
     <a class="btn quiet head-fan" id="head-fan" href="/" target="_blank" rel="noopener" hidden>Fan’s page ↗</a>
@@ -94,6 +94,8 @@
       try { key = localStorage.getItem('nutpub-admin'); } catch {}
       const r = key && await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.path) { const a = document.getElementById('head-fan'); a.href = r.fan || r.path; a.hidden = false; }
+      // A show producer (session 55): their chip by the tabs; the artist's own parts aren't drawn (app.css, data-artist).
+      if (r?.role === 'producer') { document.body.dataset.crew = 'producer'; document.querySelector('.board-head .tabs').after(Object.assign(document.createElement('span'), { className: 'crew-chip', textContent: `Producer · ${r.crew || ''}`.trim() })); }
       import('/judge-line.js').then((m) => m.judgeLine(r, 'show')).catch(() => {}); // a judge's stage: the one next thing to do
     </script>
   </header>
@@ -120,7 +122,7 @@
           <p class="signal-text" id="signal-text"></p>
         </div>
       </div>
-      <p class="after" id="after" hidden>The night is over. Stop your stream, then go to <a href="/takings">Your takings</a> for your money.<br>
+      <p class="after" id="after" hidden><span data-artist>The night is over. Stop your stream, then go to <a href="/takings">Your takings</a> for your money.</span><span data-producer>The gig is over. Stop the stream when you’re ready.</span><br>
         Tonight’s recording, tickets, passkeys, chat and tips are deleted after 7 days. Sats you haven’t collected stay until you take them.</p>
       <!-- No phone on the door or the bar (Rajesh 14 Nov): Let in by hand, Pour by hand. -->
       <div class="host bar-strip" id="door-strip" hidden>

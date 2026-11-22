@@ -281,6 +281,14 @@
     .board .mod-row input { margin: 0; font-size: 14px; }
     .board .mod-row .btn, .board .mod-add .btn { font-size: 15px; padding: 8px 12px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
+    /* Producers (session 55): a name, then the invite's link (Copy, Share…) or ✓ once they've said yes. */
+    .board .crew-row { display: grid; grid-template-columns: minmax(80px, auto) minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; }
+    .board .crew-row b { font: 600 16px/1.2 var(--body); color: var(--cream); }
+    .board .crew-row input { margin: 0; font-size: 14px; }
+    .board .crew-row .btn { font-size: 15px; padding: 8px 12px; }
+    .board .crew-row .said { font-size: 15px; color: var(--cream); }
+    .board .crew-row .said.wait { color: var(--smoke); }
+    @media (max-width: 700px) { .board .crew-row { grid-template-columns: 1fr auto auto; } .board .crew-row b, .board .crew-row input, .board .crew-row .said { grid-column: 1 / -1; } }
     .board .mod-add .field { flex: 1; margin: 0; }
     .board .mod-add select, .board .mod-add .btn { height: 44px; } /* the same height as the Name box beside it */
     @media (max-width: 600px) { .board .mod-row { grid-template-columns: auto 1fr auto auto; } .board .mod-row input[readonly] { grid-column: 1 / -1; grid-row: 2; } .board .mod-row .mod-main { grid-column: 1 / -1; grid-row: 3; } }
@@ -329,9 +337,9 @@
     <p class="mark">THE NUTPU<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></p>
     <nav class="tabs" aria-label="The artist's pages">
       <a class="tab-cellar" href="/cellar">Cellar</a>
-      <a href="/setup">1 · Plan <span class="tab-long">your </span>gig</a>
+      <a href="/setup">1 · Plan <span class="tab-long" data-artist>your </span>gig</a>
       <a href="/show">2 · Show Time</a>
-      <a href="/takings">3 · <span class="tab-long">Your </span>takings</a>
+      <a href="/takings" data-artist>3 · <span class="tab-long">Your </span>takings</a>
     </nav>
     <script>{ const a = document.querySelector(`.board-head .tabs a[href="/${document.body.dataset.room === 'cellar' ? 'cellar' : 'setup'}"]`); a.classList.add('on'); a.setAttribute('aria-current', 'page'); }</script>
     <!-- The fan's page, one click from every artist page (Rajesh 15 Nov), in a tab of its own. -->
@@ -341,6 +349,8 @@
       try { key = localStorage.getItem('nutpub-admin'); } catch {}
       const r = key && await fetch('/api/admin/setlist', { headers: { 'X-Admin': key } }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (r?.path) { const a = document.getElementById('head-fan'); a.href = r.fan || r.path; a.hidden = false; }
+      // A show producer (session 55): their chip by the tabs; the artist's own parts aren't drawn (app.css, data-artist).
+      if (r?.role === 'producer') { document.body.dataset.crew = 'producer'; document.querySelector('.board-head .tabs').after(Object.assign(document.createElement('span'), { className: 'crew-chip', textContent: `Producer · ${r.crew || ''}`.trim() })); }
       // Cellar's Artist passkey row (session 53): not on Longy's own stage (no passkey field there).
       if (r && 'passkey' in r) {
         const line = document.getElementById('passkey-line');
@@ -399,7 +409,9 @@
   </header>
   <div class="page">
     <main>
-      <p class="cellar-intro" data-room="cellar">What stays the same from gig to gig: you, your passkey, your 12 words, photos, stream and moderators.</p>
+      <p class="cellar-intro" data-room="cellar" data-artist>What stays the same from gig to gig: you, your passkey, your 12 words, photos, stream, producers and moderators.</p>
+      <!-- A show producer's Cellar (session 55): the stream only. -->
+      <p class="cellar-intro" data-room="cellar" data-producer id="crew-intro">The stream is here. The passkey, 12 words, photos and crew stay with the artist.</p>
       <div class="top" data-room="night">
         <div style="flex: 1 1 320px;">
           <!-- With two or more saved shows, a drop-down that loads one. -->
@@ -407,8 +419,8 @@
           <!-- What's left before going live, as Show Time's stream box: a grey dot, then solid green when ready. -->
           <div class="ready-box" id="ready-box" role="status"><p class="ready-head"><span class="dot" aria-hidden="true"></span><span id="ready-head">Checking…</span></p><p class="ready-text" id="ready-text"></p></div>
           <!-- Sign in on your phone (13 Nov): a QR with a one-time code, so the phone runs Show Time without the setup link. -->
-          <p class="phone-in" id="phone-in-row" hidden><button type="button" class="btn quiet" id="phone-in-btn">Sign in on your phone</button></p>
-          <div class="phone-in-panel" id="phone-in" hidden>
+          <p class="phone-in" id="phone-in-row" data-artist hidden><button type="button" class="btn quiet" id="phone-in-btn">Sign in on your phone</button></p>
+          <div class="phone-in-panel" id="phone-in" data-artist hidden>
             <img id="phone-in-qr" alt="QR code: sign in on your phone" width="180" height="180">
             <div>
               <p><b>Scan with your phone's camera.</b> It signs this gig in on your phone, so you can run Show Time from it.</p>
@@ -433,7 +445,7 @@
       <form id="form" hidden autocomplete="off">
         <div class="grid">
           <!-- Cellar: who the artist is, set once. -->
-          <section class="panel wide" data-room="cellar">
+          <section class="panel wide" data-room="cellar" data-artist>
             <h2>You</h2>
             <div class="two">
               <label class="field" id="field-artist">Artist<input data-path="artist" maxlength="60"></label>
@@ -442,7 +454,7 @@
           </section>
 
           <!-- Cellar: the artist's passkey (session 53): which one opens this stage, or none yet. Filled from /api/admin/setlist. -->
-          <section class="panel wide" id="passkey-card" data-room="cellar" hidden>
+          <section class="panel wide" id="passkey-card" data-room="cellar" data-artist hidden>
             <h2>Artist passkey</h2>
             <p class="words-line" id="passkey-said" role="status" hidden></p>
             <div class="words-line" id="passkey-line" role="status"></div>
@@ -450,7 +462,7 @@
           </section>
 
           <!-- Cellar: the 12 words (session 42's sheets, as on Your takings). The key is made here the first time. -->
-          <section class="panel wide" id="words-card" data-room="cellar">
+          <section class="panel wide" id="words-card" data-room="cellar" data-artist>
             <h2>Your 12 words</h2>
             <p class="replay-sub">Every payment locks to a key in this browser. Your 12 words bring it back on another. Keep them somewhere safe: the NutPub can’t see them or open your takings, so nobody can get them back for you.</p>
             <div class="words-line" id="words-line" role="status"><span>Opening this browser’s wallet…</span></div>
@@ -610,7 +622,7 @@
           </section>
           <!-- One card (Rajesh 15 Nov, late): the stretch goals the tips fill, a hairline, then who shares the takings. -->
           <section class="panel wide" id="goals-card" data-room="night">
-            <h2>Stretch goals and splits</h2>
+            <h2>Stretch goals<span data-artist> and splits</span></h2>
             <div class="two-up">
               <div>
                 <h3 class="sub">Stretch goals</h3>
@@ -627,7 +639,7 @@
                 <div class="goal-track"><i id="goal-bar"></i></div>
                 <p style="margin: 0; font-size: 14px; color: var(--smoke);" id="goal-note">Tips so far: …</p>
               </div>
-              <div>
+              <div data-artist>
                 <h3 class="sub">Splits</h3>
                 <p class="sub-note">Who shares the takings.</p>
                 <div class="split-rows" id="split-rows"></div>
@@ -677,7 +689,7 @@
             <p style="margin: -4px 0 14px; font-size: 13px; color: var(--smoke);">Keep the key and the code private: anyone with them can stream as you.</p>
           </section>
 
-          <section class="panel wide" data-room="cellar">
+          <section class="panel wide" data-room="cellar" data-artist>
             <h2>Images</h2>
             <p style="margin: -4px 0 14px; font-size: 15px; color: var(--smoke);">Two tall photos for phones, two wide ones for screens. Drop one in, or click. A JPEG, PNG or WebP, up to 5 MB.</p>
             <div class="slots">
@@ -688,7 +700,16 @@
             </div>
           </section>
 
-          <section class="panel wide" data-room="cellar">
+          <!-- Cellar: show producers (session 55): people the artist trusts to run the night, invited with a link that works
+               once, for 7 days; their own passkey on thenutpub.com after that. Shown on an artist's stage, not Longy's own. -->
+          <section class="panel wide" id="crew-card" data-room="cellar" data-artist hidden>
+            <h2>Producers</h2>
+            <p class="switch-note">Someone you trust to run your nights: Plan gig, Show Time, your stream and Pub TV. Never your 12 words, your takings, splits or invites. Up to two.</p>
+            <div class="mod-rows" id="crew-rows"></div>
+            <div class="mod-add"><label class="field">Name<input id="crew-name" maxlength="24" placeholder="e.g. Jo" autocomplete="off"></label><button type="button" class="btn quiet" id="crew-make">Invite a producer</button></div>
+          </section>
+
+          <section class="panel wide" data-room="cellar" data-artist>
             <h2>Moderators</h2>
             <p class="switch-note">A private link each, for people you trust, in the room or at home. They see your stream before it opens, chat, post links (guests can't), delete messages and use slow mode. The main mod can change the pin. Never your pages, your takings or your stream key. Up to three.</p>
             <div class="mod-rows" id="mod-rows"></div>
@@ -698,7 +719,7 @@
           <!-- Pre-roll (Rajesh 21 Nov): videos and photos lined up before the show, played until Start show. Drawn, not
                wired yet: it stays off. The limits fit a real producer's set (four 2-3 minute clips at 1080p, eight
                photos), so the space can't become a file store; each gig's set goes 7 days after it, like the recording. -->
-          <section class="panel wide preroll" id="preroll-card" data-room="cellar">
+          <section class="panel wide preroll" id="preroll-card" data-room="cellar" data-artist>
             <h2>Pre-roll <span class="chip-soon">Not wired yet</span></h2>
             <p class="replay-sub">Videos and photos fans watch while they wait for the show. Up to 4 videos, 10 minutes in all, and 8 photos: 1 GB at most. Deleted 7 days after the gig.</p>
             <label class="choice room-switch"><b>Play my pre-roll before the show</b><input type="checkbox" role="switch" disabled aria-label="Play my pre-roll before the show"></label>

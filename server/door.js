@@ -94,14 +94,14 @@ const WORD_MS = 10 * 60 * 1000;
 const WORDS = ['PUNTER', 'PINT', 'STOUT', 'LAGER', 'CIDER', 'ENCORE', 'CHORUS', 'RIFF', 'JUKEBOX', 'SNUG', 'ROUND', 'TAPROOM', 'BARREL', 'ANTHEM', 'GIG', 'AMP'];
 const pick = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-export function mountDoor(route, admin, pass) {
+export function mountDoor(route, admin, pass, crew = admin) { // crew: the artist or their producer (session 55)
   const doorman = async (c) => {
     const k = c.req.headers.get('X-Door') || '';
     if (/^[0-9a-f]{32}$/.test(k) && (await sha(k)) === (await kv.get('doorKey'))) return null;
-    return admin(c) && json({ error: 'not_door', detail: k ? 'This door scanner has been replaced: ask the artist for the new one.' : 'This phone isn’t the door scanner yet: ask the artist for its QR or link.' }, 403);
+    return (await crew(c)) && json({ error: 'not_door', detail: k ? 'This door scanner has been replaced: ask the artist for the new one.' : 'This phone isn’t the door scanner yet: ask the artist for its QR or link.' }, 403);
   };
-  route('GET', '/api/admin/door-link', admin, async () => json({ made: !!(await kv.get('doorKey')) }));
-  route('POST', '/api/admin/door-link', admin, async () => {
+  route('GET', '/api/admin/door-link', crew, async () => json({ made: !!(await kv.get('doorKey')) }));
+  route('POST', '/api/admin/door-link', crew, async () => {
     const key = randomHex(16);
     await kv.set('doorKey', await sha(key));
     return json({ key }); // the key leaves the server this once
@@ -132,9 +132,9 @@ export function mountDoor(route, admin, pass) {
   });
   // Let in by hand (Rajesh 14 Nov: "I don't have my phone on me"): Show Time lists the door words waiting, and lets one
   // in; the same once-only mark as a scan. It can't list tickets by buyer any more: the NutPub doesn't know whose is whose.
-  route('GET', '/api/admin/door', admin, async () => json({ ...(await counts()),
+  route('GET', '/api/admin/door', crew, async () => json({ ...(await counts()),
     words: await all('SELECT w.word, w.at, i.at AS in_at FROM door_words w LEFT JOIN door_in i ON i.y = w.y WHERE w.at >= ? OR i.y IS NOT NULL ORDER BY w.at', Date.now() - WORD_MS) }));
-  route('POST', '/api/admin/door/let-in', admin, async (c) => {
+  route('POST', '/api/admin/door/let-in', crew, async (c) => {
     const word = String((await body(c))?.word || '').toUpperCase();
     const w = await one('SELECT y, at FROM door_words WHERE word = ?', word);
     if (!w) return json({ result: 'unknown' });
@@ -157,7 +157,7 @@ export function mountDoor(route, admin, pass) {
     const reachedAt = reached ?? (live ? await kv.set('reachedAt', now()) : null);
     return json({ stage, live, replay, opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), times, reachedAt });
   });
-  route('POST', '/api/admin/stage', admin, async (c) => {
+  route('POST', '/api/admin/stage', crew, async (c) => {
     const stage = (await body(c))?.stage;
     if (!STAGES.includes(stage)) return json({ error: 'bad_stage' }, 400);
     // A free stream opens only once the artist has paid for it up front (upfront.js, session 35).
@@ -180,7 +180,7 @@ export function mountDoor(route, admin, pass) {
   });
 
   // Tickets sold since the last New night: New night cancels them, and the artist should see that before pressing it.
-  route('GET', '/api/admin/sold', admin, async (c) => json({ ...Object.fromEntries(
+  route('GET', '/api/admin/sold', crew, async (c) => json({ ...Object.fromEntries(
     (await all('SELECT kind, COUNT(*) AS n FROM tickets GROUP BY kind')).map((r) => [r.kind, r.n])), over: await gigOver(await current(c)) }));
 
   // ---- The bar's key: made in the bar's own browser; only the public half comes here.
@@ -286,12 +286,12 @@ export function mountDoor(route, admin, pass) {
   });
 
   // ---- The bar: one drink by its number (the QR on the phone carries only that), with its locked token.
-  route('GET', /^\/api\/admin\/drinks\/(?<id>\d+)$/, admin, async (c) => {
+  route('GET', /^\/api\/admin\/drinks\/(?<id>\d+)$/, crew, async (c) => {
     const d = await one(`${DRINK} WHERE d.id = ?`, Number(c.params.id));
     if (!d) return json({ error: 'no_drink' }, 404);
     return json({ ...d, poured: !!d.collected_at });
   });
-  route('GET', '/api/admin/drinks', admin, async () =>
+  route('GET', '/api/admin/drinks', crew, async () =>
     json((await all(`${DRINK} ORDER BY d.id`)).map((d) => ({ ...d, poured: !!d.collected_at }))));
 
   // ---- The live chat. Free messages: one per 10 s per phone, 30 s in slow mode; mods any time, and only they may post
@@ -343,7 +343,7 @@ export function mountDoor(route, admin, pass) {
     ]);
     return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top, lightning: show.lightning || '' } : {}) }); // the TV page: the artist's own Lightning address under its QR (session 45)
   });
-  route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, admin, async (c) => {
+  route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, crew, async (c) => {
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));
     return json({ ok: true });
   });

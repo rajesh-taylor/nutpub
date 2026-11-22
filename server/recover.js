@@ -7,6 +7,7 @@
 import { kv, stageDb } from './db.js';
 import { json, body, randomHex } from './http.js';
 import { challengeOk, spend } from './passkey.js';
+import { clearCrew } from './crew.js';
 
 export const RECOVER_INFO = 'refueler.nutpub.recover.v1';
 const HEX32 = /^[0-9a-f]{64}$/;
@@ -69,6 +70,8 @@ export function mountRecover(route, admin) {
     await kv.set('artistKey', fields.artistKey);
     await kv.set('recoverKey', fields.recoverKey);
     await kv.set('artist-passkey', null);
+    // Producers and moderators signed out too (session 55): a thief could have invited themselves. Invite them again.
+    await clearCrew();
     // Off every passkey (thenutpub.com's list); a passkey left opening nothing is forgotten by the daily clean-up, as
     // any other. A claim code comes back: the next passkey made or used on thenutpub.com adds the gig again.
     const claim = randomHex(16);
@@ -78,7 +81,7 @@ export function mountRecover(route, admin) {
         DB.prepare('DELETE FROM key_stages WHERE stage = ?').bind(stage),
         DB.prepare('INSERT OR REPLACE INTO stage_claims (stage, hash) VALUES (?, ?)').bind(stage, await sha(claim))]);
     }
-    console.log(`stage ${stage} opened with its 12 words: other browsers signed out, passkeys off, new words`);
+    console.log(`stage ${stage} opened with its 12 words: other browsers and crew signed out, passkeys off, new words`);
     return json({ key, claim });
   });
 }

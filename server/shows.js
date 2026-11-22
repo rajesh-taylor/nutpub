@@ -211,9 +211,12 @@ export async function nextGig() {
   return currentShow();
 }
 
-export async function saveShow(input) {
-  const { show, problems } = clean(input);
+// keep (session 55): a show producer's save. The artist's own fields stay as stored, whatever the page sent: the name
+// and page address (Cellar's You), the Lightning address and the splits (who gets paid).
+export async function saveShow(input, { keep = false } = {}) {
   const was = await currentShow();
+  if (keep) input = { ...input, artist: was.show.artist, page: was.show.page, lightning: was.show.lightning, splits: was.show.splits };
+  const { show, problems } = clean(input);
   // A new date on a gig that hasn't happened is a postponement: its tickets stand.
   if (show.date && show.date !== was.show.date && !problems.includes('date.past') && (await gigOver(was))) await clearGig();
   // A new date ends the last gig's replay: the page is the next gig's now (Finish gig alone keeps it, session 34).
@@ -241,10 +244,10 @@ export async function saveTemplate(name, input) {
 }
 
 // Start the current show from a template (the template itself stays as it was).
-export async function loadTemplate(name) {
+export async function loadTemplate(name, opts = {}) {
   const row = await one('SELECT settings FROM templates WHERE name = ?', String(name ?? ''));
   if (!row) throw new Error('No template by that name.');
-  return saveShow(JSON.parse(row.settings));
+  return saveShow(JSON.parse(row.settings), opts);
 }
 
 export async function deleteTemplate(name) {

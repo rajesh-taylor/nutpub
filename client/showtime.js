@@ -27,7 +27,8 @@ $('screen-copy').addEventListener('click', async () => {
   setTimeout(() => { b.innerHTML = icon; b.style.color = ''; }, 2000);
 });
 // Nutzaps are always on: this page sends the artist's "Nutzap me here" note when the NutPub has none (artist-nostr.js).
-import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, info.artistKey)).catch(() => {});
+// Not in a show producer's browser (session 55): the note is signed with the artist's own key, which never comes there.
+api('GET', '/api/admin/setlist').then((r) => { if (r.role !== 'producer') import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, info.artistKey)); }).catch(() => {});
 
 const streamed = info.show.stream.mode !== 'off';
 // An example gig (a stage's setlist): its set plays from a recording, so no Larix. The stream button becomes a status

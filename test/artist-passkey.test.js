@@ -141,7 +141,8 @@ test('Back to your gigs lists only this passkey’s open stages, newest first, a
   assert.equal(r.status, 200);
   assert.deepEqual(r.stages.map((s) => s.stage), [b.stage, a.stage]);
   assert.match(r.stages[0].url, new RegExp(`^https://${b.stage}\\.thenutpub\\.com/#h=c{32}$`));
-  assert.deepEqual(Object.keys(r.stages[0]).sort(), ['artist', 'gig', 'stage', 'state', 'url', 'venue']);
+  assert.deepEqual(Object.keys(r.stages[0]).sort(), ['artist', 'gig', 'role', 'stage', 'state', 'url', 'venue']);
+  assert.equal(r.stages[0].role, 'artist'); // session 55: or producer, on someone else's gig
   assert.match(r.link, /^[0-9a-f]{32}$/);
   assert.notEqual(r.link, link);
   // Both browsers' links still add stages.
