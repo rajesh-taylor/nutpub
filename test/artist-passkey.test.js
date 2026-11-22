@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { useDb } from '../server/db.js';
 import { b64u } from '../server/passkey.js';
-import { mountStageDoor, closeOldStages, makeRoom } from '../server/stages.js';
+import { mountStageDoor, closeOldStages, makeRoom, newAddCode, tidyAddCode } from '../server/stages.js';
 
 const utf8 = new TextEncoder();
 const sha256 = async (b) => new Uint8Array(await crypto.subtle.digest('SHA-256', b));
@@ -210,4 +210,124 @@ test('a gig opened with its 12 words joins the passkey used next, by its claim c
   // Spent once used.
   const again = await call('POST', '/api/stages/back', { ...(await p.get(await makeChallenge())), claims: [{ stage: g.stage, claim: g.claim }] });
   assert.deepEqual(again.linked, []);
+});
+
+// ---- Session 54b: a passkey added from another device.
+const addCode = async (p) => call('POST', '/api/artist/add', await p.get(await makeChallenge()));
+const addWith = async (p, code, claims = []) => call('POST', '/api/artist', { ...(await p.create(await makeChallenge())), name: 'NutPub · Artist · 23 Nov', claims, add: code });
+
+test('the add code: 8 characters of Crockford base32, typed any way', () => {
+  assert.equal(newAddCode(Uint8Array.of(0, 0, 0, 0, 0)), '00000000');
+  assert.equal(newAddCode(Uint8Array.of(255, 255, 255, 255, 255)), 'ZZZZZZZZ');
+  assert.equal(newAddCode(Uint8Array.of(0x01, 0x23, 0x45, 0x67, 0x89)), '04HMASW9');
+  assert.equal(newAddCode(Uint8Array.of(0x9c, 0x3d, 0x6f, 0x23, 0x45)), 'KGYPY8T5');
+  for (let i = 0; i < 50; i++) assert.match(newAddCode(), /^[0-9A-HJKMNP-TV-Z]{8}$/);
+  assert.equal(tidyAddCode(' k7qx-3mpa '), 'K7QX3MPA');
+  assert.equal(tidyAddCode('o1lI-ab cd'), '0111ABCD');
+});
+
+test('another device: the passkey once, a code, and both passkeys open the same gigs', async () => {
+  const p = await phone();
+  const { link } = await make(p);
+  const a = await judge('longy', link);
+  const got = await addCode(p);
+  assert.equal(got.status, 200);
+  assert.match(got.code, /^[0-9A-HJKMNP-TV-Z]{8}$/);
+  assert.equal(got.ms, 5 * 60 * 1000);
+  // The server keeps the code's SHA-256, never the code.
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_adds WHERE hash = ?').get(got.code).n, 0);
+  // The new device checks the code (as typed, with a dash) before its sheet, then makes its own passkey with it.
+  const shown = `${got.code.slice(0, 4)}-${got.code.slice(4).toLowerCase()}`;
+  const checked = await call('POST', '/api/artist/add/check', { code: shown });
+  assert.equal(checked.ok, true);
+  assert.equal(checked.n, 2); // its name ends · 2
+  const q = await phone();
+  const added = await addWith(q, shown);
+  assert.equal(added.status, 200);
+  assert.equal(added.name, 'NutPub · Artist · 23 Nov');
+  assert.match(added.link, /^[0-9a-f]{32}$/);
+  assert.deepEqual(added.stages.map((s) => s.stage), [a.stage]); // its gigs, ready to open
+  assert.equal(db.prepare('SELECT artist FROM artist_keys WHERE id = ?').get(q.id).artist, p.id);
+  // A gig started on either joins both.
+  const b = await judge('frankie', added.link);
+  assert.equal(b.linked, true);
+  const c = await judge('pickle', link);
+  assert.deepEqual(opens(p.id), [a.stage, b.stage, c.stage].sort());
+  assert.deepEqual((await back(p)).stages.map((s) => s.stage).sort(), [a.stage, b.stage, c.stage].sort());
+  assert.deepEqual((await back(q)).stages.map((s) => s.stage).sort(), [a.stage, b.stage, c.stage].sort());
+  // Once: the same code makes nothing more, and leaves no passkey on record.
+  const r = await phone();
+  assert.equal((await call('POST', '/api/artist/add/check', { code: got.code })).status, 403);
+  const again = await addWith(r, got.code);
+  assert.equal(again.status, 403);
+  assert.equal(again.error, 'add');
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_keys WHERE id = ?').get(r.id).n, 0);
+});
+
+test('a link code alone never makes an add code; an unknown passkey neither', async () => {
+  const p = await phone();
+  const { link } = await make(p);
+  const noKey = await call('POST', '/api/artist/add', { link }, { 'X-Artist-Link': link });
+  assert.equal(noKey.status, 400);
+  const stranger = await addCode(await phone());
+  assert.equal(stranger.status, 404);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_adds').get().n, 0);
+});
+
+test('an add code runs out after 5 minutes, and a new one replaces the last', async () => {
+  const p = await phone();
+  await make(p);
+  const first = await addCode(p);
+  const second = await addCode(p);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_adds').get().n, 1);
+  assert.equal((await addWith(await phone(), first.code)).status, 403);
+  db.prepare('UPDATE artist_adds SET until = ?').run(Date.now() - 1);
+  assert.equal((await call('POST', '/api/artist/add/check', { code: second.code })).status, 403);
+  const late = await phone();
+  assert.equal((await addWith(late, second.code)).status, 403);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_keys WHERE id = ?').get(late.id).n, 0);
+  // The daily clean-up takes it off.
+  await closeOldStages(env, Date.now(), (e, id) => stub(id));
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_adds').get().n, 0);
+});
+
+test('a passkey added later keeps the gigs its browser started before (claim codes), on the same artist', async () => {
+  const p = await phone();
+  await make(p);
+  const here = await judge('longy'); // started on the new device before the passkey
+  const q = await phone();
+  const added = await addWith(q, (await addCode(p)).code, [{ stage: here.stage, claim: here.claim }]);
+  assert.deepEqual(added.linked, [here.stage]);
+  assert.deepEqual(opens(p.id), [here.stage]);
+});
+
+test('an artist with gigs keeps every passkey; one with none forgets each 7 days after its own last use', async () => {
+  const p = await phone();
+  const { link } = await make(p);
+  const q = await phone();
+  await addWith(q, (await addCode(p)).code);
+  await judge('longy', link);
+  db.prepare("UPDATE artist_keys SET created = '2026-11-01T00:00:00Z', used = NULL").run();
+  await closeOldStages(env, Date.parse('2026-11-12T00:00:00Z'), (e, id) => stub(id));
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_keys').get().n, 2);
+  db.exec('DELETE FROM key_stages');
+  await closeOldStages(env, Date.parse('2026-11-12T00:00:00Z'), (e, id) => stub(id));
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artist_keys').get().n, 0);
+});
+
+test('the migration gives every passkey its own artist, and they keep their gigs', async () => {
+  const old = new DatabaseSync(':memory:');
+  old.exec('CREATE TABLE stage_keys (id TEXT PRIMARY KEY, stage TEXT NOT NULL, pubkey TEXT NOT NULL, alg INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT)');
+  old.exec(readFileSync('scripts/artist-keys-migration.sql', 'utf8')); // the tables as session 53 made them
+  old.exec("INSERT INTO artist_keys (id, name, pubkey, alg, created) VALUES ('k1', 'NutPub · Artist · 22 Nov', 'pk', -7, '2026-11-22')");
+  old.exec("INSERT INTO key_stages (key, stage, role, created) VALUES ('k1', 'x7k2p9', 'artist', '2026-11-22')");
+  old.exec(readFileSync('scripts/add-device-migration.sql', 'utf8'));
+  assert.deepEqual({ ...old.prepare('SELECT id, artist FROM artist_keys').get() }, { id: 'k1', artist: 'k1' });
+  assert.equal(old.prepare('SELECT COUNT(*) AS n FROM artist_adds').get().n, 0);
+  // And schema.sql still runs on a stage made before the column (every statement IF NOT EXISTS, no index on it).
+  const stage = new DatabaseSync(':memory:');
+  stage.exec('CREATE TABLE stage_keys (id TEXT PRIMARY KEY, stage TEXT NOT NULL, pubkey TEXT NOT NULL, alg INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT)');
+  stage.exec(readFileSync('scripts/artist-keys-migration.sql', 'utf8'));
+  stage.exec(readFileSync('schema.sql', 'utf8'));
+  assert.equal(stage.prepare("SELECT COUNT(*) AS n FROM pragma_table_info('artist_keys') WHERE name = 'artist'").get().n, 0);
 });

@@ -352,7 +352,8 @@
         try { claim = JSON.parse(localStorage.getItem('nutpub-claim') || 'null'); } catch {}
         if (r.passkey?.name) { try { localStorage.removeItem('nutpub-claim'); } catch {} claim = null; }
         const make = `${front}/judge${claim?.claim ? `#claim=${claim.stage}.${claim.claim}.${r.setlist?.at || ''}` : '#passkey'}`;
-        if (r.passkey?.name) line.replaceChildren(span(tick(), `${r.passkey.name}. Opens this gig on any device.`));
+        // Session 54b: a device that can't sync gets a passkey of its own from one that has it (on thenutpub.com/judge).
+        if (r.passkey?.name) line.replaceChildren(span(tick(), `${r.passkey.name}. Opens this gig on any device.`), Object.assign(document.createElement('a'), { className: 'btn quiet', href: `${front}/judge#another`, textContent: 'Add a passkey on another device' }));
         else line.replaceChildren(span('None yet: this gig opens in this browser only.'), Object.assign(document.createElement('a'), { className: 'btn quiet', href: make, textContent: claim ? 'Add it to your passkey on thenutpub.com' : 'Make one on thenutpub.com' }));
         let recovered = false;
         try { recovered = sessionStorage.getItem('nutpub-recovered') === '1'; } catch {}

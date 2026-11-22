@@ -26,16 +26,18 @@ export const skipped = () => read(SKIP) === '1';
 export const skip = (on = true) => write(SKIP, on ? '1' : null);
 
 // The name the password manager lists (Rajesh 22 Nov): one passkey per person, never one per gig, so no gig and no
-// count in it; the date is the day it was made. After 27 Nov the artist's name comes first ("Longy · …").
-export const passkeyName = (at = new Date()) => `NutPub · Artist · ${at.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+// count in it; the date is the day it was made. After 27 Nov the artist's name comes first ("Longy · …"). One added
+// from another device carries its number (Rajesh 22 Nov, session 54b): "NutPub · Artist · 22 Nov · 2".
+export const passkeyName = (at = new Date(), nth = 1) => `NutPub · Artist · ${at.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}${nth > 1 ? ` · ${nth}` : ''}`;
 
 // Make your artist passkey. claims: [{ stage, claim }], stages this browser started before it (they join it).
-// Null if the sheet was closed.
-export async function makeArtist(claims = []) {
+// add (session 54b): the code another device showed: the passkey joins that artist, and their open gigs come back
+// ({ stages }); nth: which of the artist's passkeys it is (from checkCode). Null if the sheet was closed.
+export async function makeArtist(claims = [], add = null, nth = 1) {
   const challenge = await take();
   const had = artistHere() || {};
   const uid = /^[A-Za-z0-9_-]{43}$/.test(had.uid || '') ? had.uid : b64u(crypto.getRandomValues(new Uint8Array(32)));
-  const name = passkeyName();
+  const name = passkeyName(new Date(), add ? Math.max(2, nth) : 1);
   let cred;
   try {
     cred = await navigator.credentials.create({ publicKey: {
@@ -53,10 +55,13 @@ export async function makeArtist(claims = []) {
     throw e;
   }
   const r = cred.response;
-  const out = await said(await fetch('/api/artist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+  const res = await fetch('/api/artist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
     challenge, id: cred.id, alg: r.getPublicKeyAlgorithm(), publicKey: b64u(r.getPublicKey()),
-    clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.getAuthenticatorData()), name, claims }) }));
-  keep({ id: cred.id, uid, link: out.link, name: out.name, how: 'made' });
+    clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.getAuthenticatorData()), name, claims, ...(add ? { add } : {}) }) });
+  // The code ran out under the sheet: the NutPub keeps no passkey, so the password manager is told (session 50's lesson).
+  if (res.status === 403 && (await res.clone().json().catch(() => ({}))).error === 'add') forgetPasskey(cred.id);
+  const out = await said(res);
+  keep({ id: cred.id, uid, link: out.link, name: out.name, how: add ? 'added' : 'made' });
   skip(false);
   return out;
 }
@@ -83,6 +88,32 @@ export async function backToGigs(claims = []) {
   keep({ how: 'back', ...(had?.id === cred.id ? had : {}), id: cred.id, link: out.link, name: out.name }); // how: made here, or signed in
   skip(false);
   return out;
+}
+
+// ---- Another device (session 54b). The add code: 8 characters (Crockford base32), shown K7QX-3MPA, typed any way.
+export const tidyCode = (text) => String(text || '').toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+export const codeOk = (code) => /^[0-9A-HJKMNP-TV-Z]{8}$/.test(code);
+export const showCode = (code) => `${code.slice(0, 4)}-${code.slice(4)}`;
+// Add a passkey on another device: any of this site's artist passkeys, once (a link code can't), then { code, ms }.
+// Null if the sheet was closed.
+export async function addCode() {
+  const challenge = await take();
+  let cred;
+  try {
+    cred = await navigator.credentials.get({ publicKey: { challenge: unb64u(challenge), rpId: location.hostname, userVerification: 'preferred', timeout: 120000 } });
+  } catch (e) { if (cancelled(e)) return null; throw e; }
+  const r = cred.response;
+  const res = await fetch('/api/artist/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+    challenge, id: cred.id, clientDataJSON: b64u(r.clientDataJSON), authenticatorData: b64u(r.authenticatorData), signature: b64u(r.signature) }) });
+  if (res.status === 404 && (await res.clone().json().catch(() => ({}))).error === 'no_stage') forgetPasskey(cred.id);
+  return said(res);
+}
+// The new device, as the code is typed: still good? (Checked before the sheet, so the sheet opens straight from the tap.)
+// { ok, n }: n, which of the artist's passkeys this one will be. ok null: no answer (no connection).
+export async function checkCode(code) {
+  const res = await fetch('/api/artist/add/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) }).catch(() => null);
+  if (!res) return { ok: null };
+  return { ok: res.ok, n: (await res.json().catch(() => ({}))).n };
 }
 
 // One line a gig: "Longy · Peggy Sue’s Music Bar · on now", then Open.

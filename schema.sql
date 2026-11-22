@@ -89,10 +89,16 @@ CREATE INDEX IF NOT EXISTS stage_keys_stage ON stage_keys (stage);
 -- the stage that browser starts, never open one. stage_claims: a stage started before its passkey was made, and the
 -- SHA-256 of the code its browser keeps, so the passkey made later adds it. Added: scripts/artist-keys-migration.sql
 CREATE TABLE IF NOT EXISTS artist_keys (id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pubkey TEXT NOT NULL,
-  alg INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT);
+  alg INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, synced INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, used TEXT,
+  artist TEXT);
 CREATE TABLE IF NOT EXISTS key_stages (key TEXT NOT NULL, stage TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'artist',
   created TEXT NOT NULL, PRIMARY KEY (key, stage));
 CREATE INDEX IF NOT EXISTS key_stages_stage ON key_stages (stage);
 CREATE TABLE IF NOT EXISTS artist_links (hash TEXT PRIMARY KEY, key TEXT NOT NULL, created TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS artist_links_key ON artist_links (key);
 CREATE TABLE IF NOT EXISTS stage_claims (stage TEXT PRIMARY KEY, hash TEXT NOT NULL);
+-- Session 54b (22 Nov): a passkey added from another device. artist_keys.artist: the artist it belongs to (the first
+-- passkey's id), which key_stages.key holds, so an artist's passkeys open the same gigs. artist_adds: the SHA-256 of a
+-- code a device with the passkey shows for 5 minutes (until, in ms), spent once. Added: scripts/add-device-migration.sql
+-- (no index on artist here: stages run this file on tables made before the column).
+CREATE TABLE IF NOT EXISTS artist_adds (hash TEXT PRIMARY KEY, artist TEXT NOT NULL, until INTEGER NOT NULL);

@@ -166,6 +166,14 @@
     .step0 .your-gigs li:last-child { border-bottom: 0; }
     .step0 .your-gigs .btn { padding: 8px 16px; }
     .step0[data-state="made"] .s0-been, .step0[data-state="back"] .s0-been { display: none; }
+    /* Session 54b: another device. The old one shows a QR and a code; the new one types it. */
+    .step0 .s0-input { width: 11ch; padding: 10px 12px; border: 1px solid rgb(239 227 200 / .4); border-radius: 6px; background: var(--deep); color: var(--cream); font: 600 22px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .step0 .s0-input::placeholder { color: rgb(239 227 200 / .3); }
+    .step0 .s0-add { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .step0 .s0-qr { flex: none; width: 168px; height: 168px; }
+    .step0 .s0-qr svg { display: block; width: 100%; height: 100%; border-radius: 6px; }
+    .step0 .s0-add-say { flex: 1 1 260px; display: grid; gap: 8px; justify-items: start; }
+    .step0 .s0-code { margin: 0; font: 600 34px/1 var(--mono); letter-spacing: .08em; color: var(--cream); }
     @media (max-width: 700px) { .step0 { padding: 14px 14px 12px; } .step0 .s0-btns { margin-left: 0; } .step0 .s0-say { font-size: 16px; } }
   </style>
 </head>
@@ -343,7 +351,7 @@
     // then offers Open again (the stage's page still has its key in this browser) and Start fresh (a new stage).
     // Step 0 (session 53): the artist's passkey first. Made, each new stage joins it (this browser's link code); skipped,
     // the stages stay in this browser, each with a claim code, so a passkey made later adds them.
-    import { passkeysWork, warm, artistHere, artistLink, dropLink, skipped, skip, makeArtist, backToGigs, gigsList } from '/js/front-door.js';
+    import { passkeysWork, warm, artistHere, artistLink, dropLink, skipped, skip, makeArtist, backToGigs, gigsList, addCode, checkCode, tidyCode, codeOk, showCode } from '/js/front-door.js';
     const KEEP = 'nutpub-judge-stages';
     const CLAIMS = 'nutpub-judge-claims'; // { stageId: claim }: stages started before the passkey
     const readJ = (k) => { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch { return {}; } };
@@ -382,7 +390,10 @@
     const box = document.getElementById('step0');
     let gigs = null; // Back to your gigs' answer, with more than one gig: listed here
     let note = '';
-    const state = () => (artistLink() ? (artistHere().how === 'back' ? 'back' : 'made') : !passkeysWork() ? 'none' : skipped() ? 'skipped' : 'new');
+    // Session 54b, another device: adding (this one types a code), shown (this one shows a code), another (Cellar's link).
+    let adding = false; let typed = ''; let typedOk = null; let typedN = 2; let shown = null; let another = false;
+    const state = () => (!passkeysWork() ? 'none' : adding ? 'add'
+      : artistLink() ? ({ back: 'back', added: 'added' }[artistHere().how] || 'made') : skipped() ? 'skipped' : 'new');
     const busy = (on) => { for (const b of box.querySelectorAll('button')) b.disabled = on; };
     const act = (fn) => async () => {
       note = ''; busy(true);
@@ -412,23 +423,84 @@
       claimed = false;
       gigs = null;
     });
+    const opened = (s) => { if (s.gig && START[s.gig]) keep(s.gig, s.stage); };
     const back = act(async () => {
       const out = await backToGigs(claims());
       if (!out) return;
       spent(out.linked);
       claimed = false;
-      const opened = (s) => { if (s.gig && START[s.gig]) keep(s.gig, s.stage); };
       if (out.stages.length === 1) { opened(out.stages[0]); location.href = out.stages[0].url; return; }
       gigs = out.stages.length ? gigsList(out.stages, opened) : null;
       if (!out.stages.length) note = 'No gigs open on this passkey now: practice gigs close 7 days after they’re made.';
     });
-    const been = () => el('p', { className: 's0-been' }, 'Been before? ', el('button', { type: 'button', className: 's0-link', id: 'come-back', textContent: 'Back to your gigs', onclick: back }));
+    // ---- Another device (session 54b). Words: the drawing "NutPub Lost Device Plan", case (a); Rajesh edits them.
+    const GONE = 'That code has been used or has run out: make a new one on your other device.';
+    // The old device: the passkey once, then a QR and the code, for 5 minutes.
+    const showAdd = act(async () => {
+      const out = await addCode();
+      warm();
+      if (!out) return;
+      const { qrSvg } = await import('/js/qr.js');
+      clearTimeout(shown?.timer);
+      shown = { code: out.code, svg: await qrSvg(`${location.origin}/judge#add=${out.code}`),
+        timer: setTimeout(() => { shown = null; note = 'That code has run out: make a new one if you need it.'; draw(); }, out.ms) };
+      another = false;
+    });
+    const addPanel = () => (shown
+      ? el('div', { className: 's0-add', id: 'add-shown' },
+        el('span', { className: 's0-qr', innerHTML: shown.svg, role: 'img', ariaLabel: 'QR code to add a passkey on your other device' }),
+        el('div', { className: 's0-add-say' },
+          el('span', { className: 's0-chip', textContent: 'Add a passkey on another device' }),
+          el('p', { className: 's0-code', textContent: showCode(shown.code) }),
+          el('span', { className: 's0-story', textContent: `On the other device, scan this or open ${location.host}/judge and type the code. Works once, for 5 minutes.` }),
+          el('button', { type: 'button', className: 's0-link', textContent: 'Done', onclick: () => { clearTimeout(shown.timer); shown = null; draw(); } })))
+      : el('div', { className: 's0-btns' }, el('button', { type: 'button', className: 's0-link', id: 'add-device', textContent: 'Add a passkey on another device', onclick: showAdd })));
+    // The new device: the code (typed, or from the QR's link), then Make your artist passkey.
+    const startAdding = (code = '') => { adding = true; typed = codeOk(code) ? showCode(code) : code; typedOk = null; typedN = 2; note = ''; gigs = null; if (codeOk(code)) check(code); };
+    let checking = 0;
+    async function check(code) {
+      const n = ++checking;
+      const { ok, n: nth } = await checkCode(code);
+      if (n !== checking || tidyCode(typed) !== code) return; // typed on since
+      typedOk = ok;
+      if (nth > 1) typedN = nth;
+      const said = document.getElementById('add-said');
+      if (said) { said.textContent = ok === false ? GONE : ''; said.hidden = ok !== false; }
+    }
+    const makeAdded = act(async () => {
+      const code = tidyCode(typed);
+      if (!codeOk(code)) { note = 'The code is 8 letters and numbers: type it as your other device shows it.'; return; }
+      if (typedOk === false) { note = GONE; return; }
+      const out = await makeArtist(claims(), code, typedN);
+      warm();
+      if (!out) return; // the sheet was closed
+      spent(out.linked);
+      adding = false; typed = ''; claimed = false;
+      gigs = out.stages?.length ? gigsList(out.stages, opened) : null;
+      if (!out.stages?.length) note = 'No gigs open on this passkey now: practice gigs close 7 days after they’re made.';
+    });
+    const been = (now) => el('p', { className: 's0-been' }, 'Been before? ', el('button', { type: 'button', className: 's0-link', id: 'come-back', textContent: 'Back to your gigs', onclick: back }),
+      ...(now === 'new' || now === 'skipped' ? [' · Have a code from your other device? ',
+        el('button', { type: 'button', className: 's0-link', id: 'add-here', textContent: 'Add this device', onclick: () => { startAdding(); draw(); document.getElementById('add-code')?.focus(); } })] : []));
     function draw() {
       const now = state();
       box.dataset.state = now;
       const chip = (start) => el('span', { className: 's0-chip' }, start ? '0 · ' : '0 · Your artist passkey', ...(start ? [el('span', { className: 'here', textContent: 'Start here' })] : []));
       const kids = [];
-      if (now === 'new') {
+      if (now === 'add') {
+        const input = el('input', { type: 'text', id: 'add-code', className: 's0-input', value: typed, placeholder: 'K7QX-3MPA', maxLength: 12,
+          autocomplete: 'one-time-code', autocapitalize: 'characters', spellcheck: false, ariaLabel: 'The code from your other device' });
+        input.addEventListener('input', () => { typed = input.value; typedOk = null; const code = tidyCode(typed); const said = document.getElementById('add-said'); if (said) said.hidden = true; if (codeOk(code)) check(code); });
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') makeAdded(); });
+        kids.push(el('div', { className: 's0-row' },
+          el('div', { className: 's0-say' }, el('span', { className: 's0-chip', textContent: '0 · Add this device' }),
+            el('span', { className: 's0-act', textContent: 'Type the code your other device shows, then press Make your artist passkey.' }), input),
+          el('div', { className: 's0-btns' },
+            el('button', { type: 'button', className: 'btn primary', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: makeAdded }),
+            el('button', { type: 'button', className: 's0-link', textContent: 'Cancel', onclick: () => { adding = false; typed = ''; note = ''; draw(); } }))),
+          el('p', { className: 's0-said', id: 'add-said', role: 'status', textContent: GONE, hidden: typedOk !== false }),
+          el('p', { className: 's0-fine', textContent: 'A passkey for thenutpub.com, kept by this device’s password manager. It opens the same gigs as your other passkey.' }));
+      } else if (now === 'new') {
         kids.push(el('div', { className: 's0-row' },
           el('div', { className: 's0-say' }, chip(true),
             el('span', { className: 's0-story', textContent: 'Every artist starts here. No email, no password: one passkey opens all your gigs.' }),
@@ -437,12 +509,13 @@
             el('button', { type: 'button', className: 'btn primary', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: make }),
             el('button', { type: 'button', className: 's0-link', textContent: 'Not now & continue', onclick: () => { skip(); note = ''; draw(); } }))),
           el('p', { className: 's0-fine', textContent: 'A passkey for thenutpub.com, kept by your password manager. The NutPub keeps its public key and which gigs it opens.' }));
-      } else if (now === 'made' || now === 'back') {
+      } else if (now === 'made' || now === 'back' || now === 'added') {
         const name = artistHere().name || 'NutPub · Artist';
         kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false),
           el('span', {}, el('span', { className: 's0-ok', textContent: '✓ ' }), now === 'made'
             ? `Saved as “${name}”. It opens the three gigs below, on any device.`
-            : `Signed in with “${name}”. Gigs you start here join it too.`))));
+            : now === 'added' ? `Saved as “${name}”. It opens the same gigs as your other passkey.`
+              : `Signed in with “${name}”. Gigs you start here join it too.`)), shown ? '' : addPanel()), ...(shown ? [addPanel()] : []));
       } else if (now === 'skipped') {
         kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'Not now. Your gigs stay in this browser.' })),
           el('div', { className: 's0-btns' }, el('button', { type: 'button', className: 's0-link', id: 'make-passkey', textContent: 'Make one', onclick: make }))));
@@ -452,14 +525,24 @@
       if (gigs) kids.push(el('p', { className: 's0-chip', textContent: 'Your gigs' }), gigs);
       if (claimed && (now === 'made' || now === 'back')) kids.push(el('p', { className: 's0-said', role: 'status', textContent: 'Press Back to your gigs to add your gig to your passkey again.' }));
       if (note) kids.push(el('p', { className: 's0-said', role: 'status', textContent: note }));
-      if (now !== 'none') kids.push(been());
+      // From Cellar's link on a browser that doesn't know its passkey yet: the same button, under the rest.
+      if ((now === 'new' || now === 'skipped') && (another || shown)) kids.push(addPanel());
+      if (now !== 'none' && now !== 'add') kids.push(been(now));
       box.replaceChildren(...kids);
       box.hidden = false;
       // Gig 1 says Start here once step 0 is done or skipped.
-      document.querySelector('[data-gig="longy"] .start-here').hidden = now === 'new';
+      document.querySelector('[data-gig="longy"] .start-here').hidden = now === 'new' || now === 'add';
     }
     if (passkeysWork()) warm(); // a challenge ahead, so the passkey sheet opens straight from the tap
+    // Session 54b: the QR's link (#add=CODE) fills the code in; Cellar's Add a passkey on another device (#another).
+    let toFocus = null;
+    {
+      const m = /^#add=([0-9A-Za-z-]{8,9})$/.exec(location.hash);
+      if (m && passkeysWork()) { startAdding(tidyCode(m[1])); toFocus = 'make-passkey'; history.replaceState(null, '', location.pathname); }
+      if (location.hash === '#another' && passkeysWork()) { another = true; toFocus = 'add-device'; history.replaceState(null, '', location.pathname); }
+    }
     draw();
+    if (toFocus) { const b = document.getElementById(toFocus); b?.scrollIntoView({ block: 'center' }); b?.focus({ preventScroll: true }); }
     // From Cellar's Make one (#passkey) or a stage opened elsewhere (#back): the button to press, in view.
     if (location.hash === '#passkey' || location.hash === '#back' || claimed) {
       const b = document.getElementById(location.hash === '#back' || (claimed && document.getElementById('step0').dataset.state !== 'new' && document.getElementById('step0').dataset.state !== 'skipped') ? 'come-back' : 'make-passkey');
@@ -496,6 +579,7 @@
       drawCards();
     })();
     addEventListener('pageshow', (e) => { if (e.persisted) { drawCards(); draw(); } });
+    addEventListener('hashchange', () => { if (/^#(add=|another$|claim=|passkey$|back$)/.test(location.hash)) location.reload(); }); // a link opened on this page
   </script>
 </body>
 </html>

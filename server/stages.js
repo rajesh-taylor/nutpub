@@ -43,10 +43,12 @@ export async function closeOldStages(env, at = Date.now(), stub = stageStub) {
     closed.push(id);
   }
   if (closed.length) console.log(`stages closed: ${closed.join(', ')}`);
-  // A passkey with no stage left is forgotten 7 days after it was last used (its page then tells the password manager).
+  // A passkey whose artist has no stage left is forgotten 7 days after it was last used (its page then tells the
+  // password manager). Add codes past their 5 minutes go too.
   await env.DB.batch([
-    env.DB.prepare('DELETE FROM artist_links WHERE key IN (SELECT id FROM artist_keys WHERE COALESCE(used, created) < ? AND id NOT IN (SELECT key FROM key_stages))').bind(cutoff),
-    env.DB.prepare('DELETE FROM artist_keys WHERE COALESCE(used, created) < ? AND id NOT IN (SELECT key FROM key_stages)').bind(cutoff)]);
+    env.DB.prepare('DELETE FROM artist_links WHERE key IN (SELECT id FROM artist_keys WHERE COALESCE(used, created) < ? AND COALESCE(artist, id) NOT IN (SELECT key FROM key_stages))').bind(cutoff),
+    env.DB.prepare('DELETE FROM artist_keys WHERE COALESCE(used, created) < ? AND COALESCE(artist, id) NOT IN (SELECT key FROM key_stages)').bind(cutoff),
+    env.DB.prepare('DELETE FROM artist_adds WHERE until < ?').bind(at)]);
   return closed;
 }
 // A closed stage, off the front door's lists: its passkeys' links to it, its claim, the stage itself.
@@ -84,10 +86,14 @@ const CODE = /^[0-9a-f]{32}$/;
 // ---- The artist's passkey (session 53). One passkey, many stages: key_stages says which. Starting a stage shouldn't
 // ask for the passkey again, so the browser that made it (or signed in with it) keeps a link code: sent with a new
 // stage, it adds that stage to the passkey, and does nothing else. Opening a stage elsewhere always takes the passkey.
+// Session 54b: an artist may have several passkeys (one added from another device). artist_keys.artist is the first
+// passkey's id, and key_stages.key holds it, so every passkey of one artist opens the same gigs; before the migration
+// it was empty, hence COALESCE(artist, id).
 export const LINKS_PER_KEY = 10; // browsers holding a link for one passkey: the newest ten
+const KEY_COLS = 'k.id, k.name, COALESCE(k.artist, k.id) AS artist';
 async function keyOfLink(link) {
   if (!CODE.test(String(link || ''))) return null;
-  return one('SELECT k.id, k.name FROM artist_links l JOIN artist_keys k ON k.id = l.key WHERE l.hash = ?', await sha(link));
+  return one(`SELECT ${KEY_COLS} FROM artist_links l JOIN artist_keys k ON k.id = l.key WHERE l.hash = ?`, await sha(link));
 }
 async function newLink(key) {
   const link = randomHex(16);
@@ -97,7 +103,7 @@ async function newLink(key) {
 }
 // The stage is told it has a passkey, and its name, so Cellar can say so.
 async function linkStage(env, key, stage) {
-  await run("INSERT OR IGNORE INTO key_stages (key, stage, role, created) VALUES (?, ?, 'artist', ?)", key.id, stage, now());
+  await run("INSERT OR IGNORE INTO key_stages (key, stage, role, created) VALUES (?, ?, 'artist', ?)", key.artist || key.id, stage, now());
   try { await stageStub(env, stage).passkey(key.name); } catch (e) { console.log(`stage ${stage} not told of its passkey: ${String(e.message || e).slice(0, 200)}`); }
 }
 // A stage started before its passkey was made: its browser keeps a claim code beside the stage's id (/judge, this
@@ -131,23 +137,95 @@ const newStage = async () => {
   return id;
 };
 
+// ---- Another device (session 54b). A device with the artist passkey shows a code for 5 minutes; the new device makes a
+// passkey of its own with it, and both belong to one artist. The code takes the passkey itself: a link code never makes
+// one. 8 characters of Crockford base32 (40 random bits, shown K7QX-3MPA), its SHA-256 kept, never the code; spent once,
+// and a new one replaces the artist's earlier code. No key, no encryption: the passkeys sign, as they always have.
+export const ADD_MS = 5 * 60 * 1000;
+const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const ADD = /^[0-9A-HJKMNP-TV-Z]{8}$/;
+export function newAddCode(bytes = crypto.getRandomValues(new Uint8Array(5))) {
+  let bits = 0n;
+  for (const b of bytes) bits = (bits << 8n) | BigInt(b);
+  return Array.from({ length: 8 }, (_, i) => CROCKFORD[Number((bits >> BigInt(35 - 5 * i)) & 31n)]).join('');
+}
+// As typed: any case, dashes and spaces dropped, O read as 0 and I or L as 1 (Crockford's own rule).
+export const tidyAddCode = (text) => String(text || '').toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+async function addCodeFor(artist, at = Date.now()) {
+  const code = newAddCode();
+  await batch([sql('DELETE FROM artist_adds WHERE until < ? OR artist = ?', at, artist),
+    sql('INSERT INTO artist_adds (hash, artist, until) VALUES (?, ?, ?)', await sha(code), artist, at + ADD_MS)]);
+  return code;
+}
+// The artist a live code adds to, or null.
+const addLive = async (code, at = Date.now()) => (ADD.test(code) ? (await one('SELECT artist FROM artist_adds WHERE hash = ? AND until >= ?', await sha(code), at))?.artist ?? null : null);
+// Spent in one statement, so two devices with the same code can't both use it.
+async function takeAddCode(code, at = Date.now()) {
+  if (!ADD.test(code)) return null;
+  return (await one('DELETE FROM artist_adds WHERE hash = ? AND until >= ? RETURNING artist', await sha(code), at))?.artist ?? null;
+}
+const ADD_GONE = () => json({ error: 'add', detail: 'That code has been used or has run out: make a new one on your other device.' }, 403);
+// The artist's open stages, newest first, each with a one-time sign-in link (Back to your gigs, and a device just added).
+async function gigsOf(c, artist) {
+  const rows = await all('SELECT s.id FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', artist);
+  const stages = [];
+  for (const { id } of rows) {
+    const w = await stageStub(c.env, id).welcome().catch(() => null);
+    if (w?.code) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, url: stageLink(c, id, w.code) });
+  }
+  return stages;
+}
+// The passkey check that Back to your gigs and Add a passkey on another device share: the passkey, as stored, or a reply.
+async function checkArtist(c, b) {
+  if (!(await challengeOk(b?.challenge))) return { no: old() };
+  const k = await one(`SELECT k.id, k.name, k.pubkey AS publicKey, k.alg, k.count, COALESCE(k.artist, k.id) AS artist FROM artist_keys k WHERE k.id = ?`, String(b?.id || ''));
+  if (!k) return { no: json({ error: 'no_stage', detail: 'That passkey doesn’t open any gigs now: pick the one called “NutPub · Artist”.' }, 404) };
+  let auth;
+  try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return { no: fail(e) }; }
+  if (!(await spend(b.challenge))) return { no: old() };
+  await run('UPDATE artist_keys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
+  return { k };
+}
+
 export function mountStageDoor(route) {
   const front = (c) => (stageDb().id ? json({ error: 'not_found' }, 404) : null); // on thenutpub.com only
 
   // Make your artist passkey (step 0 on /judge): the passkey made in this browser, then a link code for it. Stages this
-  // browser started before (their claim codes) join it.
+  // browser started before (their claim codes) join it. With an add code (session 54b), it joins the artist whose
+  // other device showed the code, and their open gigs come back with it.
   route('POST', '/api/artist', front, async (c) => {
     const b = await body(c);
     if (!(await challengeOk(b?.challenge))) return old();
+    const add = b?.add == null ? null : tidyAddCode(b.add);
+    if (add != null && !(await addLive(add))) return ADD_GONE();
     let k;
     try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if (!(await spend(b.challenge))) return old();
-    const key = { id: k.id, name: nameOf(b.name) };
-    await run('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now());
+    const artist = add == null ? k.id : await takeAddCode(add);
+    if (!artist) return ADD_GONE();
+    const key = { id: k.id, name: nameOf(b.name), artist };
+    await run('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created, artist) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now(), artist);
     const linked = await takeClaims(c.env, key, b.claims);
-    console.log(`artist passkey made${linked.length ? `, with ${linked.join(', ')}` : ''}`);
-    return json({ link: await newLink(k.id), name: key.name, linked });
+    console.log(`artist passkey ${add == null ? 'made' : 'added from another device'}${linked.length ? `, with ${linked.join(', ')}` : ''}`);
+    return json({ link: await newLink(k.id), name: key.name, linked, ...(add == null ? {} : { stages: await gigsOf(c, artist) }) });
+  });
+
+  // Add a passkey on another device: this device's passkey once, then a code for 5 minutes.
+  route('POST', '/api/artist/add', front, async (c) => {
+    const { k, no } = await checkArtist(c, await body(c));
+    if (no) return no;
+    console.log('add code made');
+    return json({ code: await addCodeFor(k.artist), ms: ADD_MS });
+  });
+  // The new device, before its passkey sheet: is the code still good? (Asked as it's typed, so the sheet opens straight
+  // from the tap and a dead code never leaves a passkey the NutPub won't keep.) Spends nothing. n: which of the artist's
+  // passkeys this will be, for its name ("NutPub · Artist · 23 Nov · 2"), so two in one password manager can be told apart.
+  route('POST', '/api/artist/add/check', front, async (c) => {
+    const artist = await addLive(tidyAddCode((await body(c))?.code));
+    if (!artist) return ADD_GONE();
+    const { n } = await one('SELECT COUNT(*) AS n FROM artist_keys WHERE COALESCE(artist, id) = ?', artist);
+    return json({ ok: true, n: n + 1 });
   });
 
   // Put on a gig (parked on the home page since 15 Nov): the artist's passkey made, then a stage of its own.
@@ -162,8 +240,8 @@ export function mountStageDoor(route) {
     const at = now();
     const key = { id: k.id, name: nameOf(b.name) };
     await batch([sql('INSERT INTO stages (id, created) VALUES (?, ?)', id, at),
-      sql('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, at)]);
+      sql('INSERT OR IGNORE INTO artist_keys (id, name, pubkey, alg, count, synced, created, artist) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        k.id, key.name, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, at, k.id)]);
     const code = await stageStub(c.env, id).setup(id);
     await linkStage(c.env, key, id);
     console.log(`stage made: ${id}`);
@@ -200,21 +278,10 @@ export function mountStageDoor(route) {
   // link code for this browser. One stage: the page goes straight in.
   route('POST', '/api/stages/back', front, async (c) => {
     const b = await body(c);
-    if (!(await challengeOk(b?.challenge))) return old();
-    const k = await one('SELECT id, name, pubkey AS publicKey, alg, count FROM artist_keys WHERE id = ?', String(b?.id || ''));
-    if (!k) return json({ error: 'no_stage', detail: 'That passkey doesn’t open any gigs now: pick the one called “NutPub · Artist”.' }, 404);
-    let auth;
-    try { auth = await checkGet(b, k, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
-    if (!(await spend(b.challenge))) return old();
-    await run('UPDATE artist_keys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
+    const { k, no } = await checkArtist(c, b);
+    if (no) return no;
     // A gig opened with its 12 words (session 54) comes back onto the passkey with its claim code.
     const linked = await takeClaims(c.env, k, b.claims);
-    const rows = await all('SELECT s.id FROM key_stages ks JOIN stages s ON s.id = ks.stage WHERE ks.key = ? ORDER BY s.created DESC LIMIT 10', k.id);
-    const stages = [];
-    for (const { id } of rows) {
-      const w = await stageStub(c.env, id).welcome().catch(() => null);
-      if (w?.code) stages.push({ stage: id, gig: w.gig, artist: w.artist, venue: w.venue, state: w.state, url: stageLink(c, id, w.code) });
-    }
-    return json({ stages, name: k.name, link: await newLink(k.id), linked });
+    return json({ stages: await gigsOf(c, k.artist), name: k.name, link: await newLink(k.id), linked });
   });
 }

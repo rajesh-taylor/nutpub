@@ -138,6 +138,7 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 - tell which purchase a ticket at the door came from, or who came in: no name, email or address is asked for
 - see the artist's 12 words, or bring them back: they never leave the artist's browser, which forgets them once they're checked
 - open a gig without its 12 words or a passkey that opens it: the words sign a one-time challenge, the gig checks it
+- add a passkey to an artist's gigs without one of their passkeys: a device that has one shows a code that works once, for 5 minutes
 
 ---
 
