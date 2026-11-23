@@ -18,9 +18,10 @@
     .head-right .linkish { margin: 0; font-size: 15px; }
     .mod-chip { padding: 5px 10px; border-radius: 4px; background: rgb(90 169 255 / .14); font: 600 14px/1.2 var(--body); color: #7db9ff; white-space: nowrap; }
     .mod-chip.nostr { background: rgb(185 140 255 / .16); color: #b98cff; }
-    .mod-wrap { max-width: 1600px; margin: 0 auto; padding: 24px 40px 48px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(340px, 1fr); gap: 32px; align-items: start; }
+    .mod-wrap { max-width: 1600px; margin: 0 auto; padding: 24px 40px 48px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); gap: 32px; align-items: start; }
     @media (max-width: 1000px) { .mod-wrap { grid-template-columns: minmax(0, 1fr); padding: 16px; } .board-head { padding: 0 16px; } }
-    .watch { position: sticky; top: 16px; min-width: 0; }
+    .watch { min-width: 0; }
+    .tools-col { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
     .frame-box { width: 100%; aspect-ratio: 16 / 9; max-width: 100%; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; overflow: hidden; background: #000; }
     .frame-box iframe { width: 100%; height: 100%; border: 0; display: block; }
     .under { margin: 10px 0 0; font-size: 15px; color: var(--smoke); }
@@ -33,7 +34,8 @@
     .pin-row .linkish { margin: 0; }
     .pin-form { display: flex; flex-wrap: wrap; gap: 8px; }
     .pin-form input { flex: 1 1 220px; min-width: 0; }
-    .lines { list-style: none; margin: 0; padding: 0; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); max-height: min(60vh, 560px); overflow-y: auto; }
+    .lines { list-style: none; margin: 0; padding: 0; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); height: calc(100dvh - 230px); min-height: 360px; overflow-y: auto; }
+    @media (max-width: 1000px) { .lines { height: auto; max-height: 70vh; min-height: 0; } }
     .lines li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 7px 10px; border-bottom: 1px solid rgb(239 227 200 / .08); font-size: 15px; line-height: 1.35; }
     .lines li:last-child { border-bottom: 0; }
     .lines li.none { color: var(--smoke); }
@@ -94,36 +96,40 @@
   </main>
 
   <div class="mod-wrap" id="page" hidden>
-    <section class="watch" aria-label="The gig">
+    <!-- Rajesh 23 Nov: the player and the mod's own tools on the left; the chat on the right at full height, to see
+         more lines at a glance. -->
+    <section class="watch" aria-label="The gig and your tools">
       <div class="frame-box"><iframe id="player" title="The gig, as on the gig page" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
       <p class="under" id="under"></p>
       <p class="under" id="player-say" role="status" hidden></p>
       <p class="under" id="under-free" hidden>You’re on: comments are free while this page is open.</p>
+      <div class="tools-col">
+        <div class="pin-row" id="pin-row" hidden>
+          <span aria-hidden="true">📌</span><span class="pin-words" id="pin-words"></span>
+          <button type="button" class="linkish" id="pin-change" hidden>Change</button>
+        </div>
+        <form class="pin-form" id="pin-form" hidden>
+          <input class="field" id="pin-input" maxlength="140" autocomplete="off" aria-label="The pinned message" placeholder="Pinned over the chat: 140 characters, links work">
+          <button type="submit" class="btn primary">Pin it</button>
+          <button type="button" class="btn quiet" id="pin-down" hidden>Take it down</button>
+          <button type="button" class="btn quiet" id="pin-cancel">Cancel</button>
+        </form>
+        <div class="tools">
+          <button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button>
+          <button type="button" class="btn quiet" id="pin-add" hidden>Pin a message</button>
+          <small id="slow-note">A busy chat turns slow mode on by itself.</small>
+        </div>
+        <form class="say-box" id="say-form">
+          <input class="field" id="say-text" maxlength="140" autocomplete="off" placeholder="Say something to the chat (links work)" aria-label="A message to the chat">
+          <button type="submit" class="btn primary">Send</button>
+        </form>
+        <p class="say" id="say" role="status"></p>
+      </div>
     </section>
     <section class="chat-col" aria-label="The chat">
       <p class="col-head">The chat</p>
-      <div class="pin-row" id="pin-row" hidden>
-        <span aria-hidden="true">📌</span><span class="pin-words" id="pin-words"></span>
-        <button type="button" class="linkish" id="pin-change" hidden>Change</button>
-      </div>
-      <form class="pin-form" id="pin-form" hidden>
-        <input class="field" id="pin-input" maxlength="140" autocomplete="off" aria-label="The pinned message" placeholder="Pinned over the chat: 140 characters, links work">
-        <button type="submit" class="btn primary">Pin it</button>
-        <button type="button" class="btn quiet" id="pin-down" hidden>Take it down</button>
-        <button type="button" class="btn quiet" id="pin-cancel">Cancel</button>
-      </form>
       <ol class="lines" id="lines" aria-live="polite"></ol>
       <p class="quiet-row" id="quiet-row" hidden><span id="quiet-text"></span> · <button type="button" class="linkish" id="undo">Undo</button></p>
-      <div class="tools">
-        <button type="button" class="btn quiet" id="slow-btn" aria-pressed="false">Slow mode · off</button>
-        <button type="button" class="btn quiet" id="pin-add" hidden>Pin a message</button>
-        <small id="slow-note">A busy chat turns slow mode on by itself.</small>
-      </div>
-      <form class="say-box" id="say-form">
-        <input class="field" id="say-text" maxlength="140" autocomplete="off" placeholder="Say something to the chat (links work)" aria-label="A message to the chat">
-        <button type="submit" class="btn primary">Send</button>
-      </form>
-      <p class="say" id="say" role="status"></p>
     </section>
   </div>
 
