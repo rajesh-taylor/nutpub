@@ -16,6 +16,7 @@ import { mountReplay } from './replay.js';
 import { mountUpfront } from './upfront.js';
 import { mountRate } from './rate.js';
 import { mountMods } from './mods.js';
+import { mountChat } from './chat.js';
 import { mountWallet } from './wallet.js';
 import { mountGoogleWallet } from './gwallet.js';
 import { mountPasskeys } from './passkey.js';
@@ -166,6 +167,7 @@ mountReplay(route, pass);
 mountUpfront(route, admin, crew);
 mountRate(route);
 mountMods(route, admin, crew);
+mountChat(route, admin, crew); // a safer chat: Quiet, the artist's words, their Nostr mute list (session 55c)
 mountWallet(route);
 mountGoogleWallet(route);
 mountPasskeys(route, pass);

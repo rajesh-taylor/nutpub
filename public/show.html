@@ -65,6 +65,22 @@
     .preview-box { flex: 0 0 144px; aspect-ratio: 16 / 9; background: #000; border-radius: 4px; overflow: hidden; }
     .preview-box video { width: 100%; height: 100%; object-fit: contain; display: block; }
     .locked-note { max-width: 560px; margin: 40px auto; text-align: center; }
+    /* The chat strip (session 55c): big enough to tap from a step away, newest at the top. */
+    .chat-strip { padding: 10px 14px; margin: 0 0 18px; border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; background: rgb(11 20 38 / .6); }
+    .chat-strip .label { font: 600 14px/1 var(--body); letter-spacing: 0; color: var(--smoke); margin: 0 0 6px; }
+    .chat-lines { list-style: none; margin: 0; padding: 0; }
+    .chat-lines li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 6px 0; border-bottom: 1px solid rgb(239 227 200 / .1); font-size: 16px; line-height: 1.35; }
+    .chat-lines li:last-child { border-bottom: 0; }
+    .chat-lines li.none { color: var(--smoke); font-size: 15px; }
+    .chat-lines .from { color: var(--smoke); }
+    .chat-lines .from.nostr { color: #b48cf2; }
+    .chat-lines .amt { color: var(--amber); }
+    .chat-lines .mod-tag { font: 600 11px/1 var(--body); color: var(--deep); background: #7db9ff; border-radius: 3px; padding: 3px 5px; }
+    .chat-lines .words { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+    .chat-lines .hush { margin-left: auto; min-height: 40px; padding: 6px 18px; font-size: 15px; }
+    .chat-quiet { margin: 8px 0 0; font-size: 15px; color: var(--cream); }
+    .chat-quiet .linkish { font-size: 15px; }
+    .chat-say { margin: 6px 0 0; font-size: 14px; color: var(--smoke); }
       /* Widgets (12 Nov): pages for the venue's screens, each a button with a copy icon beside it; room for more on the row. */
     .widgets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 16px; text-align: left; }
     .widgets-head { margin: 0; font: 400 26px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
@@ -122,6 +138,13 @@
           <p class="signal-text" id="signal-text"></p>
         </div>
       </div>
+      <!-- Session 55c: the chat, for a look between songs. Quiet: one tap, the line goes and that phone stays quiet tonight. -->
+      <section class="chat-strip" id="chat-strip" aria-label="The chat" hidden>
+        <p class="label">The chat</p>
+        <ol class="chat-lines" id="chat-lines"></ol>
+        <p class="chat-quiet" id="chat-quiet" hidden><span id="chat-quiet-text"></span> <button type="button" class="linkish" id="chat-undo" hidden>Undo</button></p>
+        <p class="chat-say" id="chat-say" role="status"></p>
+      </section>
       <p class="after" id="after" hidden><span data-artist>The night is over. Stop your stream, then go to <a href="/takings">Your takings</a> for your money.</span><span data-producer>The gig is over. Stop the stream when you’re ready.</span><br>
         Tonight’s recording, tickets, passkeys, chat and tips are deleted after 7 days. Sats you haven’t collected stay until you take them.</p>
       <!-- No phone on the door or the bar (Rajesh 14 Nov): Let in by hand, Pour by hand. -->
@@ -155,5 +178,6 @@
 
   <script type="module" src="/js/showtime.js"></script>
   <script type="module" src="/js/barstrip.js"></script>
+  <script type="module" src="/js/chatstrip.js"></script>
 </body>
 </html>

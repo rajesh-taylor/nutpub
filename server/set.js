@@ -12,10 +12,11 @@ import { hasTicket, addMessage, tipMessage, noGuestLinks } from './door.js';
 import { modOf, hasLink } from './mods.js';
 import { nostrOf, handle } from './nostr.js';
 import { nutzapInfo, checkNutzap, tokenProofs, recordNutzap, WHY } from './nutzap.js';
+import { MIN_TIP } from './chat.js';
+import { noBadWords, caught, extraWords, NOT_WELCOME } from './wordlist.js';
 import { json, body, randomHex, now } from './http.js';
 import { replayPlaying, replayPieceOk, replayPieceSeen, replayPieceNext, replayPieceKeep } from './replay.js';
 
-const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 const MAX_PIECE = 100_000; // the set loops; n counts pieces played, n % pieces() is the file
 
 // Each gig plays its own clip (show.set): '' is the default set (Longy's clip), a name is one under /set-media/sets/.
@@ -126,13 +127,13 @@ export function mountSet(route) {
   };
 
   // The tip button: its own 402, at the label and price set on the setup page.
-  route('GET', '/api/tip', pass, noGuestLinks(tipMessage),
+  route('GET', '/api/tip', pass, noGuestLinks(tipMessage), noBadWords(tipMessage),
     async (c) => ((await showOf(c)).tip.price ? null : json({ error: 'not_ready', detail: 'No tip price set yet.' }, 409)),
     cashuGate(async (c) => (await showOf(c)).tip.price, async (c) => (await showOf(c)).tip.label || 'A tip', { lockTo: artistKey, kind: 'tip' }),
     thanks);
 
   // Tip sats, your amount: the viewer picks the amount; a 402 of its own for exactly that.
-  route('GET', /^\/api\/tip\/(?<sats>[^/]+)$/, pass, noGuestLinks(tipMessage),
+  route('GET', /^\/api\/tip\/(?<sats>[^/]+)$/, pass, noGuestLinks(tipMessage), noBadWords(tipMessage),
     async (c) => {
       const n = Number(c.params.sats);
       if (!Number.isInteger(n) || n > 1_000_000) return json({ error: 'bad_amount' }, 400);
@@ -163,6 +164,7 @@ export function mountSet(route) {
       const why = await checkNutzap(c.zap, { proofs, fan: c.fan.pubkey, artist: c.zapTo.pubkey });
       if (why) return json({ error: why, detail: WHY[why] }, 400);
       if (hasLink(c.zap.content) && !(await modOf(c))) return json({ error: 'no_links', detail: 'Links are for the moderators.' }, 400);
+      if (caught(c.zap.content, await extraWords())) return json({ error: 'not_welcome', detail: NOT_WELCOME }, 400);
       return null;
     },
     cashuGate((c) => c.amount, (c) => `A Nutzap of ${c.amount} sats`, { lockTo: artistKey, kind: 'tip' }),

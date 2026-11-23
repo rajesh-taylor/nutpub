@@ -47,6 +47,8 @@ export const blank = () => ({
   lightning: '',                        // the artist's Lightning address: where the takings page pays out
   splits: [],                           // more people's shares: { name, percent, lightning }. Saved, not paid out yet
   comments: true,                       // the live chat's words: on unless the artist turns them off (tips still come, without words)
+  // tipWords (session 55c): comments need a tip (21 sats or more) while no mod is on. Not stored until the artist saves:
+  // clean() makes it true for a free stream, false otherwise.
   chatRows: 5,                          // over the picture, the newest 3, 5 or 10 lines of the chat (Rajesh 14 Nov; 5 from 19 Nov: at 3, lines went by while typing)
   stream: { mode: 'pay', perMinute: null, freeMinutes: null }, // freeMinutes: Pay as you watch only, the first minutes free (10 Nov). Watching from home: 'ticket' (a Watch online ticket), 'pay' (sats a minute), 'free' (tips only) or 'off' (no stream)
   replay: { mode: 'off', price: null, fiat: null, locked: false }, // after End night the gig page plays the recording (sessions 34-35): 'off' or 'on', one price for the whole replay (sats; fiat: £, which fills the sats unless locked), never below the minimum for the show's length
@@ -102,6 +104,7 @@ export function clean(input = {}) {
       return [...list, { name: text(s?.name, 40), percent: n >= 1 && used < 94 ? Math.min(n, 94 - used) : null, lightning: LN_ADDRESS.test(lightning) ? lightning : '' }];
     }, []),
     comments: input.comments !== false,
+    tipWords: typeof input.tipWords === 'boolean' ? input.tipWords : input.stream?.mode === 'free',
     chatRows: [5, 10].includes(Number(input.chatRows)) ? Number(input.chatRows) : 3,
     stream: {
       mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',
@@ -190,7 +193,7 @@ export const gigOver = async (settled) => (await kv.get('stage')) === 'closed' |
 // chat and stage. Its one-line totals are kept first (Past gigs). Payments stay to collect.
 export async function clearGig() {
   await keepGigLine((await kv.get('endedAt')) || undefined);
-  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM blinded'), sql('DELETE FROM door_in'), sql('DELETE FROM door_words'), sql('DELETE FROM passkeys'), sql('DELETE FROM nostr'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freePaid', 'freeFrom', 'liveFrom', 'onAirFrom', 'endedAt', 'stageTimes', 'reachedAt', 'moved', 'gigKey')"), sql('UPDATE messages SET deleted = 1')]);
+  await batch([sql('DELETE FROM tickets'), sql('DELETE FROM blinded'), sql('DELETE FROM door_in'), sql('DELETE FROM door_words'), sql('DELETE FROM passkeys'), sql('DELETE FROM nostr'), sql('DELETE FROM drinks'), sql('DELETE FROM live_paid'), sql('DELETE FROM watchers'), sql("DELETE FROM kv WHERE key IN ('freePaid', 'freeFrom', 'liveFrom', 'onAirFrom', 'endedAt', 'stageTimes', 'reachedAt', 'moved', 'gigKey', 'quiet', 'slowAuto', 'slowHeld', 'modSeen')"), sql('UPDATE messages SET deleted = 1')]);
   const at = now();
   await kv.set('nightStart', at); // Takings counts this gig from here
   await kv.set('stage', 'doors');

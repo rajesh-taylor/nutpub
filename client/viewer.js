@@ -1728,16 +1728,18 @@ function withLinks(text) {
   out.push(text.slice(at));
   return out.filter((x) => x !== '');
 }
-// The mod's strip over the chat (their name, slow mode), and the line guests see while slow mode is on.
-function modBar(slow) {
+// The mod's strip over the chat (their name, slow mode), and the line guests see while slow mode is on. busy: a busy
+// chat turned it on by itself (session 55c).
+function modBar(slow, busy = false) {
   $('slow-note').hidden = !slow || !!MOD;
+  $('slow-note').textContent = busy ? 'Busy chat: one message every 30 seconds.' : 'Slow mode: one message every 30 seconds.';
   $('mod-bar').hidden = !MOD;
   $('im-mod').hidden = !!MOD || !STAGE_ID || top !== self || show.comments === false; // fans: "I'm a mod" (session 55b)
   if (!MOD) return;
   $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
   $('pin-btn').hidden = !MOD.main;
   $('mod-out').hidden = MOD.via !== 'passkey'; // a Nostr mod signs out of Nostr; a link stays the mod's own
-  $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}`;
+  $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}${busy ? ' · busy' : ''}`;
   $('slow-btn').setAttribute('aria-pressed', !!slow);
   $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
 }
@@ -1764,8 +1766,20 @@ $('mod-out').onclick = async () => { // this browser only: "I'm a mod" brings th
 $('slow-btn').onclick = async () => {
   const on = $('slow-btn').getAttribute('aria-pressed') !== 'true';
   const r = await fetch('/api/mod/slow', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) });
-  if (r.ok) modBar((await r.json()).slow); else say('Slow mode not changed: are you still a mod on this gig?');
+  if (r.ok) { const o = await r.json(); modBar(o.slow, o.busy); } else say('Slow mode not changed: are you still a mod on this gig?');
 };
+// Session 55c: comments need a tip while none of the artist's mods is on (their switch on Plan gig; on for a free
+// stream). The note over the chat says so, and ➤ with words and no sats asks for the tip instead of sending.
+let TIP_ONLY = null;
+function tipWords(on) {
+  on = !!on && !MOD;
+  if (on === TIP_ONLY) return;
+  TIP_ONLY = on;
+  $('tip-note').hidden = !on;
+  $('say-text').placeholder = on ? 'Your comment, with a tip' : 'Leave a comment';
+  if (!$('say-sats-box').classList.contains('fiat')) $('say-sats').placeholder = on ? '21+ sats' : 'sats';
+}
+const TIP_FIRST = 'Add a tip to send it: 21 sats or more.';
 function chat(r) {
   for (const m of r.messages) {
     if (m.id <= lastMsg) continue; // two ticks crossing: already shown
@@ -1798,12 +1812,22 @@ function chat(r) {
         if (r.ok) li.remove(); else say('Not deleted: are you still a mod on this gig?');
       };
       li.append(del);
+      if (!m.mod && !m.cue) { // Quiet (session 55c): that phone's words stay out of the chat tonight; the artist can undo it
+        const hush = Object.assign(document.createElement('button'), { type: 'button', className: 'del hush', textContent: '🔇', title: 'Quiet this phone tonight' });
+        hush.setAttribute('aria-label', 'Quiet this phone tonight');
+        hush.onclick = async () => {
+          const r = await fetch('/api/mod/quiet', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ message: m.id }) });
+          if (r.ok) li.remove(); else say((await r.json().catch(() => ({}))).detail || 'Not quietened: are you still a mod on this gig?');
+        };
+        li.append(hush);
+      }
     }
     feed.append(li);
     lastMsg = Math.max(lastMsg, m.id);
   }
   for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
-  modBar(r.slow);
+  modBar(r.slow, r.busy);
+  tipWords(r.tipOnly);
   pin(r.pin);
   while (feed.children.length > 60) feed.firstElementChild.remove();
   feed.scrollTop = feed.scrollHeight;
@@ -1906,7 +1930,7 @@ function drawUnit() {
   // The comment box's tip field reads the same: ₿ and sats, or £ and pounds.
   const tipBox = $('say-sats');
   tipBox.value = '';
-  if (mode === 'btc') Object.assign(tipBox, { min: 21, max: 1_000_000, step: 1, inputMode: 'numeric', placeholder: 'sats' });
+  if (mode === 'btc') Object.assign(tipBox, { min: 21, max: 1_000_000, step: 1, inputMode: 'numeric', placeholder: TIP_ONLY ? '21+ sats' : 'sats' });
   else { tipBox.removeAttribute('max'); Object.assign(tipBox, { min: box.min, step: 0.01, inputMode: 'decimal', placeholder: '0.00' }); }
   $('say-unit').textContent = mode === 'btc' ? '₿' : SYMBOL[mode];
   $('say-sats-box').classList.toggle('fiat', mode !== 'btc');
@@ -1964,8 +1988,11 @@ $('say').onsubmit = async (e) => {
   }
   const text = $('say-text').value.trim();
   if (!text) { if (show.comments === false) box.focus(); return; }
+  if (TIP_ONLY) { thank(TIP_FIRST); box.focus(); return; } // nothing sent, nothing paid
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-  if (r.ok) { $('say-text').value = ''; todoMark('hello'); tick().catch(() => {}); } else say((await r.json().catch(() => ({}))).detail || 'Not sent.');
+  if (r.ok) { $('say-text').value = ''; todoMark('hello'); tick().catch(() => {}); return; }
+  const why = await r.json().catch(() => ({}));
+  if (why.error === 'tip_words') { tipWords(true); thank(TIP_FIRST); box.focus(); } else say(why.detail || 'Not sent.');
 };
 
 // ---- Nostr sign-in for the chat, a purple button in the Live chat header for every fan (not mods: they have their own

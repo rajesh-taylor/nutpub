@@ -281,6 +281,14 @@
     .board .mod-row input { margin: 0; font-size: 14px; }
     .board .mod-row .btn, .board .mod-add .btn { font-size: 15px; padding: 8px 12px; }
     .board .mod-add { display: flex; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
+    /* Session 55c: Words to keep out, and the Nostr mute list, under the moderators. */
+    .board .keep-out { border-top: 1px solid rgb(239 227 200 / .14); padding-top: 14px; }
+    .board .keep-out textarea { display: block; width: 100%; box-sizing: border-box; min-height: 72px; padding: 8px 10px; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; background: var(--deep); color: var(--cream); font: 15px/1.4 var(--body); resize: vertical; }
+    .board .keep-out .add-row { margin: 8px 0 18px; }
+    .board .mute-use { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+    .board .mute-use .field { flex: 1 1 260px; margin: 0; }
+    .board .mute-use .btn { font-size: 15px; padding: 8px 12px; }
+    #mute-what { margin: 0 0 4px; }
     /* Session 55b: a mod by invite says how they sign in; an invite still waiting shows its icon (picked when invited). */
     .board .mod-row .said { font-size: 15px; color: var(--cream); }
     .board .mod-row .said.wait { color: var(--smoke); }
@@ -621,7 +629,11 @@
             <label class="choice room-switch"><b>Comments in the live chat</b><input type="checkbox" role="switch" data-path="comments" aria-label="Comments in the live chat"></label>
             <p class="switch-note" data-when="comments=false">Off: tips still show in the chat, without words. No moderators tonight.</p>
             <div data-when="comments">
+            <!-- Session 55c: on a free stream, comments go with a tip unless one of the artist's mods is on. -->
+            <label class="choice room-switch"><b>Comments need a tip while no mod is on</b><input type="checkbox" role="switch" data-path="tipWords" aria-label="Comments need a tip while no mod is on"></label>
+            <p class="switch-note">21 sats or more each, so trolls pay you. On for a free stream. Free comments open while one of your mods is on.</p>
             <label class="field">Pinned message <span class="optional">· optional, over the chat; links work here</span><input id="pin-text" maxlength="140" placeholder="e.g. Merch at longy.com · next gig Fri 12 Dec" autocomplete="off"></label>
+            <p class="switch-note">Every message is checked for slurs before it shows, and a busy chat slows itself down. Between songs, Quiet on Show Time keeps a phone out of your chat tonight.</p>
             </div>
           </section>
           <!-- One card (Rajesh 15 Nov, late): the stretch goals the tips fill, a hairline, then who shares the takings. -->
@@ -709,6 +721,22 @@
                  Nostr there, or a mod passkey on thenutpub.com. Links made before keep working until cancelled. -->
             <div class="mod-rows" id="mod-rows"></div>
             <div class="mod-add"><select id="mod-icon" aria-label="The new moderator's icon"></select><label class="field">Name<input id="mod-name" maxlength="24" placeholder="e.g. Kat" autocomplete="off"></label><button type="button" class="btn quiet" id="mod-make">Invite a moderator</button></div>
+            <!-- Session 55c: the artist's own words to keep out, and their Nostr mute list (NIP-51), on top of the
+                 NutPub's own list of slurs. Saved on their own, not with the form. -->
+            <div class="keep-out">
+              <h3 class="sub">Words to keep out</h3>
+              <p class="sub-note">On top of the NutPub’s own list of slurs. One per line, or commas between. A message with one of them isn’t sent.</p>
+              <textarea id="chat-words" rows="3" maxlength="4000" placeholder="e.g. a name you don’t want in your chat" autocomplete="off" spellcheck="false"></textarea>
+              <p class="add-row"><button type="button" class="btn quiet" id="chat-words-save">Save words</button> <span class="switch-note" id="chat-words-say"></span></p>
+              <h3 class="sub">Your Nostr mute list</h3>
+              <p class="sub-note">People and words you’ve muted on Nostr stay out of your chat too.</p>
+              <div class="mute-use" id="mute-off"><label class="field">Your npub<input id="mute-npub" placeholder="npub1…" autocomplete="off" spellcheck="false"></label><button type="button" class="btn quiet" id="mute-use">Use it</button></div>
+              <div id="mute-on" hidden>
+                <p id="mute-what"></p>
+                <p class="switch-note">Public entries only. Show Time looks for a newer list each time it opens. <button type="button" class="linkish" id="mute-refresh">Refresh</button> · <button type="button" class="linkish" id="mute-stop">Stop</button></p>
+              </div>
+              <p class="switch-note" id="mute-say"></p>
+            </div>
           </section>
 
           <!-- Images sit just above Pre-roll, the other photos and videos (Rajesh 22 Nov). -->

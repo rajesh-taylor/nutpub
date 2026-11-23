@@ -39,6 +39,11 @@ export const modOf = (c) => (c.mod ??= (async () => {
   const m = await one(`${BY_CREW} AND c.npub = (SELECT pubkey FROM nostr WHERE pass = ?)`, pass);
   return m ? { ...m, nostr: true, via: 'nostr' } : null;
 })());
+// A mod is on (session 55c) while their gig page is open: its tick says so, written at most every 20 s. On a free
+// stream that opens free comments (chat.js).
+export const MOD_ON_MS = 90_000;
+export async function modSeen(at = Date.now()) { if (at - (await kv.get('modSeen', 0)) > 20_000) await kv.set('modSeen', at); }
+export const modOnline = async (at = Date.now()) => at - (await kv.get('modSeen', 0)) < MOD_ON_MS;
 // A Nostr mod's row, by their public key (hex), or null.
 export const modByPubkey = async (pubkey) => (onStage() && pubkey ? one(`${BY_CREW} AND c.npub = ?`, pubkey) : null);
 // A mod by invite says yes (crew.js): their row in the chat's list, the next icon if theirs is taken.
@@ -58,10 +63,27 @@ export async function modCount(at = Date.now()) {
 const LINK = /\b(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|me|app|xyz|link|ly|gg|tv|fm|shop|store|info|biz|music|band|live|events?)\b(?:\/\S*)?/i;
 export const hasLink = (text) => LINK.test(String(text || ''));
 
-// Slow mode: one message every 30 s per guest instead of every 10 s. Mods are never slowed.
-export const slowMode = () => kv.get('slow', false);
+// Slow mode: one message every 30 s per guest instead of every 10 s. Mods are never slowed. A mod turns it on or off;
+// since session 55c a busy chat also turns it on by itself (BUSY free guest messages in a minute), and it goes off
+// AUTO_MS after the last busy minute. A mod's off wins for HELD_MS (the busy chat doesn't turn it straight back on).
 export const SLOW = 30_000;
 export const NORMAL = 10_000;
+export const BUSY = 15;
+export const AUTO_MS = 5 * 60_000;
+export const HELD_MS = 10 * 60_000;
+export const slowBusy = async (at = Date.now()) => !(await kv.get('slow', false)) && (await kv.get('slowAuto', 0)) > at;
+export const slowMode = async (at = Date.now()) => (await kv.get('slow', false)) || (await kv.get('slowAuto', 0)) > at;
+// After a free message: is the chat busy? Hidden lines (a quiet phone's) don't count.
+export async function noteBusy(at = Date.now()) {
+  if (at < (await kv.get('slowHeld', 0))) return;
+  const { n } = await one('SELECT COUNT(*) AS n FROM messages WHERE sats = 0 AND mod IS NULL AND deleted = 0 AND at >= ?', new Date(at - 60_000).toISOString());
+  if (n >= BUSY) await kv.set('slowAuto', at + AUTO_MS);
+}
+const setSlow = async (on, at = Date.now()) => {
+  if (on) await kv.set('slow', true);
+  else await batch([sql("DELETE FROM kv WHERE key IN ('slow', 'slowAuto')"), sql("INSERT INTO kv (key, value) VALUES ('slowHeld', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify(at + HELD_MS))]);
+  return { slow: await slowMode(at), busy: await slowBusy(at) };
+};
 
 // The pinned message over the chat: set by the artist on Plan gig, or by the main mod. Links are allowed in it.
 export const pinned = () => kv.get('pin', '');
@@ -125,7 +147,7 @@ export function mountMods(route, admin, crew = admin) { // crew: the artist or t
   });
 
   // ---- The mod, on the gig page.
-  route('GET', '/api/mod/me', mod, async (c) => { const m = await modOf(c); return json({ name: m.name, icon: m.icon, main: !!m.main, slow: await slowMode(), via: m.via, ...(m.nostr ? { nostr: true } : {}) }); });
+  route('GET', '/api/mod/me', mod, async (c) => { const m = await modOf(c); await modSeen(); return json({ name: m.name, icon: m.icon, main: !!m.main, slow: await slowMode(), busy: await slowBusy(), via: m.via, ...(m.nostr ? { nostr: true } : {}) }); });
   // Sign out (a passkey mod, session 55b: a shared phone at the venue): this browser's key stops working. "I'm a mod"
   // signs them in again. A link's key isn't touched: the link is still theirs.
   route('DELETE', '/api/mod/me', mod, async (c) => {
@@ -139,5 +161,5 @@ export function mountMods(route, admin, crew = admin) { // crew: the artist or t
     await run('UPDATE messages SET deleted = 1 WHERE id = ?', Number(c.params.id));
     return json({ ok: true });
   });
-  route('POST', '/api/mod/slow', mod, async (c) => json({ slow: await kv.set('slow', (await body(c))?.on === true) }));
+  route('POST', '/api/mod/slow', mod, async (c) => json(await setSlow((await body(c))?.on === true)));
 }

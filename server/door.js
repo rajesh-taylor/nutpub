@@ -14,8 +14,10 @@ import { current, showOf, publicShow, ticketSplit, lastOrdersAt, opensAt, stageN
 import { liveNow, freeUntil } from './live.js';
 import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
-import { modOf, hasLink, slowMode, pinned, SLOW, NORMAL } from './mods.js';
+import { modOf, hasLink, slowMode, slowBusy, noteBusy, modSeen, pinned, SLOW, NORMAL } from './mods.js';
 import { nostrOf, handle } from './nostr.js';
+import { tipOnly, hiddenFrom, MIN_TIP } from './chat.js';
+import { noBadWords } from './wordlist.js';
 
 const COMPRESSED = /^0[23][0-9a-f]{64}$/;
 export const barKey = () => kv.get('barKey');
@@ -32,8 +34,11 @@ export async function addMessage(pass, text, sats = 0, mod = null, as = null) {
   if (!t && !sats) return null;
   // Signed in with Nostr: their name goes with the message (as: a scripted line's). A mod's line shows the name the
   // artist gave them; signed in with Nostr too (session 55b), it's purple like any Nostr name.
-  const nostr = as || handle(await nostrOf(pass));
-  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr) VALUES (?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr)).meta.last_row_id;
+  const row = as ? null : await nostrOf(pass);
+  const nostr = as || handle(row);
+  // A phone the artist quietened, or a Nostr key on their mute list (session 55c, chat.js): shown to that phone only.
+  const hidden = !as && !mod && (await hiddenFrom(pass, row?.pubkey)) ? 2 : 0;
+  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr, hidden)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.
 export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(await modOf(c))
@@ -297,24 +302,35 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
     json((await all(`${DRINK} ORDER BY d.id`)).map((d) => ({ ...d, poured: !!d.collected_at }))));
 
   // ---- The live chat. Free messages: one per 10 s per phone, 30 s in slow mode; mods any time, and only they may post
-  // links. Tips with a message arrive through the tip routes.
-  route('POST', '/api/message', pass, noGuestLinks(async (c) => (await body(c))?.text), async (c) => {
+  // links. Tips with a message arrive through the tip routes. Session 55c: every message is checked for slurs and the
+  // artist's own words first (wordlist.js); on a gig whose comments need a tip, free ones wait for a mod (chat.js); a
+  // busy chat turns slow mode on by itself (mods.js).
+  const said = async (c) => (await body(c))?.text;
+  route('POST', '/api/message', pass, noGuestLinks(said), noBadWords(said), async (c) => {
     const mod = await modOf(c);
-    if ((await showOf(c)).comments === false) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
+    const show = await showOf(c);
+    if (show.comments === false) return json({ error: 'comments_off', detail: 'Comments are off for this gig.' }, 403);
+    if (!mod && (await tipOnly(show))) return json({ error: 'tip_words', detail: `Add a tip to send it: ${MIN_TIP} sats or more.` }, 403);
     const last = mod ? null : await one('SELECT at FROM messages WHERE pass = ? AND sats = 0 ORDER BY id DESC LIMIT 1', c.pass);
     const wait = (await slowMode()) ? SLOW : NORMAL;
-    if (last && Date.now() - Date.parse(last.at) < wait) return json({ error: 'too_soon', detail: `One message every ${wait / 1000} seconds${wait === SLOW ? ': slow mode is on' : ''}.` }, 429);
-    const id = await addMessage(c.pass, (await body(c))?.text, 0, mod);
+    if (last && Date.now() - Date.parse(last.at) < wait) {
+      const why = wait !== SLOW ? '.' : (await slowBusy()) ? ' while the chat is busy.' : ': slow mode is on.';
+      return json({ error: 'too_soon', detail: `One message every ${wait / 1000} seconds${why}` }, 429);
+    }
+    const id = await addMessage(c.pass, await said(c), 0, mod);
     if (!id) return json({ error: 'empty' }, 400);
+    if (!mod) await noteBusy();
     return json({ id: Number(id) });
   });
+  // `me`: the phone asking (X-Pass). A quiet phone's own lines (deleted = 2) come back to it alone.
   const chatSince = async (c, after) => {
-    const [rows, tipped, gone, show, slow, pin, cued] = await Promise.all([
-      all('SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id WHERE m.id > ? AND m.deleted = 0 ORDER BY m.id DESC LIMIT 50', after),
+    const me = c.req.headers.get('X-Pass') || '';
+    const [rows, tipped, gone, show, slow, busy, pin, cued] = await Promise.all([
+      all('SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id WHERE m.id > ? AND (m.deleted = 0 OR (m.deleted = 2 AND m.pass = ?)) ORDER BY m.id DESC LIMIT 50', after, me),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
-      all('SELECT id FROM messages WHERE deleted = 1 AND id > ?', Math.max(after - 60, 0)), // the page shows the last 60
-      showOf(c), slowMode(), pinned(), kv.get('cuedIds', []),
+      all('SELECT id FROM messages WHERE (deleted = 1 OR (deleted = 2 AND pass != ?)) AND id > ?', me, Math.max(after - 60, 0)), // the page shows the last 60
+      showOf(c), slowMode(), slowBusy(), pinned(), kv.get('cuedIds', []),
     ]);
     const scripted = new Set(cued); // an example gig's scripted lines (setlist.js cue): the TV page lets them go first
     const words = show.comments !== false; // off: only the tips, without their words
@@ -322,7 +338,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
       messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
         who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}), ...(m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}) })),
-      slow, pin: words ? pin : '',
+      slow, ...(busy ? { busy } : {}), ...((await tipOnly(show)) ? { tipOnly: true } : {}), pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };
   };
@@ -344,6 +360,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
       q.get('top') ? topTippers() : null,
       q.get('mod') ? modOf(c) : undefined, // a mod's page asks: still a mod? (Remove signs them out at once, session 55b)
     ]);
+    if (mod) await modSeen(); // a mod is on: on a free stream, free comments open (session 55c)
     return json({ stage, live, replay: await replayFor(show, c), opensAt: opensAt(show), freeUntil: await freeUntil(show, stage, live), now: Date.now(), every: pollEvery({ live, date: show.date, stageAt }), ...chat, updated, ...(q.get('shown') === updated ? {} : { show: publicShow(show) }), ...(door ? { door } : {}), ...(top ? { top, lightning: show.lightning || '' } : {}), ...(mod === undefined ? {} : { mod: !!mod }) }); // the TV page: the artist's own Lightning address under its QR (session 45)
   });
   route('DELETE', /^\/api\/admin\/messages\/(?<id>\d+)$/, crew, async (c) => {

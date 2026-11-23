@@ -40,7 +40,7 @@ async function api(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw Object.assign(new Error(data.error || r.statusText), { status: r.status });
+  if (!r.ok) throw Object.assign(new Error(data.error || r.statusText), { status: r.status, detail: data.detail });
   return data;
 }
 
@@ -396,8 +396,11 @@ function dateWarning() {
   $('date-warn').textContent = moved ? `${soldCount} ticket${soldCount === 1 ? '' : 's'} sold. Buyers see the new date when they open their link, but nobody is told: announce it yourself too.` : '';
 }
 form.addEventListener('input', (e) => {
-  if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
+  if (e.target.type === 'file' || ['mod-name', 'mod-icon', 'pin-text', 'chat-words', 'mute-npub'].includes(e.target.id) || e.target.closest('.mod-row')) return; // saved on their own, not with the form
   if (e.target.name === 'night') applyNight(e.target.value);
+  // Comments need a tip: on by default for a free stream, off for the others (session 55c); the artist may change it.
+  const modeNow = form.querySelector('[data-path="stream.mode"]:checked')?.value;
+  if (modeNow && modeNow !== show.stream.mode) form.querySelector('[data-path="tipWords"]').checked = modeNow === 'free';
   if (e.target.name === 'drink-when') $('drink-at').value = e.target.value === 'time' ? (show.drink?.at || show.streams || '20:00') : '';
   if (e.target.id === 'drink-on') for (const r of form.querySelectorAll('[name="drink"]')) r.checked = r.value === (e.target.checked ? 'artist' : 'off');
   priceRow(e);
@@ -644,6 +647,45 @@ async function drawMods() {
 }
 // ---- Producers (session 55): an invite each, a link that works once, for 7 days (thenutpub.com/crew#i=<stage>.<code>).
 // The server keeps its SHA-256; this browser keeps the link so it can be copied again until it's used.
+// Cellar: Words to keep out and the Nostr mute list (session 55c), saved on their own. The mute list is read from
+// public relays by this browser (client/mute.js); the gig checks its signature and keeps the newest.
+async function keepOut() {
+  const [{ words }, mute] = await Promise.all([api('GET', '/api/admin/chat-words'), api('GET', '/api/admin/mute-list')]);
+  $('chat-words').value = words.join('\n');
+  muteLine(mute);
+}
+const many = (n, one, more) => `${n.toLocaleString('en-GB')} ${n === 1 ? one : more}`;
+function muteLine(m) {
+  $('mute-on').hidden = !m.pubkey;
+  $('mute-off').hidden = !!m.pubkey;
+  if (!m.pubkey) return;
+  const when = m.at ? new Date(m.at * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+  const what = [m.people && many(m.people, 'person', 'people'), m.words && many(m.words, 'word', 'words')].filter(Boolean).join(' and ') || 'Nobody';
+  $('mute-what').textContent = m.found ? `✓ ${what}, from ${when}. Kept out of your chat.` : `No mute list found for ${m.npub.slice(0, 12)}…${m.npub.slice(-4)} yet.`;
+}
+const muteSay = (text) => { $('mute-say').textContent = text; };
+async function findMute(m) {
+  muteSay('Looking on Nostr…');
+  const { refreshMuteList } = await import('/js/mute.js');
+  const fresh = await refreshMuteList(api, m.pubkey).catch((e) => { muteSay(e.detail || e.message); return undefined; });
+  if (fresh === undefined) return;
+  muteLine(fresh || m);
+  muteSay(fresh ? '' : m.found ? 'No newer list on Nostr.' : '');
+}
+$('chat-words-save').onclick = async () => {
+  try {
+    const { words } = await api('PUT', '/api/admin/chat-words', { words: $('chat-words').value });
+    $('chat-words').value = words.join('\n');
+    $('chat-words-say').textContent = `✓ Saved: ${many(words.length, 'word', 'words')}.`;
+  } catch (e) { $('chat-words-say').textContent = e.detail || 'Not saved: try again.'; }
+};
+$('chat-words').addEventListener('input', () => { $('chat-words-say').textContent = 'Not saved yet.'; }); // the ✓ stays until the next change (Rajesh 23 Nov)
+$('mute-use').onclick = async () => {
+  try { const m = await api('PUT', '/api/admin/mute-list', { npub: $('mute-npub').value }); muteLine(m); await findMute(m); } catch (e) { muteSay(e.detail || e.message); }
+};
+$('mute-refresh').onclick = async () => { try { await findMute(await api('GET', '/api/admin/mute-list')); } catch (e) { muteSay(e.detail || e.message); } };
+$('mute-stop').onclick = async () => { await api('DELETE', '/api/admin/mute-list').catch(() => {}); $('mute-npub').value = ''; muteLine({}); muteSay('Your Nostr mute list no longer applies here.'); };
+
 async function drawCrew() {
   const { crew: list, max } = await api('GET', '/api/admin/crew');
   const links = crewLinks();
@@ -808,6 +850,7 @@ try {
   drawMods().catch(() => {});
   // Cellar (session 46): the artist's key, made here the first time, and its 12 words (client/cellar.js).
   if (document.body.dataset.room === 'cellar' && !producer) drawCrew().catch(() => {}); // stages only: Longy's own has no crew (404)
+  if (document.body.dataset.room === 'cellar' && !producer) keepOut().catch(() => {});
   if (document.body.dataset.room === 'cellar' && !producer) {
     import('/js/cellar.js').then((m) => m.cellarWords(key)).catch((e) => { $('words-line').textContent = `Couldn’t open this browser’s wallet: ${e.message || e}`; });
   }

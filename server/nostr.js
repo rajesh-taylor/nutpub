@@ -15,6 +15,7 @@ import { one, run, kv } from './db.js';
 import { json, body, now } from './http.js';
 import { joinWithNostr } from './crew.js';
 import { modByPubkey } from './mods.js';
+import { caught, extraWords } from './wordlist.js';
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const HEX128 = /^[0-9a-f]{128}$/;
@@ -95,7 +96,9 @@ export function mountNostr(route, pass) {
     const pubkey = b.auth.pubkey;
     // A mod's invite, said yes to with this sign-in: spent and tied to this npub, or the sign-in goes no further.
     if (b.invite != null && !(await joinWithNostr(String(b.invite), pubkey))) return json(INVITE_GONE, 403);
-    const name = await profileName(b.profile, pubkey);
+    // A name the chat's word check catches isn't shown: the short npub stands in (session 55c).
+    let name = await profileName(b.profile, pubkey);
+    if (name && caught(name, await extraWords())) name = '';
     await run('INSERT INTO nostr (pass, pubkey, name, at) VALUES (?, ?, ?, ?) ON CONFLICT (pass) DO UPDATE SET pubkey = excluded.pubkey, name = excluded.name, at = excluded.at',
       c.pass, pubkey, name || null, now());
     if (b.invite != null) console.log('mod joined with Nostr');

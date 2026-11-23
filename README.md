@@ -38,6 +38,8 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 
 **Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings.
 
+**A safer chat:** an artist alone on a free stream can't watch the chat, so comments go with a tip while none of their mods is on, slurs and the artist's own words are kept out, a busy chat slows itself, and Quiet on Show Time keeps a phone out for the night. People on the artist's Nostr mute list are kept out too.
+
 <img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: 0 in of 1 sold, ready to scan" width="260" align="right">
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
@@ -93,6 +95,8 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | NUT-24 | HTTP 402: tickets, each minute of video, tips, replays |
 | NIP-07 · 46 · 44 · 98 | Nostr sign-in, from an extension or a signer app |
 | NIP-61 | Nutzaps |
+| NIP-51 | The artist's Nostr mute list, kept out of the chat |
+| WebAuthn | Passkeys: the artist, producers, moderators and a ticket |
 | BIP-39 · BIP-32 | The artist's 12 words |
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
 
@@ -134,6 +138,7 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 - answer each price with a 402, check that the payment is locked to the right key and unspent (NUT-07), and record it
 - sign a venue ticket blind, and tell at the door that a ticket is tonight's, fresh and used once
 - delete everything from a night 7 days after it ends, except one line of totals
+- keep slurs and the artist's own words out of the chat before anyone sees them
 
 **It can't:**
 - spend a payment: it never holds the artist's or the bar's private key
@@ -148,14 +153,9 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 
 The NutPub is a working concept on a test mint, not a production service.
 
-**Not built yet:** the ideas for after NutNovember, by name, are on [the Kitchen's After 27 Nov list](https://thenutpub.com/kitchen#after).
+**What's built, and what isn't yet:** both are on [the Kitchen](https://thenutpub.com/kitchen).
 
 **A limit:** a ticket's passkey is renamed or forgotten only when the fan opens that gig's page again. A closed stage nobody revisits leaves its passkey in the password manager, and Firefox can't be told at all.
-
-**What I'm testing next:**
-- 24 Nov · A cold run: all three gigs on a laptop that has never seen the site
-- 25 Nov · A real broadcast from OBS, then its 7-day replay (the example gigs play recordings)
-- 25 Nov · The Doorman's List scanning a ticket on a real phone, on the live site
 
 **What went wrong on the way:**
 - **Move to my phone** was drawn, built and deployed before anyone timed it. A phone wallet took 15 to 25 seconds to read the animated QR, and one wallet refused it. It's back on the After 27 Nov list; Move to Cashu.me does the job in one tap.

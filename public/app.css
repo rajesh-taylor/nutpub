@@ -333,6 +333,8 @@ body[data-as="home"]:not(.wallet-card) .chat-top .nostr-in .nostr-btn { padding:
 .mod-bar .mod-out { margin-left: auto; font-size: 13px; color: var(--smoke); }
 .mod-bar small:empty { display: none; }
 .slow-note { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
+.tip-note { color: var(--cream); } /* session 55c: comments need a tip while no mod is on */
+.feed .del.hush { font-size: 13px; padding-top: 2px; opacity: .8; } /* a mod's Quiet, beside × */
 .feed .mod-tag { font: 600 11px/1 var(--body); letter-spacing: .02em; color: var(--deep); background: #7db9ff; border-radius: 3px; padding: 3px 5px; vertical-align: 1px; }
 /* Nutzaps (13 Nov): the tag after a Nutzapper's name, and the button beside Tip, in Nostr's purple. Look: for design. */
 .feed .nutzap-tag { font: 600 11px/1 var(--body); letter-spacing: .02em; color: #fff; background: #8e30eb; border-radius: 3px; padding: 3px 5px; vertical-align: 1px; }

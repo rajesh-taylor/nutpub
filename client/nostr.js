@@ -23,7 +23,10 @@ export async function extension(waitMs = 1500) {
 }
 
 // The newest profile any of the relays has for this key, or null after `ms`.
-export function fetchProfile(pubkey, ms = 3000) {
+export const fetchProfile = (pubkey, ms = 3000) => fetchNewest(0, pubkey, ms);
+// The newest note of a replaceable kind (0 a profile, 10000 a mute list) any of the relays has for this key, or null.
+// Its signature is checked by the server, which never takes the page's word for it.
+export function fetchNewest(kind, pubkey, ms = 3000) {
   return new Promise((resolve) => {
     let best = null;
     let open = RELAYS.length;
@@ -35,10 +38,10 @@ export function fetchProfile(pubkey, ms = 3000) {
       try { ws = new WebSocket(url); } catch { if (--open === 0) done(); continue; }
       socks.push(ws);
       const sub = `np${Math.random().toString(36).slice(2, 8)}`;
-      ws.onopen = () => ws.send(JSON.stringify(['REQ', sub, { kinds: [0], authors: [pubkey], limit: 1 }]));
+      ws.onopen = () => ws.send(JSON.stringify(['REQ', sub, { kinds: [kind], authors: [pubkey], limit: 1 }]));
       ws.onmessage = (e) => {
         let m; try { m = JSON.parse(e.data); } catch { return; }
-        if (m[0] === 'EVENT' && m[1] === sub && m[2]?.pubkey === pubkey && m[2]?.kind === 0) {
+        if (m[0] === 'EVENT' && m[1] === sub && m[2]?.pubkey === pubkey && m[2]?.kind === kind) {
           if (!best || m[2].created_at > best.created_at) best = m[2];
         } else if (m[0] === 'EOSE' && m[1] === sub) { ws.close(); if (--open === 0) done(); }
       };
