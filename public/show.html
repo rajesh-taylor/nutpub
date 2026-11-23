@@ -52,9 +52,9 @@
     .times { margin: -2px 0 12px; font-size: 16px; line-height: 1.45; color: var(--smoke); }
     .times b { color: var(--cream); font-weight: 600; }
     /* Session 55d: the gig on Nostr, one quiet line under the steps; the ember dot only while it's listed live. */
-    .signal .nostr-line { display: flex; flex-basis: 100%; align-items: center; gap: 8px; margin: 2px 0 0; font-size: 14px; color: var(--smoke); } /* in the stream's box, under its words */
+    .signal .nostr-line { display: flex; flex-basis: 100%; align-items: center; gap: 10px; margin: 2px 0 0; font-size: 14px; color: var(--smoke); } /* in the stream's box, under its words */
     .nostr-line[hidden] { display: none !important; }
-    .nostr-line .nostr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); flex: none; }
+    .nostr-line .nostr-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 4px rgb(226 96 63 / .2); flex: none; } /* the size of the stream's green dot above it */
     .after { margin: 0 0 18px; font-size: 18px; color: var(--cream); }
     .after a { color: var(--cream); }
     @media (max-width: 700px) { .night-btns { gap: 10px; } .big { font-size: 17px; min-height: 50px; padding: 6px 4px; } } /* shorter (Rajesh 13 Nov): one line each on a small phone */
