@@ -105,6 +105,9 @@ export function clean(input = {}) {
     }, []),
     comments: input.comments !== false,
     tipWords: typeof input.tipWords === 'boolean' ? input.tipWords : input.stream?.mode === 'free',
+    // nostrLive (session 55d): listed live on Nostr (NIP-53) while it's on. null until the artist saves: on, but off on a
+    // judge's practice gig (nostrlive.js).
+    nostrLive: typeof input.nostrLive === 'boolean' ? input.nostrLive : null,
     chatRows: [5, 10].includes(Number(input.chatRows)) ? Number(input.chatRows) : 3,
     stream: {
       mode: ['ticket', 'pay', 'free', 'off'].includes(input.stream?.mode) ? input.stream.mode : 'pay',

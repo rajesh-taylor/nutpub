@@ -83,7 +83,7 @@ export async function judgeLine(r, page) {
   };
   // Gigs 1 and 2 (Rajesh 19 Nov): a line of story above each step too.
   // British slang with its meaning on hover or a tap, as the Kitchen's dicky bird (app.css abbr[data-means]).
-  const gander = () => { const g = Object.assign(document.createElement('abbr'), { textContent: 'gander', tabIndex: 0 }); g.dataset.means = 'British slang: a look, as a goose (a gander) cranes its long neck to see'; return g; };
+  const gander = () => { const g = Object.assign(document.createElement('abbr'), { textContent: 'gander', tabIndex: 0 }); g.dataset.means = 'A look, as a goose (a gander) cranes its long neck to see'; return g; };
   const TOLD = list.at === 'longy' ? {
     // Session 47 (Rajesh 21 Nov): gig 1 opens on Cellar, the only gig that shows it.
     // Session 53: the passkey gets him in; the 12 words guard the money.
@@ -164,7 +164,7 @@ export async function judgeLine(r, page) {
     const on = s.stage === 'on';
     if (pickle) {
       if (page === 'takings' && (await admin('/api/admin/setlist'))?.setlist?.done?.includes(list.at)) {
-        const bread = Object.assign(document.createElement('abbr'), { textContent: 'bread', tabIndex: 0 }); bread.dataset.means = 'Cockney rhyming slang: bread and honey, money';
+        const bread = Object.assign(document.createElement('abbr'), { textContent: 'bread', tabIndex: 0 }); bread.dataset.means = 'Money: Cockney rhyming slang, bread and honey';
         return say('', 'Before you go, read the Pub Noticeboard: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/noticeboard'),
           { story: ['Longy’s ', bread, ' is in his own wallet.'] });
       }

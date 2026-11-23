@@ -40,7 +40,7 @@
     .board .three input { height: 52px; } /* Safari draws date and time boxes taller than number boxes */
     .board .date-warn { margin: 0 0 12px; font-size: 14px; color: var(--cream); }
     .board .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
-    .board .three { display: grid; grid-template-columns: 2.2fr 1.3fr 1fr 1fr 1fr; gap: 0 12px; } /* venue, date, stream, ends, capacity: one line on a laptop */
+    .board .three { display: grid; grid-template-columns: 2.2fr 1.3fr 1fr 1fr 1fr; gap: 0 12px; align-items: end; } /* boxes in a line even when a name wraps */ /* venue, date, stream, ends, capacity: one line on a laptop */
     /* Cellar (session 46): each card shows on its own page; the header's tabs say which. */
     body[data-room="cellar"] [data-room="night"], body[data-room="night"] [data-room="cellar"] { display: none !important; }
     .board .cellar-intro { margin: 0 0 20px; max-width: 60ch; font-size: 16px; color: var(--smoke); }
@@ -193,6 +193,9 @@
     .board .choice-note { display: block; font-size: 13px; font-weight: 400; color: var(--smoke); }
     .board .rate-line { margin: -6px 0 0; font-size: 13px; color: var(--smoke); } /* as far under the boxes as their labels are above */
     .board .switch-note { margin: 0 0 6px; font-size: 15px; color: var(--cream); }
+    .board .nostr-pair { margin: 14px 0 6px; } /* the switch and its note, together */
+    .board .nostr-pair .choice.room-switch { margin: 0; min-height: 36px; }
+    .board .nostr-pair .switch-note { margin: 2px 0 0; }
     .board .switch-pair { display: flex; flex-wrap: wrap; gap: 0 18px; } /* side by side where the column allows; one under the other where it is narrow */
     .board .switch-pair .room-switch { display: inline-flex; width: auto; flex: none; }
     .board .switch-pair .room-switch[hidden] { display: none; }
@@ -490,8 +493,11 @@
               <label class="field">Ends at<input type="time" data-path="lastOrders"></label>
               <label class="field">Venue capacity<input type="number" min="1" max="100000" inputmode="numeric" data-path="capacity" placeholder="No limit"></label>
             </div>
-            <p class="switch-note ends-note" id="ends-note" hidden>Needed for a stream: it sets your replay's lowest price, and what a free stream costs. Running late is fine; nobody's cut off.</p>
+            <p class="switch-note ends-note" id="ends-note" hidden>Needed: It sets your replay's lowest price (proposed build) and what a free stream costs.</p>
             <p class="date-warn" id="date-warn" hidden></p>
+            <!-- Session 55d: the gig listed live on Nostr (NIP-53) while it's on; off to start on a judge's practice gig. -->
+            <div class="nostr-pair"><label class="choice room-switch"><b>List it live on Nostr</b><input type="checkbox" role="switch" data-path="nostrLive" aria-label="List it live on Nostr"></label>
+            <p class="switch-note">Nostr apps show live gigs linked to your page. Stream stays behind the ticket.<span id="nostr-practice" hidden> Off on practice gigs.</span></p></div>
           </section>
 
           <section class="panel wide" data-room="night">

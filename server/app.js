@@ -23,6 +23,7 @@ import { mountPasskeys } from './passkey.js';
 import { mountHandoff } from './handoff.js';
 import { mountNostr } from './nostr.js';
 import { mountNutzaps, nutzapInfo } from './nutzap.js';
+import { mountNostrLive, practiceGig } from './nostrlive.js';
 import { mountStageDoor, closesAt } from './stages.js';
 import { mountCrew, producerOf } from './crew.js';
 import { setlist, finished, again, cue, cueTimes, lastOrdersNow } from './setlist.js';
@@ -108,7 +109,7 @@ route('GET', '/api/show', async (c) => {
   const list = stageDb().id ? await kv.get('setlist', null) : null;
   const judge = !!list?.only;
   // gig: which judge's gig ('pickle' is gig 3, the night at the venue: its one optional passkey step, session 39).
-  return json({ ...now, show: shown, photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(role ? { free: await freeStatus(now.show), role } : {}) });
+  return json({ ...now, show: shown, photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(role ? { free: await freeStatus(now.show), role, practice: await practiceGig() } : {}) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {
@@ -173,6 +174,7 @@ mountGoogleWallet(route);
 mountPasskeys(route, pass);
 mountNostr(route, pass);
 mountNutzaps(route, admin, artistKey, crew);
+mountNostrLive(route, admin); // the gig listed live on Nostr (NIP-53, session 55d): the artist's browser signs it
 mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
 mountRecover(route, admin); // the 12 words win the gig back (stages only, session 54)
 mountCrew(route, admin); // show producers by invite (stages only, session 55)

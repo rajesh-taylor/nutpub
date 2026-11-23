@@ -594,7 +594,7 @@ function printSlip(g) {
 function thanks() {
   const p = el('p', 'wrap-thanks', 'That’s all three gigs. Cheers, me old ');
   const china = Object.assign(document.createElement('abbr'), { textContent: 'china', tabIndex: 0 });
-  china.dataset.means = 'Cockney rhyming slang: china plate, mate';
+  china.dataset.means = 'Mate: Cockney rhyming slang, china plate';
   p.append(china,
     '! 🍻 Before you go, read the Pub Noticeboard: AI agents buy tickets here too.');
   return p;

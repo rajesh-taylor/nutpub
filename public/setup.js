@@ -329,10 +329,15 @@ function shareLink(path) {
 }
 
 let phoneKind = '';
+let practice = false; // a judge's practice gig: its Nostr listing starts off (session 55d)
 function saved(res) {
   if (res.replay) replayNow = res.replay;
   if (res.free) freeNow = res.free;
+  if (typeof res.practice === 'boolean') practice = res.practice;
   fill(res.show);
+  // Not saved yet: on, but off on a practice gig (the server decides the same way, nostrlive.js).
+  if (res.show.nostrLive == null) form.querySelector('[data-path="nostrLive"]').checked = !practice;
+  $('nostr-practice').hidden = !practice;
   if (replayFloorCheck('start')) { read(); setTimeout(() => form.requestSubmit(), 0); } // turned on: it starts at the minimum
   shareLink(res.path);
   larix();

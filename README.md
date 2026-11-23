@@ -40,6 +40,8 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 
 **A safer chat:** an artist alone on a free stream can't watch the chat, so comments go with a tip while none of their mods is on, slurs and the artist's own words are kept out, a busy chat slows itself, and Quiet on Show Time keeps a phone out for the night. People on the artist's Nostr mute list are kept out too.
 
+**The gig, live on Nostr:** while it's on, Nostr apps that list live streams show it, with a link to the gig page. The artist's browser signs it; the stream itself stays behind the ticket.
+
 <img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: 0 in of 1 sold, ready to scan" width="260" align="right">
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
@@ -96,6 +98,7 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | NIP-07 · 46 · 44 · 98 | Nostr sign-in, from an extension or a signer app |
 | NIP-61 | Nutzaps |
 | NIP-51 | The artist's Nostr mute list, kept out of the chat |
+| NIP-53 | The gig listed live on Nostr (planned, live, ended) |
 | WebAuthn | Passkeys: the artist, producers, moderators and a ticket |
 | BIP-39 · BIP-32 | The artist's 12 words |
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |

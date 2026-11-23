@@ -26,10 +26,6 @@ $('screen-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(screenLink); b.textContent = '✓'; b.style.color = 'var(--amber)'; } catch { prompt('The room screen\u2019s link:', screenLink); }
   setTimeout(() => { b.innerHTML = icon; b.style.color = ''; }, 2000);
 });
-// Nutzaps are always on: this page sends the artist's "Nutzap me here" note when the NutPub has none (artist-nostr.js).
-// Not in a show producer's browser (session 55): the note is signed with the artist's own key, which never comes there.
-api('GET', '/api/admin/setlist').then((r) => { if (r.role !== 'producer') import('./artist-nostr.js').then(({ nutzapsOn }) => nutzapsOn(api, info.artistKey)); }).catch(() => {});
-
 const streamed = info.show.stream.mode !== 'off';
 // An example gig (a stage's setlist): its set plays from a recording, so no Larix. The stream button becomes a status
 // light, ● On air, and the signal box says so (Rajesh 14 Nov).
@@ -51,7 +47,9 @@ let now = { stage: 'doors' };
 
 async function stage(next) {
   if (next) await api('POST', '/api/admin/stage', { stage: next });
+  const was = now.stage;
   now = await fetch('/api/stage').then((r) => r.json());
+  if (now.stage !== was) nostrNow(); // a step, or the start time came: the listing says so (planned, live, ended)
   steps();
   $('after').hidden = now.stage !== 'closed';
   document.body.dataset.stage = now.stage;
@@ -201,5 +199,32 @@ for (const b of buttons) {
     })().catch((e) => { if (e.status === 409) { $('unpaid-note').hidden = false; } });
   };
 }
+// Nutzaps are always on: this page sends the artist's "Nutzap me here" note when the NutPub has none (artist-nostr.js).
+// Not in a show producer's browser (session 55): the note is signed with the artist's own key, which never comes there.
+// Then the gig's live listing on Nostr (session 55d), signed with that same key: on load, at each step, and every 5
+// minutes (a live listing is signed again every 30, and a Plan gig switch is picked up).
+let nostrOn = false;
+let nostrBusy = false;
+async function nostrNow() {
+  if (!nostrOn || nostrBusy) return;
+  nostrBusy = true;
+  try { nostrShown(await (await import('./artist-nostr.js')).listLive(api)); } catch {} finally { nostrBusy = false; }
+}
+function nostrShown(r) {
+  const s = r?.sent;
+  $('nostr-line').hidden = !s;
+  if (!s) return;
+  const at = { planned: s.starts, live: s.starts, ended: s.ends || s.at }[s.status];
+  const words = { planned: at ? `Planned on Nostr for ${clock(at)}` : 'Planned on Nostr', live: at ? `Live on Nostr since ${clock(at)}` : 'Live on Nostr', ended: `Ended on Nostr at ${clock(at)}` }[s.status];
+  $('nostr-text').textContent = `${words}${r.local ? ' (not sent from localhost)' : ''}`;
+  $('nostr-dot').hidden = s.status !== 'live';
+}
+api('GET', '/api/admin/setlist').then(async (r) => {
+  if (r.role === 'producer') return;
+  await (await import('./artist-nostr.js')).nutzapsOn(api, info.artistKey);
+  nostrOn = true;
+  nostrNow();
+  setInterval(() => { if (!document.hidden) nostrNow(); }, 5 * 60_000);
+}).catch(() => {});
 await stage();
 setInterval(() => { if (!document.hidden) stage().catch(() => {}); }, 5_000);
