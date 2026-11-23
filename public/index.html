@@ -194,9 +194,9 @@
              No sats: a free comment. Comments off: the sats alone. -->
         <span class="say-field">
           <input id="say-text" maxlength="140" autocomplete="off" placeholder="Leave a comment" aria-label="A message for the artist">
-          <label class="say-sats" id="say-sats-box"><span class="say-unit" id="say-unit" aria-hidden="true">₿</span><input id="say-sats" type="number" min="21" max="1000000" step="1" inputmode="numeric" placeholder="tip, sats" autocomplete="off" aria-label="A tip with it, in sats (21 or more). Empty: a free comment."></label>
+          <label class="say-sats" id="say-sats-box"><button type="button" class="say-unit" id="say-unit" aria-label="Show amounts in pounds">₿</button><input id="say-sats" type="number" min="21" max="1000000" step="1" inputmode="numeric" placeholder="tip, sats" autocomplete="off" aria-label="A tip with it, in sats (21 or more). Empty: a free comment."></label>
         </span>
-        <span class="say-tools"><button type="button" class="coin" id="say-fiat" disabled aria-label="Tip by card: not wired up">£/$</button><button class="coin send" id="say-send" aria-label="Send">➤</button></span>
+        <span class="say-tools"><button class="coin send" id="say-send" aria-label="Send">➤</button></span>
           <span class="say-buttons"><button type="button" class="btn primary" id="say-tip">Send with a tip</button><button class="btn quiet" id="say-free">Send</button></span>
       </form>
       <p class="say-thanks" id="say-thanks" role="status" hidden></p>

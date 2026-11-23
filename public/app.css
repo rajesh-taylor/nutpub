@@ -652,7 +652,7 @@ body.wallet-card .nutpub-line { display: none; }
 body.wallet-card .masthead .wordmark { font-size: 32px; margin: 0; text-align: left; }
 body.wallet-card .masthead .tag { font-size: 20px; margin: 0; text-align: left; }
 body.wallet-card .when { margin: 0; text-align: left; }
-/* The comment box: ₿ opens the tip's amount, £/$ waits for card payments, the arrow sends. */
+/* The comment box: ₿ switches the amounts to £ (and back), the arrow sends. */
 .say-tools { display: none; }
 body.wallet-card .say { position: relative; flex-wrap: nowrap; }
 body.wallet-card .say input { flex: 1 1 auto; padding: 11px 132px 11px 12px; font-size: 16px; }
@@ -1122,14 +1122,17 @@ body .door-line .door-where { color: var(--smoke); font-size: 14px; }
 .say-field { position: relative; flex: 1 1 auto; min-width: 0; display: flex; }
 .say-field #say-text { flex: 1 1 auto; padding-right: 92px; }
 .say-sats { position: absolute; right: 4px; top: 4px; bottom: 4px; display: flex; align-items: center; gap: 3px; padding: 0 2px 0 8px; border-left: 1px solid rgb(239 227 200 / .2); cursor: text; }
-.say-unit { font: 700 15px/1 var(--body); color: var(--btc); }
+.say-unit { flex: none; margin: 0; padding: 4px 3px; border: 0; border-radius: 3px; background: none; font: 700 15px/1 var(--body); color: var(--btc); cursor: pointer; }
+.say-unit:hover:not(:disabled) { background: rgb(247 147 26 / .14); }
+.say-unit:disabled { cursor: text; }
+.say-unit:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 .say-sats.fiat .say-unit { color: var(--cream); }
 .say-sats input { width: 6.5ch; min-width: 0; padding: 0; border: 0; background: none; font: 15px var(--body); color: var(--amber); outline: none; }
 .say-sats input::placeholder { color: var(--smoke); }
 .say-sats:focus-within { box-shadow: inset 0 -2px 0 var(--amber); }
 body[data-as="home"] .say-field { flex: 1 1 100%; }
-body.wallet-card .say-field #say-text { padding-right: 180px; } /* Rajesh 23 Nov: the sats box fits six digits, the words get the rest */
-body.wallet-card .say-sats { right: 82px; top: 6px; bottom: 6px; }
+body.wallet-card .say-field #say-text { padding-right: 140px; } /* Rajesh 23 Nov: the sats box fits six digits, the words get the rest; 56: no £/$ button, 40 px more */
+body.wallet-card .say-sats { right: 45px; top: 6px; bottom: 6px; }
 body.wallet-card .say-unit, body.wallet-card .say-sats input { font-size: 16px; }
 body .say .say-sats input { flex: none; width: 6.5ch; padding: 0; border: 0; background: none; }
 body.no-comments .say .say-sats input { flex: 1 1 auto; width: auto; }
@@ -1529,4 +1532,4 @@ body[data-as="home"] .chat-top .im-mod:not([hidden]) + .nostr-in { margin-left: 
 html.player-view body { padding: 0 !important; margin: 0; background: #000; overflow: hidden; }
 html.player-view body > :not(main), html.player-view main > :not(#player) { display: none !important; }
 html.player-view #player { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; aspect-ratio: auto !important; }
-html.player-view #ov-btc, html.player-view #ov-tip { display: none !important; }
+html.player-view #ov-btc, html.player-view #ov-tip, html.player-view #full { display: none !important; } /* the Mod page's frame: no full screen of its own (session 56) */

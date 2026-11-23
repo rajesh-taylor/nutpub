@@ -655,7 +655,8 @@ $('big-play').onclick = toggle;
 // ---- Full screen: the picture fills the screen, with the controls and the tip on it. Phone turned sideways does
 // it by itself. The button also asks the browser for real full screen where it can (not on iPhone: there the
 // page alone fills the screen, with Safari's bars still round it).
-const sideways = matchMedia('(orientation: landscape) and (max-height: 540px)');
+// The Mod page's player (session 56): a short wide frame, never a sideways phone (it went full screen, with "Leave full screen").
+const sideways = PLAYER ? { matches: false, addEventListener() {} } : matchMedia('(orientation: landscape) and (max-height: 540px)');
 let wantFull = false;
 let sidewaysOut = false; // a sideways phone starts full screen; the button steps out to the page (comments, wallet) until it's turned again
 // Where the tip's amount lives off full screen (under the comment box, or under the money buttons).
@@ -1906,8 +1907,24 @@ unitBox.setAttribute('aria-label', 'Show amounts in');
 unitBox.innerHTML = '<span><small>Bitcoin</small><button type="button" data-unit="btc" aria-label="Sats">₿</button></span><span><small>Pounds</small><button type="button" data-unit="gbp" aria-label="Pounds">£</button></span><span><small>Dollars</small><button type="button" data-unit="usd" aria-label="Dollars">$</button></span><span><small>Euros</small><button type="button" data-unit="eur" aria-label="Euros">€</button></span>';
 $('wallet-link').append(unitBox);
 let ownMode = 'btc';
+// Session 56 (Rajesh): the comment box's ₿ is the switch (the £/$ card placeholder went, for the words' room): ₿ to the
+// fan's last £, $ or € (£ at first) and back, the same choice as the flags.
+const NAMES = { btc: 'sats', gbp: 'pounds', usd: 'dollars', eur: 'euros' };
+let lastFiat = unit !== 'btc' ? unit : 'gbp';
+$('say-unit').onclick = (e) => {
+  e.preventDefault(); // inside the tip field's label
+  const to = inFiat() ? 'btc' : lastFiat;
+  if (to !== 'btc' && !rate?.[to]) return; // no real rate: sats only
+  unit = to;
+  try { localStorage.setItem('nutpub-unit', unit); } catch {}
+  drawUnit();
+  $('say-sats').focus();
+};
 function drawUnit() {
   const mode = inFiat() ? unit : 'btc';
+  if (mode !== 'btc') lastFiat = mode;
+  $('say-unit').setAttribute('aria-label', `Show amounts in ${NAMES[mode === 'btc' ? lastFiat : 'btc']}`);
+  $('say-unit').disabled = mode === 'btc' && !rate?.[lastFiat];
   for (const b of unitBox.querySelectorAll('button')) {
     b.setAttribute('aria-pressed', b.dataset.unit === mode);
     if (b.dataset.unit !== 'btc') b.disabled = !rate?.[b.dataset.unit]; // no real rate: sats only
