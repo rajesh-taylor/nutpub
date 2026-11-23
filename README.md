@@ -36,11 +36,11 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 **Cellar:** what an artist sets once: name and page, the 12 words, photos, the stream.
 ![Cellar: the artist's name, page, 12 words and live stream](docs/img/cellar.jpg)
 
-**Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings.
+**Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings. A moderator has a page of their own, the Mod page: the chat at full height with Quiet and Undo, Slow mode and the pin, beside the stream as fans see it.
 
-**A safer chat:** an artist alone on a free stream can't watch the chat, so comments go with a tip while none of their mods is on, slurs and the artist's own words are kept out, a busy chat slows itself, and Quiet on Show Time keeps a phone out for the night. People on the artist's Nostr mute list are kept out too.
+**A safer chat:** an artist alone on a free stream can't watch the chat, so comments go with a tip while none of their mods is on, slurs and the artist's own words are kept out, a busy chat slows itself, and Quiet keeps a phone out for the night (Undo lets it back). People on the artist's Nostr mute list are kept out too.
 
-**The gig, live on Nostr:** while it's on, Nostr apps that list live streams show it, with a link to the gig page. The artist's browser signs it; the stream itself stays behind the ticket.
+**The gig, live on Nostr:** while it's on, Nostr apps that list live streams show it, with a link to the gig page. The artist's browser signs it; the stream itself stays behind the ticket. Off on the three practice gigs: Plan gig's switch turns it on.
 
 <img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: 0 in of 1 sold, ready to scan" width="260" align="right">
 
@@ -99,7 +99,8 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | NIP-61 | Nutzaps |
 | NIP-51 | The artist's Nostr mute list, kept out of the chat |
 | NIP-53 | The gig listed live on Nostr (planned, live, ended) |
-| WebAuthn | Passkeys: the artist, producers, moderators and a ticket |
+| BIP-340 | The door QR, signed again every 30 seconds; Nostr events |
+| WebAuthn · Signal API | Passkeys: the artist, producers, moderators and a ticket |
 | BIP-39 · BIP-32 | The artist's 12 words |
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
 
@@ -110,7 +111,7 @@ client/    browser code: the fan's page, Show Time, wallets, NUT-16 QR
 public/    pages, styles, fonts, the Judges line
 server/    the Worker: tickets, the door, the 402 gate, replays, takings, stages
 scripts/   the agent that buys a ticket, set-up helpers
-test/      node:test suites (including the NUT-00, NUT-12, NUT-16, BIP-39 and RFC 6238 vectors)
+test/      node:test suites (including the NUT-00, NUT-12, NUT-16, BIP-39, BIP-340 and NIP-44 vectors)
 vendor/    cashu-ts's NUT-16 encoder, unchanged
 ```
 
@@ -142,13 +143,13 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 - sign a venue ticket blind, and tell at the door that a ticket is tonight's, fresh and used once
 - delete everything from a night 7 days after it ends, except one line of totals
 - keep slurs and the artist's own words out of the chat before anyone sees them
+- change a gig's settings, as its artist can: it keeps each stage's setup key, which a passkey or the 12 words hand to the artist's browser
 
 **It can't:**
 - spend a payment: it never holds the artist's or the bar's private key
 - tell which purchase a ticket at the door came from, or who came in: no name, email or address is asked for
 - see the artist's 12 words, or bring them back: they never leave the artist's browser, which forgets them once they're checked
-- open a gig without its 12 words or a passkey that opens it: the words sign a one-time challenge, the gig checks it
-- add a passkey to an artist's gigs without one of their passkeys: a device that has one shows a code that works once, for 5 minutes
+- let anyone else in as the artist: that takes one of their passkeys or the gig's 12 words (they sign a one-time challenge); a new device gets a code from one with a passkey, good once, for 5 minutes
 
 ---
 
@@ -158,14 +159,21 @@ The NutPub is a working concept on a test mint, not a production service.
 
 **What's built, and what isn't yet:** both are on [the Kitchen](https://thenutpub.com/kitchen).
 
-**A limit:** a ticket's passkey is renamed or forgotten only when the fan opens that gig's page again. A closed stage nobody revisits leaves its passkey in the password manager, and Firefox can't be told at all.
+**Before November:** everything up to commit `0ce025e` (30 Oct), tagged `before-nutnovember`: the site on Cloudflare, the test mint, a recorded set paid per 10 seconds, the door ticket with its first drink, tips, the chat, Takings and the poster. The rest is November's.
+
+**Limits:**
+- Test sats only. They leave by Move to Cashu.me, on the same test mint; sending to a Lightning wallet isn't built yet.
+- Ecash is a claim on its mint. The NutPub never holds the sats, but if a mint fails, sats not yet moved go with it.
+- A ticket's passkey is renamed or forgotten only when the fan opens that gig's page again. A closed stage nobody revisits leaves its passkey in the password manager, and Firefox can't be told at all.
+- The Nostr listing is signed in the artist's browser, so it changes (live, ended) only while Show Time is open. Seen on relay.primal.net and nos.lol; relay.damus.io turned the connection away (503) from two networks.
 
 **What went wrong on the way:**
-- **Move to my phone** was drawn, built and deployed before anyone timed it. A phone wallet took 15 to 25 seconds to read the animated QR, and one wallet refused it. It's back on the After 27 Nov list; Move to Cashu.me does the job in one tap.
-- **The first server ran on my laptop behind a tunnel,** so it was down whenever the laptop slept. It moved to Cloudflare's free plan on 29 Oct: nothing to babysit.
-- **A DLEQ check was too slow for the free plan** (10 ms of CPU per request, about 10 ms per note). The gate asks the mint whether each coin is spent (NUT-07) instead.
-- **A reload started the stream again at piece 0** and replayed pieces already paid for, against an empty wallet. It looked exactly like a broken gate. A reload now carries on at the next unpaid piece.
-- **Two Nostr NIPs were listed before they were built.** Built and planned now sit apart on the Kitchen. Free to watch, paid up front, is built but switched off until it's redesigned.
+- **Move to my phone** (21 Nov) was drawn, built and deployed before anyone timed it. A phone wallet took 15 to 25 seconds to read the animated QR, and one wallet refused it. It came out the same day and waits on the Kitchen; Move to Cashu.me does the job in one tap.
+- **The first server ran on my laptop behind a tunnel** (October), so it was down whenever the laptop slept. It moved to Cloudflare's free plan on 29 Oct.
+- **A DLEQ check was too slow for the free plan** (29 Oct: 10 ms of CPU per request, about 10 ms per note). The gate asks the mint whether each coin is spent (NUT-07) instead.
+- **A reload started the stream again at piece 0** (6 Oct) and replayed pieces already paid for, against an empty wallet. It looked exactly like a broken gate. A reload now carries on at the next unpaid piece.
+- **Two Nostr NIPs were listed before they were built** (21 Nov). Built and planned now sit apart on the Kitchen; NIP-53 was built on 23 Nov. Free to watch, paid up front, is built but switched off (19 Nov) until it's redesigned.
+- **Undo didn't bring a line back** on fans' chats (23 Nov): each chat asks only for lines newer than its last. Lines that come back are now sent again.
 
 ---
 

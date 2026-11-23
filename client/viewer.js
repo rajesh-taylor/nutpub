@@ -1149,7 +1149,7 @@ function render() {
   $('budget-box').hidden = !liveOn || !pays();
   $('live-badge').classList.toggle('on-air', liveOn); // the live light: glows while the artist's stream comes in
   // At home the whole ticket is a button beside the tips (board 2); the ticket box stays for the phone.
-  $('whole').hidden = AS !== 'home' || !online || !show.online?.price || ticket || closed;
+  $('whole').hidden = AS !== 'home' || !online || !show.online?.price || ticket || closed || !!MOD; // a mod watches free (session 57)
   $('whole').textContent = `Watch online · ${sats(show.online?.price)}`;
   $('whole-card').hidden = !WALLET_CARD || $('whole').hidden;
   $('price-box').hidden = !pays();
