@@ -36,7 +36,7 @@ async function pour(id) {
       await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
     }
     if (spent) { trombone(); say(`Drink ${id}: Already poured, mate. The mint says it's spent.`); }
-    else { clink(); say(`Drink ${id} poured: ${sats(d.sats)} to the bar. Watch the phone.`); }
+    else { clink(); say(`Drink ${id} poured: signed with the bar’s key and swapped at the mint, ${sats(d.sats)} to the bar. Watch the phone.`); } // session 58: say what Pour by hand did
   } catch (e) { say(e.message); }
   refresh().catch(() => {});
 }

@@ -1354,7 +1354,11 @@ body.one .drink .card-title { color: var(--smoke); }
   body.one .chat { flex: 1 1 auto; display: flex; flex-direction: column; margin: 8px 0 0; padding: 0; border: 0; background: none; }
   body.one .chat-top { margin: 0 0 6px; padding: 0; border: 0; }
   body.one .chat-head { display: none !important; }
-  body.one .feed { flex: 1 1 auto; max-height: none; min-height: 160px; justify-content: flex-end; }
+  /* Session 58 (Rajesh 23 Nov): the feed scrolls in its own box and the comment box stays put under it; new lines no
+     longer push the box down the page while a fan types. The first line's auto margin keeps short chats at the bottom. */
+  body.one .feed { flex: 1 1 auto; max-height: min(40vh, 340px); min-height: 160px; overflow-y: auto; justify-content: flex-start; }
+  body.one .feed > li:first-child { margin-top: auto; }
+  body.one:not(.full) .chat .say { position: sticky; bottom: 0; z-index: 2; background: var(--deep); padding-top: 6px; }
   body.one .bottom .purse { margin: 12px 0 0; }
   /* Bought ahead of the night: only the receipt. */
   body.one.confirmed .tabs { display: none !important; }

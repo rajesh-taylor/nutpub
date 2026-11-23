@@ -1332,8 +1332,10 @@ function todoItems() {
       // A hello in Show Time's desktop view counts too: either way the clip plays on (Rajesh 18 Nov).
       // Rajesh 20 Nov: the phone's player has no play button until the show starts: say where Start show is.
       s.drink && { done: stage === 'on' || stage === 'closed', text: IN_SHOW ? 'Press Start show, on the left: the set starts here' : 'On the laptop’s Show Time, press Start show: the set starts here', did: 'The show is on', short: 'Start show' },
-      s.drink && { ...hello, done: !!todo.hello || (IN_SHOW && homeHello()), text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
-      free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip,
+      // Session 58 (Rajesh 23 Nov): a free stream's chat goes with a tip (55c), so on gig 3 hello and the tip are one step.
+      ...(s.drink && free ? [{ ...tip, done: tippedHere > 0 || (IN_SHOW && homeHello()), text: `Press play, then say hello with a ${sats(show.tip?.price || 2100)} tip in the Chat tab`, did: tippedHere > 0 ? `Said hello with ${sats(tippedHere)}` : 'Said hello with a tip', short: 'Play, hello with a tip' }]
+        : [s.drink && { ...hello, done: !!todo.hello || (IN_SHOW && homeHello()), text: 'Press play, then say hello in the Chat tab', short: 'Play, say hello in Chat' },
+          free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip]),
       // Rajesh 20 Nov (session 40): the drink after the music, hello and tip: a breather before the bar.
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
       s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);

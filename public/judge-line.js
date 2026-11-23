@@ -79,7 +79,7 @@ export async function judgeLine(r, page) {
     // Session 58 (Rajesh 23 Nov): gig 3's stream is free, so its chat goes with a tip (55c); hello and the tip are one step.
     6: 'The show’s on, and the beer token’s on the fan’s phone. A free stream’s chat goes with a tip while no moderator is on, as tipping with hard money stops spam.',
     7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
-    poured: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
+    poured: 'Poured. The bar’s key unlocked the coin (NUT-11) and swapped it at the mint; the fan’s phone saw it spent (NUT-07). Nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',
     // Session 40 (Rajesh 20 Nov): what Takings shows below. The no-show is client/noshow.js, paid at End night.
     takings: 'Below: tonight’s takings, a no-show’s beer token, Longy’s since last orders, and after Finish gig, the night’s receipt under Past gigs.',
@@ -228,7 +228,7 @@ export async function judgeLine(r, page) {
         : 'On the fan’s phone, on the right: press play, then say hello with a 2,100-sat tip in its Chat tab.', '', '', { story: STORY[6] });
       // Step 7: the bar, then End night.
       const d = await drinks();
-      if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
+      if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: the bar’s key, kept in this browser, signs the coin and swaps it at the mint, as the bar’s scanner would. Open DevTools → Network first to watch the swap.', '', '',
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
       return say(7, 'Now press End night, the yellow button below.', '', '', { story: STORY.poured });
     }
