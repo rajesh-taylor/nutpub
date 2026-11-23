@@ -331,6 +331,8 @@ body[data-as="home"]:not(.wallet-card) .chat-top .nostr-in .nostr-btn { padding:
 .mod-bar .btn[aria-pressed="true"] { border-color: #7db9ff; color: #7db9ff; }
 .mod-bar small { flex-basis: 100%; color: var(--smoke); font-size: 13px; }
 .mod-bar .mod-out { margin-left: auto; font-size: 13px; color: var(--smoke); }
+.mod-bar .mod-page { margin-left: auto; font-size: 13px; } /* session 55e: the Mod page, beside Sign out */
+.mod-bar .mod-page:not([hidden]) ~ .mod-out { margin-left: 0; }
 .mod-bar small:empty { display: none; }
 .slow-note { margin: 0 0 6px; font-size: 13px; color: var(--smoke); }
 .tip-note { color: var(--cream); } /* session 55c: comments need a tip while no mod is on */
@@ -1519,3 +1521,10 @@ body:not([data-crew="producer"]) [data-producer] { display: none !important; }
 .im-mod a { color: var(--smoke); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 body[data-as="home"] .chat-top .im-mod { order: 2; margin: 0 0 0 auto; }
 body[data-as="home"] .chat-top .im-mod:not([hidden]) + .nostr-in { margin-left: 0; }
+
+/* ---- The Mod page's player (session 55e): the gig page in the Mod page's frame (?view=player), the picture only, with
+   its own controls; no tip buttons (a mod tips from the gig page). */
+html.player-view body { padding: 0 !important; margin: 0; background: #000; overflow: hidden; }
+html.player-view body > :not(main), html.player-view main > :not(#player) { display: none !important; }
+html.player-view #player { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; aspect-ratio: auto !important; }
+html.player-view #ov-btc, html.player-view #ov-tip { display: none !important; }

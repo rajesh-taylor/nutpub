@@ -16,6 +16,11 @@ const AS = new URLSearchParams(location.search).get('as') === 'home' ? 'home' : 
 // ?view=ticket: the setup page's picture of the ticket page, whatever this browser already holds and whatever the night.
 const TICKET_VIEW = new URLSearchParams(location.search).get('view') === 'ticket';
 const CLOSING_VIEW = new URLSearchParams(location.search).get('view') === 'closing'; // Takings' picture of the end of the night
+// ?view=player: the Mod page's player (session 55e, <stage>/mod). This page in the Mod page's frame, the picture only,
+// signed in as the mod there (a mod watches free, from before the start time). Fans never see it.
+const PLAYER = new URLSearchParams(location.search).get('view') === 'player' && top !== self
+  && (() => { try { return top.location.pathname === '/mod'; } catch { return false; } })();
+if (PLAYER) document.documentElement.classList.add('player-view');
 const KEEP = AS === 'home' ? '-home' : '';
 // One screen for every fan (15 Nov, design B): the gig page on its own looks the same with a venue ticket and watching
 // online (the four tabs on a phone; the picture, the chat beside it and the cards under it on a laptop). Only the
@@ -43,7 +48,7 @@ try {
 } catch {}
 if (/(^|[#&])(mod|invite)=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
 let MOD = null; // { name, icon, main, slow, nostr? } once the server knows the key (or, below, the Nostr sign-in)
-if (MOD_KEY && top === self) {
+if (MOD_KEY && (top === self || PLAYER)) {
   const r = await fetch('/api/mod/me', { headers: { 'X-Mod': MOD_KEY } }).catch(() => null);
   if (r?.ok) MOD = await r.json();
   else if (r?.status === 403) { try { localStorage.removeItem('nutpub-mod'); } catch {} MOD_KEY = null; }
@@ -124,7 +129,7 @@ document.body.dataset.rows = [5, 10].includes(show.chatRows) ? show.chatRows : 3
 // A stream-only gig (no venue tickets): the show's link opens the home view.
 // The setup page's phone (view=ticket) follows the same rule, and turns back when venue tickets are switched on again.
 const homeOnly = !show.ticket.on && show.stream.mode !== 'off';
-if (AS === 'room' && homeOnly) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : ''}`);
+if (AS === 'room' && homeOnly) location.replace(`${location.pathname}?as=home${TICKET_VIEW ? '&view=ticket' : PLAYER ? '&view=player' : ''}`);
 if (AS === 'home' && TICKET_VIEW && !homeOnly) location.replace(`${location.pathname}?view=ticket`);
 // Free shows: no price and no "This set" (there's nothing to count).
 // Free, then paid: the price says how long is left free; it's redrawn on every tick.
@@ -179,7 +184,7 @@ if (me.status === 403) pass = await getPass(true);
 // A Nostr mod's browser: this pass signed in with their npub. Asked only where one has been before (NOSTR_MOD).
 let nostrModHere = false;
 try { nostrModHere = !!localStorage.getItem(NOSTR_MOD); } catch {}
-if (!MOD && nostrModHere && top === self) {
+if (!MOD && nostrModHere && (top === self || PLAYER)) {
   const r = await fetch('/api/mod/me', { headers: { 'X-Pass': pass } }).catch(() => null);
   if (r?.ok) MOD = await r.json();
   else if (r?.status === 403) { try { localStorage.removeItem(NOSTR_MOD); } catch {} }
@@ -1739,6 +1744,7 @@ function modBar(slow, busy = false) {
   $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
   $('pin-btn').hidden = !MOD.main;
   $('mod-out').hidden = MOD.via !== 'passkey'; // a Nostr mod signs out of Nostr; a link stays the mod's own
+  $('mod-page').hidden = false; // the Mod page (session 55e): the chat and the player, a page of its own
   $('slow-btn').textContent = `Slow mode · ${slow ? 'on' : 'off'}${busy ? ' · busy' : ''}`;
   $('slow-btn').setAttribute('aria-pressed', !!slow);
   $('mod-say').textContent = !opened && stage !== 'closed' ? 'Viewers see the countdown: you see the stream already.' : '';
@@ -2045,7 +2051,8 @@ async function nostrGo(b) {
   try { nostrLine(await signIn(pass, null, extra)); } catch (e) { inviteSaid(e?.message); say(e?.message || 'Nostr sign-in cancelled.'); }
   b.disabled = false;
 }
-// This page, as a mod's: once per tab, so a server that disagrees can't keep it reloading.
+// This page, as a mod's: once per tab, so a server that disagrees can't keep it reloading. On an artist's stage a mod's
+// place is the Mod page (session 55e): Nostr Sign In, from the chat or an invite, lands there.
 function becomeMod() {
   try {
     localStorage.setItem(NOSTR_MOD, '1');
@@ -2053,7 +2060,7 @@ function becomeMod() {
     if (sessionStorage.getItem('nutpub-mod-again')) return;
     sessionStorage.setItem('nutpub-mod-again', '1');
   } catch {}
-  location.reload();
+  if (STAGE_ID) location.assign('/mod'); else location.reload();
 }
 // Nostr Connect, waiting for the fan's signer app. Words for fans: no "NIP", no "bunker".
 async function connectPanel(extra = {}) {

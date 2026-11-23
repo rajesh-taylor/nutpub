@@ -166,7 +166,7 @@
     }
     // Session 55: a producer from thenutpub.com/crew, with their own one-time code (#c=), traded once for a key of their
     // own (never the setup key), then Show Time. A browser already signed in here as the artist stays the artist's.
-    // Session 55b: a moderator's code gives a mod key (kept as a link's was), then the gig page, as a mod.
+    // Session 55b: a moderator's code gives a mod key (kept as a link's was), then (55e) the Mod page.
     const crewCode = new URLSearchParams(location.hash.slice(1)).get('c');
     if (crewCode) {
       history.replaceState(null, '', location.pathname);
@@ -175,8 +175,7 @@
         .then((x) => (x.ok ? x.json() : null)).catch(() => null);
       if (c?.role === 'mod') {
         try { localStorage.setItem('nutpub-mod', c.key); } catch {}
-        const s = await fetch('/api/show').then((x) => x.json()).catch(() => ({}));
-        location.replace(`${s.path || '/'}?as=home`);
+        location.replace('/mod'); // session 55e: a mod's place is the Mod page (the chat and the player)
         await new Promise(() => {});
       }
       if (c?.role === 'producer' && was?.role !== 'artist') { try { localStorage.setItem('nutpub-admin', c.key); } catch {} location.replace('/show'); await new Promise(() => {}); }

@@ -67,6 +67,7 @@ route('GET', '/agents', page('agents.html')); // The Pub Noticeboard (session 43
 route('GET', '/noticeboard', page('agents.html')); // its name since session 45 (Rajesh 21 Nov); /agents kept for old links
 route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
+route('GET', '/mod', page('mod.html')); // the Mod page (session 55e): a gig's moderators, signed in as now (passkey or Nostr)
 route('GET', '/takings', page('night-takings.html'));
 route('GET', '/last-orders', redirect('/takings')); // its name before 29 Oct
 

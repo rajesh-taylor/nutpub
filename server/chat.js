@@ -14,9 +14,10 @@ import { bech32 } from '@scure/base';
 import { one, all, run, sql, batch, kv } from './db.js';
 import { json, body, now, randomHex } from './http.js';
 import { verifyEvent, npub } from './nostr.js';
-import { modOf, modOnline } from './mods.js';
+import { modOf, modOnline, modSeen, slowMode, slowBusy, pinned } from './mods.js';
 import { tidyWords } from './wordlist.js';
-import { currentShow } from './shows.js';
+import { currentShow, stageNow, opensAt } from './shows.js';
+import { liveNow } from './live.js';
 
 export const MIN_TIP = 21; // mints keep a fee reserve when paying out over Lightning: a 1-sat tip could never leave
 export const MUTE_KIND = 10000;
@@ -104,6 +105,35 @@ export function mountChat(route, admin, crew) {
     await applyHidden();
     return null;
   };
+  // The Mod page (session 55e, <stage>/mod): the mod's own look at the chat. The newest 40 lines fans see, who's quiet
+  // tonight (Undo by its own id, as Show Time's), slow mode, the pin, and the night's step so the page can say what fans
+  // see. Asking counts as a mod on, as the gig page's tick does (free comments on a tip-only gig). Never a phone's pass.
+  const modState = async (c) => {
+    const m = await modOf(c);
+    const [lines, q, cs, slow, busy, pin, cued] = await Promise.all([
+      all('SELECT id, pass, sats, text, mod, mod_icon, nostr FROM messages WHERE deleted = 0 ORDER BY id DESC LIMIT 40'),
+      quietList(), currentShow(), slowMode(), slowBusy(), pinned(), kv.get('cuedIds', []),
+    ]);
+    const { show } = cs;
+    const words = show.comments !== false;
+    const scripted = new Set(cued);
+    const [stage, live] = await Promise.all([stageNow(show), liveNow(show.page)]);
+    return {
+      me: { name: m.name, icon: m.icon || '', main: !!m.main, via: m.via },
+      lines: lines.reverse().filter((r) => words || r.sats > 0).map((r) => ({ id: r.id, who: r.mod || r.nostr || guest(r.pass), sats: r.sats, text: words ? r.text : '',
+        ...(r.mod ? { mod: true, icon: r.mod_icon || '' } : {}), ...(r.nostr ? { nostr: true } : {}), ...(scripted.has(r.id) || !r.pass ? { cue: true } : {}) })),
+      quiet: q.map(({ id, who }) => ({ id, who })),
+      slow, busy, pin: words ? pin : '', comments: words, tipWords: words && !!show.tipWords,
+      gig: { artist: show.artist || '', venue: show.venue || '', date: show.date || '', path: cs.path, stage, live: !!live, opensAt: opensAt(show) },
+    };
+  };
+  const asMod = async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'You’re no longer a mod on this gig.' }, 403));
+  route('GET', '/api/mod/chat', asMod, async (c) => { await modSeen(); return json(await modState(c)); });
+  route('DELETE', /^\/api\/mod\/quiet\/(?<id>[0-9a-f]{12})$/, asMod, async (c) => {
+    await kv.set('quiet', (await quietList()).filter((x) => x.id !== c.params.id));
+    await applyHidden();
+    return json(await modState(c));
+  });
   route('GET', '/api/admin/chat', crew, async () => json(await state()));
   route('POST', '/api/admin/quiet', crew, quiet, async () => json(await state()));
   route('DELETE', /^\/api\/admin\/quiet\/(?<id>[0-9a-f]{12})$/, crew, async (c) => {
@@ -111,9 +141,8 @@ export function mountChat(route, admin, crew) {
     await applyHidden();
     return json(await state());
   });
-  // A mod's 🔇: the same Quiet. The artist's Show Time has the Undo.
-  route('POST', '/api/mod/quiet', async (c) => ((await modOf(c)) ? null : json({ error: 'not_mod', detail: 'You’re no longer a mod on this gig.' }, 403)),
-    quiet, async () => json({ ok: true }));
+  // A mod's 🔇 on the gig page, or Quiet on the Mod page: the same Quiet. Undo: Show Time's, or the Mod page's (above).
+  route('POST', '/api/mod/quiet', asMod, quiet, async (c) => json({ ok: true, ...(await modState(c)) }));
 
   // Cellar: the artist's own words to keep out, and their Nostr mute list.
   route('GET', '/api/admin/chat-words', admin, async () => json({ words: await kv.get('chatWords', []) }));

@@ -9,7 +9,7 @@ import { endReplay } from './replay.js';
 export const LANGUAGES = ['en', 'de', 'es', 'fr', 'pt'];
 
 // A page address: "Longy" -> longy, "Bitfest '26" -> bitfest-26. Names the site's own folders use are left out.
-const TAKEN = ['api', 'img', 'js', 'fonts', 'gig']; // gig: a stage's gig with no page name yet (below)
+const TAKEN = ['api', 'img', 'js', 'fonts', 'gig', 'mod']; // gig: a stage's gig with no page name yet (below); mod: the Mod page
 export const pageName = (name) => {
   const s = String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);

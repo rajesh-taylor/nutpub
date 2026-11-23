@@ -415,3 +415,53 @@ test('on localhost a stage’s own address (<id>.localhost) passes the Nostr che
   assert.equal(await local(`http://${STAGE}.localhost:8818/api/nostr`, `${STAGE}.localhost:8818`), 200);
   assert.equal(await local('http://p7q2m4.localhost:8818/api/nostr', `${STAGE}.localhost:8818`), 400);
 });
+
+// The Mod page (session 55e): <stage>/mod, the mod's own look at the chat, signed in as mods are (passkey or Nostr).
+test('the Mod page: a mod’s chat with Quiet and Undo, slow mode and the pin; a fan, a producer and a removed mod get nothing', async () => {
+  const { key } = await passkeyMod('Kat');
+  const pk = { 'X-Mod': key };
+  const guest = await newPass();
+  await fan('POST', '/api/message', { text: 'sound’s great' }, { 'X-Pass': guest });
+  const mine = await newPass();
+  await fan('POST', '/api/message', { text: 'Setlist at frankie.shop' }, { 'X-Pass': mine, ...pk });
+  const s = await fan('GET', '/api/mod/chat', null, pk);
+  assert.equal(s.status, 200, JSON.stringify(s));
+  assert.deepEqual([s.me.name, s.me.icon, s.me.main, s.me.via], ['Kat', '🎤', true, 'passkey']);
+  assert.deepEqual(s.lines.map((l) => [l.who.startsWith('guest ') ? 'guest' : l.who, !!l.mod, l.text]), [['guest', false, 'sound’s great'], ['Kat', true, 'Setlist at frankie.shop']]);
+  assert.ok(s.lines.every((l) => !('pass' in l))); // never a phone's pass
+  assert.equal(s.gig.path, '/gig');
+  assert.equal(s.gig.stage, 'doors');
+  assert.equal(await withStage(stage, () => kv.get('modSeen', 0)) > 0, true); // asking counts as a mod on
+  // Quiet from the Mod page, then the mod's own Undo.
+  const q = await fan('POST', '/api/mod/quiet', { message: s.lines[0].id }, pk);
+  assert.equal(q.status, 200);
+  assert.deepEqual(q.lines.map((l) => l.who), ['Kat']);
+  assert.equal(q.quiet.length, 1);
+  const u = await fan('DELETE', `/api/mod/quiet/${q.quiet[0].id}`, null, pk);
+  assert.deepEqual([u.status, u.quiet.length, u.lines.length], [200, 0, 2]); // the line is back
+  // Slow mode and the pin, as on the gig page.
+  assert.equal((await fan('POST', '/api/mod/slow', { on: true }, pk)).slow, true);
+  assert.equal((await fan('POST', '/api/mod/pin', { text: 'Merch at the bar' }, pk)).pin, 'Merch at the bar');
+  const again = await fan('GET', '/api/mod/chat', null, pk);
+  assert.deepEqual([again.slow, again.pin], [true, 'Merch at the bar']);
+  // Not a mod: refused, with the words the page signs out on.
+  for (const h of [{}, { 'X-Pass': guest }, { 'X-Mod': 'f'.repeat(32) }]) {
+    const r = await fan('GET', '/api/mod/chat', null, h);
+    assert.deepEqual([r.status, r.error], [403, 'not_mod']);
+  }
+  assert.equal((await fan('DELETE', `/api/mod/quiet/${'a'.repeat(12)}`, null, { 'X-Pass': guest })).status, 403);
+  const prod = await producer('Pat');
+  assert.equal((await fan('GET', '/api/mod/chat', null, { 'X-Admin': prod.key })).status, 403); // producers stay on Show Time
+  const { mods } = await call('GET', '/api/admin/mods');
+  await call('DELETE', `/api/admin/crew/${mods[0].crew}`);
+  assert.equal((await fan('GET', '/api/mod/chat', null, pk)).error, 'not_mod'); // Remove: out at once
+});
+
+test('the Mod page for a Nostr mod: their pass, signed in with the npub the invite was tied to', async () => {
+  const inv = await modInvite('Sam', '🥁');
+  const pass = await newPass();
+  await fan('POST', '/api/nostr', { auth: await note(), invite: inv.code }, { 'X-Pass': pass });
+  const s = await fan('GET', '/api/mod/chat', null, { 'X-Pass': pass });
+  assert.deepEqual([s.status, s.me.name, s.me.via], [200, 'Sam', 'nostr']);
+  assert.equal((await fan('GET', '/api/mod/chat', null, { 'X-Pass': await newPass() })).status, 403);
+});
