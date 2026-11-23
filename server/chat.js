@@ -27,6 +27,9 @@ const HEX64 = /^[0-9a-f]{64}$/;
 export const tipOnly = async (show) => show.comments !== false && !!show.tipWords && !(await modOnline());
 
 const quietList = () => kv.get('quiet', []);
+export const BACK_MS = 120_000; // how long a line brought back is sent again to chats that had moved past it
+// Lines brought back since `at - BACK_MS`, among the last 60 a chat at `after` shows.
+export const backSince = async (after, at = Date.now()) => (await kv.get('chatBack', [])).filter((x) => x.at > at - BACK_MS && x.id <= after && x.id > after - 60).map((x) => x.id);
 const muteList = () => kv.get('muteList', null);
 // A new line from this phone (and its Nostr key, if signed in): kept out of everyone else's chat?
 export async function hiddenFrom(pass, pubkey) {
@@ -40,6 +43,13 @@ export async function applyHidden() {
   const passes = new Set(q.map((x) => x.pass));
   if (people.size) for (const r of await all('SELECT pass, pubkey FROM nostr')) if (people.has(r.pubkey)) passes.add(r.pass);
   const list = JSON.stringify([...passes]);
+  // Session 56: lines coming back (Undo, Stop) are older than fans' last line, so their chats would never ask for them
+  // again; the tick sends them for 2 minutes (door.js chatSince), and each chat puts them back in their place.
+  const back = await all('SELECT id FROM messages WHERE deleted = 2 AND pass NOT IN (SELECT value FROM json_each(?))', list);
+  if (back.length) {
+    const at = Date.now();
+    await kv.set('chatBack', [...(await kv.get('chatBack', [])).filter((x) => x.at > at - BACK_MS), ...back.map(({ id }) => ({ id, at }))].slice(-100));
+  }
   await batch([
     sql('UPDATE messages SET deleted = 2 WHERE deleted = 0 AND mod IS NULL AND pass IN (SELECT value FROM json_each(?))', list),
     sql('UPDATE messages SET deleted = 0 WHERE deleted = 2 AND pass NOT IN (SELECT value FROM json_each(?))', list),

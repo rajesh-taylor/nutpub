@@ -1788,7 +1788,8 @@ function tipWords(on) {
 const TIP_FIRST = 'Add a tip to send it: 21 sats or more.';
 function chat(r) {
   for (const m of r.messages) {
-    if (m.id <= lastMsg) continue; // two ticks crossing: already shown
+    // Two ticks crossing: already shown. A line back after Undo (session 56) is older: shown again, in its place.
+    if (m.id <= lastMsg && !(m.back && !feed.querySelector(`[data-id="${m.id}"]`))) continue;
     const li = document.createElement('li');
     li.dataset.id = m.id;
     const who = document.createElement('span');
@@ -1828,7 +1829,8 @@ function chat(r) {
         li.append(hush);
       }
     }
-    feed.append(li);
+    if (m.id < lastMsg) feed.insertBefore(li, [...feed.children].find((x) => Number(x.dataset.id) > m.id) || null);
+    else feed.append(li);
     lastMsg = Math.max(lastMsg, m.id);
   }
   for (const id of r.deleted) feed.querySelector(`[data-id="${id}"]`)?.remove();
@@ -1983,7 +1985,10 @@ $('say').onsubmit = async (e) => {
     $('say-send').textContent = '…'; // session 51: the mint can take a few seconds; the button says it's on its way
     try {
       const res = await paidFetch(`/api/tip/${n}`, said());
-      if (res.ok) { sent(); tipped(res); box.value = ''; thank(T.ownDone(reads(n)) + feeNote()); } else say(await refusal(res));
+      if (res.ok) { sent(); tipped(res); box.value = ''; thank(T.ownDone(reads(n)) + feeNote()); } else {
+        const why = await res.clone().json().catch(() => ({})); // a word on the list: said under the box, where the words are (session 56)
+        (why.error === 'not_welcome' ? thank : say)(await refusal(res));
+      }
     } catch (err) {
       say(/insufficient|not enough|balance/i.test(err.message) ? T.empty : err.message);
     }
@@ -1998,7 +2003,7 @@ $('say').onsubmit = async (e) => {
   const r = await fetch('/api/message', { method: 'POST', headers: { 'X-Pass': pass, ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) { $('say-text').value = ''; todoMark('hello'); tick().catch(() => {}); return; }
   const why = await r.json().catch(() => ({}));
-  if (why.error === 'tip_words') { tipWords(true); thank(TIP_FIRST); box.focus(); } else say(why.detail || 'Not sent.');
+  if (why.error === 'tip_words') { tipWords(true); thank(TIP_FIRST); box.focus(); } else if (why.error === 'not_welcome') thank(why.detail); else say(why.detail || 'Not sent.');
 };
 
 // ---- Nostr sign-in for the chat, a purple button in the Live chat header for every fan (not mods: they have their own

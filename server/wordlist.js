@@ -1,5 +1,5 @@
 // The chat's word check (session 55c): every message, with a tip or without, mods' too, is checked here before anyone
-// sees it, and before anything is paid. Caught: it isn't sent ("Not sent: that word isn't welcome in this chat.").
+// sees it, and before anything is paid. Caught: it isn't sent ("Word(s) used are on the naughty list.").
 // Three lists: the NutPub's own (slurs and hate, not everyday swearing: it's a pub), the words the artist adds in
 // Cellar, and the words on the artist's Nostr mute list (NIP-51, chat.js). Whole words only, so a word inside another
 // word isn't caught; spellings like s.l.u.r, s l u r, 5lur, sluuut and Cyrillic look-alikes are.
@@ -56,7 +56,7 @@ export function caught(text, extra = []) {
 }
 // The artist's own words (Cellar) and their Nostr mute list's words, for this stage.
 export const extraWords = async () => [...(await kv.get('chatWords', [])), ...((await kv.get('muteList', null))?.words || [])];
-export const NOT_WELCOME = 'Not sent: that word isn’t welcome in this chat.';
+export const NOT_WELCOME = 'Word(s) used are on the naughty list.'; // Rajesh 23 Nov
 // For a route: before a message goes out (or is paid for), with a tip or without.
 export const noBadWords = (text) => async (c) => (caught(await text(c), await extraWords())
   ? json({ error: 'not_welcome', detail: NOT_WELCOME }, 400) : null);

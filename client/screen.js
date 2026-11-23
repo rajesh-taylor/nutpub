@@ -116,6 +116,14 @@ async function tick() {
   }
   const fresh = new Set();
   for (const m of now.messages || []) {
+    if (m.back) { // a line back after Undo (session 56): in its place (newest first), once
+      if ((m.sats > 0 || m.text) && !feed.some((f) => f.id === m.id)) {
+        const at = feed.findIndex((f) => f.id < m.id);
+        feed.splice(at < 0 ? feed.length : at, 0, { id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text, cue: !!m.cue });
+        fresh.add(m.id);
+      }
+      continue;
+    }
     after = Math.max(after, m.id);
     if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text, cue: !!m.cue }); fresh.add(m.id); }
   }

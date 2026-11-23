@@ -102,7 +102,7 @@ test('a slur isn’t sent: free, with a tip (before anything is paid), from a mo
   const pass = await newPass();
   const bad = rot13('lbh ner n fyhg');
   const no = await say(pass, bad);
-  assert.deepEqual([no.status, no.error, no.detail], [400, 'not_welcome', 'Not sent: that word isn’t welcome in this chat.']);
+  assert.deepEqual([no.status, no.error, no.detail], [400, 'not_welcome', 'Word(s) used are on the naughty list.']);
   assert.equal((await say(pass, bad, { 'X-Mod': await linkMod() })).status, 400);
   assert.equal((await fan('GET', '/api/tip/100', null, { 'X-Pass': pass, 'X-Message': encodeURIComponent(bad) })).status, 400);
   assert.notEqual((await fan('GET', '/api/tip/100', null, { 'X-Pass': pass, 'X-Message': 'Lovely' })).status, 400); // clean words go on to the payment
@@ -193,6 +193,13 @@ test('Quiet: the line goes, that phone sees its own lines and nobody else does, 
   const back = await call('DELETE', `/api/admin/quiet/${q.quiet[0].id}`);
   assert.deepEqual(back.quiet.map((x) => x.who), [`guest ${other.slice(0, 4)}`]);
   assert.deepEqual(await lines(kind), ['you’re rubbish', 'Lovely set', 'hello??', 'Hello all']);
+  // Session 56: a chat already past those lines (its last line newer) gets them again, marked back, for 2 minutes.
+  const past = await fan('GET', `/api/tick?after=${o.id}`, null, { 'X-Pass': kind });
+  assert.deepEqual(past.messages.map((m) => [m.text, !!m.back]), [['you’re rubbish', true], ['hello??', true]]);
+  assert.equal((await tick(kind)).messages.some((m) => m.back), false); // a fresh page: every line, none marked
+  assert.deepEqual((await fan('GET', `/api/tick?after=${o.id + 60}`, null, { 'X-Pass': kind })).messages, []); // beyond the last 60
+  await db(() => kv.set('chatBack', [])); // and after 2 minutes, not again
+  assert.deepEqual((await fan('GET', `/api/tick?after=${o.id}`, null, { 'X-Pass': kind })).messages, []);
   await db(() => clearGig());
   assert.deepEqual(await db(() => kv.get('quiet', [])), []);
 });

@@ -16,7 +16,7 @@ import { artistKey } from './takings.js';
 import { json, body, now, randomHex } from './http.js';
 import { modOf, hasLink, slowMode, slowBusy, noteBusy, modSeen, pinned, SLOW, NORMAL } from './mods.js';
 import { nostrOf, handle } from './nostr.js';
-import { tipOnly, hiddenFrom, MIN_TIP } from './chat.js';
+import { tipOnly, hiddenFrom, MIN_TIP, backSince } from './chat.js';
 import { noBadWords } from './wordlist.js';
 
 const COMPRESSED = /^0[23][0-9a-f]{64}$/;
@@ -325,19 +325,23 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
   // `me`: the phone asking (X-Pass). A quiet phone's own lines (deleted = 2) come back to it alone.
   const chatSince = async (c, after) => {
     const me = c.req.headers.get('X-Pass') || '';
-    const [rows, tipped, gone, show, slow, busy, pin, cued] = await Promise.all([
-      all('SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id WHERE m.id > ? AND (m.deleted = 0 OR (m.deleted = 2 AND m.pass = ?)) ORDER BY m.id DESC LIMIT 50', after, me),
+    const LINE = 'SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id';
+    const [rows, tipped, gone, show, slow, busy, pin, cued, back] = await Promise.all([
+      all(`${LINE} WHERE m.id > ? AND (m.deleted = 0 OR (m.deleted = 2 AND m.pass = ?)) ORDER BY m.id DESC LIMIT 50`, after, me),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
       kv.get('nightStart', '').then((since) => one("SELECT COALESCE(SUM(sats), 0) AS s FROM locked WHERE kind = 'tip' AND at >= ?", since)),
       all('SELECT id FROM messages WHERE (deleted = 1 OR (deleted = 2 AND pass != ?)) AND id > ?', me, Math.max(after - 60, 0)), // the page shows the last 60
       showOf(c), slowMode(), slowBusy(), pinned(), kv.get('cuedIds', []),
+      // Lines brought back by Undo (or Stop on the mute list), older than this chat's last: sent again, marked back.
+      after ? backSince(after).then((ids) => (ids.length ? all(`${LINE} WHERE m.id IN (SELECT value FROM json_each(?)) AND m.deleted = 0`, JSON.stringify(ids)) : [])) : [],
     ]);
-    const scripted = new Set(cued); // an example gig's scripted lines (setlist.js cue): the TV page lets them go first
+    const scripted = new Set(cued);
+    const backIds = new Set(back.map((m) => m.id)); // an example gig's scripted lines (setlist.js cue): the TV page lets them go first
     const words = show.comments !== false; // off: only the tips, without their words
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
-      messages: rows.reverse().filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
-        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}), ...(m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}) })),
+      messages: [...back, ...rows.reverse()].filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
+        who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}), ...(m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}), ...(backIds.has(m.id) ? { back: true } : {}) })),
       slow, ...(busy ? { busy } : {}), ...((await tipOnly(show)) ? { tipOnly: true } : {}), pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',
     };

@@ -1185,7 +1185,9 @@ body.drink-focus #drink-back { margin: 4px 0 0; }
      the chat stays the screen's height, beside the player. */
   body.wallet-card main { height: auto; min-height: calc(100dvh - 30px); grid-template-rows: auto auto auto; align-content: start; }
   body.wallet-card:not(.full) .player { width: 100%; height: auto; }
-  body.wallet-card .chat { position: sticky; top: 16px; height: calc(100dvh - 62px); align-self: start; }
+  /* Session 56 (Rajesh): the chat ends with the stretch goals, not lower. Its window height no longer stretches an empty
+     row under the cards (the 100% caps it at its rows); at the bottom of the page both columns end together. */
+  body.wallet-card .chat { position: sticky; top: 16px; height: min(calc(100dvh - 56px), 100%); align-self: start; }
 }
 /* In the room, the gig's credits sit under the photo, never over a face (Rajesh 14 Nov). */
 body[data-as="room"] .welcome { flex-direction: column; }
