@@ -235,7 +235,7 @@ export async function judgeLine(r, page) {
       const second = (() => { try { return localStorage.getItem('nutpub-second-pint') === location.host; } catch { return false; } })();
       if (!second) return say(7, 'Cheeky second pint? Press Pour again. To watch the mint answer, first open developer tools (⌥⌘I) on the Network tab and type “testnut” in its filter box.', '', '',
         { story: STORY.poured, extra: pressBtn('Pour again', '#bar-drinks button', /pour again$/, 'Pouring…') });
-      return say(7, 'Now press End night, the yellow button below.', '', '', { story: STORY.again });
+      return say(7, 'Close developer tools (⌥⌘I again), then press End night, the yellow button below.', '', '', { story: STORY.again });
     }
     if (g2) {
       if (page === 'setup') {

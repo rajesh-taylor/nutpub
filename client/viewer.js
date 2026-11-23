@@ -1793,7 +1793,11 @@ function tipWords(on) {
   if (!$('say-sats-box').classList.contains('fiat')) $('say-sats').placeholder = on ? '21+ sats' : 'sats';
 }
 const TIP_FIRST = 'Add a tip to send it: 21 sats or more.';
+// Session 58 (Rajesh 23 Nov): gig 3's phone on Show Time holds its chat still until the fan's hello with a tip has gone:
+// nothing new comes in while they read and type. Held lines aren't lost: the next tick after asks from the same place.
+const holdChat = () => IN_SHOW && AS === 'room' && free && !!split().drink && !(tippedHere > 0 || homeHello());
 function chat(r) {
+  if (holdChat()) r = { ...r, messages: r.messages.filter((m) => m.id <= lastMsg) }; // Undo's lines back still show
   for (const m of r.messages) {
     // Two ticks crossing: already shown. A line back after Undo (session 56) is older: shown again, in its place.
     if (m.id <= lastMsg && !(m.back && !feed.querySelector(`[data-id="${m.id}"]`))) continue;
