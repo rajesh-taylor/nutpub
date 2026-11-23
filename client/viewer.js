@@ -1338,7 +1338,7 @@ function todoItems() {
           free ? { ...tip, text: `Tip ${show.artist || 'the artist'} ${sats(show.tip?.price || 2100)} in the Tip tab`, short: 'Tip: the stream is free' } : tip]),
       // Rajesh 20 Nov (session 40): the drink after the music, hello and tip: a breather before the bar.
       // Rajesh 18 Nov: say exactly where to go. Pour by hand on the laptop stands in for the bar scanning the glass.
-      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: press Pour by hand, on the left (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
+      s.drink && { done: !!door.drink?.poured, text: show.drinkCoin && !drinkReady() ? (IN_SHOW ? 'Your drink arrives here when you press Start show, on the left' : 'Keep this page open. On the laptop’s Show Time, press Start show: your drink arrives here') : (IN_SHOW ? 'Get your drink: scroll up to the Judges line and press Pour by hand (that’s the bar scanning this QR)' : 'Get your drink: on the laptop, press Pour by hand on Show Time (that’s the bar scanning this QR)'), did: 'Drink poured', short: 'Get your drink poured' }].filter(Boolean);
   }
   // Longy's, gig 1 (Rajesh 21 Nov, session 47): one count for the whole gig, whole numbers, 9 steps. 1 the 12 words, 2 on to
   // Plan gig, 3 Plan gig, 4 Start show; here 5 the ticket, 6 one big tip in full screen (both goals), 7 Pub TV; 8, 9.
@@ -1845,7 +1845,8 @@ function chat(r) {
   tipWords(r.tipOnly);
   pin(r.pin);
   while (feed.children.length > 60) feed.firstElementChild.remove();
-  feed.scrollTop = feed.scrollHeight;
+  // Session 58 (Rajesh 23 Nov): while a fan types, the chat holds still (new lines wait below); it catches up once they've sent.
+  if (!document.activeElement?.closest?.('#say') || feedCatchUp) { feed.scrollTop = feed.scrollHeight; feedCatchUp = false; }
   goal(r.tipped, r.goals, r.thanks);
 }
 // Full screen on a phone: the keyboard covers the tip box (sideways it leaves only a strip), so while typing the box
@@ -1991,7 +1992,9 @@ function said() {
   const text = $('say-text').value.trim();
   return text ? { 'X-Message': encodeURIComponent(text) } : {};
 }
+var feedCatchUp = false; // var: the chat can draw before this line runs. Set by a send: the chat scrolls to the newest line once, even with the box still focused
 function sent() {
+  feedCatchUp = true;
   if ($('say-text').value.trim()) todoMark('hello');
   $('say-text').value = '';
   setTimeout(() => tick().catch(() => {}), 300);

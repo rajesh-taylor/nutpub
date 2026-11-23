@@ -78,7 +78,7 @@ export async function judgeLine(r, page) {
     // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
     // Session 58 (Rajesh 23 Nov): gig 3's stream is free, so its chat goes with a tip (55c); hello and the tip are one step.
     6: 'The show’s on, and the beer token’s on the fan’s phone. A free stream’s chat goes with a tip while no moderator is on, as tipping with hard money stops spam.',
-    7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
+    7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar’s key (NUT-11), so only the bar can spend it.',
     poured: 'Poured. The bar’s key unlocked the coin (NUT-11) and swapped it at the mint; the fan’s phone saw it spent (NUT-07). Nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',
     // Session 40 (Rajesh 20 Nov): what Takings shows below. The no-show is client/noshow.js, paid at End night.
@@ -119,7 +119,7 @@ export async function judgeLine(r, page) {
       b.disabled = true; b.textContent = busy;
       for (let i = 0; i < 10; i++) {
         const own = [...document.querySelectorAll(sel)].find((x) => re.test(x.textContent));
-        if (own) return own.click();
+        if (own) { own.click(); setTimeout(() => { b.disabled = false; b.textContent = words; }, 12000); return; } // session 58: never stuck on Pouring… (a slow test mint)
         await new Promise((r) => setTimeout(r, 1000));
       }
       b.disabled = false; b.textContent = words;
@@ -228,9 +228,10 @@ export async function judgeLine(r, page) {
         : 'On the fan’s phone, on the right: press play, then say hello with a 2,100-sat tip in its Chat tab.', '', '', { story: STORY[6] });
       // Step 7: the bar, then End night.
       const d = await drinks();
-      if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: the bar’s key, kept in this browser, signs the coin and swaps it at the mint, as the bar’s scanner would. Open DevTools → Network first to watch the swap.', '', '',
+      if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: the bar’s key, kept in this browser, signs the coin and swaps it at the mint, as the bar’s scanner would. Then watch the fan’s phone.', '', '',
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
-      return say(7, 'Now press End night, the yellow button below.', '', '', { story: STORY.poured });
+      return say(7, 'Now open developer tools (⌥⌘I) on the Network tab, type “testnut” (the mint) in its filter box and press Pour again: the mint itself turns the spent coin away. Then End night.', '', '',
+        { story: STORY.poured, extra: pressBtn('Pour again', '#bar-drinks button', /pour again$/, 'Pouring…') });
     }
     if (g2) {
       if (page === 'setup') {

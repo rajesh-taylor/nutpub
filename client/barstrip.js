@@ -30,14 +30,13 @@ async function pour(id) {
   try {
     const d = await api('GET', `/api/admin/drinks/${id}`);
     if (!(await bar.coco.keyring.getKeyPair(d.pubkey))) throw new Error('This drink is locked to a bar key held on another browser: open page 3 there.');
-    let spent = d.poured;
-    if (!spent) {
-      try { await bar.collect(d.token, d.pubkey); } catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
-      await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
-    }
-    if (spent) { trombone(); say(`Drink ${id}: Already poured, mate. The mint says it's spent.`); }
+    // Session 58 (Rajesh 23 Nov): Pour again asks the mint too, so DevTools shows the mint refusing a spent coin.
+    let spent = false;
+    try { await bar.collect(d.token, d.pubkey); } catch (e) { if (!/spent/i.test(e.message)) throw e; spent = true; }
+    if (!d.poured) await api('POST', '/api/admin/locked/collected', { ids: [d.locked], by: 'bar' });
+    if (spent && d.poured) { trombone(); say(`Drink ${id}: Already poured, mate. The mint says it's spent.`); }
     else { clink(); say(`Drink ${id} poured: signed with the bar’s key and swapped at the mint, ${sats(d.sats)} to the bar. Watch the phone.`); } // session 58: say what Pour by hand did
-  } catch (e) { say(e.message); }
+  } catch (e) { say(e.status === 502 || /mint|fetch|network|timeout/i.test(e.message) ? `Drink ${id}: the test mint didn’t answer in time. Press Pour by hand again.` : e.message); } // session 58
   refresh().catch(() => {});
 }
 
