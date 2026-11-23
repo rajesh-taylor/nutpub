@@ -33,6 +33,8 @@ export async function judgeLine(r, page) {
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
   const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at Pub TV, the venue's TV page, before End night
   const tvSeen = () => { try { return !!localStorage.getItem('nutpub-tv-seen'); } catch { return false; } };
+  // Session 58 (Rajesh 23 Nov): gig 1 shows the chat's Quiet before End night; chatstrip.js marks this stage once it's pressed.
+  const quieted = () => { try { return localStorage.getItem('nutpub-quieted') === location.host; } catch { return false; } };
   // Gig 1's Cellar step: the words sheet opened and shut once; leaving for Plan gig counts too (Open again then skips Cellar).
   const CELLAR = 'nutpub-cellar-seen';
   const cellarSeen = () => { try { return !!localStorage.getItem(CELLAR); } catch { return false; } };
@@ -50,7 +52,7 @@ export async function judgeLine(r, page) {
   }
   if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  const steps = pickle ? 8 : g2 ? 7 : tv ? 9 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
+  const steps = pickle ? 8 : g2 ? 7 : tv ? 10 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
   const o = tv ? 2 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
     const key = n + [].concat(story, text).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note;
@@ -74,7 +76,8 @@ export async function judgeLine(r, page) {
     4: 'Ticket bought, with the beer token in it. It was signed blind, so not even the NutPub can tell who comes in. Its door QR changes every 30 seconds, so a screenshot won’t get in.',
     5: 'Let the Nutter in. The door saw a ticket signed by tonight’s gig and used once, never who bought it. The beer token reaches the fan’s phone when the show starts.',
     // Rajesh 20 Nov (session 40): Longy's set first, a breather, then the bar.
-    6: 'The show’s on, and the beer token’s on the fan’s phone, locked to the bar. First, some music.',
+    // Session 58 (Rajesh 23 Nov): gig 3's stream is free, so its chat goes with a tip (55c); hello and the tip are one step.
+    6: 'The show’s on, and the beer token’s on the fan’s phone. A free stream’s chat goes with a tip while no moderator is on, as tipping with hard money stops spam.',
     7: 'Thirsty? The fan’s phone holds the beer token: a real coin, locked to the bar.',
     poured: 'Poured. The bar took the coin at the mint with its own key; nobody in between held it.',
     8: 'Closing time. Longy’s ticket earnings and tips are locked to his key; the poured token’s £5 went to the bar.',
@@ -92,6 +95,7 @@ export async function judgeLine(r, page) {
     start: 'Show time. Fans are waiting at home, wallets in their browsers.',
     fan: 'You’re a fan at home now: no app, no account. A real fan tops up the browser wallet from any Lightning or Cashu wallet; here test sats are already in it.',
     end: 'Every sat tonight went straight to Longy’s key. The NutPub only checked it.',
+    quiet: 'Longy’s alone on stage, so the chat looks after itself: slurs and his own banned words never reach it, and mods he invites from Cellar step in with a passkey or Nostr Sign In.',
     takings: 'Closing time. The ticket and tips are Longy’s, locked to his key.',
   } : list.at === 'frankie' ? {
     setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute.',
@@ -221,7 +225,7 @@ export async function judgeLine(r, page) {
       // once, on reaching step 6, it goes back to the top, with the play button in view.
       if (!hello && !toPlay) { toPlay = true; try { document.getElementById('phone')?.contentWindow?.scrollTo({ top: 0, behavior: 'smooth' }); } catch {} }
       if (!tipped) return say(6, hello ? 'Now tip Longy 2,100 sats in the fan’s Tip tab.'
-        : 'On the fan’s phone, on the right: press play, then say hello in its Chat tab.', '', '', { story: STORY[6] });
+        : 'On the fan’s phone, on the right: press play, then say hello with a 2,100-sat tip in its Chat tab.', '', '', { story: STORY[6] });
       // Step 7: the bar, then End night.
       const d = await drinks();
       if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: that’s the bar scanning it. Then watch the fan’s phone.', '', '',
@@ -261,19 +265,20 @@ export async function judgeLine(r, page) {
     if (page === 'setup') say(1 + o, tv ? ['Tickets, comments, stretch goals, splits and tips live here. Nothing needs changing, but take a ', gander(), ' before you click 2 · Show Time, up above.']
       : `This is where ${name} plans tonight: tickets, comments, stretch goals, splits and tips. What he sets once is in Cellar. Nothing needs changing: click 2 · Show Time, up above.`, '', '', { story: TOLD.setup });
     else if (page === 'show' && tv) { // gig 1 (session 47): Pub TV is part of the fan's steps now
-      if (closed) say(9, 'The night’s over. Click 3 · Your takings, at the top.');
+      if (closed) say(10, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(4, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(5, 'Press Fan’s page ↗, top right, and follow the strip there: steps 5 to 7. Then come back here.', '', '', { story: TOLD.fan });
-      else say(8, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
+      else if (!quieted()) say(8, 'Press Quiet on the “Big up the A13 Massive!” line: that phone’s words leave every fan’s chat tonight. Then End night.', '', '', { story: TOLD.quiet });
+      else say(9, 'Now press End night, the yellow button below.', '', '', { story: TOLD.end });
     } else if (page === 'show') {
       if (closed) say((tv ? 6 : 5) + o, 'The night’s over. Click 3 · Your takings, at the top.');
       else if (!on) say(2 + o, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
       else if (!fanDone()) say(3 + o, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
       else if (tv && !tvSeen()) say(4 + o, 'Press the Pub TV widget, just above the three big buttons. Have a look, then come back to this tab.', '', '', { story: 'The tips and the chat go up on Pub TV too.' });
       else say((tv ? 5 : 4) + o, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
-    } else if (!closed) say(tv ? 8 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+    } else if (!closed) say(tv ? 9 : 4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
     // Session 45 (Rajesh 21 Nov): the button on screen first, then Cashu.me's own welcome, which a new judge meets there.
-    else say(tv ? 9 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
+    else say(tv ? 10 : 5, 'Press Move to my own wallet, then Move to Cashu.me. First time on Cashu.me? Its welcome comes first. Then close the Cashu.me tab, come back here and press Finish gig.', '', '', { story: TOLD.takings });
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.

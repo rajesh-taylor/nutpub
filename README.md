@@ -6,7 +6,7 @@
 
 1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop. A phone helps in gig 3, but isn't needed.
 2. Make your artist passkey (or press Not now), then **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet. The passkey opens all three gigs on another laptop: **Back to your gigs**.
-3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3.
+3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3: each builds on the last.
 
 Test mint, test sats: they have no value. I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.
 
@@ -27,14 +27,8 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 **Gig 1:** the fan's page after the 50,000-sat encore tip, both goals met.
 ![Gig 1: Longy's fan page, the live chat and a 50,000-sat tip](docs/img/gig-1.jpg)
 
-**Gig 2:** Frankie playing, paid for piece by piece.
-![Gig 2: Frankie Peroni's fan page at 60 sats a minute](docs/img/gig-2.jpg)
-
 **Gig 3:** Show Time, with the fan's phone holding the door QR. It changes every 30 seconds.
 ![Gig 3: Show Time with the fan's phone showing its 30-second door QR](docs/img/gig-3.jpg)
-
-**Cellar:** what an artist sets once: name and page, the 12 words, photos, the stream.
-![Cellar: the artist's name, page, 12 words and live stream](docs/img/cellar.jpg)
 
 **Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings. A moderator has a page of their own, the Mod page: the chat at full height with Quiet and Undo, Slow mode and the pin, beside the stream as fans see it.
 
@@ -42,7 +36,7 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 
 **The gig, live on Nostr:** while it's on, Nostr apps that list live streams show it, with a link to the gig page. The artist's browser signs it; the stream itself stays behind the ticket. Off on the three practice gigs: Plan gig's switch turns it on.
 
-<img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: 0 in of 1 sold, ready to scan" width="260" align="right">
+<img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: Let the Nutter in, 1 in of 1 sold" width="260" align="right">
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
 

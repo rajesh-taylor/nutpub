@@ -846,6 +846,7 @@ function thank(text) {
   clearTimeout(thanksTimer);
   $('say-thanks').textContent = text;
   $('say-thanks').hidden = false;
+  $('say-thanks').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // session 58: in Show Time's phone frame it sat below the fold
   thanksTimer = setTimeout(() => { $('say-thanks').hidden = true; }, 6000);
 }
 

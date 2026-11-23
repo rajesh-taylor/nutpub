@@ -56,21 +56,22 @@
     <div class="board-card">
       <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
       <h1>Pub Noticeboard</h1>
-      <p class="lede">AI agents welcome. Every price at the NutPub is a plain HTTP 402, so an agent can pay one the way your browser does. What works today.</p>
+      <!-- Session 58 (Rajesh 23 Nov): the judges' last stops get a Judges line too. -->
+      <div class="judge-line page-judge"><b>Judges</b><span class="jl-say"><span class="jl-story">AI agents welcome. Every price is a plain 402, so a script buys a ticket the way your browser did.</span><span>Run the two lines below against your gig 1 stage if you like, then have a butcher’s at the Kitchen.</span></span></div>
 
       <section class="today" aria-labelledby="r-today">
         <div class="head"><h2 id="r-today">Today: an agent buys a ticket</h2><span class="chip built">✓ Built</span></div>
-        <p>A small script buys gig 1’s Watch online ticket with test sats: it asks, gets the 402, takes test sats from the mint, locks them to the artist’s key and pays. No account, no browser. Start <a href="/">gig 1</a> first: your stage’s address is in the address bar.</p>
+        <p>Gig 1’s Watch online ticket: it asks, gets the 402, takes test sats from the mint, locks them to the artist’s key and pays. No account, no browser.</p>
         <pre>git clone https://github.com/rajesh-taylor/nutpub &amp;&amp; cd nutpub &amp;&amp; npm install
 npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
-        <p class="small">The ticket then shows on your stage’s Takings. Every price is a 402 (NUT-24), the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>
+        <p class="small">NUT-24, the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>
       </section>
 
       <!-- Session 47 (Rajesh 21 Nov): one line, by name only; the fuller plan waits for a later, bigger product. -->
-      <p class="next"><span class="chip after">After 27 Nov</span> Gig search for agents</p>
+      <p class="next"><span class="chip after">From 3 Dec</span> Gig search for agents</p>
 
       <div class="foot">
-        <a class="btn-out" href="/">← Back</a>
+        <a class="btn-out" href="/" onclick="try { if (document.referrer &amp;&amp; new URL(document.referrer).hostname.endsWith(location.hostname.replace(/^www\./, ''))) { history.back(); return false; } } catch {}">← Back</a>
         <a class="btn-out" href="/kitchen"><span>Have a <abbr data-means="Look: Cockney rhyming slang, butcher’s hook">butcher’s</abbr> at the Kitchen →</span></a>
       </div>
     </div>

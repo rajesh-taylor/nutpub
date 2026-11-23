@@ -28,7 +28,7 @@ const makeStage = (id) => { const s = fakeStorage(); s.sql.exec(schema); return 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
 const photos = new Map();
 const env = {
-  ASSETS: { fetch: async (u) => (/\/img\/(longy|frankie)-(tall|wide)\.jpg$/.test(String(u)) ? new Response(JPEG) : new Response('', { status: 404 })) },
+  ASSETS: { fetch: async (u) => (/\/img\/(longy|frankie|yours)-(tall|wide)\.jpg$/.test(String(u)) ? new Response(JPEG) : new Response('', { status: 404 })) },
   PHOTOS: { put: async (k, v) => photos.set(k, v), delete: async (k) => photos.delete(k), get: async (k) => photos.get(k) ?? null },
 };
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
@@ -76,7 +76,7 @@ test('Finish gig ticks a gig off and opens the next: Frankie Peroni, then the ve
     assert.equal((await currentShow()).show.set, 'longy-2'); // gig 3: Longy at The Fickle Pickle
     assert.deepEqual(await finish(), { at: 'yours', done: ['longy', 'frankie', 'pickle'] });
     assert.equal((await currentShow()).show.stream.mode, 'free'); // at the venue: the stream free, with tips
-    assert.equal(photos.size, 0);
+    assert.equal(photos.size, 2); // session 58: the test's assets serve yours-*.jpg too (Frankie's wide picture is yours-wide.jpg)
   });
 });
 

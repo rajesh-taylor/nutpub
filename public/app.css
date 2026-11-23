@@ -1604,3 +1604,6 @@ html:root .board #mute-on:not([hidden]) { padding: 12px 14px; border: 1px solid 
 html:root .board #mute-what { color: var(--cream); font-weight: 600; }
 html:root .board #mute-on .switch-note { margin: 0; }
 html:root .board #mute-say:not(:empty) { margin: 10px 0 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; color: var(--cream); }
+
+/* Session 58: the Judges line on the Noticeboard and the Kitchen, inside their card. */
+html:root .judge-line.page-judge { margin: 22px 0 6px; text-align: left; }

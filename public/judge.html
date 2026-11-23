@@ -82,8 +82,9 @@
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 13px/1.5 var(--body); color: #4a3a1c; }
     /* Two tiles under the posters (Rajesh 21 Nov, session 45): The Kitchen and the Pub Noticeboard, for after the gigs, or
        for developers who skip them. A hairline and cream titles (session 47); side by side, stacked on a phone. */
+    .in-order { margin: 6px 0 -4px; text-align: center; font: 400 17px/1.4 var(--body); color: var(--smoke); }
     .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; }
-    .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 16px 20px; background: rgb(11 20 38 / .7); border: 1px solid var(--line); border-radius: 6px; text-decoration: none; }
+    .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 16px 20px; background: transparent; border: 1px solid var(--line); border-radius: 6px; text-decoration: none; } /* session 58: no fill of its own, the page's lines run through */
     .tile b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: var(--cream); padding-top: 3px; }
     .tile span { grid-column: 1; font: 400 16px/1.45 var(--body); color: var(--smoke); }
     .tile i { grid-column: 2; grid-row: 1 / span 2; font: 400 28px/1 var(--poster); font-style: normal; color: var(--cream); }
@@ -270,6 +271,8 @@
     <!-- Step 0 (session 53, Rajesh 22 Nov): the artist's passkey, as real artists will get it. Drawn by the script below. -->
     <section class="step0" id="step0" aria-label="Your artist passkey" hidden></section>
 
+    <!-- Session 58 (Rajesh 23 Nov): gigs 2 and 3 build on gig 1. -->
+    <p class="in-order">Each gig builds on the last: run them in order.</p>
     <div class="wall">
       <article class="poster" data-gig="longy">
         <span class="tape" style="left: 22px; transform: rotate(-8deg);" aria-hidden="true"></span><span class="tape" style="right: 22px; transform: rotate(7deg);" aria-hidden="true"></span>
@@ -289,13 +292,13 @@
         <span class="tape" style="left: 26px; transform: rotate(6deg);" aria-hidden="true"></span><span class="tape" style="right: 18px; transform: rotate(-9deg);" aria-hidden="true"></span>
         <picture><source media="(max-width: 900px)" srcset="/img/card-yours-tall.jpg"><img src="/img/card-yours-wide.jpg" alt="Frankie Peroni and a fiddler on stage at The Fickle Pickle"></picture>
         <div class="inner">
-          <p class="kicker"><span>2</span><span class="dev">Laptop</span></p>
+          <p class="kicker"><span>2 · A 402 every 10 seconds</span><span class="dev">Laptop</span></p>
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">The Devils Train · The Fickle Pickle</p>
           <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
           <p class="does">Pin Frankie’s Fountain link, then pay by the minute: play, stop, play again. Tip, then take the fan’s change home.</p>
           <div class="btns"></div>
-          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged.</p>
+          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged. Open DevTools → Network to watch each 402.</p>
         </div>
       </article>
 

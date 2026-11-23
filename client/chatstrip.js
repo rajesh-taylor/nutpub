@@ -40,7 +40,7 @@ function line(m) {
     const b = el('button', 'btn quiet hush', 'Quiet');
     b.type = 'button';
     b.setAttribute('aria-label', `Quiet ${m.who} tonight`);
-    b.onclick = () => { b.disabled = true; act('POST', '/api/admin/quiet', { message: m.id }, `${m.who} is quiet tonight.`).finally(() => { b.disabled = false; }); };
+    b.onclick = () => { b.disabled = true; act('POST', '/api/admin/quiet', { message: m.id }, `${m.who} is quiet tonight.`).then(() => { try { localStorage.setItem('nutpub-quieted', location.host); } catch {} }).finally(() => { b.disabled = false; }); };
     li.append(b);
   }
   return li;

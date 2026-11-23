@@ -50,7 +50,7 @@ const GIGS = {
       { after: 28, text: 'Go on Longy! 🎸🎤', nostr: 'Rod Stuart (not that one)' }], // Rajesh 21 Nov: his full name
   },
   frankie: {
-    photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/frankie-wide.jpg' },
+    photos: { tall1: '/img/frankie-tall.jpg', wide1: '/img/yours-wide.jpg' }, // Rajesh 23 Nov: the home poster's picture for wide screens
     show: {
       artist: 'Frankie Peroni', page: 'frankie-peroni', venue: 'The Fickle Pickle, Westcliff-on-Sea',
       description: 'The Devils Train, filmed at The Fickle Pickle. Russ Strutter, bass · Levent Basharan, lead guitar solo · Emma Jane Beaumont, backing vocals. Find Frankie on Fountain: frankieperoni@fountain.fm',
