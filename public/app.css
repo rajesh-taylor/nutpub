@@ -1541,3 +1541,66 @@ dialog.ask .field:focus-visible { outline: 2px solid var(--amber); outline-offse
 dialog.ask .ask-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
 dialog.ask .ask-buttons .btn { width: 100%; min-height: 50px; margin: 0; font-size: 17px; }
 @media (min-width: 700px) { dialog.ask .ask-buttons { flex-direction: row-reverse; justify-content: flex-start; } dialog.ask .ask-buttons .btn { width: auto; min-width: 140px; padding: 0 22px; } }
+
+/* ==== Session 56: the design pass (Rajesh picked B for all five, tried at ?look=b). In the quiet look: amber on the next
+   press only, Bebas for headings, Plex for the rest, one size of grey per card. "html:root" keeps the weight the tries had,
+   so these win over the pages' own older rules. */
+/* The gig's front page: the straight sign in a bar (as Show Time and the Mod page), the words in one card. */
+html:root .stage-head { display: flex; align-items: center; min-height: 64px; padding: 0 clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line); box-sizing: border-box; }
+html:root .stage-head .mark { margin: 0; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: var(--cream); }
+html:root .stage-head .nb { color: var(--amber); }
+html:root body.stage .nut-menu { top: calc(env(safe-area-inset-top, 0px) + 10px); }
+html:root .stage h1 { color: var(--cream); }
+html:root .stage main { justify-content: center; }
+html:root #theirs:not([hidden]) { display: flex; flex-direction: column; width: 100%; max-width: 440px; box-sizing: border-box; margin: 0 auto; padding: 28px 28px 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--midnight); text-align: left; }
+html:root #theirs h1 { margin: 0 0 10px; font-size: 40px; }
+html:root #theirs p { margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: var(--smoke); }
+html:root #theirs .go { margin: 0; max-width: none; padding: 15px 16px 14px; font-size: 19px; text-align: center; }
+html:root #theirs .to-gig-note { margin: 8px 0 0; font-size: 15px; text-align: center; }
+html:root #theirs p:has(> #back) { margin: 12px 0 0; }
+html:root #back { display: block; padding: 14px 16px 13px; border: 1px solid rgb(239 227 200 / .35); border-radius: 6px; font: 600 17px/1 var(--body); color: var(--cream); text-align: center; text-decoration: none; }
+html:root #back:hover { border-color: rgb(239 227 200 / .7); }
+/* A judge's own stage in another browser: the artist's passkey is the next press, the fan's way second and outlined. */
+html:root #theirs.artist-way p:has(> #back) { order: 1; margin: 0; }
+html:root #theirs.artist-way #back { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+html:root #theirs.artist-way > #to-gig { order: 2; margin-top: 12px; background: none; border: 1px solid rgb(239 227 200 / .35); color: var(--cream); font-size: 17px; }
+html:root #theirs.artist-way > .to-gig-note { display: none; } /* Rajesh 23 Nov: one line fewer; the artist isn't looking for a ticket here (a fan's browser on a real stage keeps it) */
+html:root #theirs.artist-way > .lost { order: 4; }
+html:root #theirs .lost { max-width: none; margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
+html:root #theirs .lost-link { color: var(--cream); font-size: 15px; }
+html:root #theirs .lost .fine, html:root #theirs .lost label { font-size: 15px; }
+/* Show Time: the stream's dot ember, not green; the chat strip as the fans' chat reads (a Bebas head, names, a tip's chip). */
+html:root .signal.on .dot { background: var(--live); box-shadow: 0 0 0 4px rgb(226 96 63 / .2); }
+html:root .chat-strip { padding: 0 0 12px; border-radius: 8px; background: var(--midnight); }
+html:root .chat-strip .label { margin: 0; padding: 12px 16px 10px; border-bottom: 1px solid var(--line); font: 400 22px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
+html:root .chat-lines li { padding: 7px 16px; gap: 4px 10px; }
+html:root .chat-lines .from, html:root .lines .from { font-weight: 600; }
+html:root .chat-lines .amt, html:root .lines .amt { padding: 2px 6px 1px; border-radius: 3px; background: var(--amber); color: var(--deep); font-weight: 700; font-size: 14px; }
+html:root .chat-lines .hush { min-height: 36px; padding: 4px 16px; font-size: 14px; color: var(--smoke); border-color: rgb(239 227 200 / .2); }
+html:root .chat-lines li:hover .hush, html:root .chat-lines .hush:focus-visible { color: var(--cream); border-color: rgb(239 227 200 / .5); }
+html:root .chat-quiet, html:root .chat-say { padding: 0 16px; }
+/* The Mod page's chat: bigger words, the tools quiet until a line is pointed at. */
+html:root .lines { background: var(--midnight); border-radius: 8px; }
+html:root .lines li { padding: 9px 12px; gap: 4px 10px; font-size: 16px; }
+html:root .lines .acts .btn { min-height: 32px; padding: 4px 10px; border-color: transparent; background: none; font-size: 14px; color: var(--smoke); }
+html:root .lines li:hover .acts .btn, html:root .lines .acts .btn:focus-visible { border-color: rgb(239 227 200 / .3); color: var(--cream); }
+html:root .mod-chip { background: none; border: 1px solid rgb(125 185 255 / .45); }
+html:root .mod-chip.nostr { border-color: rgb(185 140 255 / .5); }
+/* The gig page's mod bar: a hairline box, the name in cream with the chat's own Mod tag, buttons the same size. */
+html:root .mod-bar { gap: 6px 10px; padding: 6px 8px 6px 12px; border: 1px solid var(--line); background: none; }
+html:root .mod-bar b { display: inline-flex; align-items: center; gap: 6px; font: 600 15px/1 var(--body); letter-spacing: 0; color: var(--cream); }
+html:root .mod-bar .mod-tag { font: 600 11px/1 var(--body); letter-spacing: .02em; color: var(--deep); background: #7db9ff; border-radius: 3px; padding: 3px 5px; }
+html:root .mod-bar .btn { min-height: 32px; padding: 4px 12px; font-size: 14px; border-color: rgb(239 227 200 / .3); color: var(--cream); }
+html:root .mod-bar .mod-page { margin-left: auto; padding: 7px 12px; border: 1px solid rgb(239 227 200 / .3); border-radius: 4px; font-size: 14px; color: var(--cream); text-decoration: none; }
+html:root .mod-bar .mod-page::after { content: " ↗"; }
+html:root .mod-bar .mod-out { font-size: 14px; }
+/* Cellar's Words to keep out and mute list: fields and buttons one height, the answer in a box of its own, not a stray line. */
+html:root .board .keep-out textarea { min-height: 96px; padding: 10px 12px; font-size: 16px; }
+html:root .board .keep-out .add-row { display: flex; align-items: center; gap: 14px; margin: 10px 0 24px; }
+html:root .board .keep-out .add-row .btn, html:root .board .mute-use .btn { flex: none; width: auto; min-width: 140px; height: 46px; margin: 0; padding: 0 20px; font-size: 15px; }
+html:root .board .mute-use { flex-wrap: nowrap; align-items: flex-end; gap: 10px; }
+html:root .board .mute-use .field input { height: 46px; box-sizing: border-box; }
+html:root .board #mute-on:not([hidden]) { padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: rgb(5 9 20 / .5); }
+html:root .board #mute-what { color: var(--cream); font-weight: 600; }
+html:root .board #mute-on .switch-note { margin: 0; }
+html:root .board #mute-say:not(:empty) { margin: 10px 0 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; color: var(--cream); }

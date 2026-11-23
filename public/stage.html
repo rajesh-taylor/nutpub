@@ -104,12 +104,8 @@
       <li><a href="https://github.com/rajesh-taylor/nutpub" target="_blank" rel="noreferrer noopener">GitHub</a></li>
     </ul>
   </details>
+  <header class="stage-head"><p class="mark" role="img" aria-label="The NutPub">THE NUTPU<span class="nb" aria-hidden="true">₿</span></p></header><!-- session 56: the straight sign in a bar, as Show Time and the Mod page -->
   <main>
-    <p class="pub-sign" role="img" aria-label="The NutPub">
-      <svg viewBox="0 10 800 170" style="overflow: visible" aria-hidden="true">
-        <text x="86.7 146.3 220.8 318.6 391.7 462.6 522.6 583.3 653.9" y="151.2 143.2 135.6 129.6 128.0 128.9 131.6 135.9 143.2" rotate="-7.7 -5.9 -4.1 -1.3 0.7 2.4 4.1 5.8 7.6" filter="url(#worn-sign)">THENUTPU<tspan class="btc">₿</tspan></text>
-      </svg>
-    </p>
     <!-- Session 45 (Rajesh 21 Nov): words while the stage is made (about 5 s on a judge's stage), not an empty page. -->
     <h1 id="wait" class="wait" role="status">Setting up the stage…</h1>
     <div id="mine" hidden>
@@ -196,6 +192,7 @@
       // Session 53: the artist's passkey opens it here (Back to your gigs, on /judge).
       if (s.judge) {
         document.getElementById('theirs-text').textContent = 'This gig was set up in another browser. Your artist passkey opens it here.';
+        document.getElementById('theirs').classList.add('artist-way'); // session 56: the passkey is the next press (amber), the fan's way outlined
         document.getElementById('back').href = `${front}/judge#back`;
       }
       // Session 54: every device lost (no passkey, no browser): the gig's 12 words open it here (client/recover.js).

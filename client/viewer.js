@@ -1475,6 +1475,7 @@ function ticketTab({ room, ticket, closed, s, confirmed }) {
   if (room) { // a venue ticket with no door QR to show: say so, so the tab is never empty
     $('tt-online').hidden = !ticket || closed || confirmed || !$('door-pass').hidden;
     $('tt-online-k').textContent = 'Your venue ticket';
+    $('tt-online-k').hidden = false;
     $('tt-online-line').textContent = 'Paid. The video plays free with it.';
     $('tt-meter').hidden = true;
     $('tt-venue').hidden = true;
@@ -1482,6 +1483,7 @@ function ticketTab({ room, ticket, closed, s, confirmed }) {
   }
   $('tt-online').hidden = closed || show.stream.mode === 'off';
   $('tt-online-k').textContent = 'Watching online';
+  $('tt-online-k').hidden = !!(online && !ticket && !MOD); // session 56 (Rajesh): the Watch online button says it already
   $('tt-online-line').textContent = MOD ? 'You watch free: you’re a mod.'
     : online ? (ticket ? 'Paid: the whole show plays here.' : 'One price for the whole show.')
     : free ? 'Free to watch, with tips.' : 'Stop the video and nothing more is charged.';
@@ -1743,7 +1745,7 @@ function modBar(slow, busy = false) {
   $('mod-bar').hidden = !MOD;
   $('im-mod').hidden = !!MOD || !STAGE_ID || top !== self || show.comments === false; // fans: "I'm a mod" (session 55b)
   if (!MOD) return;
-  $('mod-who').textContent = `${MOD.icon || ''} ${MOD.name} · Mod`.trim();
+  $('mod-who').replaceChildren(`${MOD.icon || ''} ${MOD.name} `.trimStart(), Object.assign(document.createElement('span'), { className: 'mod-tag', textContent: 'Mod' })); // session 56: the chat's own Mod tag
   $('pin-btn').hidden = !MOD.main;
   $('mod-out').hidden = MOD.via !== 'passkey'; // a Nostr mod signs out of Nostr; a link stays the mod's own
   $('mod-page').hidden = false; // the Mod page (session 55e): the chat and the player, a page of its own
