@@ -3,6 +3,7 @@
 // as the artist's and the bar's own pages, so Collect and Pour sign with the key that lives here. The server only
 // lists the locked payments and marks one collected when the mint says it's spent.
 import { openWallet, wordsFor, forgetWords } from './wallet.js';
+import { ask, tell } from './ask.js'; // session 56: the site's own sheet, not the browser's boxes
 import { unlockAudio, trombone, clink } from './sound.js';
 import { money } from '../server/money.js';
 
@@ -189,7 +190,7 @@ async function keyLine(id, wallet, pubkey, who, path) { // the bar's card (hidde
   b.className = 'btn quiet pour-btn';
   b.textContent = 'Make a new key here';
   b.onclick = async () => {
-    if (!confirm(`Payments locked to the old key can only be collected where that key is. Make ${who}'s key here?`)) return;
+    if (!(await ask({ title: `Make ${who}’s key here?`, text: 'Payments locked to the old key can only be collected where that key is.', yes: 'Make it here' }))) return;
     const { publicKeyHex } = await wallet.coco.keyring.generateKeyPair();
     await api('PUT', path, { pubkey: publicKeyHex });
     await refresh();
@@ -640,9 +641,9 @@ async function recordings() {
     const del = Object.assign(el('button', 'btn quiet del', 'Delete'), { type: 'button', disabled: v.recording });
     get.onclick = () => fetchMp4(v, get);
     del.onclick = async () => {
-      if (!confirm(`Delete the recording from ${day(v.created)}? It can't be brought back.`)) return;
+      if (!(await ask({ title: `Delete the recording from ${day(v.created)}?`, text: 'It can’t be brought back.', yes: 'Delete it', no: 'Keep it' }))) return;
       del.disabled = get.disabled = true;
-      await api('POST', `/api/admin/recordings/${v.uid}/delete`).catch((e) => alert(e.message));
+      await api('POST', `/api/admin/recordings/${v.uid}/delete`).catch((e) => tell('Not deleted', e.message));
       recordings();
     };
     acts.append(get, del);
@@ -654,7 +655,7 @@ async function fetchMp4(v, btn) {
   btn.disabled = true;
   for (let i = 0; i < 200; i += 1) { // up to about 10 minutes
     let r;
-    try { r = await api('POST', `/api/admin/recordings/${v.uid}/download`); } catch (e) { btn.textContent = 'Download'; btn.disabled = false; alert(e.message); return; }
+    try { r = await api('POST', `/api/admin/recordings/${v.uid}/download`); } catch (e) { btn.textContent = 'Download'; btn.disabled = false; tell('Not downloaded', e.message); return; }
     if (r.status === 'ready' && r.url) { btn.textContent = 'Download'; btn.disabled = false; location.href = r.url; return; }
     btn.textContent = `Preparing ${r.percent || 0}%`;
     await new Promise((ok) => setTimeout(ok, 3000));

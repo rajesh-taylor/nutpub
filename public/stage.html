@@ -150,6 +150,7 @@
     </div>
   </main>
   <script type="module">
+    import { ask, tell } from '/js/ask.js'; // session 56: the site's own sheet, not the browser's boxes
     // The stage's home: the artist's setlist. Arriving from Put on a gig or Back to your stage, the link carries a
     // one-time code (#h=), traded once here for the stage's setup key, which this browser keeps (as Plan gig does).
     const front = `${location.protocol}//${location.host.split('.').slice(1).join('.')}`; // thenutpub.com
@@ -262,11 +263,10 @@
         tag.querySelector('.tick').setAttribute('aria-label', 'Done');
         li.append(tag);
         btn.onclick = async () => {
-          const now = ` It clears ${title[list.at]} (its tickets and chat). Sats waiting on Your takings stay there.`;
-          if (!confirm(`Open ${title[li.dataset.step]} again?${now}`)) return;
+          if (!(await ask({ title: `Open ${title[li.dataset.step]} again?`, text: `It clears ${title[list.at]} (its tickets and chat). Sats waiting on Your takings stay there.`, yes: 'Open it again' }))) return;
           const out = await fetch('/api/admin/setlist/again', { method: 'POST', headers: { 'X-Admin': key, 'Content-Type': 'application/json' }, body: JSON.stringify({ step: li.dataset.step }) })
             .then((x) => x.json()).catch(() => ({ error: 'No answer: try again.' }));
-          if (out.error) alert(out.error); else location.reload();
+          if (out.error) tell('Not opened', out.error); else location.reload();
         };
       }
       // Every payment is locked to the artist's key: made here once, so the fan's tab can buy straight away.

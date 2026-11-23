@@ -1,5 +1,6 @@
 // The setup page: read the show, edit it, save it to the server. Templates save and load whole shows.
 import { satsFrom } from '/js/money.js';
+import { ask, tell } from '/js/ask.js'; // session 56: the site's own sheet, not the browser's boxes
 const LANGS = { en: 'English', de: 'Deutsch', es: 'Español*', fr: 'Français*', pt: 'Português*' };
 const PROBLEMS = {
   artist: 'artist (in Cellar)', venue: 'venue', 'stream.perMinute': 'price a minute', 'goal.amount': 'goal', 'ticket.price': 'ticket price', 'online.price': 'Watch online price', streamEnds: 'the stream\u2019s end time (Ends at)', 'free.viewers': 'the most viewers at once (Free to watch)', unpaid: 'pay for the free stream (Free to watch)',
@@ -455,13 +456,13 @@ $('tpl-save').addEventListener('click', async () => {
 });
 $('tpl-load').addEventListener('click', async () => {
   const name = $('tpl-list').value;
-  if (!name || (dirty && !confirm('Load the template over your unsaved changes?'))) return;
+  if (!name || (dirty && !(await ask({ title: `Load “${name}”?`, text: 'It replaces the changes you haven’t saved.', yes: 'Load it' })))) return;
   try { saved(await api('POST', '/api/admin/templates/load', { name })); status(`Loaded “${name}”. ${$('status').textContent}`, $('status').className); }
   catch (err) { status(err.message, 'bad'); }
 });
 $('tpl-delete').addEventListener('click', async () => {
   const name = $('tpl-list').value;
-  if (!name || !confirm(`Delete the template “${name}”?`)) return;
+  if (!name || !(await ask({ title: `Delete “${name}”?`, text: 'The template goes for good.', yes: 'Delete it', no: 'Keep it' }))) return;
   try { await templates(await api('POST', '/api/admin/templates/delete', { name })); status(`Template “${name}” deleted.`); }
   catch (err) { status(err.message, 'bad'); }
 });
@@ -594,10 +595,10 @@ async function drawMods() {
   const used = [...list, ...waiting].map((m) => m.icon);
   if (!$('mod-name').value) $('mod-icon').value = icons.find((i) => !used.includes(i)) || icons[0]; // a new icon for each new mod
   const el = (tag, props) => Object.assign(document.createElement(tag), props);
-  const drop = (text, ask, path, done, after = () => {}) => {
+  const drop = (text, sure, path, done, after = () => {}) => { // sure: the sheet's { title, text, yes, no }
     const b = el('button', { type: 'button', className: 'btn quiet', textContent: text });
     b.onclick = async () => {
-      if (!confirm(ask)) return;
+      if (!(await ask(sure))) return;
       await api('DELETE', path);
       after();
       status(done, 'ok');
@@ -619,7 +620,7 @@ async function drawMods() {
     // By invite: how they sign in, and Remove (their crew row: their passkey or npub stops opening the gig).
     if (m.via === 'passkey' || m.via === 'nostr') {
       row.append(icon, name, el('span', { className: 'said', textContent: m.via === 'nostr' ? '✓ Signs in with Nostr' : '✓ Signs in with a passkey' }), main, el('span'),
-        drop('Remove', `Remove ${m.name}? They're signed out at once and can't moderate this gig again without a new invite.`, `/api/admin/crew/${m.crew}`, `${m.name} is removed.`));
+        drop('Remove', { title: `Remove ${m.name}?`, text: 'They’re signed out at once and can’t moderate this gig again without a new invite.', yes: 'Remove', no: 'Keep them' }, `/api/admin/crew/${m.crew}`, `${m.name} is removed.`));
       return row;
     }
     // An example gig's mod (Aaron of Essex, setlist.js) has no link: his lines are scripted (Rajesh 19 Nov). A link made
@@ -628,7 +629,7 @@ async function drawMods() {
     link.setAttribute('aria-label', `${m.name}'s moderator link`);
     const copyBtn = el('button', { type: 'button', className: 'btn quiet', textContent: 'Copy', disabled: !keys[m.id] });
     copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link.value); copied(copyBtn); status(`${m.name}'s link copied. Send it to them privately.`, 'ok'); } catch { link.select(); } };
-    const cancel = drop('Cancel', `Cancel ${m.name}'s link? It stops working at once.`, `/api/admin/mods/${m.id}`, `${m.name}'s link is cancelled.`, () => keepModKey(m.id, null));
+    const cancel = drop('Cancel', { title: `Cancel ${m.name}’s link?`, text: 'It stops working at once.', yes: 'Cancel the link', no: 'Keep it' }, `/api/admin/mods/${m.id}`, `${m.name}'s link is cancelled.`, () => keepModKey(m.id, null));
     row.append(icon, name, link, main, copyBtn, cancel);
     return row;
   });
@@ -642,7 +643,7 @@ async function drawMods() {
     copyBtn.onclick = async () => { try { await navigator.clipboard.writeText(link); copied(copyBtn); status(`${m.name}'s invite copied. Send it however you like: it works once, until ${untilDay(m.until)}.`, 'ok'); } catch { what.select?.(); } };
     const share = el('button', { type: 'button', className: 'btn quiet', textContent: 'Share…', hidden: !link || !navigator.share });
     share.onclick = () => navigator.share({ title: 'The NutPub', text: show?.artist ? `Moderate ${show.artist}’s chat on the NutPub` : 'Moderate my chat on the NutPub', url: link }).catch(() => {});
-    const cancel = drop('Cancel', `Cancel ${m.name}'s invite? The link stops working at once.`, `/api/admin/crew/${m.id}`, `${m.name}'s invite is cancelled.`, () => keepCrewLink(m.id, null));
+    const cancel = drop('Cancel', { title: `Cancel ${m.name}’s invite?`, text: 'The link stops working at once.', yes: 'Cancel the invite', no: 'Keep it' }, `/api/admin/crew/${m.id}`, `${m.name}'s invite is cancelled.`, () => keepCrewLink(m.id, null));
     row.append(el('span', { className: 'mod-icon-now', textContent: m.icon || '', title: `${m.name}'s icon` }), el('b', { textContent: m.name }), what, share, copyBtn, cancel);
     rows.push(row);
   }
@@ -709,7 +710,7 @@ async function drawCrew() {
     share.onclick = () => navigator.share({ title: 'The NutPub', text: show?.artist ? `Produce ${show.artist}’s gigs on the NutPub` : 'Produce my gigs on the NutPub', url: link }).catch(() => {});
     const drop = el('button', { type: 'button', className: 'btn quiet', textContent: m.joined ? 'Remove' : 'Cancel' });
     drop.onclick = async () => {
-      if (!confirm(m.joined ? `Remove ${m.name}? They're signed out at once and their passkey stops opening this gig.` : `Cancel ${m.name}'s invite? The link stops working at once.`)) return;
+      if (!(await ask(m.joined ? { title: `Remove ${m.name}?`, text: 'They’re signed out at once and their passkey stops opening this gig.', yes: 'Remove', no: 'Keep them' } : { title: `Cancel ${m.name}’s invite?`, text: 'The link stops working at once.', yes: 'Cancel the invite', no: 'Keep it' }))) return;
       await api('DELETE', `/api/admin/crew/${m.id}`);
       keepCrewLink(m.id, null);
       status(m.joined ? `${m.name} is removed.` : `${m.name}'s invite is cancelled.`, 'ok');
@@ -735,8 +736,12 @@ $('crew-make').onclick = async () => {
 };
 
 // Scan at the door needs the venue's yes: turning it on asks first (a click that's cancelled leaves it off, unsaved).
-$('door-on').addEventListener('click', (e) => {
-  if ($('door-on').checked && !judgeStage && !confirm('Has the venue agreed to scan tickets at the door?\n\nEach venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.')) e.preventDefault();
+$('door-on').addEventListener('click', async (e) => {
+  if (!$('door-on').checked || judgeStage) return;
+  e.preventDefault(); // off until the venue's yes (the sheet can't hold the click, as confirm did)
+  if (!(await ask({ title: 'Has the venue agreed?', text: 'Each venue ticket gets a QR on the gig day, and whoever is on the door scans it once with a phone.', yes: 'Yes, scan at the door', no: 'Not yet' }))) return;
+  $('door-on').checked = true;
+  for (const t of ['input', 'change']) $('door-on').dispatchEvent(new Event(t, { bubbles: true }));
 });
 
 // A judge's stage (session 36): turning the door on makes the door scanner at once and shows its DOOR pass, so the
@@ -774,7 +779,7 @@ $('qr-door').onclick = () => drawDoorQr($('door-link-qr').hidden);
 $('copy-door').onclick = async () => { try { await navigator.clipboard.writeText($('door-link').value); copied($('copy-door')); status('Door scanner link copied. Send it to the door privately.', 'ok'); } catch { $('door-link').select(); } };
 $('new-door').onclick = async () => {
   const made = $('new-door').textContent === 'New one';
-  if (made && !confirm('Make a new door scanner? The old one stops working at once.')) return;
+  if (made && !(await ask({ title: 'Make a new door scanner?', text: 'The old one stops working at once.', yes: 'Make a new one', no: 'Keep the old one' }))) return;
   const { key: k } = await api('POST', '/api/admin/door-link');
   try { localStorage.setItem(DOOR_KEY, k); } catch {}
   doorLink(true);
@@ -888,7 +893,7 @@ $('phone-in-btn').onclick = async () => {
     $('phone-in-row').hidden = true;
     clearTimeout(phoneInTimer);
     phoneInTimer = setTimeout(() => $('phone-in-close').onclick(), ms);
-  } catch (e) { alert(`Couldn\u2019t make the QR: ${e.message}`); }
+  } catch (e) { tell('Couldn’t make the QR', e.message); }
   $('phone-in-btn').disabled = false;
 };
 $('phone-in-close').onclick = () => {

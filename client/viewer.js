@@ -8,6 +8,7 @@ import { seedFor, keepSeed, seedText, blindFor, signedTicket, proofAt, inAt } fr
 import { passkeysWork, warm, makePasskey, checkPasskey, tidyPasskeys, handleOf, keepHandle } from './passkey.js';
 import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
 import { pintGlass, playCoin } from './pint.js';
+import { ask } from './ask.js'; // session 56: the site's own sheet, not the browser's boxes
 
 const $ = (id) => document.getElementById(id);
 // ?as=home: someone watching at home (the desktop view), with a pass and wallet of their own, apart from the
@@ -1760,7 +1761,7 @@ function pin(text = '') {
   $('pin').title = text;
 }
 $('pin-btn').onclick = async () => {
-  const text = prompt('Pinned message, over the chat (140 characters; links work). Empty it to take it down.', pinNow || '');
+  const text = await ask({ title: 'Pin a message', text: 'It sits over the chat for everyone. 140 characters; links work. Empty it to take it down.', field: { value: pinNow || '', maxLength: 140, label: 'The pinned message' }, yes: 'Pin it', no: 'Cancel' });
   if (text === null) return;
   const r = await fetch('/api/mod/pin', { method: 'POST', headers: { ...modH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   if (r.ok) pin((await r.json()).pin); else say((await r.json().catch(() => ({}))).detail || 'Not pinned.');

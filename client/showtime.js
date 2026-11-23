@@ -1,6 +1,7 @@
 // Show Time: sign-in, the two views, the artist's own look at the stream, and three big buttons. Only the next step
 // is lit: Start stream (the public sees it from now; it opens by itself at the start time), Start show (room
 // phones change to the picture), End night.
+import { ask } from './ask.js'; // session 56: the site's own sheet, not the browser's boxes
 const $ = (id) => document.getElementById(id);
 let key = null;
 try { key = localStorage.getItem('nutpub-admin'); } catch {}
@@ -23,7 +24,7 @@ $('screen-open').href = screenLink;
 $('screen-copy').addEventListener('click', async () => {
   const b = $('screen-copy');
   const icon = b.innerHTML;
-  try { await navigator.clipboard.writeText(screenLink); b.textContent = '✓'; b.style.color = 'var(--amber)'; } catch { prompt('The room screen\u2019s link:', screenLink); }
+  try { await navigator.clipboard.writeText(screenLink); b.textContent = '✓'; b.style.color = 'var(--amber)'; } catch { ask({ title: 'The room screen’s link', text: 'Copy it, then open it on the room’s screen.', link: screenLink }); }
   setTimeout(() => { b.innerHTML = icon; b.style.color = ''; }, 2000);
 });
 const streamed = info.show.stream.mode !== 'off';
@@ -157,32 +158,15 @@ async function preview() {
 const freeNow = info.show.stream.mode === 'free' ? await api('GET', '/api/admin/free-stream').catch(() => null) : null;
 const unpaid = () => !!freeNow && !freeNow.covered;
 $('unpaid-note').hidden = !unpaid();
-// Rajesh 21 Nov (session 47): the browser's own confirm box looked out of place (and some browsers cancel it unseen),
-// so the question asks in the page's own look: the safe answer outlined, the one that goes ahead amber.
-function ask(text, yes, no = 'Not yet') {
-  return new Promise((done) => {
-    const d = Object.assign(document.createElement('dialog'), { className: 'ask' });
-    d.innerHTML = '<p></p><div class="ask-btns"><button type="button" class="btn quiet"></button><button type="button" class="btn primary"></button></div>';
-    d.querySelector('p').textContent = text;
-    const [n, y] = d.querySelectorAll('button');
-    n.textContent = no;
-    y.textContent = yes;
-    const end = (answer) => { d.close(); d.remove(); done(answer); };
-    n.onclick = () => end(false);
-    y.onclick = () => end(true);
-    d.addEventListener('cancel', (e) => { e.preventDefault(); end(false); }); // Esc
-    document.body.append(d);
-    d.showModal();
-    n.focus();
-  });
-}
+// Rajesh 21 Nov (session 47): the browser's own confirm box looked out of place, so End night and Open now ask in the
+// page's own look; since session 56 it's the site's one sheet (ask.js), the safe answer outlined, the go-ahead amber.
 for (const b of buttons) {
   b.onclick = async () => {
     const s = b.dataset.stage;
     if (['open', 'on'].includes(s) && unpaid()) { $('unpaid-note').hidden = false; $('unpaid-note').classList.add('flash'); return; }
-    if (s === 'closed' && !(await ask('End night? Every phone goes to Cheers and everyone watching stops.', 'End night'))) return;
+    if (s === 'closed' && !(await ask({ title: 'End night?', text: 'Every phone goes to Cheers and everyone watching stops.', yes: 'End night', no: 'Not yet' }))) return;
     if (s === 'open' && now.opensAt && Date.now() / 1000 < now.opensAt
-      && !(await ask(`Open the stream to viewers now? It would open by itself at ${clock(now.opensAt)}.`, 'Open it now'))) return;
+      && !(await ask({ title: 'Open the stream now?', text: `It would open to viewers by itself at ${clock(now.opensAt)}.`, yes: 'Open it now', no: 'Not yet' }))) return;
     (async () => {
       if (s === 'closed' && NOSHOW && mintUrl) {
         lastOrders = true;

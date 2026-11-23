@@ -3,6 +3,7 @@
 // drink with that key. The server marks it poured only when the mint says it's spent, so a second pour of the
 // same QR finds it spent: "Already poured, mate".
 import { openWallet } from './wallet.js';
+import { ask } from './ask.js'; // session 56: the site's own sheet, not the browser's boxes
 import { unlockAudio, trombone, clink } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
@@ -44,7 +45,7 @@ const { coco } = wallet;
 // ---- The bar's key: made here on first open, its public half sent. A key made elsewhere stays there.
 let { barKey } = await fetch('/api/show').then((r) => r.json());
 if (!barKey || !(await coco.keyring.getKeyPair(barKey))) {
-  if (!barKey || confirm('The bar’s key is on another browser. Make a new one here? Drinks locked to the old one can only be poured there.')) {
+  if (!barKey || (await ask({ title: 'Make the bar’s key here?', text: 'The bar’s key is on another browser. Drinks locked to the old one can only be poured there.', yes: 'Make it here' }))) {
     const { publicKeyHex } = await coco.keyring.generateKeyPair();
     barKey = (await api('PUT', '/api/admin/bar-key', { pubkey: publicKeyHex })).pubkey;
   }
