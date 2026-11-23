@@ -221,7 +221,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
       async (c) => `${(await showOf(c)).title || 'The show'}: ${home(c) ? 'watch online' : 'venue ticket'}`,
       { lockTo: artistKey, kind: 'ticket' }),
     async (c) => {
-      await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind, code, secret) VALUES (?, ?, ?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room', randomHex(12), randomHex(32));
+      await run('INSERT OR IGNORE INTO tickets (pass, sats, at, kind, code) VALUES (?, ?, ?, ?, ?)', c.pass, c.paid, now(), home(c) ? 'home' : 'room', randomHex(12));
       if (home(c)) return json({ in: true });
       await keepSigned(c.pass, blindOf(c));
       return json({ in: true, ...(await signedFor(c.pass, blindOf(c))) });
