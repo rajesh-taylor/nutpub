@@ -96,7 +96,8 @@ export function mountSet(route) {
         return send(c, 'audio');
       }
       if (stream.mode === 'free' && !(await freeStatus(await showOf(c))).covered) return json({ error: 'unpaid_stream', detail: 'This free stream hasn’t been paid for yet.' }, 409); // session 35
-      if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece))) return send(c, 'audio'); // a ticket plays the set
+      // A ticket plays the set; so does a mod's page (session 55e: mods watch free, as they do a live stream).
+      if ((await free(c)) || (await hasTicket(c.pass)) || (await hasPaid(c.pass, c.piece)) || (await modOf(c))) return send(c, 'audio');
       if (stream.mode === 'ticket') return json({ error: 'ticket_needed', detail: 'Buy Watch online first: one price for the whole show.' }, 403);
       if (!stream.perMinute) return json({ error: 'not_ready', detail: 'No price a minute set yet.' }, 409);
       return null;
@@ -114,7 +115,7 @@ export function mountSet(route) {
       if (!(await replayPieceSeen(c.pass, c.piece))) return json({ error: 'not_paid', detail: 'Play the sound first.' }, 403);
       return send(c, 'video');
     }
-    if (!(await free(c)) && !(await hasTicket(c.pass)) && !(await hasPaid(c.pass, c.piece))) {
+    if (!(await free(c)) && !(await hasTicket(c.pass)) && !(await hasPaid(c.pass, c.piece)) && !(await modOf(c))) {
       return json({ error: 'not_paid', detail: 'Pay for these 10 seconds first.' }, 403);
     }
     return send(c, 'video');

@@ -594,7 +594,7 @@ function cueAt(n, startAt) {
 // The picture for a paid piece, started when its sound starts.
 async function picture(n, startAt, mine) {
   try {
-    const r = await fetch(`/api/set/video/${n}`, { headers: { 'X-Pass': pass } });
+    const r = await fetch(`/api/set/video/${n}`, { headers: { 'X-Pass': pass, ...modH() } }); // a mod's picture is free too (session 55e)
     if (!r.ok) return;
     const v = vids[n % 2];
     const old = v.src;

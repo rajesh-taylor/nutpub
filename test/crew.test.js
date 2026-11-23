@@ -465,3 +465,20 @@ test('the Mod page for a Nostr mod: their pass, signed in with the npub the invi
   assert.deepEqual([s.status, s.me.name, s.me.via], [200, 'Sam', 'nostr']);
   assert.equal((await fan('GET', '/api/mod/chat', null, { 'X-Pass': await newPass() })).status, 403);
 });
+
+test('a mod plays the recorded set free, as they watch a live stream free; a fan still needs a ticket or the 402', async () => {
+  const { key } = await passkeyMod('Kat');
+  env.ASSETS = { fetch: async (u) => (String(u).endsWith('/set.json') ? Response.json({ segments: 3, segmentMs: 10000 })
+    : new Response('x', { headers: { 'Content-Type': String(u).endsWith('.wav') ? 'audio/wav' : 'video/mp4' } })) };
+  await withStage(stage, async () => {
+    const { currentShow, saveShow } = await import('../server/shows.js');
+    const { show } = await currentShow();
+    await saveShow({ ...show, stream: { ...show.stream, mode: 'ticket' } });
+  });
+  const guest = await newPass();
+  const fanAsk = await fan('GET', '/api/set/audio/0', null, { 'X-Pass': guest });
+  assert.equal(fanAsk.error, 'ticket_needed', JSON.stringify(fanAsk));
+  assert.equal((await fan('GET', '/api/set/video/0', null, { 'X-Pass': guest })).error, 'not_paid');
+  assert.equal((await fan('GET', '/api/set/audio/0', null, { 'X-Pass': guest, 'X-Mod': key })).status, 200);
+  assert.equal((await fan('GET', '/api/set/video/0', null, { 'X-Pass': guest, 'X-Mod': key })).status, 200);
+});
