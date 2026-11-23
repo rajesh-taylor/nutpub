@@ -71,7 +71,7 @@ function start(s) {
   if (me.via === 'nostr') put(NOSTR_MOD, '1');
   $('page').hidden = false;
   $('head-right').hidden = false;
-  $('who').textContent = `${me.icon} ${me.name} · Mod`.trim();
+  $('who').textContent = `${me.icon} ${me.name}`.trim(); // the page says Mod already (Rajesh 23 Nov)
   $('who').classList.toggle('nostr', me.via === 'nostr');
   $('sign-out').hidden = !['passkey', 'nostr'].includes(me.via); // a link stays the mod's own
   $('to-gig').href = `${gig.path}${as === 'home' ? '?as=home' : ''}`;
