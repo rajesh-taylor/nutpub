@@ -233,7 +233,7 @@ export async function judgeLine(r, page) {
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
       // Session 58 (Rajesh 23 Nov): the cheeky second pint is a step of its own; DevTools optional, opened before it.
       const second = (() => { try { return localStorage.getItem('nutpub-second-pint') === location.host; } catch { return false; } })();
-      if (!second) return say(7, 'Cheeky second pint? Press Pour again. To watch the mint answer, first open developer tools (⌥⌘I) on the Network tab and type “testnut” in its filter box.', '', '',
+      if (!second) return say(7, 'Cheeky second pint? First open developer tools (⌥⌘I), click Network and type “testnut” in its filter box. Then press Pour again: the mint’s swap comes back 400, already spent.', '', '',
         { story: STORY.poured, extra: pressBtn('Pour again', '#bar-drinks button', /pour again$/, 'Pouring…') });
       return say(7, 'Close developer tools (⌥⌘I again), then press End night, the yellow button below.', '', '', { story: STORY.again });
     }
