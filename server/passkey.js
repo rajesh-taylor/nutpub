@@ -5,10 +5,14 @@
 // We keep the passkey's public key and which purchase it opens; never anything about the person. Its user handle (the
 // 32 bytes the password manager keeps with it) is made on the phone and never sent here: it's the blind-signed
 // ticket's seed (blind.js), so Find my ticket rebuilds the ticket on the phone without us linking buyer to door.
+// Sealed tickets (session 59, client/seal.js): where the passkey gives a PRF answer, the seed is sealed with it on the
+// phone and we keep the sealed copy beside the passkey (kv 'seal:<id>'), 61 bytes we can't open. The user handle is
+// then 32 random bytes of the phone's own.
 //
 // Signatures are checked with WebCrypto only: ES256 (P-256, most phones), Ed25519, RS256 (Windows Hello).
 import { one, run, kv, stageDb } from './db.js';
 import { json, body, now, randomHex } from './http.js';
+import { isSealed } from '../client/seal.js';
 
 const utf8 = new TextEncoder();
 export const b64u = {
@@ -162,12 +166,14 @@ export function mountPasskeys(route, pass) {
     if (!(await one('SELECT 1 AS x FROM tickets WHERE pass = ?', c.pass))) return json({ error: 'no_ticket' }, 403);
     if ((await one('SELECT COUNT(*) AS n FROM passkeys WHERE pass = ?', c.pass)).n >= 5) return json({ error: 'too_many' }, 409);
     if (!(await challengeOk(b?.challenge))) return old();
+    if (b.sealed !== undefined && !isSealed(b.sealed)) return fail(new Error('bad_seal'));
     let k;
     try { k = await checkCreate(b, { ...site(c), challenge: b.challenge }); } catch (e) { return fail(e); }
     if (!(await spend(b.challenge))) return old();
     await run('INSERT OR IGNORE INTO passkeys (id, pass, pubkey, alg, count, synced, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
       k.id, c.pass, k.publicKey, k.alg, k.count, k.synced ? 1 : 0, now());
-    return json({ ok: true, synced: k.synced });
+    if (b.sealed) await kv.set(`seal:${k.id}`, b.sealed);
+    return json({ ok: true, synced: k.synced, sealed: !!b.sealed });
   });
 
   // Find my ticket: a passkey check gives back the purchase's pass and kind.
@@ -182,9 +188,11 @@ export function mountPasskeys(route, pass) {
     await run('UPDATE passkeys SET count = ?, used = ? WHERE id = ?', auth.count, now(), k.id);
     const t = await one('SELECT kind FROM tickets WHERE pass = ?', k.pass);
     if (!t) return json({ error: 'no_ticket', detail: 'This passkey’s ticket was for another night.' }, 404);
-    // The phone has the passkey's user ID (the ticket's 32 bytes) itself: it rebuilds the blinded ticket and asks
-    // /api/door/me for the gig's signature again. Nothing here is the ticket.
-    return json({ pass: k.pass, kind: t.kind });
+    // The phone has the passkey's user ID (the ticket's 32 bytes) itself, or opens the sealed copy with the passkey's
+    // PRF answer: it rebuilds the blinded ticket and asks /api/door/me for the gig's signature again. Nothing here opens
+    // the ticket.
+    const sealed = await kv.get(`seal:${k.id}`, null);
+    return json({ pass: k.pass, kind: t.kind, ...(sealed ? { sealed } : {}) });
   });
 }
 

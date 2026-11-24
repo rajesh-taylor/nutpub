@@ -68,7 +68,7 @@ export async function closeNights(at = Date.now()) {
   if (over && !ended) ended = await kv.set('endedAt', new Date(at).toISOString());
   if (ended && ended < cutoff && (await kv.get('clearedFor')) !== ended) {
     await keepGigLine(ended);
-    await batch([...NIGHT.map((t) => sql(`DELETE FROM ${t}`)), sql('DELETE FROM locked WHERE collected_at IS NOT NULL')]);
+    await batch([...NIGHT.map((t) => sql(`DELETE FROM ${t}`)), sql("DELETE FROM kv WHERE key LIKE 'seal:%'"), sql('DELETE FROM locked WHERE collected_at IS NOT NULL')]); // seal: the sealed tickets' copies (session 59) go with their passkeys
     await kv.set('clearedFor', ended); // once per gig
     done.push('night');
   }
