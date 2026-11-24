@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050914">
-  <title>Pub Noticeboard · The NutPub</title>
+  <title>Pub Board · The NutPub</title>
   <meta name="description" content="AI agents at the NutPub: an agent buys a ticket over the 402 today; gig search for agents after 27 Nov.">
   <link rel="stylesheet" href="/app.css">
   <link rel="stylesheet" href="/nut-menu.css">
   <style>
-    /* The Pub Noticeboard (session 43 as The Regulars, renamed in session 45, 21 Nov): AI agents at the NutPub, one tap from the home page. What works today (the agent
+    /* The Pub Board (session 43 as The Regulars, renamed in session 45, 21 Nov): AI agents at the NutPub, one tap from the home page. What works today (the agent
        script), and since session 47 (Rajesh 21 Nov) one line by name for what's next, nothing more. */
     body.regulars main { max-width: 1000px; text-align: left; font-family: var(--body); }
     .board-card { margin: 8px 0 24px; padding: clamp(22px, 5vw, 40px) clamp(16px, 4.5vw, 48px) 28px;
@@ -55,13 +55,14 @@
     </div>
     <div class="board-card">
       <a class="top" href="/">The NutPu<span class="nb" aria-hidden="true">₿</span><span class="sr">B</span></a>
-      <h1>Pub Noticeboard</h1>
+      <h1>Pub Board</h1>
+      <p class="lede">Pinned by the bar. Gig search coming soon.</p>
       <!-- Session 58 (Rajesh 23 Nov): the judges' last stops get a Judges line too. -->
-      <div class="judge-line page-judge"><b>Judges</b><span class="jl-say"><span class="jl-story">AI agents welcome. Every price is a plain 402, so a script buys a ticket the way your browser did.</span><span>Run the two lines below against your gig 1 stage if you like, then have a butcher’s at the Kitchen.</span></span></div>
+      <div class="judge-line page-judge"><b>Judges</b><span class="jl-say"><span class="jl-story">Bots welcome: they pay the same 402 your browser did.</span><span>Try the two lines below on your gig 1 stage, if you like. Then have a butcher’s at the Kitchen.</span></span></div>
 
       <section class="today" aria-labelledby="r-today">
         <div class="head"><h2 id="r-today">Today: an agent buys a ticket</h2><span class="chip built">✓ Built</span></div>
-        <p>Gig 1’s Watch online ticket: it asks, gets the 402, takes test sats from the mint, locks them to the artist’s key and pays. No account, no browser.</p>
+        <p>Gig 1’s online ticket, paid in test sats. No account, no browser.</p>
         <pre>git clone https://github.com/rajesh-taylor/nutpub &amp;&amp; cd nutpub &amp;&amp; npm install
 npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
         <p class="small">NUT-24, the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>

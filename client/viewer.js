@@ -4,8 +4,8 @@
 import { openWallet, walletStep } from './wallet.js';
 import { money, satsFrom } from '../server/money.js';
 import { stepAt } from '../server/totp.js';
-import { seedFor, keepSeed, seedText, blindFor, signedTicket, proofAt, inAt } from './ticket.js';
-import { passkeysWork, warm, makePasskey, checkPasskey, tidyPasskeys, handleOf, keepHandle } from './passkey.js';
+import { seedFor, keepSeed, seedText, userIdOf, keepSealed, toOpen, opens, blindFor, signedTicket, proofAt, inAt } from './ticket.js';
+import { passkeysWork, warm, makePasskey, openSealed, checkPasskey, tidyPasskeys, handleOf, keepHandle } from './passkey.js';
 import { extension, signIn, signOut, whoAmI, connect, connected, signer, sign, publish } from './nostr.js';
 import { pintGlass, playCoin } from './pint.js';
 import { ask } from './ask.js'; // session 56: the site's own sheet, not the browser's boxes
@@ -73,6 +73,7 @@ const T = {
   paused: 'Paused. Nothing more is charged. Press play to rejoin the show, live.',
   budget: (n) => `You’ve reached your limit: ${n} sats tonight. Raise it to keep watching.`,
   liveEnded: 'The stream has stopped.', liveLost: 'The picture stopped. Press play to rejoin.',
+  noSound: 'No sound came through: press play again.',
   empty: 'Your wallet’s empty. Top it up to keep playing.',
   tipDone: (label) => `${label}: paid. Thank you!`,
   ownTip: 'Tip', ownPay: (n) => `Tip ${n} sat${n === 1 ? '' : 's'}`, ownDone: (amount) => `${amount} tipped. Thank you!`, thanks: 'Thank you!',
@@ -361,6 +362,10 @@ function unlockAudio() {
 }
 // The sound went quiet mid-set (Rajesh 19 Nov, Safari: no sound on gigs 2 and 4): any tap on the page brings it back.
 addEventListener('pointerdown', () => { if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); }, { capture: true });
+// Session 59 (Rajesh 23 Nov, Safari, gig 3's phone: ■ on, no sound): a set whose sound never starts, or stops on
+// its own, stops too, so the button says play again and no piece is bought for silence. The next tap brings it back.
+const silent = () => { if (playing && ctx && ctx.state !== 'running' && !document.body.classList.contains('live-video')) stop(T.noSound); };
+const watchSound = (ac) => { if (!ac.onstatechange) ac.onstatechange = () => setTimeout(silent, 1500); setTimeout(silent, 2500); };
 
 // ---- The background photo: the account holder's own; or the Berlin picks, one before Play and three taking
 // turns while the set plays.
@@ -544,6 +549,7 @@ async function play() {
   const ac = unlockAudio();
   const mine = ++run;
   controls(true);
+  watchSound(ac);
   say('');
   master = ac.createGain();
   master.gain.value = muted ? 0 : volume;
@@ -1020,6 +1026,7 @@ const owe = (yes) => { try { if (yes) localStorage.setItem(DUE, pass); else loca
 async function withTicket(d) {
   if (d?.ticketKind !== 'room') return d;
   try { d.mine = await signedTicket(pass, d, KEEP); } catch { d.mine = null; }
+  d.sealed = d.mine ? null : toOpen(pass, KEEP); // sealed in this browser, not opened in this tab yet (session 59)
   d.checkedAt = d.mine ? inAt(d.mine, d.inside) : null;
   return d;
 }
@@ -1205,6 +1212,7 @@ function render() {
   // so by itself.
   const passOn = room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !!door.mine && !keepFirst;
   $('door-pass').hidden = !passOn;
+  $('door-open').hidden = !(room && doorCheck && door.ticketKind === 'room' && !confirmed && !closed && !TICKET_VIEW && !door.mine && !!door.sealed);
   // One thing at a time until they're in: save the passkey, then Show at the door. Goals, tips and chat come after.
   // In the room only: at home the show is on the screen, so the chat and the wallet stay (Rajesh 15 Nov: a Watch online
   // ticket left the page blank under the video, the Save button hidden with the rest).
@@ -1233,7 +1241,7 @@ function render() {
     const inRoom = !!door.checkedAt;
     $('door-show').hidden = inRoom;
     $('door-pass-title').textContent = inRoom ? 'You’re in' : 'Your ticket';
-    $('door-pass-note').textContent = inRoom ? '· enjoy the night' : '';
+    $('door-pass-note').textContent = inRoom ? '· enjoy the night' : userIdOf(pass, KEEP) && !seedText(pass, KEEP) ? '· opens only with your face or fingerprint' : '';
     doorQr();
     // Scanned while the QR is open: it says so, then closes by itself.
     if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
@@ -1476,7 +1484,7 @@ function todoDraw() {
 function ticketTab({ room, ticket, closed, s, confirmed }) {
   const online = show.stream.mode === 'ticket';
   if (room) { // a venue ticket with no door QR to show: say so, so the tab is never empty
-    $('tt-online').hidden = !ticket || closed || confirmed || !$('door-pass').hidden;
+    $('tt-online').hidden = !ticket || closed || confirmed || !$('door-pass').hidden || !$('door-open').hidden; // session 59: or Open your ticket
     $('tt-online-k').textContent = 'Your venue ticket';
     $('tt-online-k').hidden = false;
     $('tt-online-line').textContent = 'Paid. The video plays free with it.';
@@ -1548,15 +1556,21 @@ function passkeyName() {
 // drops them. Only where the browser can (passkey.js). A fan who never opens the page again keeps theirs.
 function tidyKeys() {
   if (!PASSKEYS) return;
-  if (gonePass) for (const id of [seedText(gonePass, KEEP), handleOf(gonePass)]) tidyPasskeys(id, []);
+  if (gonePass) for (const id of [userIdOf(gonePass, KEEP), handleOf(gonePass)]) tidyPasskeys(id, []);
   // None on the server (a save the server never took): the password manager's copy goes too.
-  if (door.ticket === true && Array.isArray(door.passkeyIds)) tidyPasskeys(door.ticketKind === 'room' ? seedText(pass, KEEP) : handleOf(pass), door.passkeyIds, passkeyName());
-  else if (door.ticket === false) for (const id of [seedText(pass, KEEP), handleOf(pass)]) tidyPasskeys(id, []);
+  if (door.ticket === true && Array.isArray(door.passkeyIds)) tidyPasskeys(door.ticketKind === 'room' ? userIdOf(pass, KEEP) : handleOf(pass), door.passkeyIds, passkeyName());
+  else if (door.ticket === false) for (const id of [userIdOf(pass, KEEP), handleOf(pass)]) tidyPasskeys(id, []);
 }
 $('keep-btn').onclick = async () => {
   try {
     const name = passkeyName();
-    if (!(await makePasskey(pass, name, door.ticketKind === 'room' ? seedFor(pass, KEEP) : null))) { keepTried = true; return render(); }
+    const room = door.ticketKind === 'room';
+    const seed = room ? seedFor(pass, KEEP) : null;
+    const made = await makePasskey(pass, name, seed, room);
+    if (!made) { keepTried = true; return render(); }
+    // The passkey gave no PRF answer after all (session 59): one more press saves it as before.
+    if (made.again) { $('keep-note').textContent = 'One more press to finish saving.'; return; }
+    if (made.sealed) keepSealed(pass, made, seed, KEEP); // the plain 32 bytes leave this browser; this tab keeps it open
     door.passkey = true;
     render();
   } catch (e) { keepTried = true; render(); say(e.message); }
@@ -1569,10 +1583,21 @@ $('find').onclick = async () => {
     const keep = t.kind === 'home' ? '-home' : '';
     try {
       localStorage.setItem(`nutpub-pass${keep}`, t.pass);
-      if (t.kind === 'room' && t.seed) keepSeed(t.pass, t.seed, keep); // the passkey's user ID: the ticket's 32 bytes
+      if (t.kind === 'room' && t.sealed) keepSealed(t.pass, t.sealed, t.seed, keep); // sealed (session 59): opened in this tab
+      else if (t.kind === 'room' && t.seed) keepSeed(t.pass, t.seed, keep); // the passkey's user ID: the ticket's 32 bytes
       if (t.kind === 'home' && t.seed) keepHandle(t.pass, t.seed); // a Watch online ticket's: its name kept current
     } catch { return say('This browser can’t keep the ticket (private window?).'); }
     location.replace(`${location.pathname}${t.kind === 'home' ? '?as=home' : ''}`);
+  } catch (e) { say(e.message); }
+};
+// A sealed ticket on a later visit (session 59): its passkey opens it in this tab, then the door QR as before.
+$('door-open-btn').onclick = async () => {
+  try {
+    const seed = await openSealed(door.sealed);
+    if (!seed) return;
+    opens(pass, seed, KEEP);
+    door = await myDoor();
+    render();
   } catch (e) { say(e.message); }
 };
 $('whole').onclick = () => $('buy').onclick();

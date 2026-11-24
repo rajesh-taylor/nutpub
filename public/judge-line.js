@@ -170,7 +170,7 @@ export async function judgeLine(r, page) {
     if (pickle) {
       if (page === 'takings' && (await admin('/api/admin/setlist'))?.setlist?.done?.includes(list.at)) {
         const bread = Object.assign(document.createElement('abbr'), { textContent: 'bread', tabIndex: 0 }); bread.dataset.means = 'Money: Cockney rhyming slang, bread and honey';
-        return say('', 'Before you go, read the Pub Noticeboard: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/noticeboard'),
+        return say('', 'Before you go, read the Pub Board: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/board'),
           { story: ['Longy’s ', bread, ' is in his own wallet.'] });
       }
       if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
@@ -233,7 +233,7 @@ export async function judgeLine(r, page) {
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
       // Session 58 (Rajesh 23 Nov): the cheeky second pint is a step of its own; DevTools optional, opened before it.
       const second = (() => { try { return localStorage.getItem('nutpub-second-pint') === location.host; } catch { return false; } })();
-      if (!second) return say(7, 'Cheeky second pint? Press Pour again. To watch the mint answer, first open developer tools (⌥⌘I) on the Network tab and type “testnut” in its filter box.', '', '',
+      if (!second) return say(7, 'Cheeky second pint? First open developer tools (⌥⌘I), click Network and type “testnut” in its filter box. Then press Pour again: the mint’s swap comes back 400, already spent.', '', '',
         { story: STORY.poured, extra: pressBtn('Pour again', '#bar-drinks button', /pour again$/, 'Pouring…') });
       return say(7, 'Close developer tools (⌥⌘I again), then press End night, the yellow button below.', '', '', { story: STORY.again });
     }

@@ -63,8 +63,9 @@ route('GET', '/crew', (c) => (stageDb().id ? Response.redirect(new URL('/', c.ur
 route('GET', '/judge', (c) => (stageDb().id ? Response.redirect(new URL('/', c.url), 302) : page('judge.html')(c))); // Judge for yourself: the three gig cards (thenutpub.com only)
 route('GET', '/menu', page('menu.html')); // Pub Menu: off every menu since session 45 (the Kitchen says it); kept for old links
 route('GET', '/kitchen', page('kitchen.html')); // The Kitchen (session 43): what the NutPub does, a tick chip each, from the Pub Menu
-route('GET', '/agents', page('agents.html')); // The Pub Noticeboard (session 43 as The Regulars): AI agents, the 402 today and MCP on refueler.io
-route('GET', '/noticeboard', page('agents.html')); // its name since session 45 (Rajesh 21 Nov); /agents kept for old links
+route('GET', '/agents', page('agents.html')); // The Pub Board (session 43 as The Regulars): AI agents, the 402 today and MCP on refueler.io
+route('GET', '/board', page('agents.html')); // the Pub Board (Rajesh 24 Nov, session 60)
+route('GET', '/noticeboard', page('agents.html')); // its name from session 45 to 59; kept, like /agents, for old links
 route('GET', '/doors', redirect('/show')); // its own page for a day, 9 Nov
 route('GET', '/show', page('show.html'));
 route('GET', '/mod', page('mod.html')); // the Mod page (session 55e): a gig's moderators, signed in as now (passkey or Nostr)

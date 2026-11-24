@@ -90,6 +90,12 @@
           <button type="button" class="btn quiet" id="door-word-back">Back to the QR</button>
         </div>
       </div>
+      <!-- Session 59: a sealed ticket, on a later visit: its passkey opens it here, then the door QR as before. -->
+      <div class="door-line" id="door-open" hidden>
+        <p><b>Your ticket</b> · sealed to your passkey</p>
+        <button type="button" class="btn primary" id="door-open-btn">Open your ticket</button>
+        <p class="hint">Your face or fingerprint opens it.</p>
+      </div>
       <div class="drink card" id="drink" hidden>
         <img id="drink-qr" alt="Your free drink: a QR code for the bar" width="112" height="112">
         <!-- Gig 3 (17 Nov): the drink as the coin itself, an animated QR in a pint glass (client/pint.js). -->

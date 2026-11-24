@@ -1,6 +1,6 @@
 /* The menu: a pint with the word, so judges see it opens something (Rajesh 15 Nov); a card under it, one row per
    place, its name and what's there (19 Nov). On every reading page since 21 Nov: home, the Kitchen and the Pub
-   Noticeboard (the Pub Menu left the menus in session 45). Home places it absolutely (judge.html); the other pages give it a row of its own above their card. */
+   Pub Board (the Pub Menu left the menus in session 45). Home places it absolutely (judge.html); the other pages give it a row of its own above their card. */
 .nut-menu { z-index: 5; text-align: right; }
 .nut-menu summary { list-style: none; cursor: pointer; padding: 4px; }
 .nut-menu summary::-webkit-details-marker { display: none; }
