@@ -170,7 +170,7 @@ export async function judgeLine(r, page) {
     if (pickle) {
       if (page === 'takings' && (await admin('/api/admin/setlist'))?.setlist?.done?.includes(list.at)) {
         const bread = Object.assign(document.createElement('abbr'), { textContent: 'bread', tabIndex: 0 }); bread.dataset.means = 'Money: Cockney rhyming slang, bread and honey';
-        return say('', 'Before you go, read the Pub Noticeboard: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/noticeboard'),
+        return say('', 'Before you go, read the Pub Board: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/board'),
           { story: ['Longy’s ', bread, ' is in his own wallet.'] });
       }
       if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',

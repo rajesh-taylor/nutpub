@@ -1,4 +1,4 @@
-// The Kitchen and the Pub Noticeboard (session 43, as The Regulars): what they may and may not say. Every card on the Kitchen has exactly one
+// The Kitchen and the Pub Board (session 43, as The Regulars): what they may and may not say. Every card on the Kitchen has exactly one
 // tick chip of the three; neither page names another project, a Refueler product, a fee, or an MCP endpoint here.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,7 +34,7 @@ test('no other projects, no Refueler products, no fees, no MCP endpoint on thenu
     assert.ok(!/thenutpub\.com\/(mcp|sse)/.test(page), `${name} names an MCP endpoint here`);
   }
   assert.match(regulars, /refueler\.io/);
-  // Session 47 (Rajesh 21 Nov): the Noticeboard names what's next by name only, with no MCP plan.
-  assert.ok(!/MCP/.test(regulars), 'the Noticeboard talks about MCP');
+  // Session 47 (Rajesh 21 Nov): the Pub Board names what's next by name only, with no MCP plan.
+  assert.ok(!/MCP/.test(regulars), 'the Pub Board talks about MCP');
   assert.match(regulars, /Gig search for agents/);
 });
