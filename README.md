@@ -40,7 +40,7 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
 
-Everything the NutPub does, ticked off with its specs, is on [The Kitchen](https://thenutpub.com/kitchen). The [Pub Board](https://thenutpub.com/board) shows a ticket bought by a script.
+Everything the NutPub does, ticked off with its specs, is on [The Kitchen](https://thenutpub.com/kitchen). The [Pub Board](https://thenutpub.com/board): a bot buys a ticket. No browser, no account.
 
 <br clear="right">
 
