@@ -846,13 +846,20 @@ $('own-form').onsubmit = async (e) => {
 let thanksTimer = 0;
 // Session 51: the mint's own fee for the swap, when it took one, said after the thank-you (it leaves the wallet too).
 const feeNote = () => { const f = wallet.lastFee; return f > 0 ? ` The mint took ${sats(f)} as its fee.` : ''; };
+// Session 61: scroll this page only. In Show Time's phone frame, scrollIntoView also scrolled the Show Time page
+// around it, so the comment box moved away from the judge's mouse after a tip.
+function intoView(el) {
+  const r = el.getBoundingClientRect();
+  const by = r.bottom > innerHeight ? r.bottom - innerHeight + 12 : r.top < 0 ? r.top - 12 : 0;
+  if (by) scrollBy({ top: by, behavior: 'smooth' });
+}
 function thank(text) {
   if (document.body.classList.contains('full')) return ONE ? say(text, true, 8000) : undefined; // the strip has no room under the box
   if (!$('say').offsetParent) return say(text, true, 8000);
   clearTimeout(thanksTimer);
   $('say-thanks').textContent = text;
   $('say-thanks').hidden = false;
-  $('say-thanks').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // session 58: in Show Time's phone frame it sat below the fold
+  intoView($('say-thanks')); // session 58: in Show Time's phone frame it sat below the fold
   thanksTimer = setTimeout(() => { $('say-thanks').hidden = true; }, 6000);
 }
 
@@ -920,7 +927,7 @@ if (WALLET_CARD) {
   // The picture, the gig's line, then the tabs.
   line.after($('tabs'));
   // All the goals met: a ₿ button by them goes to the sats in the comment box.
-  $('goal-more').onclick = () => { unlockAudio(); $('say').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $('say-sats').focus({ preventScroll: true }); };
+  $('goal-more').onclick = () => { unlockAudio(); intoView($('say')); $('say-sats').focus({ preventScroll: true }); };
 } else if (AS === 'home') $('money').after($('goal'));
 // The Tip card: the stretch goal and the tip button. On a phone it's the Tip tab; on a laptop a card in the row under
 // the picture, after the ticket's cards (Rajesh 15 Nov: with no tip button there, tipping hid in the comment box).
@@ -943,7 +950,7 @@ PHONE.addEventListener('change', phoneMoves);
 $('tip-own').onclick = () => {
   unlockAudio();
   if (PHONE.matches) body.dataset.tab = 'tip'; // the Tip tab keeps the comment box under it
-  $('say-sats').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  intoView($('say-sats'));
   $('say-sats').focus({ preventScroll: true });
 };
 const DEFAULT_PHOTO = '/img/peggy-5-1372.jpg';
