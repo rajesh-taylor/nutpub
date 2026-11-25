@@ -7,8 +7,8 @@
 // from the artist and carries losses, the artist fills in Stripe's hosted onboarding.
 import { kv, siteUrl } from './db.js';
 import { current } from './shows.js';
-import { STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY } from './config.js';
-import { json } from './http.js';
+import { STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, FEE_PERCENT } from './config.js';
+import { json, body } from './http.js';
 
 const API = 'https://api.stripe.com';
 const V2_VERSION = '2026-11-18.endive'; // the version Stripe named when it refused v1 accounts (25 Nov 2026)
@@ -48,8 +48,54 @@ async function status() {
   const account = await stripeAccount();
   if (!account) return { state: 'none' };
   const acct = await stripe('GET', `/v2/core/accounts/${account}?include=configuration.merchant&include=requirements`);
-  return { state: cardState(acct), name: acct.display_name || null };
+  const state = cardState(acct);
+  // Kept, so the fan's page knows card tips are on without asking Stripe on every visit.
+  const saved = await kv.get('stripe', {});
+  if (saved.on !== (state === 'on')) await kv.set('stripe', { ...saved, on: state === 'on' });
+  return { state, name: acct.display_name || null };
 }
+
+// Card tips are on: this site has Stripe keys and the artist's account takes cards (Cellar saw it so).
+export const cardTipsOn = async () => stripeOn() && !!(await kv.get('stripe', null))?.on;
+// For the fan's page: what Stripe's card box needs (both public: the publishable key and the artist's account id).
+export async function cardTipsInfo() {
+  const saved = stripeOn() ? await kv.get('stripe', null) : null;
+  return saved?.on ? { pk: STRIPE_PUBLISHABLE_KEY, account: saved.account } : null;
+}
+
+// What Stripe took and what it pays the artist, from Stripe's own record of the charge (its fee depends on the card).
+// Not there yet: left out, and Takings asks again.
+function fees(pi) {
+  const bt = pi.latest_charge?.balance_transaction;
+  if (!bt || typeof bt !== 'object') return {};
+  const stripeFee = (bt.fee_details || []).filter((f) => f.type === 'stripe_fee').reduce((t, f) => t + f.amount, 0);
+  return { stripeFee, net: bt.net };
+}
+
+// Tonight's card money, for Takings: null when this gig has no card tips and card tips aren't on (Takings then looks
+// as it did). Tips whose fees Stripe hadn't settled at the time are asked about once more here.
+export async function cardMoney() {
+  const tips = await kv.get('cardTips', []);
+  const on = await cardTipsOn();
+  if (!tips.length && !on) return null;
+  const account = await stripeAccount();
+  let changed = false;
+  for (const t of tips) {
+    if (t.net != null || !account) continue;
+    try {
+      const f = fees(await stripe('GET', `/v1/payment_intents/${t.id}?expand[]=latest_charge.balance_transaction`, { account }));
+      if (f.net != null) { Object.assign(t, f); changed = true; }
+    } catch { /* Stripe away: the line says so */ }
+  }
+  if (changed) await kv.set('cardTips', tips);
+  const sum = (k) => tips.reduce((n, t) => n + (t[k] || 0), 0);
+  const known = tips.every((t) => t.net != null);
+  return { on, count: tips.length, pence: sum('pence'), nutpub: sum('fee'), stripeFee: known ? sum('stripeFee') : null, net: known ? sum('net') : null };
+}
+
+// A card tip, in pence: £1 to £100 (Stripe's least in pounds is 30p).
+const tipPence = (x) => (Number.isInteger(x) && x >= 100 && x <= 10000 ? x : null);
+const fee = (pence) => Math.round((pence * FEE_PERCENT) / 100);
 
 export function mountStripe(route, admin) {
   // Cellar's panel. off: this server has no Stripe keys (a judge sees no panel, nothing changes).
@@ -83,6 +129,44 @@ export function mountStripe(route, admin) {
       const link = await stripe('POST', '/v2/core/account_links', { json: { account, use_case: { type: 'account_onboarding',
         account_onboarding: { refresh_url: back, return_url: back } } } });
       return json({ url: link.url });
+    } catch (e) { return json({ error: e.message }, 502); }
+  });
+
+  // Tip by card, from the fan's page. A direct charge on the artist's own account: the artist is the merchant, Stripe
+  // pays them and hands the NutPub its share as an application fee. The fan's card details go to Stripe's own box on the
+  // page, never here; no email asked. Made when the fan presses Pay, so nothing is left half-made by browsing.
+  route('POST', '/api/card-tip', async (c) => {
+    const pence = tipPence((await body(c))?.pence);
+    if (!pence) return json({ error: 'A card tip is £1 to £100.' }, 400);
+    const account = await stripeAccount();
+    if (!(await cardTipsOn()) || !account) return json({ error: 'Card tips aren’t on for this gig.' }, 400);
+    try {
+      const { show, path } = await current(c);
+      const pi = await stripe('POST', '/v1/payment_intents', { account, form: {
+        amount: String(pence), currency: 'gbp', application_fee_amount: String(fee(pence)),
+        'automatic_payment_methods[enabled]': 'true',
+        description: `Tip for ${String(show?.artist || 'the artist').slice(0, 60)} on the NutPub`,
+        'metadata[nutpub]': 'tip', 'metadata[gig]': path,
+      } });
+      return json({ secret: pi.client_secret });
+    } catch (e) { return json({ error: e.message }, 502); }
+  });
+  // After Stripe's box says paid: the NutPub asks Stripe itself (the page's word isn't proof) and keeps the tip for
+  // Takings, once. No webhook: this one question is enough.
+  route('POST', '/api/card-tip/check', async (c) => {
+    const id = String((await body(c))?.id || '');
+    const account = await stripeAccount();
+    if (!/^pi_[A-Za-z0-9]{8,64}$/.test(id) || !account) return json({ error: 'Not a card tip.' }, 400);
+    try {
+      const pi = await stripe('GET', `/v1/payment_intents/${id}?expand[]=latest_charge.balance_transaction`, { account });
+      if (pi.metadata?.nutpub !== 'tip') return json({ error: 'Not a card tip.' }, 400);
+      if (pi.status !== 'succeeded') return json({ status: pi.status });
+      const tips = await kv.get('cardTips', []);
+      if (!tips.some((t) => t.id === id)) {
+        tips.push({ id, pence: pi.amount, fee: pi.application_fee_amount || 0, ...fees(pi), at: new Date().toISOString() });
+        await kv.set('cardTips', tips);
+      }
+      return json({ status: 'succeeded', pence: pi.amount });
     } catch (e) { return json({ error: e.message }, 502); }
   });
 }

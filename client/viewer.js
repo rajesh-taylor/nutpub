@@ -116,7 +116,7 @@ const inFiat = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fiat = (n) => money(n, rate[unit], SYMBOL[unit]);
 const reads = (n) => (inFiat() ? fiat(n) : sats(n));
 
-const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false, gig: judgeGig = null, cues = [] }] = await Promise.all([
+const [health, { show, photo: showPhoto, photos: showPhotos = {}, nutzap: zapTo = null, judge = false, gig: judgeGig = null, cues = [], cardTips: cardTipsOn = null }] = await Promise.all([
   fetch('/api/health').then((r) => r.json()),
   fetch('/api/show').then((r) => r.json()),
 ]);
@@ -198,11 +198,22 @@ spentHere += liveSpentSoFar;
 let liveFees = 0;
 try { liveFees = liveSpentSoFar ? Number(localStorage.getItem(`nutpub-fees${KEEP}`)) || 0 : 0; } catch {}
 // What this browser has given tonight: minutes watched and tips. A free stream says so, and asks for a tip.
+// Card tips (session 62): pounds, not sats, so their own small line under the total. Only this browser knows them,
+// for tonight: forgotten after 18 hours, so the next gig starts at nothing.
+let cardHere = 0;
+try { const c = JSON.parse(localStorage.getItem(`nutpub-card${KEEP}`) || 'null'); if (c && Date.now() - c.at < 18 * 3600e3) cardHere = c.pence || 0; } catch {}
 const meter = () => {
   const given = (free ? 0 : spentHere + liveFees) + tippedHere + ticketHere;
+  // In £, $ or €: one figure, card tips in it (the flags read the whole night). In sats: the card's pounds beside it,
+  // the same size (Rajesh 25 Nov). In £, $ or € a quiet line says how much of it went by card.
+  const card = `£${(cardHere / 100).toFixed(2)}`;
+  const cardSats = cardHere && rate?.gbp ? Math.round((cardHere / 100 / rate.gbp) * 1e8) : 0;
+  let byCard = $('spent-card');
+  if (cardHere && !byCard) $('spent').after(byCard = Object.assign(document.createElement('small'), { id: 'spent-card', className: 'spent-card fine' }));
+  if (byCard) { byCard.textContent = `${card} of it by card`; byCard.hidden = !inFiat(); }
   $('spent-label').textContent = `You've supported ${show.artist || 'the artist'} with`;
-  $('spent').textContent = inFiat() ? fiat(given) : T.spent(given);
-  $('spent-box').hidden = free && !given;
+  $('spent').textContent = inFiat() ? fiat(given + cardSats) : cardHere ? `${T.spent(given)} + ${card}` : T.spent(given);
+  $('spent-box').hidden = free && !given && !cardHere;
   $('free-note').hidden = !free;
   // A judge's practice gig with the first drink (Frankie's, Your gig): once they've paid to watch at home, the venue
   // ticket is the next thing to try (Rajesh 14 Nov).
@@ -946,6 +957,10 @@ function phoneMoves() {
 }
 phoneMoves();
 PHONE.addEventListener('change', phoneMoves);
+// Tip by card (session 62): only when the artist connected Stripe in Cellar; otherwise the buttons stay as they were.
+if (cardTipsOn) import('./cardtip.js').then(({ cardTips }) => cardTips({ row: $('tip-btns'), button: $('card-tip'), also: [$('goal-card')], ...cardTipsOn, artist: show.artist,
+  chat: () => { if (PHONE.matches) showTab('chat'); intoView($('say')); $('say-text').focus({ preventScroll: true }); },
+  paid: (pence) => { cardHere += pence; try { localStorage.setItem(`nutpub-card${KEEP}`, JSON.stringify({ pence: cardHere, at: Date.now() })); } catch {} meter(); } }));
 // Your amount (Rajesh 15 Nov, late): the comment box's sats field is a tip of any amount; this puts the cursor there.
 $('tip-own').onclick = () => {
   unlockAudio();
@@ -1012,6 +1027,7 @@ function words() {
   $('about').textContent = show.description;
   tipLabel(reads(show.tip.price || 0));
   $('tip').disabled = $('ov-tip').disabled = !show.tip.price;
+  $('tip').hidden = !show.tip.price; // no tip amount set for the gig: no "Tip 0 sats" (Rajesh 25 Nov)
   $('say-tip').textContent = `Send with ${reads(show.tip.price || 0)}`;
   nutzapButton();
 }

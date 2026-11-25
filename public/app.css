@@ -1611,3 +1611,32 @@ html:root .board #mute-say:not(:empty) { margin: 10px 0 0; padding: 10px 14px; b
 
 /* Session 58: the Judges line on the Pub Board and the Kitchen, inside their card. */
 html:root .judge-line.page-judge { margin: 22px 0 6px; text-align: left; }
+
+/* Tip by card (session 62): only when the artist connected Stripe. The tip row splits in two: sats, a hairline, card. */
+.goal .goal-card.on { color: var(--cream); cursor: pointer; }
+.tip-split { display: grid; gap: 12px; min-width: 0; }
+.tip-side { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.tip-k { font: 600 13px/1.2 var(--body); letter-spacing: .02em; color: var(--smoke); }
+.card-side { padding-top: 12px; border-top: 1px solid rgb(239 227 200 / .14); }
+.card-amounts { display: flex; gap: 10px; }
+.card-amounts .btn { flex: 1; min-height: 56px; font-size: 16px; }
+.card-amounts .btn[aria-pressed="true"] { border-color: var(--cream); color: var(--cream); }
+@media (min-width: 900px) {
+  body.one .tip-split { grid-template-columns: auto auto; justify-content: start; gap: 0; }
+  body.one .tip-split > .tip-side:first-child { padding-right: 22px; }
+  body.one .card-side { padding: 0 0 0 22px; border-top: 0; border-left: 1px solid rgb(239 227 200 / .14); }
+  body.one .card-amounts .btn { flex: none; min-height: 52px; padding: 0 22px; }
+}
+.card-tip-box { display: grid; gap: 12px; padding: 14px; border: 1px solid rgb(239 227 200 / .14); border-radius: 8px; }
+.card-tip-box > [hidden] { display: none !important; }
+.card-other { display: flex; align-items: center; gap: 8px; max-width: 220px; font: 400 26px/1 var(--poster); }
+.card-other input { flex: 1; min-width: 0; font: 16px var(--body); padding: 10px 12px; border-radius: 6px; border: 1px solid rgb(239 227 200 / .14); background: var(--deep, #050914); color: var(--cream); }
+.card-tip-box .card-pay { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0; }
+.card-tip-box .card-pay img { opacity: .85; }
+.card-tip-box .card-note { margin: 0; font-size: 14px; color: var(--amber); }
+.card-tip-box .card-note:empty { display: none; }
+.stat .spent-card { display: block; margin-top: 6px; }
+.card-thanks { display: grid; gap: 8px; justify-items: start; padding: 6px 2px; }
+.card-thanks b { font: 400 40px/1 var(--poster); letter-spacing: .04em; color: var(--cream); }
+.card-thanks span { font-size: 17px; color: var(--cream); }
+.card-thanks .card-thanks-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }

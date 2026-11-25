@@ -26,7 +26,7 @@ import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountNostrLive, practiceGig } from './nostrlive.js';
 import { mountStageDoor, closesAt } from './stages.js';
 import { mountCrew, producerOf } from './crew.js';
-import { mountStripe } from './stripe.js';
+import { mountStripe, cardTipsInfo } from './stripe.js';
 import { setlist, finished, again, cue, cueTimes, lastOrdersNow } from './setlist.js';
 import { keepMoved } from './closing.js';
 import { current, publicShow, replayPrice, freeStatus, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
@@ -112,7 +112,7 @@ route('GET', '/api/show', async (c) => {
   const list = stageDb().id ? await kv.get('setlist', null) : null;
   const judge = !!list?.only;
   // gig: which judge's gig ('pickle' is gig 3, the night at the venue: its one optional passkey step, session 39).
-  return json({ ...now, show: shown, photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), replay: await replayPrice(now.show), ...(role ? { free: await freeStatus(now.show), role, practice: await practiceGig() } : {}) });
+  return json({ ...now, show: shown, photo, photos, artistKey: artist, barKey: bar, nutzap: await nutzapInfo(artist), judge, gig: judge ? list.at ?? null : null, cues: await cueTimes(), cardTips: await cardTipsInfo(), replay: await replayPrice(now.show), ...(role ? { free: await freeStatus(now.show), role, practice: await practiceGig() } : {}) });
 });
 // The show page's link as a QR code (posters, the screen in the room). Public: so is the link.
 route('GET', '/api/show/qr.svg', async (c) => {

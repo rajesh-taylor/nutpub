@@ -266,6 +266,7 @@ async function refresh() {
     over: !!takings.over, homeN: count('piece'), sold: takings.sold || {}, poured: poured.length, drinksAll: drinks.length,
   };
   paint();
+  drawCard(takings.card);
 
   // The bar's card (hidden): its drinks, Pour and its key, as before.
   $('drinks').replaceChildren(...drinks.map((d) => {
@@ -709,3 +710,32 @@ await pastGigs().catch(() => {});
 if (onSetlist?.only && onSetlist.done?.includes(onSetlist.at) && pastList[0]) finishedLine = pastList[0];
 await refresh();
 setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 60_000); // each refresh is 4 requests
+
+// Card money (session 62): only once the artist has connected Stripe in Cellar; otherwise the box stays "Card · soon".
+// Stripe's own figures: what fans tipped, Stripe's fee, the NutPub's 5% and what Stripe pays the artist.
+function drawCard(card) {
+  if (!card) return;
+  const box = document.querySelector('.card-box');
+  const make = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text ?? '' });
+  const gbp = (p) => `£${(p / 100).toFixed(2)}`;
+  box.classList.add('on');
+  $('card-h').textContent = 'Card money';
+  const body = [];
+  if (!card.count) body.push(make('p', 'note card-none', 'No card tips yet tonight. Fans see By card next to the sats tips.'));
+  else {
+    const dl = make('dl', 'card-sums');
+    const line = (k, v, cls) => dl.append(make('dt', cls, k), make('dd', cls, v));
+    line(`${card.count} card tip${card.count === 1 ? '' : 's'}`, gbp(card.pence));
+    line('Stripe’s fee', card.stripeFee == null ? 'Stripe is still working it out' : `−${gbp(card.stripeFee)}`);
+    line('The NutPub’s 5%', `−${gbp(card.nutpub)}`);
+    line('Stripe pays you', card.net == null ? '…' : gbp(card.net), 'total');
+    body.push(dl);
+  }
+  const open = make('a', 'btn quiet', 'Open my Stripe ↗');
+  Object.assign(open, { href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener' });
+  body.push(make('p', 'note card-note', 'Stripe pays it into your bank on its own schedule. The NutPub never holds it.'), open);
+  box.querySelectorAll('.card-body, .stripe-room, .card-box > p.note').forEach((x) => x.remove());
+  const wrap = make('div', 'card-body');
+  wrap.append(...body);
+  box.append(wrap);
+}
