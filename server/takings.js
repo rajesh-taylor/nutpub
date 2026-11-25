@@ -8,6 +8,7 @@ import { keysetIds, proofStates } from './gate.js';
 import { showOf, lastOrdersAt, gigOver, current } from './shows.js';
 import { json, body, now } from './http.js';
 import { FEE_PERCENT } from './config.js';
+import { cardMoney } from './stripe.js';
 
 export const artistKey = () => kv.get('artistKey');
 const COMPRESSED = /^0[23][0-9a-f]{64}$/; // a 33-byte compressed secp256k1 public key, in hex
@@ -92,6 +93,7 @@ export function mountTakings(route, admin) { // the artist's alone: a show produ
       over: await gigOver(await current(c)), // Finish gig shows once the gig is over
       replay: await replayNow(await showOf(c)), // the replay's days left, for its tile (session 34)
       upfront: await kv.get('freePaid', null), // a free stream, paid before the gig: its own line on the receipt (session 35)
+      card: await cardMoney(), // card tips through the artist's own Stripe (session 62): null with no Stripe
     });
   });
 
