@@ -751,14 +751,14 @@ function drawCard(card) {
   else {
     const dl = make('dl', 'card-sums');
     const line = (k, v, cls) => dl.append(make('dt', cls, k), make('dd', cls, v));
+    // Session 63 (Rajesh 26 Nov): two lines, as the Bitcoin card; Stripe's fee and the NutPub's 5% are on the receipt.
     line(`${card.count} card tip${card.count === 1 ? '' : 's'}`, gbp(card.pence));
-    line('Stripe’s fee', card.stripeFee == null ? 'Stripe is still working it out' : `−${gbp(card.stripeFee)}`);
-    line('The NutPub’s 5%', `−${gbp(card.nutpub)}`);
-    line('Stripe pays you', card.net == null ? '…' : gbp(card.net), 'total');
+    line('Stripe pays you', card.net == null ? 'Stripe is still working it out' : gbp(card.net), 'total');
     body.push(dl);
   }
-  const open = make('a', 'btn quiet', 'Open my Stripe ↗');
-  Object.assign(open, { href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener' });
+  // The demo account (judges' gigs) is the NutPub's, not the judge's: no Open my Stripe, a plain tag instead.
+  const open = card.demo ? make('span', 'small', 'Demo Stripe account · test mode') : make('a', 'btn quiet', 'Open my Stripe ↗');
+  if (!card.demo) Object.assign(open, { href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener' });
   // Rajesh 25 Nov: Open my Stripe takes the badge's place, top right, so the box is shorter.
   const badge = box.querySelector('.box-head img');
   if (badge) badge.replaceWith(open); else box.querySelector('.box-head a.btn')?.replaceWith(open);

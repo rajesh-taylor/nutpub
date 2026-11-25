@@ -37,6 +37,13 @@ export async function stripe(method, path, { json, form, account } = {}) {
 
 export const stripeAccount = async () => (await kv.get('stripe', null))?.account || null;
 
+// Judges' gigs (session 63, Rajesh 26 Nov): one press links a judge's stage to the NutPub's demo artist account, a
+// Stripe test account already through Stripe's pages, so judges try card tips without filling them in. Test mode
+// only (config.js takes test keys only); a real artist still connects their own account. Keep this account when
+// tidying Stripe's test accounts.
+export const DEMO_ACCOUNT = 'acct_1UfoVe9YLAboalr7';
+const judgeStage = async () => !!(await kv.get('setlist', null))?.only;
+
 // Where the artist's account stands, in Cellar's words: none, unfinished (Stripe still needs details), checking
 // (Stripe is looking at them; a few seconds after their last page, longer if it asks for a document) or on.
 export function cardState(acct) {
@@ -53,13 +60,13 @@ export function cardState(acct) {
 
 async function status() {
   const account = await stripeAccount();
-  if (!account) return { state: 'none' };
+  if (!account) return { state: 'none', judge: await judgeStage() };
   const acct = await stripe('GET', `/v2/core/accounts/${account}?include=configuration.merchant&include=requirements`);
   const state = cardState(acct);
   // Kept, so the fan's page knows card tips are on without asking Stripe on every visit.
   const saved = await kv.get('stripe', {});
   if (saved.on !== (state === 'on')) await kv.set('stripe', { ...saved, on: state === 'on' });
-  return { state, name: acct.display_name || null };
+  return { state, name: acct.display_name || null, demo: !!saved.demo };
 }
 
 // Card tips are on: this site has Stripe keys and the artist's account takes cards (Cellar saw it so).
@@ -97,7 +104,7 @@ export async function cardMoney() {
   if (changed) await kv.set('cardTips', tips);
   const sum = (k) => tips.reduce((n, t) => n + (t[k] || 0), 0);
   const known = tips.every((t) => t.net != null);
-  return { on, count: tips.length, pence: sum('pence'), nutpub: sum('fee'), stripeFee: known ? sum('stripeFee') : null, net: known ? sum('net') : null };
+  return { on, demo: !!(await kv.get('stripe', null))?.demo, count: tips.length, pence: sum('pence'), nutpub: sum('fee'), stripeFee: known ? sum('stripeFee') : null, net: known ? sum('net') : null };
 }
 
 // A card tip, in pence: £1 to £100 (Stripe's least in pounds is 30p).
@@ -141,6 +148,15 @@ export function mountStripe(route, admin, pass) {
         account_onboarding: { refresh_url: back, return_url: back } } } });
       return json({ url: link.url });
     } catch (e) { return json({ error: e.message }, 502); }
+  });
+
+  // Try it with the demo account (judges' gigs only; see DEMO_ACCOUNT): nothing to fill in, cards on at once.
+  route('POST', '/api/admin/stripe/demo', admin, async () => {
+    if (!stripeOn()) return json({ error: 'Card payments aren’t on for this site yet.' }, 400);
+    if (!(await judgeStage())) return json({ error: 'The demo account is for the judges’ gigs only.' }, 403);
+    if (await stripeAccount()) return json({ error: 'This stage already has a Stripe account.' }, 409);
+    await kv.set('stripe', { account: DEMO_ACCOUNT, on: true, demo: true, made: new Date().toISOString() });
+    return json({ state: 'on', demo: true });
   });
 
   // Tip by card, from the fan's page. A direct charge on the artist's own account: the artist is the merchant, Stripe

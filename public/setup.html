@@ -896,7 +896,20 @@
         if (!r || r.off || r.status === 403) return; // no Stripe on this site, or not the artist: no panel
         card.hidden = false;
         if (r.error) { line.replaceChildren(el('span', {}, 'Stripe didn’t answer. '), connect('Try again', false)); return; }
-        if (r.state === 'none') line.replaceChildren(el('span', {}, 'Not connected. Fans tip with sats only.'), connect('Connect with Stripe', true));
+        // A judge's gig (session 63, Rajesh 26 Nov): wired for Stripe Connect; one press tries it with the NutPub's
+        // demo account (nothing to fill in), or Connect with Stripe as a real artist does, once.
+        if (r.state === 'none' && r.judge) {
+          const demo = el('button', { type: 'button', className: 'btn quiet', textContent: 'Try it with the demo account' });
+          demo.onclick = async () => {
+            demo.disabled = true; demo.textContent = 'Connecting…';
+            const d = await ask('POST', '/api/admin/stripe/demo').catch(() => ({}));
+            if (d.state === 'on') return show();
+            demo.disabled = false; demo.textContent = 'Try it with the demo account';
+            line.append(el('span', { className: 'stripe-err', textContent: d.error || 'Stripe didn’t answer. Try again in a minute.' }));
+          };
+          line.replaceChildren(el('span', {}, 'Wired for Stripe Connect. An artist connects their own Stripe once. To try card tips on this gig, use the NutPub’s demo account: nothing to fill in.'), demo, connect('Connect with Stripe', false));
+        } else if (r.state === 'none') line.replaceChildren(el('span', {}, 'Not connected. Fans tip with sats only.'), connect('Connect with Stripe', true));
+        else if (r.state === 'on' && r.demo) line.replaceChildren(el('span', {}, tick(), 'Connected to the NutPub’s demo Stripe account, test mode. Fans can tip by card: By card on the fan’s page.'));
         else if (r.state === 'on') line.replaceChildren(el('span', {}, tick(), 'Connected. Fans can tip by card.'), open());
         else if (r.state === 'checking' || (back && gaps++ < 5)) {
           line.replaceChildren(el('span', {}, 'Stripe is checking your details. This can take a minute or two…'));
