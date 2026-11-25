@@ -62,9 +62,10 @@
     .key-warn { margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; text-align: center; }
     .key-warn .btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
     .key-warn .btn { height: 46px; padding: 0 16px; font-size: 15px; }
-    /* Session 62c: on a laptop the box sits beside Move, in place of the padlock line (night.js moves it). */
-    .move-row .key-warn { flex: 1 1 300px; text-align: left; }
-    .move-row .key-warn .btns { justify-content: flex-start; }
+    /* Session 62c (Rajesh 25 Nov): on a laptop the box is a card of its own, top right, above Your recordings, so the
+       left column is earnings only (night.js moves it); on a phone it stays right under the figure. */
+    .side .key-warn { padding: 18px; border-radius: 8px; background: rgb(11 20 38 / .6); font-size: 15px; text-align: left; }
+    .side .key-warn .btns { justify-content: flex-start; margin-top: 14px; }
     .key-status { margin: 0; font-size: 14px; text-align: center; }
     .key-status:empty { display: none; }
     /* The 12 words (session 42): the padlock beside Move is open until they're written down and checked. */
@@ -223,7 +224,7 @@
         <p class="stale" id="stale" hidden></p>
       </div>
 
-      <!-- Here on a phone, right under the figure; on a laptop night.js puts it beside Move, in the Bitcoin card. -->
+      <!-- Here on a phone, right under the figure; on a laptop night.js puts it top right, above Your recordings. -->
       <div class="key-warn" id="key-warn" data-artist hidden>
         <span>Your bitcoin is locked to another web browser. Open Your takings there, or bring it here with your 12 words.</span>
         <span class="btns"><button type="button" class="btn primary" id="back-open">Bring back with my 12 words</button><button type="button" class="btn quiet" id="key-new">Make a new key here</button></span>

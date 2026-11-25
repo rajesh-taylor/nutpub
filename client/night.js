@@ -61,10 +61,10 @@ async function artistKeyHere(pubkey) {
   return pubkey;
 }
 let keyAway = false;
-// Session 62c: on a laptop the box goes in the Bitcoin card, beside the greyed Move, in place of the padlock line;
-// on a phone it stays right under the figure.
+// Session 62c (Rajesh 25 Nov): on a laptop the box is a card of its own, top right, above Your recordings, so the left
+// column is earnings only; on a phone it stays right under the figure.
 const narrow = matchMedia('(max-width: 1000px)');
-const placeKeyWarn = () => (narrow.matches ? $('key-status').before($('key-warn')) : $('lock').after($('key-warn')));
+const placeKeyWarn = () => (narrow.matches ? $('key-status').before($('key-warn')) : $('recs').before($('key-warn')));
 placeKeyWarn();
 narrow.addEventListener('change', placeKeyWarn);
 $('key-new').onclick = () => $('key-sheet').showModal();
