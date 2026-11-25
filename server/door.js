@@ -29,17 +29,16 @@ const siteOf = (c) => siteUrl(c);
 
 // A message for the live chat: plain text, one line, 140 characters at most. Shown as text, never as HTML.
 const clip = (text) => String(text || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 140);
-// pence: a card tip's pounds (session 62b, stripe.js), put in the chat once Stripe says paid.
-export async function addMessage(pass, text, sats = 0, mod = null, as = null, pence = 0) {
+export async function addMessage(pass, text, sats = 0, mod = null, as = null) {
   const t = clip(text);
-  if (!t && !sats && !pence) return null;
+  if (!t && !sats) return null;
   // Signed in with Nostr: their name goes with the message (as: a scripted line's). A mod's line shows the name the
   // artist gave them; signed in with Nostr too (session 55b), it's purple like any Nostr name.
   const row = as ? null : await nostrOf(pass);
   const nostr = as || handle(row);
   // A phone the artist quietened, or a Nostr key on their mute list (session 55c, chat.js): shown to that phone only.
   const hidden = !as && !mod && (await hiddenFrom(pass, row?.pubkey)) ? 2 : 0;
-  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr, deleted, pence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr, hidden, pence)).meta.last_row_id;
+  return (await run('INSERT INTO messages (at, pass, sats, text, mod, mod_icon, nostr, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', now(), pass, sats, t, mod?.name ?? null, mod?.icon ?? null, nostr, hidden)).meta.last_row_id;
 }
 // Before a guest's words go out, with a tip or without: links are for the moderators.
 export const noGuestLinks = (text) => async (c) => (hasLink(await text(c)) && !(await modOf(c))
@@ -326,7 +325,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
   // `me`: the phone asking (X-Pass). A quiet phone's own lines (deleted = 2) come back to it alone.
   const chatSince = async (c, after) => {
     const me = c.req.headers.get('X-Pass') || '';
-    const LINE = 'SELECT m.id, m.pass, m.sats, m.pence, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id';
+    const LINE = 'SELECT m.id, m.pass, m.sats, m.text, m.mod, m.mod_icon, m.nostr, n.locked AS zap FROM messages m LEFT JOIN nutzaps n ON n.message = m.id';
     const [rows, tipped, gone, show, slow, busy, pin, cued, back] = await Promise.all([
       all(`${LINE} WHERE m.id > ? AND (m.deleted = 0 OR (m.deleted = 2 AND m.pass = ?)) ORDER BY m.id DESC LIMIT 50`, after, me),
       // Tonight's tips only (since the last New night), so the stretch goal starts empty each night.
@@ -341,7 +340,7 @@ export function mountDoor(route, admin, pass, crew = admin) { // crew: the artis
     const words = show.comments !== false; // off: only the tips, without their words
     return {
       // A mod's name comes first, then their icon and the Mod tag (drawn by the page).
-      messages: [...back, ...rows.reverse()].filter((m) => words || m.sats > 0 || m.pence > 0).map((m) => ({ id: m.id, sats: m.sats, ...(m.pence ? { pence: m.pence } : {}), text: words ? m.text : '',
+      messages: [...back, ...rows.reverse()].filter((m) => words || m.sats > 0).map((m) => ({ id: m.id, sats: m.sats, text: words ? m.text : '',
         who: m.mod || m.nostr || `guest ${String(m.pass || '').slice(0, 4)}`, ...(m.mod ? { mod: true, icon: m.mod_icon || '' } : {}), ...(m.nostr ? { nostr: true } : {}), ...(m.zap ? { nutzap: true } : {}), ...(scripted.has(m.id) ? { cue: true } : {}), ...(backIds.has(m.id) ? { back: true } : {}) })),
       slow, ...(busy ? { busy } : {}), ...((await tipOnly(show)) ? { tipOnly: true } : {}), pin: words ? pin : '',
       deleted: gone.map((r) => r.id), tipped: tipped.s, goals: show.goals.filter((g) => g.label && g.at), thanks: show.goalsThanks || '',

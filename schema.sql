@@ -51,8 +51,7 @@ CREATE TABLE IF NOT EXISTS messages (
   deleted INTEGER NOT NULL DEFAULT 0,
   mod TEXT,                        -- a moderator's name; null for a guest. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod TEXT;
   mod_icon TEXT,                   -- their icon then. Added 10 Nov: ALTER TABLE messages ADD COLUMN mod_icon TEXT;
-  nostr TEXT,                      -- a guest's Nostr name then, if signed in. Added 12 Nov: scripts/nostr-migration.sql
-  pence INTEGER NOT NULL DEFAULT 0 -- a card tip's pounds, in pence (session 62b). Added 25 Nov by db.js addColumns, on first use
+  nostr TEXT                       -- a guest's Nostr name then, if signed in. Added 12 Nov: scripts/nostr-migration.sql
 );
 -- Nostr sign-in for the chat (server/nostr.js): the phone's pass, its Nostr public key and profile name, for the night.
 CREATE TABLE IF NOT EXISTS nostr (pass TEXT PRIMARY KEY, pubkey TEXT NOT NULL, name TEXT, at TEXT NOT NULL);

@@ -121,13 +121,11 @@ function draw(s) {
   const last = s.quiet.at(-1);
   $('undo').onclick = last ? () => act('DELETE', `/api/mod/quiet/${last.id}`, null, `${last.who} is back in the chat.`) : null;
 }
-const byCardTag = (p) => `£${p % 100 ? (p / 100).toFixed(2) : p / 100} by card`; // a card tip's pounds (session 62b)
 function line(m) {
-  const li = el('li', m.sats || m.pence ? 'tipped' : '');
+  const li = el('li', m.sats ? 'tipped' : '');
   li.append(el('span', m.nostr ? 'from nostr' : 'from', m.who), ' ');
   if (m.mod) li.append(...(m.icon ? [m.icon, ' '] : []), el('span', 'mod-tag', 'Mod'), ' ');
   if (m.sats) li.append(el('b', 'amt', m.sats.toLocaleString('en-GB')), ' ');
-  if (m.pence) li.append(el('b', 'amt by-card', byCardTag(m.pence)), ' ');
   const words = el('span', 'words');
   words.append(...(m.mod ? withLinks(m.text) : [m.text]));
   li.append(words);

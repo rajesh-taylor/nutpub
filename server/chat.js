@@ -91,13 +91,13 @@ export function mountChat(route, admin, crew) {
   // are on the artist's Nostr mute list. Never a phone's pass: Quiet goes by the line's id, Undo by its own id.
   const state = async () => {
     const [lines, q, m, here, show] = await Promise.all([
-      all('SELECT id, pass, sats, pence, text, mod, mod_icon, nostr FROM messages WHERE deleted = 0 ORDER BY id DESC LIMIT 8'),
+      all('SELECT id, pass, sats, text, mod, mod_icon, nostr FROM messages WHERE deleted = 0 ORDER BY id DESC LIMIT 8'),
       quietList(), muteList(), all('SELECT pubkey FROM nostr'), currentShow(),
     ]);
     const people = new Set(m?.people || []);
     const words = show.show.comments !== false;
     return {
-      lines: lines.map((r) => ({ id: r.id, who: r.mod || r.nostr || guest(r.pass), sats: r.sats, ...(r.pence ? { pence: r.pence } : {}), text: words ? r.text : '',
+      lines: lines.map((r) => ({ id: r.id, who: r.mod || r.nostr || guest(r.pass), sats: r.sats, text: words ? r.text : '',
         ...(r.mod ? { mod: true, icon: r.mod_icon || '' } : {}), ...(r.nostr ? { nostr: true } : {}) })),
       quiet: q.map(({ id, who }) => ({ id, who })),
       muted: new Set(here.map((r) => r.pubkey).filter((p) => people.has(p))).size,
@@ -121,7 +121,7 @@ export function mountChat(route, admin, crew) {
   const modState = async (c) => {
     const m = await modOf(c);
     const [lines, q, cs, slow, busy, pin, cued] = await Promise.all([
-      all('SELECT id, pass, sats, pence, text, mod, mod_icon, nostr FROM messages WHERE deleted = 0 ORDER BY id DESC LIMIT 40'),
+      all('SELECT id, pass, sats, text, mod, mod_icon, nostr FROM messages WHERE deleted = 0 ORDER BY id DESC LIMIT 40'),
       quietList(), currentShow(), slowMode(), slowBusy(), pinned(), kv.get('cuedIds', []),
     ]);
     const { show } = cs;
@@ -130,7 +130,7 @@ export function mountChat(route, admin, crew) {
     const [stage, live] = await Promise.all([stageNow(show), liveNow(show.page)]);
     return {
       me: { name: m.name, icon: m.icon || '', main: !!m.main, via: m.via },
-      lines: lines.reverse().filter((r) => words || r.sats > 0 || r.pence > 0).map((r) => ({ id: r.id, who: r.mod || r.nostr || guest(r.pass), sats: r.sats, ...(r.pence ? { pence: r.pence } : {}), text: words ? r.text : '',
+      lines: lines.reverse().filter((r) => words || r.sats > 0).map((r) => ({ id: r.id, who: r.mod || r.nostr || guest(r.pass), sats: r.sats, text: words ? r.text : '',
         ...(r.mod ? { mod: true, icon: r.mod_icon || '' } : {}), ...(r.nostr ? { nostr: true } : {}), ...(scripted.has(r.id) || !r.pass ? { cue: true } : {}) })),
       quiet: q.map(({ id, who }) => ({ id, who })),
       slow, busy, pin: words ? pin : '', comments: words, tipWords: words && !!show.tipWords,

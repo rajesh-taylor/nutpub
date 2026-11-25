@@ -34,7 +34,6 @@ document.fonts?.ready.then(() => draw(new Set()));
 // On a judge's stage, a note on what this page is for (Rajesh 19 Nov).
 fetch('/api/show').then((r) => r.json()).then((s) => { if (s.judge) { $('screen-judge').hidden = false; document.body.classList.add('judging'); draw(new Set()); } }).catch(() => {});
 
-const byCardTag = (p) => `£${p % 100 ? (p / 100).toFixed(2) : p / 100} by card`; // a card tip's pounds (session 62b)
 function draw(fresh, top) {
   $('feed-box').hidden = !feed.length;
   $('feed').replaceChildren(...feed.slice(0, SHOWN).reverse().map((m) => { // oldest first: the newest at the bottom
@@ -44,7 +43,6 @@ function draw(fresh, top) {
     li.append(cell(m.nostr ? 'who nostr' : 'who', m.who));
     if (m.nutzap) li.append(cell('zap', 'Nutzap'));
     if (m.sats) li.append(cell('sats', sats(m.sats)));
-    if (m.pence) li.append(cell('sats by-card', byCardTag(m.pence)));
     if (m.text) li.append(cell('words', m.text));
     return li;
   }));
@@ -119,15 +117,15 @@ async function tick() {
   const fresh = new Set();
   for (const m of now.messages || []) {
     if (m.back) { // a line back after Undo (session 56): in its place (newest first), once
-      if ((m.sats > 0 || m.pence > 0 || m.text) && !feed.some((f) => f.id === m.id)) {
+      if ((m.sats > 0 || m.text) && !feed.some((f) => f.id === m.id)) {
         const at = feed.findIndex((f) => f.id < m.id);
-        feed.splice(at < 0 ? feed.length : at, 0, { id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, pence: m.pence || 0, text: m.text, cue: !!m.cue });
+        feed.splice(at < 0 ? feed.length : at, 0, { id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text, cue: !!m.cue });
         fresh.add(m.id);
       }
       continue;
     }
     after = Math.max(after, m.id);
-    if (m.sats > 0 || m.pence > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, pence: m.pence || 0, text: m.text, cue: !!m.cue }); fresh.add(m.id); }
+    if (m.sats > 0 || m.text) { feed.unshift({ id: m.id, who: m.who, nostr: !!m.nostr, nutzap: !!m.nutzap, sats: m.sats, text: m.text, cue: !!m.cue }); fresh.add(m.id); }
   }
   const gone = new Set(now.deleted || []);
   for (let i = feed.length - 1; i >= 0; i -= 1) if (gone.has(feed[i].id)) feed.splice(i, 1);

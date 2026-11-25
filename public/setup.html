@@ -73,9 +73,6 @@
     dialog.wsheet input:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
     dialog.wsheet .err { margin: 10px 0 0; color: #e0675b; font-size: 14px; }
     /* Session 54: Lost or stolen device? */
-    .board .stripe-badge { margin: 0 0 14px; }
-    .board .stripe-badge img { display: block; opacity: .85; }
-    .board .stripe-err { flex-basis: 100%; color: var(--amber); font-size: 14px; }
     .board .lost-row { margin: 0; }
     .board .lost-row .link, .board .lost-row button { background: none; border: 0; padding: 0; font: 14px var(--body); color: var(--smoke); text-decoration: underline; cursor: pointer; }
     dialog.wsheet .lost-list { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 4px; font-size: 15px; }
@@ -487,14 +484,6 @@
             <p class="words-soon"><span class="chip-soon after">After 27 Nov</span>A passkey copy of your words</p>
           </section>
 
-          <!-- Cellar: card payments (session 62). Shown only when this site has Stripe keys; filled by the script below. -->
-          <section class="panel wide" id="stripe-card" data-room="cellar" data-artist hidden>
-            <h2>Card payments</h2>
-            <p class="replay-sub">Fans can tip by card. The money goes straight to your own Stripe account; Stripe takes its fee and the NutPub’s 5%, then pays you. The NutPub never holds it.</p>
-            <div class="words-line" id="stripe-line" role="status"><span>Asking Stripe…</span></div>
-            <p class="stripe-badge"><img src="/badges/powered-by-stripe.svg" alt="Powered by Stripe" height="26"></p>
-          </section>
-
           <section class="panel wide" data-room="night">
             <h2>Event</h2>
             <div class="three">
@@ -861,48 +850,5 @@
     </aside>
   </div>
   <script type="module" src="/setup.js"></script>
-  <script type="module">
-    // Cellar's Card payments (session 62): Connect with Stripe once; Stripe's own pages do the rest and send the artist
-    // back here (#stripe). Stripe takes a few seconds to say yes after its last page, so a "checking" answer asks again.
-    if (document.body.dataset.room === 'cellar') {
-      let key = null;
-      try { key = localStorage.getItem('nutpub-admin'); } catch {}
-      const card = document.getElementById('stripe-card');
-      const line = document.getElementById('stripe-line');
-      const back = location.hash === '#stripe';
-      if (back) history.replaceState(null, '', location.pathname);
-      const ask = (method, path) => fetch(path, { method, headers: { 'X-Admin': key || '' } }).then(async (r) => ({ ok: r.ok, ...(await r.json().catch(() => ({}))) }));
-      const el = (tag, props, ...kids) => { const x = Object.assign(document.createElement(tag), props); x.append(...kids); return x; };
-      const tick = () => el('b', { className: 'ok-tick', textContent: '✓ ' });
-      // Amber only on the next thing to press (session 47): not while Cellar still asks for the 12 words.
-      const connect = (label, primary) => {
-        if (document.querySelector('#words-line .btn.primary')) primary = false;
-        const b = el('button', { type: 'button', className: primary ? 'btn primary' : 'btn quiet', textContent: label });
-        b.onclick = async () => {
-          b.disabled = true; b.textContent = 'Opening Stripe…';
-          const r = await ask('POST', '/api/admin/stripe/connect').catch(() => ({}));
-          if (r.url) { location.href = r.url; return; }
-          b.disabled = false; b.textContent = label;
-          line.append(el('span', { className: 'stripe-err', textContent: r.error || 'Stripe didn’t answer. Try again in a minute.' }));
-        };
-        return b;
-      };
-      const open = () => el('a', { className: 'btn quiet', href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener', textContent: 'Open my Stripe ↗' });
-      let tries = 0;
-      async function show() {
-        const r = key ? await ask('GET', '/api/admin/stripe').catch(() => null) : null;
-        if (!r || r.off || r.status === 403) return; // no Stripe on this site, or not the artist: no panel
-        card.hidden = false;
-        if (r.error) { line.replaceChildren(el('span', {}, 'Stripe didn’t answer. '), connect('Try again', false)); return; }
-        if (r.state === 'none') line.replaceChildren(el('span', {}, 'Not connected. Fans tip with sats only.'), connect('Connect with Stripe', true));
-        else if (r.state === 'on') line.replaceChildren(el('span', {}, tick(), 'Connected. Fans can tip by card.'), open());
-        else if (r.state === 'checking' || (back && tries < 10)) { // back from Stripe: up to 30 s (it took over 15 s on 25 Nov)
-          line.replaceChildren(el('span', {}, 'Stripe is checking your details…'));
-          if (tries++ < 10) setTimeout(show, 3000); else line.replaceChildren(el('span', {}, 'Stripe is still checking your details. Look again later.'), open());
-        } else line.replaceChildren(el('span', {}, 'Stripe still needs a few details from you.'), connect('Finish with Stripe', true));
-      }
-      show();
-    }
-  </script>
 </body>
 </html>
