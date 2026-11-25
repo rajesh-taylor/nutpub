@@ -83,7 +83,11 @@ test("Cellar reads where the artist's Stripe account stands", () => {
   assert.equal(cardState(acct('active', true)), 'on'); // cards already taken: on, whatever Stripe asks next
   assert.equal(cardState(acct('pending')), 'checking'); // Stripe looking at the details (it lags 15 s or more)
   assert.equal(cardState(acct('pending', true)), 'unfinished'); // the artist still has pages to fill in
-  assert.equal(cardState(acct('restricted')), 'unfinished');
+  assert.equal(cardState(acct('restricted')), 'checking'); // just submitted: Stripe still checking (session 63)
+  const asks = (resolution) => ({ configuration: { merchant: { capabilities: { card_payments: { status: 'restricted',
+    status_details: [{ code: 'requirements_past_due', resolution }] } } } }, requirements: { entries: [] } });
+  assert.equal(cardState(asks('provide_info')), 'unfinished'); // Stripe asks the artist for more
+  assert.equal(cardState(asks('no_resolution')), 'checking');
   assert.equal(cardState(acct(null)), 'unfinished'); // no card payments asked for yet
   assert.equal(cardState(null), 'unfinished');
 });

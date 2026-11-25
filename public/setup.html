@@ -888,7 +888,9 @@
         return b;
       };
       const open = () => el('a', { className: 'btn quiet', href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener', textContent: 'Open my Stripe ↗' });
-      let tries = 0;
+      // Back from Stripe (session 63): Stripe can take a minute or more to say yes after the last Submit, so Cellar
+      // keeps asking for two minutes while Stripe checks, and 15 s before it believes details are still missing.
+      let tries = 0, gaps = 0;
       async function show() {
         const r = key ? await ask('GET', '/api/admin/stripe').catch(() => null) : null;
         if (!r || r.off || r.status === 403) return; // no Stripe on this site, or not the artist: no panel
@@ -896,9 +898,9 @@
         if (r.error) { line.replaceChildren(el('span', {}, 'Stripe didn’t answer. '), connect('Try again', false)); return; }
         if (r.state === 'none') line.replaceChildren(el('span', {}, 'Not connected. Fans tip with sats only.'), connect('Connect with Stripe', true));
         else if (r.state === 'on') line.replaceChildren(el('span', {}, tick(), 'Connected. Fans can tip by card.'), open());
-        else if (r.state === 'checking' || (back && tries < 10)) { // back from Stripe: up to 30 s (it took over 15 s on 25 Nov)
-          line.replaceChildren(el('span', {}, 'Stripe is checking your details…'));
-          if (tries++ < 10) setTimeout(show, 3000); else line.replaceChildren(el('span', {}, 'Stripe is still checking your details. Look again later.'), open());
+        else if (r.state === 'checking' || (back && gaps++ < 5)) {
+          line.replaceChildren(el('span', {}, 'Stripe is checking your details. This can take a minute or two…'));
+          if (tries++ < 40) setTimeout(show, 3000); else line.replaceChildren(el('span', {}, 'Stripe is still checking your details. Look again in a few minutes.'), open());
         } else line.replaceChildren(el('span', {}, 'Stripe still needs a few details from you.'), connect('Finish with Stripe', true));
       }
       show();

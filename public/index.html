@@ -217,7 +217,7 @@
         <button class="btn primary" id="tip" disabled></button>
         <button class="btn" id="whole" hidden></button>
         <button class="btn quiet" id="whole-card" disabled hidden>Watch online by card · not wired up</button>
-        <button class="btn quiet" id="card-tip" disabled title="Card tips through Stripe: not wired up yet">Tip with Stripe</button>
+        <button class="btn quiet" id="card-tip" disabled hidden>Tip with Stripe</button><!-- session 63: hidden; cardtip.js puts By card here once the artist connects Stripe -->
       </p>
       <form class="own" id="own-form" hidden>
         <input type="number" id="own-sats" min="21" max="1000000" step="1" inputmode="numeric" placeholder="21 sats or more" aria-label="Tip amount in sats, 21 or more">

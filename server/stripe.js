@@ -42,8 +42,12 @@ export const stripeAccount = async () => (await kv.get('stripe', null))?.account
 export function cardState(acct) {
   const cards = acct?.configuration?.merchant?.capabilities?.card_payments;
   if (cards?.status === 'active') return 'on';
-  const due = (acct?.requirements?.entries || []).some((e) => e.awaiting_action_from === 'user');
-  if (due || !cards || cards.status === 'restricted') return 'unfinished';
+  // Session 63: restricted alone isn't unfinished. Right after the artist's last Submit, Stripe keeps cards restricted
+  // while it checks (a minute or more); only something asked of the artist (an entry awaiting the user, or
+  // "provide_info") sends them back to Stripe's pages.
+  const due = (acct?.requirements?.entries || []).some((e) => e.awaiting_action_from === 'user')
+    || (cards?.status_details || []).some((d) => d.resolution === 'provide_info');
+  if (due || !cards) return 'unfinished';
   return 'checking';
 }
 
