@@ -26,6 +26,7 @@ import { mountNutzaps, nutzapInfo } from './nutzap.js';
 import { mountNostrLive, practiceGig } from './nostrlive.js';
 import { mountStageDoor, closesAt } from './stages.js';
 import { mountCrew, producerOf } from './crew.js';
+import { mountStripe } from './stripe.js';
 import { setlist, finished, again, cue, cueTimes, lastOrdersNow } from './setlist.js';
 import { keepMoved } from './closing.js';
 import { current, publicShow, replayPrice, freeStatus, saveShow, nextGig, listTemplates, saveTemplate, loadTemplate, deleteTemplate } from './shows.js';
@@ -180,6 +181,7 @@ mountNostrLive(route, admin); // the gig listed live on Nostr (NIP-53, session 5
 mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
 mountRecover(route, admin); // the 12 words win the gig back (stages only, session 54)
 mountCrew(route, admin); // show producers by invite (stages only, session 55)
+mountStripe(route, admin); // Connect with Stripe in Cellar: card money straight to the artist's own account (session 62)
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

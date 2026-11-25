@@ -27,6 +27,10 @@ export let PASS_CERT = '';
 export let GWALLET_ISSUER = '';
 export let GWALLET_EMAIL = '';
 export let GWALLET_KEY = '';
+// Stripe Connect (session 62): card money goes straight to the artist's own Stripe account. Secrets, set by Rajesh
+// (nutpub-local.env locally, wrangler secrets live). Test keys only: a live key leaves cards off.
+export let STRIPE_SECRET_KEY = '';
+export let STRIPE_PUBLISHABLE_KEY = '';
 
 const trim = (url) => String(url).replace(/\/+$/, '');
 export function configure(env) {
@@ -56,4 +60,7 @@ export function configure(env) {
   GWALLET_ISSUER = env.GWALLET_ISSUER || '';
   GWALLET_EMAIL = env.GWALLET_EMAIL || '';
   GWALLET_KEY = env.GWALLET_KEY || '';
+  const test = (k, ...starts) => (starts.some((p) => String(k || '').startsWith(p)) ? String(k).trim() : '');
+  STRIPE_SECRET_KEY = test(env.STRIPE_SECRET_KEY, 'sk_test_', 'rk_test_');
+  STRIPE_PUBLISHABLE_KEY = test(env.STRIPE_PUBLISHABLE_KEY, 'pk_test_');
 }
