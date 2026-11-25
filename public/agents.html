@@ -23,14 +23,12 @@
     .regulars .lede { margin: 8px auto 0; max-width: 620px; text-align: center; font-size: clamp(16px, 4.2vw, 18px); line-height: 1.5; color: rgb(239 227 200 / .9); }
     .chip { flex: none; white-space: nowrap; font: 600 12px/1 var(--body); letter-spacing: .02em; padding: 4px 9px; border-radius: 3px; }
     .chip.built { border: 1px solid var(--cream); color: var(--cream); background: rgb(239 227 200 / .08); }
-    .chip.after { border: 1px solid rgb(239 227 200 / .4); color: var(--cream); }
     .head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
     .regulars h2 { margin: 0; font: 400 clamp(26px, 6.5vw, 30px)/1.05 var(--poster); letter-spacing: .08em; color: var(--cream); }
     .regulars p { margin: 10px 0 0; font-size: 15.5px; line-height: 1.55; color: rgb(239 227 200 / .86); }
     .regulars p.small { font-size: 14px; color: #a9b0c2; }
     .today { margin-top: 30px; padding: clamp(16px, 4vw, 22px) clamp(14px, 4vw, 24px); background: rgb(5 9 20 / .55); border: 1px solid rgb(239 227 200 / .14); border-radius: 6px; }
     pre { margin: 14px 0 0; padding: 14px 16px; overflow-x: auto; background: var(--deep); border: 1px solid rgb(239 227 200 / .12); border-radius: 4px; font: 14px/1.6 var(--mono); color: var(--cream); }
-    .next { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 26px 0 0; font-weight: 600; }
     .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 16px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
     .today a { color: var(--cream); }
     /* Rajesh 21 Nov: the ways on are buttons, big enough to read and press. */
@@ -67,9 +65,6 @@
 npm run agent -- https://&lt;your stage&gt;.thenutpub.com</pre>
         <p class="small">NUT-24, the idea x402 shares, paid in Cashu ecash. Needs Node.js 22 or later.</p>
       </section>
-
-      <!-- Session 47 (Rajesh 21 Nov): one line, by name only; the fuller plan waits for a later, bigger product. -->
-      <p class="next"><span class="chip after">From 3 Dec</span> Gig search for agents</p>
 
       <div class="foot">
         <a class="btn-out" href="/" onclick="try { if (document.referrer &amp;&amp; new URL(document.referrer).hostname.endsWith(location.hostname.replace(/^www\./, ''))) { history.back(); return false; } } catch {}">← Back</a>

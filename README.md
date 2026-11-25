@@ -40,6 +40,8 @@ Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](http
 
 **The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
 
+**Sealed tickets:** a venue ticket saved as a passkey is sealed to it, where the password manager can. The NutPub keeps a copy it can't open.
+
 Everything the NutPub does, ticked off with its specs, is on [The Kitchen](https://thenutpub.com/kitchen). The [Pub Board](https://thenutpub.com/board): a bot buys a ticket. No browser, no account.
 
 <br clear="right">
@@ -95,6 +97,7 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | NIP-53 | The gig listed live on Nostr (planned, live, ended) |
 | BIP-340 | The door QR, signed again every 30 seconds; Nostr events |
 | WebAuthn · Signal API | Passkeys: the artist, producers, moderators and a ticket |
+| WebAuthn PRF · HKDF-SHA256 · AES-GCM | A venue ticket sealed to its passkey |
 | BIP-39 · BIP-32 | The artist's 12 words |
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
 
