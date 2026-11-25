@@ -7,6 +7,7 @@ import { currentShow, gigOver } from './shows.js';
 import { recordings, deleteRecording } from './live.js';
 import { FEE_PERCENT } from './config.js';
 import { closeReplay } from './replay.js';
+import { cardMoney } from './stripe.js';
 
 export const KEEP_DAYS = 7;
 const DAY = 86_400_000;
@@ -36,13 +37,16 @@ export async function keepGigLine(ended = new Date().toISOString()) {
     (SELECT COUNT(*) FROM locked WHERE kind = 'drink' AND collected_by = 'bar' AND at >= ?1) AS poured,
     (SELECT COUNT(*) FROM locked WHERE kind = 'drink' AND at >= ?1) AS drinksAll`, start);
   const sats = t.ticketSats + t.tips + t.homeSats + t.replaySats + t.drinks; // the artist's: drinks poured are the bar's
-  if (!sats && !t.room && !t.home) return null; // nothing happened: no line
+  // Card tips (session 62b), Stripe's own figures; Stripe away: the tips without its fee.
+  const c = await cardMoney().catch(() => null);
+  const card = c?.count ? { count: c.count, pence: c.pence, nutpub: c.nutpub, stripeFee: c.stripeFee, net: c.net } : null;
+  if (!sats && !t.room && !t.home && !card) return null; // nothing happened: no line
   // Stream's minutes for budgeting: how long this gig's recordings run (Stream bills storage by the minute).
   const recorded = await recordings().then((vs) => vs.filter((v) => !start || v.created >= start)
     .reduce((m, v) => m + Math.max(0, v.duration || 0) / 60, 0)).catch(() => null);
   const line = { start, ended, date: show.date, page: show.page, artist: show.artist, venue: (show.venue || '').split(',')[0].trim(),
     tickets: { room: t.room, home: t.home, inside: t.inside, sats: t.ticketSats, roomSats: t.roomSats }, tips: t.tips, tipsN: t.tipsN, home: t.homeSats, replay: t.replaySats,
-    drinks: t.drinks, drinksN: t.drinksN, poured: t.poured, drinksAll: t.drinksAll, sats, feePercent: FEE_PERCENT,
+    drinks: t.drinks, drinksN: t.drinksN, poured: t.poured, drinksAll: t.drinksAll, sats, feePercent: FEE_PERCENT, ...(card ? { card } : {}),
     upfront: (await kv.get('freePaid', null))?.sats || 0, // a free stream, paid before the gig (session 35)
     moved: await kv.get('moved', null), recordedMinutes: recorded === null ? null : Math.round(recorded) };
   await kv.set('gigs', [...gigs, line]);
