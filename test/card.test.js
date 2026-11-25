@@ -10,6 +10,7 @@ import { useDb, d1Stage, addColumns, kv, run, one, all } from '../server/db.js';
 import { addMessage } from '../server/door.js';
 import { keepGigLine } from '../server/closing.js';
 import { clearGig } from '../server/shows.js';
+import { cardState, tipPence, fee, fees, stripeOn } from '../server/stripe.js';
 
 let db;
 const asD1 = (d) => ({ batch: (list) => Promise.all(list.map((st) => st.run())), prepare: (text) => {
@@ -72,4 +73,57 @@ test('a gig with no card tips keeps its line as before', async () => {
   const line = await keepGigLine();
   assert.equal(line.sats, 21);
   assert.equal('card' in line, false);
+});
+
+// The card code's plain parts (session 62c): nothing here calls Stripe.
+test("Cellar reads where the artist's Stripe account stands", () => {
+  const acct = (status, due = false) => ({ configuration: { merchant: { capabilities: { card_payments: status && { status } } } },
+    requirements: { entries: due ? [{ awaiting_action_from: 'user' }] : [] } });
+  assert.equal(cardState(acct('active')), 'on');
+  assert.equal(cardState(acct('active', true)), 'on'); // cards already taken: on, whatever Stripe asks next
+  assert.equal(cardState(acct('pending')), 'checking'); // Stripe looking at the details (it lags 15 s or more)
+  assert.equal(cardState(acct('pending', true)), 'unfinished'); // the artist still has pages to fill in
+  assert.equal(cardState(acct('restricted')), 'unfinished');
+  assert.equal(cardState(acct(null)), 'unfinished'); // no card payments asked for yet
+  assert.equal(cardState(null), 'unfinished');
+});
+
+test('a card tip is £1 to £100, in whole pence', () => {
+  assert.equal(tipPence(100), 100);
+  assert.equal(tipPence(500), 500);
+  assert.equal(tipPence(10000), 10000);
+  for (const bad of [99, 10001, 0, -500, 250.5, '500', null, undefined, NaN, Infinity]) assert.equal(tipPence(bad), null, String(bad));
+});
+
+test("the NutPub's 5% of a card tip, rounded to the penny", () => {
+  configure({ MINT_URL: 'https://mint.test', MINT_TEST: '1', FEE_PERCENT: '5' });
+  assert.equal(fee(500), 25); // £5 → 25p, as in session 62's premise
+  assert.equal(fee(1000), 50);
+  assert.equal(fee(110), 6); // 5.5p rounds up
+  assert.equal(fee(130), 7); // 6.5p rounds up
+  configure({ MINT_URL: 'https://mint.test', MINT_TEST: '1', FEE_PERCENT: '0' });
+  assert.equal(fee(500), 0); // the rate is changeable: none taken at 0
+});
+
+test("Stripe's fee and what it pays the artist, from Stripe's own record of the charge", () => {
+  // Session 62's premise: £5, Stripe's fee 36p, the NutPub's 25p application fee, £4.39 to the artist.
+  const pi = { latest_charge: { balance_transaction: { net: 439, fee: 61, fee_details: [
+    { type: 'stripe_fee', amount: 36 }, { type: 'application_fee', amount: 25 }] } } };
+  assert.deepEqual(fees(pi), { stripeFee: 36, net: 439 }); // the NutPub's share isn't Stripe's fee
+  const split = { latest_charge: { balance_transaction: { net: 900, fee_details: [{ type: 'stripe_fee', amount: 20 }, { type: 'stripe_fee', amount: 5 }] } } };
+  assert.deepEqual(fees(split), { stripeFee: 25, net: 900 });
+  assert.deepEqual(fees({ latest_charge: { balance_transaction: 'txn_123' } }), {}); // not expanded: asked again later
+  assert.deepEqual(fees({ latest_charge: null }), {}); // not settled yet
+  assert.deepEqual(fees({}), {});
+});
+
+test('cards stay off without both keys, and with a live key', () => {
+  const keys = (sk, pk) => configure({ MINT_URL: 'https://mint.test', MINT_TEST: '1', STRIPE_SECRET_KEY: sk, STRIPE_PUBLISHABLE_KEY: pk });
+  keys('sk_test_x', 'pk_test_x'); assert.equal(stripeOn(), true);
+  keys('rk_test_x', 'pk_test_x'); assert.equal(stripeOn(), true); // a restricted test key works too
+  keys('sk_test_x', undefined); assert.equal(stripeOn(), false); // tonight's deploy: no secrets, no cards
+  keys(undefined, undefined); assert.equal(stripeOn(), false);
+  keys('sk_live_x', 'pk_live_x'); assert.equal(stripeOn(), false); // test mode only
+  keys('sk_test_x', 'pk_live_x'); assert.equal(stripeOn(), false);
+  keys(undefined, undefined);
 });

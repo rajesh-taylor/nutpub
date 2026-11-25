@@ -68,7 +68,7 @@ export async function cardTipsInfo() {
 
 // What Stripe took and what it pays the artist, from Stripe's own record of the charge (its fee depends on the card).
 // Not there yet: left out, and Takings asks again.
-function fees(pi) {
+export function fees(pi) {
   const bt = pi.latest_charge?.balance_transaction;
   if (!bt || typeof bt !== 'object') return {};
   const stripeFee = (bt.fee_details || []).filter((f) => f.type === 'stripe_fee').reduce((t, f) => t + f.amount, 0);
@@ -97,8 +97,8 @@ export async function cardMoney() {
 }
 
 // A card tip, in pence: £1 to £100 (Stripe's least in pounds is 30p).
-const tipPence = (x) => (Number.isInteger(x) && x >= 100 && x <= 10000 ? x : null);
-const fee = (pence) => Math.round((pence * FEE_PERCENT) / 100);
+export const tipPence = (x) => (Number.isInteger(x) && x >= 100 && x <= 10000 ? x : null);
+export const fee = (pence) => Math.round((pence * FEE_PERCENT) / 100);
 
 // The words with a card tip (session 62b, the comment box's £ card): the same checks as a sats comment's (links are
 // for the moderators; the slur list and the artist's own words), at most 140 characters (door.js clips them).
