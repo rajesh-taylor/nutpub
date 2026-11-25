@@ -29,6 +29,7 @@ export async function judgeLine(r, page) {
   // Gig 2 (Rajesh 20 Nov): no replay; the Fountain pin first, then one thing a step, the fan's sats home and Move apart.
   const g2 = list.at === 'frankie';
   const FOUNTAIN = 'https://fountain.fm/artist/YPv5hRTJVHSoWeB86g6m';
+  const PIN = `Frankie’s Fountain page: ${FOUNTAIN}`; // Rajesh 25 Nov: the pin says what the link is
   // Gig 3, the night at the venue (gigs 3 and 4 folded together, Rajesh 19 Nov): the price, the door, the stream's
   // payment, the ticket, the door scan, the drink, the tip, the fan's change, Your takings.
   const tv = list.at === 'longy'; // gig 1 (Rajesh 19 Nov): a look at Pub TV, the venue's TV page, before End night
@@ -247,7 +248,7 @@ export async function judgeLine(r, page) {
         const pinned = /fountain\.fm\//.test(pin?.value || '');
         pin?.classList.toggle('pin-hint', !pinned); // the empty box shimmers until the link's in (app.css)
         if (pin && !pinned) pin.placeholder = 'Paste in Frankie’s Fountain link here';
-        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(FOUNTAIN, pin) });
+        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(PIN, pin) });
         return say(1, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
       }
       if (page === 'show') {

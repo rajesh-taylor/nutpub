@@ -398,6 +398,8 @@ body.counting .big-play, body.counting .live-badge { display: none; }
 /* Closing time. */
 .closing { position: fixed; inset: 0; z-index: 5; display: flex; align-items: stretch; text-align: center; }
 .closing img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; } /* the photo as the artist gave it: nothing dims it */
+/* A tall photo on a wide screen (Rajesh 25 Nov, Frankie's): cut from near the top, so the head, cap and mic stay in. */
+@media (orientation: landscape) { .closing img { object-position: 50% 22%; } }
 /* Cheers at the top, in the photo's dark ceiling; the card about the sats at the bottom, in thumb's reach. */
 .closing > div { position: relative; width: 100%; box-sizing: border-box; padding: max(56px, calc(env(safe-area-inset-top) + 40px)) 24px max(40px, calc(env(safe-area-inset-bottom) + 24px)); display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; }
 .cheers { font: 400 72px/.9 var(--poster); color: var(--amber); margin: 0; letter-spacing: .04em; text-shadow: 0 2px 12px rgb(5 9 20 / .85), 0 0 32px rgb(5 9 20 / .6); }
