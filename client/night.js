@@ -56,9 +56,17 @@ async function artistKeyHere(pubkey) {
     await api('PUT', '/api/admin/artist-key', { pubkey: publicKeyHex });
     return publicKeyHex;
   }
-  $('key-warn').hidden = await holds(artist, pubkey); // its two ways out: the 12 words, or a new key (asks first)
+  keyAway = !(await holds(artist, pubkey));
+  $('key-warn').hidden = !keyAway; // its two ways out: the 12 words, or a new key (asks first)
   return pubkey;
 }
+let keyAway = false;
+// Session 62c: on a laptop the box goes in the Bitcoin card, beside the greyed Move, in place of the padlock line;
+// on a phone it stays right under the figure.
+const narrow = matchMedia('(max-width: 1000px)');
+const placeKeyWarn = () => (narrow.matches ? $('key-status').before($('key-warn')) : $('lock').after($('key-warn')));
+placeKeyWarn();
+narrow.addEventListener('change', placeKeyWarn);
 $('key-new').onclick = () => $('key-sheet').showModal();
 $('key-keep').onclick = () => $('key-sheet').close();
 $('key-switch').onclick = async () => {
@@ -99,6 +107,7 @@ async function drawLock() {
   const shut = kind === 'shut' || kind === 'brought';
   $('lock-arm').setAttribute('d', kind === 'open' ? 'M8 11V7a4 4 0 0 1 7.6-1.7' : 'M8 11V7a4 4 0 0 1 8 0v4');
   $('lock-body').setAttribute('fill', shut ? '#d9953a' : 'none');
+  $('lock').hidden = kind === 'away'; // the key's in another browser: the box says so instead
   const t = $('lock-text');
   if (kind === 'open') t.replaceChildren('Only this browser can open your bitcoin. ', linkButton('Write down your 12 words', showWords), ' to bring it back on another.');
   else if (shut) t.replaceChildren(Object.assign(document.createElement('b'), { textContent: 'Backed up with your 12 words.' }), ' Move it after the gig, or the next day.',
@@ -258,7 +267,7 @@ async function refresh() {
     tickets: all('ticket'), ticketsN: count('ticket'), tips: all('tip'), tipsN: count('tip'), zaps, home: all('piece'), replay: all('replay'), replayN: count('replay'), replayOn: takings.replay,
     drinks: drinkSum, drinksN: toArtist.length + unpouredLate.length, drinkOn, came,
     late: lateWaiting(), // unpoured after last orders, still locked to the bar's key: Move takes them by the refund path
-    fee: Math.round((came * (takings.feePercent ?? 5)) / 100), feePercent: takings.feePercent ?? 5,
+    feePercent: takings.feePercent ?? 5,
     waiting: locked.totals.here.sats, held: await artist.balance(), stream: show.stream?.mode,
     // Anything still to move, wherever it's locked (another browser too); drinks locked to the bar are the bar's.
     left: locked.waiting.filter((p) => p.kind !== 'drink' || p.pubkey === pubkey).reduce((t, p) => t + p.sats, 0),
@@ -296,13 +305,11 @@ async function refresh() {
 }
 
 // The figures, in sats or the chosen money. The big number is what's the artist's: the 5% isn't taken yet (it needs
-// each payment split as it's paid), so it's shown as its own line and not taken off.
+// each payment split as it's paid), so it's on the receipt and not taken off (Rajesh 25 Nov: no line on the card).
 function paint() {
   if (!sums) return;
   const s = sums;
   $('big').replaceChildren(fig(s.came), ...(fiatOn() ? [] : [' ', Object.assign(document.createElement('small'), { textContent: 'sats' })]));
-  $('came').textContent = `Came in · ${fig(s.came)} · The NutPub's ${s.feePercent}% · (${fig(s.fee)}), not taken on the test mint`
-    + (s.upfront ? ` · The free stream, paid before the gig · (${fig(s.upfront)})` : ''); // session 35: the artist's own money, not in Came in
   $('v-tickets').textContent = fig(s.tickets);
   $('s-tickets').textContent = `${n(s.ticketsN)} sold`;
   $('v-tips').textContent = fig(s.tips);
@@ -335,7 +342,6 @@ function paint() {
   if (done) $('key-warn').hidden = true; // nothing left behind in another browser: no warning
   $('btc-done').hidden = !done;
   $('btc-done-word').textContent = allMoved ? 'In your wallet' : 'Nothing came in';
-  $('came').hidden = done;
   $('tiles').hidden = done;
   $('move-row').hidden = done;
   $('done-counts').hidden = !allMoved;
@@ -348,9 +354,9 @@ function paint() {
   $('finish-go').hidden = !s.over;
   $('finish-note').textContent = s.over ? (onSetlist?.only ? (onSetlist.at === 'pickle' ? 'Then read the Pub Board.' : 'Then back to the three gigs.') : onSetlist ? 'It ticks off your setlist, and the next gig opens.' : 'Plan gig opens for the next one, same settings.') : 'Finish gig comes once the night’s over: End night on Show Time.';
   if (done) { if (!$('artist-status').dataset.busy) $('artist-status').textContent = ''; return; }
-  const toMove = s.waiting + s.held + s.late;
+  const toMove = (keyAway ? 0 : s.waiting) + s.held + s.late; // locked to a key in another browser: nothing to move here
   $('move').disabled = !toMove;
-  if (!toMove && !$('artist-status').dataset.busy) $('artist-status').textContent = s.came ? 'Nothing waiting to move.' : '';
+  if (!toMove && !$('artist-status').dataset.busy) $('artist-status').textContent = s.came && !keyAway ? 'Nothing waiting to move.' : '';
   else if (!$('artist-status').dataset.busy) $('artist-status').textContent = toMove !== s.came ? `${n(toMove)} sats to move, from this gig and earlier ones.` : '';
 }
 
