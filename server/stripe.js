@@ -5,10 +5,13 @@
 // Cellar's Connect with Stripe: the stage keeps one thing, the artist's Stripe account id (kv 'stripe'). Accounts are
 // made with Stripe's Accounts v2 (it refuses v1 for new platforms): the full Stripe Dashboard, Stripe collects its fees
 // from the artist and carries losses, the artist fills in Stripe's hosted onboarding.
-import { kv, siteUrl } from './db.js';
+import { kv, one, siteUrl } from './db.js';
 import { current } from './shows.js';
 import { STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, FEE_PERCENT } from './config.js';
 import { json, body } from './http.js';
+import { addMessage, noGuestLinks } from './door.js';
+import { noBadWords } from './wordlist.js';
+import { modOf } from './mods.js';
 
 const API = 'https://api.stripe.com';
 const V2_VERSION = '2026-11-18.endive'; // the version Stripe named when it refused v1 accounts (25 Nov 2026)
@@ -97,7 +100,11 @@ export async function cardMoney() {
 const tipPence = (x) => (Number.isInteger(x) && x >= 100 && x <= 10000 ? x : null);
 const fee = (pence) => Math.round((pence * FEE_PERCENT) / 100);
 
-export function mountStripe(route, admin) {
+// The words with a card tip (session 62b, the comment box's £ card): the same checks as a sats comment's (links are
+// for the moderators; the slur list and the artist's own words), at most 140 characters (door.js clips them).
+const cardText = async (c) => String((await body(c))?.text || '');
+
+export function mountStripe(route, admin, pass) {
   // Cellar's panel. off: this server has no Stripe keys (a judge sees no panel, nothing changes).
   route('GET', '/api/admin/stripe', admin, async (c) => {
     if (!stripeOn()) return json({ off: true });
@@ -135,7 +142,10 @@ export function mountStripe(route, admin) {
   // Tip by card, from the fan's page. A direct charge on the artist's own account: the artist is the merchant, Stripe
   // pays them and hands the NutPub its share as an application fee. The fan's card details go to Stripe's own box on the
   // page, never here; no email asked. Made when the fan presses Pay, so nothing is left half-made by browsing.
-  route('POST', '/api/card-tip', async (c) => {
+  // Session 62b: every card tip goes in the live chat once Stripe says paid, as a sats tip does, tagged with its pounds;
+  // from the comment box, with the fan's words. The words stay here, kept by Stripe's payment id (kv cardSaid:<id>),
+  // and never go to Stripe.
+  route('POST', '/api/card-tip', pass, noGuestLinks(cardText), noBadWords(cardText), async (c) => {
     const pence = tipPence((await body(c))?.pence);
     if (!pence) return json({ error: 'A card tip is £1 to £100.' }, 400);
     const account = await stripeAccount();
@@ -148,11 +158,15 @@ export function mountStripe(route, admin) {
         description: `Tip for ${String(show?.artist || 'the artist').slice(0, 60)} on the NutPub`,
         'metadata[nutpub]': 'tip', 'metadata[gig]': path,
       } });
+      const mod = await modOf(c);
+      await kv.set(`cardSaid:${pi.id}`, { pass: c.pass, text: show?.comments === false ? '' : await cardText(c),
+        mod: mod ? { name: mod.name, icon: mod.icon || null } : null });
       return json({ secret: pi.client_secret });
     } catch (e) { return json({ error: e.message }, 502); }
   });
   // After Stripe's box says paid: the NutPub asks Stripe itself (the page's word isn't proof) and keeps the tip for
-  // Takings, once. No webhook: this one question is enough.
+  // Takings, once, and its line in the chat, once (taken from kv in one statement, so two checks can't both post it).
+  // No webhook: this one question is enough.
   route('POST', '/api/card-tip/check', async (c) => {
     const id = String((await body(c))?.id || '');
     const account = await stripeAccount();
@@ -166,6 +180,8 @@ export function mountStripe(route, admin) {
         tips.push({ id, pence: pi.amount, fee: pi.application_fee_amount || 0, ...fees(pi), at: new Date().toISOString() });
         await kv.set('cardTips', tips);
       }
+      const said = await one('DELETE FROM kv WHERE key = ? RETURNING value', `cardSaid:${id}`);
+      if (said) { const w = JSON.parse(said.value); await addMessage(w.pass, w.text, 0, w.mod, null, pi.amount); }
       return json({ status: 'succeeded', pence: pi.amount });
     } catch (e) { return json({ error: e.message }, 502); }
   });

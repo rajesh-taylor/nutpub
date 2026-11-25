@@ -205,6 +205,10 @@ try { unit = localStorage.getItem('nutpub-unit') || 'btc'; } catch {}
 let rate = null;
 const fiatOn = () => !!rate?.[unit] && !!SYMBOL[unit];
 const fig = (v) => (fiatOn() ? money(v, rate[unit], SYMBOL[unit]) : n(v));
+// Card money is pounds (session 62b): as sats at today's rate when the page shows £, $ or €; beside the sats in ₿.
+const gbp = (p) => `£${(p / 100).toFixed(2)}`;
+const cardSats = (p) => (p && rate?.gbp > 0 ? Math.round((p / 100 / rate.gbp) * 1e8) : 0);
+const byCard = (g) => (g.card?.pence ? ` + ${gbp(g.card.pence)} by card` : '');
 function drawUnit() {
   for (const b of $('unit').querySelectorAll('button')) {
     b.disabled = b.dataset.unit !== 'btc' && !rate?.[b.dataset.unit];
@@ -264,6 +268,7 @@ async function refresh() {
     left: locked.waiting.filter((p) => p.kind !== 'drink' || p.pubkey === pubkey).reduce((t, p) => t + p.sats, 0),
     upfront: takings.upfront?.sats || 0, // a free stream, paid before the gig from the artist's own wallet (session 35)
     over: !!takings.over, homeN: count('piece'), sold: takings.sold || {}, poured: poured.length, drinksAll: drinks.length,
+    card: takings.card?.count ? takings.card : null, // card tips tonight, in pence (session 62b): in the top figure, not the Bitcoin card
   };
   paint();
   drawCard(takings.card);
@@ -301,7 +306,11 @@ async function refresh() {
 function paint() {
   if (!sums) return;
   const s = sums;
-  $('big').replaceChildren(fig(s.came), ...(fiatOn() ? [] : [' ', Object.assign(document.createElement('small'), { textContent: 'sats' })]));
+  // The top figure: everything that came in tonight, bitcoin and card (session 62b). In £, $ or €: one figure, as the
+  // fan's page; in ₿: the sats, then + the card pounds.
+  const card = s.card?.pence || 0;
+  if (fiatOn() && (!card || cardSats(card))) $('big').replaceChildren(fig(s.came + cardSats(card)));
+  else $('big').replaceChildren(n(s.came), ' ', Object.assign(document.createElement('small'), { textContent: 'sats' }), ...(card ? [' + ', gbp(card)] : []));
   $('came').textContent = `Came in · ${fig(s.came)} · The NutPub's ${s.feePercent}% · (${fig(s.fee)}), not taken on the test mint`
     + (s.upfront ? ` · The free stream, paid before the gig · (${fig(s.upfront)})` : ''); // session 35: the artist's own money, not in Came in
   $('v-tickets').textContent = fig(s.tickets);
@@ -546,7 +555,7 @@ function liveLine() {
   return { artist: show.artist, date: show.date, venue: (show.venue || '').split(',')[0].trim(),
     tickets: { room: s.sold.room?.count || 0, home: s.sold.home?.count || 0, inside: s.sold.room?.inside || 0, sats: s.tickets, roomSats: s.sold.room?.sats ?? null },
     tips: s.tips, tipsN: s.tipsN, home: s.home, replay: s.replay, drinks: s.drinks, drinksN: s.drinksN, poured: s.poured, drinksAll: s.drinksAll,
-    sats: s.came, feePercent: s.feePercent, upfront: s.upfront, moved: lastMoved() || true };
+    sats: s.came, feePercent: s.feePercent, upfront: s.upfront, moved: lastMoved() || true, ...(s.card ? { card: s.card } : {}) };
 }
 function slip(g, { folded = false } = {}) {
   const out = [el('p', 'mark', 'THE NUTPUB')];
@@ -572,6 +581,18 @@ function slip(g, { folded = false } = {}) {
   const pct = g.feePercent ?? 5;
   out.push(ln(`The NutPub's ${pct}%`, `(${n(Math.round(((g.sats || 0) * pct) / 100))})`));
   out.push(el('p', 'small', 'not taken on the test mint'));
+  // Card tips (session 62b): pounds, through the artist's own Stripe; the 5% there is Stripe's application fee.
+  const c = g.card;
+  if (c?.count) {
+    out.push(el('div', 'rule'));
+    out.push(ln(folded ? 'By card' : `${n(c.count)} × card tip`, gbp(c.pence)));
+    if (!folded) {
+      if (c.stripeFee != null) out.push(ln('Stripe’s fee', `(${gbp(c.stripeFee)})`));
+      out.push(ln(`The NutPub's ${pct}%`, `(${gbp(c.nutpub || 0)})`));
+      if (c.net != null) out.push(ln('Stripe pays you', gbp(c.net)));
+    }
+    out.push(el('p', 'small', 'through your own Stripe, test mode'));
+  }
   // A free stream's cost, paid up front (session 35): the artist's own money, so not in YOURS or the 5%.
   if (g.upfront) {
     out.push(ln('Free stream, paid before the gig', `(${n(g.upfront)})`));
@@ -674,7 +695,7 @@ async function pastGigs() {
     const row = document.createElement('div');
     row.className = 'past-row';
     const p = document.createElement('p');
-    p.append(gigWhen(g), document.createElement('br'), Object.assign(document.createElement('span'), { textContent: sats(g.sats) }));
+    p.append(gigWhen(g), document.createElement('br'), Object.assign(document.createElement('span'), { textContent: sats(g.sats) + byCard(g) }));
     const acts = document.createElement('span');
     acts.className = 'acts';
     const rec = Object.assign(document.createElement('button'), { type: 'button', className: 'btn quiet', textContent: 'Receipt' });
@@ -691,7 +712,7 @@ let deleting = null;
 function askDelete(g) {
   deleting = g;
   $('del-h').textContent = `Delete ${shortDay(g.date) || 'this gig'}?`;
-  $('del-what').textContent = [g.venue || g.page, sats(g.sats)].filter(Boolean).join(' · ');
+  $('del-what').textContent = [g.venue || g.page, sats(g.sats) + byCard(g)].filter(Boolean).join(' · ');
   $('del-sheet').showModal();
 }
 $('del-keep').onclick = () => $('del-sheet').close();
@@ -717,7 +738,6 @@ function drawCard(card) {
   if (!card) return;
   const box = document.querySelector('.card-box');
   const make = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls || '', textContent: text ?? '' });
-  const gbp = (p) => `£${(p / 100).toFixed(2)}`;
   box.classList.add('on');
   $('card-h').textContent = 'Card money';
   const body = [];
@@ -733,7 +753,10 @@ function drawCard(card) {
   }
   const open = make('a', 'btn quiet', 'Open my Stripe ↗');
   Object.assign(open, { href: 'https://dashboard.stripe.com/test/dashboard', target: '_blank', rel: 'noopener' });
-  body.push(make('p', 'note card-note', 'Stripe pays it into your bank on its own schedule. The NutPub never holds it.'), open);
+  // Rajesh 25 Nov: Open my Stripe takes the badge's place, top right, so the box is shorter.
+  const badge = box.querySelector('.box-head img');
+  if (badge) badge.replaceWith(open); else box.querySelector('.box-head a.btn')?.replaceWith(open);
+  body.push(make('p', 'note card-note', 'Stripe pays it into your bank on its own schedule. The NutPub never holds it.'));
   box.querySelectorAll('.card-body, .stripe-room, .card-box > p.note').forEach((x) => x.remove());
   const wrap = make('div', 'card-body');
   wrap.append(...body);

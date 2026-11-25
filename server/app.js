@@ -181,7 +181,7 @@ mountNostrLive(route, admin); // the gig listed live on Nostr (NIP-53, session 5
 mountStageDoor(route); // the artist's passkey, Back to your gigs, the judges' stages (thenutpub.com only)
 mountRecover(route, admin); // the 12 words win the gig back (stages only, session 54)
 mountCrew(route, admin); // show producers by invite (stages only, session 55)
-mountStripe(route, admin); // Connect with Stripe in Cellar: card money straight to the artist's own account (session 62)
+mountStripe(route, admin, pass); // Connect with Stripe in Cellar: card money straight to the artist's own account (session 62)
 
 // A page per artist: the show page at /<page> (e.g. /longy), the link the artist shares, and its poster.
 async function showPage(c) {

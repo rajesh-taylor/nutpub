@@ -58,6 +58,17 @@ export function sqliteStage(storage, { id, adminKey: key = '', made = null }) {
   };
 }
 
+// Columns added after databases were made: schema.sql's CREATE TABLE IF NOT EXISTS leaves an old table as it is, so
+// each is added once, on a database's first use (a stage's when it wakes, Longy's D1 once per Worker start). Session 62b:
+// the pounds of a card tip in the chat.
+export const ADDED_COLUMNS = [['messages', 'pence', 'INTEGER NOT NULL DEFAULT 0']];
+export async function addColumns(st) {
+  for (const [table, column, type] of ADDED_COLUMNS) {
+    const { results } = await st.prepare(`PRAGMA table_info(${table})`).all();
+    if (!results.some((r) => r.name === column)) await st.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+  }
+}
+
 // Small settings and counters, stored as JSON.
 export const kv = {
   async get(key, fallbackValue = null) {

@@ -958,9 +958,18 @@ function phoneMoves() {
 phoneMoves();
 PHONE.addEventListener('change', phoneMoves);
 // Tip by card (session 62): only when the artist connected Stripe in Cellar; otherwise the buttons stay as they were.
-if (cardTipsOn) import('./cardtip.js').then(({ cardTips }) => cardTips({ row: $('tip-btns'), button: $('card-tip'), also: [$('goal-card')], ...cardTipsOn, artist: show.artist,
-  chat: () => { if (PHONE.matches) showTab('chat'); intoView($('say')); $('say-text').focus({ preventScroll: true }); },
-  paid: (pence) => { cardHere += pence; try { localStorage.setItem(`nutpub-card${KEEP}`, JSON.stringify({ pence: cardHere, at: Date.now() })); } catch {} meter(); } }));
+// Session 62b: the comment box's ₿ | £ card switch (byCard, cardtip.js cardWords); every card tip goes in the chat once
+// Stripe says paid, so the chat asks again soon after.
+var byCard = null; // var: drawUnit can run before this line
+const cardPaid = (pence) => { cardHere += pence; try { localStorage.setItem(`nutpub-card${KEEP}`, JSON.stringify({ pence: cardHere, at: Date.now() })); } catch {} meter(); setTimeout(() => tick().catch(() => {}), 300); };
+const cardHeaders = () => ({ 'X-Pass': pass, ...modH() });
+if (cardTipsOn) import('./cardtip.js').then(({ cardTips, cardWords }) => {
+  cardTips({ row: $('tip-btns'), button: $('card-tip'), also: [$('goal-card')], ...cardTipsOn, artist: show.artist, headers: cardHeaders,
+    chat: () => { if (PHONE.matches) showTab('chat'); intoView($('say')); $('say-text').focus({ preventScroll: true }); },
+    paid: cardPaid });
+  byCard = cardWords({ form: $('say'), text: $('say-text'), amount: $('say-sats'), unit: $('say-unit'), ...cardTipsOn, artist: show.artist,
+    headers: cardHeaders, fiat: () => (inFiat() ? SYMBOL[unit] : null), satsLook: () => saysSats(inFiat() ? unit : 'btc'), paid: cardPaid, sent });
+});
 // Your amount (Rajesh 15 Nov, late): the comment box's sats field is a tip of any amount; this puts the cursor there.
 $('tip-own').onclick = () => {
   unlockAudio();
@@ -1838,7 +1847,7 @@ function tipWords(on) {
   TIP_ONLY = on;
   $('tip-note').hidden = !on;
   $('say-text').placeholder = on ? 'Your comment, with a tip' : 'Leave a comment';
-  if (!$('say-sats-box').classList.contains('fiat')) $('say-sats').placeholder = on ? '21+ sats' : 'sats';
+  if (!$('say-sats-box').classList.contains('fiat') && !$('say-sats-box').classList.contains('paycard')) $('say-sats').placeholder = on ? '21+ sats' : 'sats';
 }
 const TIP_FIRST = 'Add a tip to send it: 21 sats or more.';
 // Session 58 (Rajesh 23 Nov): gig 3's phone on Show Time holds its chat still until the fan's hello with a tip has gone:
@@ -1867,6 +1876,9 @@ function chat(r) {
       amt.dataset.sats = m.sats;
       amt.textContent = inFiat() ? fiat(m.sats) : m.sats.toLocaleString('en-GB');
       li.append(amt, ' ');
+    } else if (m.pence) { // a card tip (session 62b): its pounds, never turned into sats
+      li.className = 'tipped';
+      li.append(Object.assign(document.createElement('b'), { className: 'by-card', textContent: `£${m.pence % 100 ? (m.pence / 100).toFixed(2) : m.pence / 100} by card` }), ' ');
     }
     if (m.mod) li.classList.add('mod');
     if (m.text) li.append(...(m.mod ? withLinks(m.text) : [m.text])); // only a mod's links are links
@@ -1995,7 +2007,7 @@ function drawUnit() {
   words();
   if (lastGoal) goal(...lastGoal);
   for (const a of feed.querySelectorAll('.amt')) a.textContent = inFiat() ? fiat(Number(a.dataset.sats)) : Number(a.dataset.sats).toLocaleString('en-GB');
-  if (mode === ownMode) return;
+  if (mode === ownMode) return byCard?.redraw();
   // The tip box takes pounds or dollars; its button still says the sats that will be paid.
   ownMode = mode;
   const box = $('own-sats');
@@ -2011,13 +2023,22 @@ function drawUnit() {
     box.setAttribute('aria-label', `Tip amount in ${{ gbp: 'pounds', usd: 'dollars', eur: 'euros' }[mode]}`);
   }
   box.oninput();
-  // The comment box's tip field reads the same: ₿ and sats, or £ and pounds.
+  saysSats(mode);
+}
+// The comment box's tip field reads the same: ₿ and sats, or £ and pounds. With card tips on (session 62b) its own
+// switch then says which money: pounds of sats read "£ in sats", and £ card keeps its own look.
+function saysSats(mode) {
   const tipBox = $('say-sats');
+  const box = $('own-sats');
   tipBox.value = '';
+  tipBox.setAttribute('aria-label', 'A tip with it, in sats (21 or more). Empty: a free comment.');
   if (mode === 'btc') Object.assign(tipBox, { min: 21, max: 1_000_000, step: 1, inputMode: 'numeric', placeholder: TIP_ONLY ? '21+ sats' : 'sats' });
   else { tipBox.removeAttribute('max'); Object.assign(tipBox, { min: box.min, step: 0.01, inputMode: 'decimal', placeholder: '0.00' }); }
   $('say-unit').textContent = mode === 'btc' ? '₿' : SYMBOL[mode];
+  $('say-unit').disabled = mode === 'btc' && !rate?.[lastFiat];
+  $('say-unit').setAttribute('aria-label', `Show amounts in ${NAMES[mode === 'btc' ? lastFiat : 'btc']}`);
   $('say-sats-box').classList.toggle('fiat', mode !== 'btc');
+  byCard?.redraw();
 }
 unitBox.onclick = (e) => {
   const b = e.target.closest('button');
@@ -2055,6 +2076,7 @@ function sent() {
 $('say').onsubmit = async (e) => {
   e.preventDefault();
   unlockAudio();
+  if (byCard?.on()) { const why = byCard.send(); if (why) thank(why); return; } // £ card: Stripe's box, above
   const box = $('say-sats');
   const n = satsIn(box);
   if (box.value.trim() && !n) { say(T.refused.too_small); box.focus(); return; }

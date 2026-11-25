@@ -1640,3 +1640,28 @@ html:root .judge-line.page-judge { margin: 22px 0 6px; text-align: left; }
 .card-thanks b { font: 400 40px/1 var(--poster); letter-spacing: .04em; color: var(--cream); }
 .card-thanks span { font-size: 17px; color: var(--cream); }
 .card-thanks .card-thanks-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+
+/* Session 62b: words by card. With card tips on, the comment box's ₿ | £ card switch sits before the amount; £ card
+   opens Stripe's box just above the comment box. A card tip's line in the chat says its pounds, never sats. */
+.say-money { display: inline-flex; flex: none; align-self: stretch; margin-right: 3px; border: 1px solid rgb(239 227 200 / .25); border-radius: 4px; overflow: hidden; } /* Rajesh 25 Nov: the field's full height */
+.say-m { margin: 0; padding: 4px 5px; border: 0; background: none; font: 600 11px/1 var(--body); color: var(--smoke); cursor: pointer; white-space: nowrap; }
+.say-m + .say-m { border-left: 1px solid rgb(239 227 200 / .25); }
+.say-m[aria-pressed="true"] { background: rgb(239 227 200 / .12); color: var(--cream); }
+.say-m:first-child[aria-pressed="true"] { color: var(--btc); }
+.say-m:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.say-sats.paycard .say-unit { color: var(--cream); }
+.say-sats.with-card:not(.fiat):not(.paycard) .say-unit { display: none; } /* ₿ beside ₿ says nothing more */
+body:not(.full) .say.with-card .say-field #say-text { padding-right: 158px; }
+body:not(.full).wallet-card .say.with-card .say-field #say-text { padding-right: 212px; } /* Rajesh 25 Nov: "Leave a comment" whole beside the switch */
+body.full .say-money { display: none; }
+.card-words { margin: 8px 0 0; }
+body[data-as="room"] .chat > .card-words { order: 6; }
+.card-words-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.card-words .tip-k { font-size: 14px; color: var(--cream); }
+.card-words-quote { font-size: 14px; line-height: 1.4; color: var(--cream); overflow-wrap: anywhere; }
+.card-shut { font-size: 13px; }
+.card-words .card-thanks b { font-size: 32px; }
+.card-words .card-thanks span { font-size: 15px; }
+.feed .by-card { font: 600 12px/1 var(--body); letter-spacing: 0; color: var(--cream); border: 1px solid var(--cream); border-radius: 3px; padding: 2px 5px; }
+body[data-as="home"] .feed .by-card { font-size: 15px; }
+html:root .chat-lines .amt.by-card, html:root .lines .amt.by-card { background: none; color: var(--cream); border: 1px solid var(--cream); }

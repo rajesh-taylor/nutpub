@@ -4,7 +4,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import schema from '../schema.sql';
 import { configure, SITE_URL } from './config.js';
-import { sqliteStage, withStage, kv } from './db.js';
+import { sqliteStage, withStage, kv, ADDED_COLUMNS } from './db.js';
 import { randomHex } from './http.js';
 import { serve } from './app.js';
 import { useStream, stopPractice, closeStream } from './live.js';
@@ -38,6 +38,9 @@ export class Stage extends DurableObject {
       });
     }
     sql.exec(schema); // tables added since it was made (every statement is IF NOT EXISTS)
+    for (const [table, column, type] of ADDED_COLUMNS) { // and columns (db.js)
+      if (!sql.exec(`PRAGMA table_info(${table})`).toArray().some((r) => r.name === column)) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    }
     return (this.db = sqliteStage(this.ctx.storage, { id: self.id, adminKey: self.adminKey, made: self.made || null }));
   }
   ready() { configure(this.env); useStream(this.env); return this.open(); }
