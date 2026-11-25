@@ -79,8 +79,9 @@ export async function makePasskey(pass, name, id = null, sealIt = false) {
   return sealed ? { sealed, cred: cred.id, handle: b64u(handle) } : { ok: true };
 }
 
-// A sealed ticket in this browser, opened with its own passkey: the face or fingerprint, then its PRF answer opens the
-// copy here (nothing asked of the server). The 32 bytes, or null if the fan closed the sheet.
+// A sealed ticket in this browser, opened with its own passkey: whatever the password manager asks (face, fingerprint
+// or password), then its PRF answer opens the copy here (nothing asked of the server). The 32 bytes, or null if the
+// fan closed the sheet.
 export async function openSealed(s) {
   let cred;
   try {

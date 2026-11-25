@@ -1248,7 +1248,7 @@ function render() {
     const inRoom = !!door.checkedAt;
     $('door-show').hidden = inRoom;
     $('door-pass-title').textContent = inRoom ? 'You’re in' : 'Your ticket';
-    $('door-pass-note').textContent = inRoom ? '· enjoy the night' : userIdOf(pass, KEEP) && !seedText(pass, KEEP) ? '· opens only with your face or fingerprint' : '';
+    $('door-pass-note').textContent = inRoom ? '· enjoy the night' : userIdOf(pass, KEEP) && !seedText(pass, KEEP) ? '· sealed to your passkey' : '';
     doorQr();
     // Scanned while the QR is open: it says so, then closes by itself.
     if (inRoom && !$('door-screen').hidden && $('door-in').hidden) {
