@@ -100,6 +100,7 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | WebAuthn PRF · HKDF-SHA256 · AES-GCM | A venue ticket sealed to its passkey |
 | BIP-39 · BIP-32 | The artist's 12 words |
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
+| Stripe Connect *(test mode)* | Card tips, straight to the artist's own Stripe account; the NutPub's 5% as Stripe's application fee |
 
 Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, copied unchanged from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309) into `vendor/cashu-ts-nut16`, with the spec's test vectors as tests.
 
