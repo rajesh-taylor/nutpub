@@ -43,6 +43,13 @@ export const stripeAccount = async () => (await kv.get('stripe', null))?.account
 // tidying Stripe's test accounts.
 export const DEMO_ACCOUNT = 'acct_1UfoVe9YLAboalr7';
 const judgeStage = async () => !!(await kv.get('setlist', null))?.only;
+// Session 63b (Rajesh 26 Nov): a judge's stage starts with card tips on, on the demo account, on all three gigs:
+// nothing to press, and a judge who comes back to any gig can tip by card. A stage with its own account keeps it.
+export async function demoOn() {
+  if (!stripeOn() || !(await judgeStage()) || (await stripeAccount())) return false;
+  await kv.set('stripe', { account: DEMO_ACCOUNT, on: true, demo: true, made: new Date().toISOString() });
+  return true;
+}
 
 // Where the artist's account stands, in Cellar's words: none, unfinished (Stripe still needs details), checking
 // (Stripe is looking at them; a few seconds after their last page, longer if it asks for a document) or on.
@@ -155,7 +162,7 @@ export function mountStripe(route, admin, pass) {
     if (!stripeOn()) return json({ error: 'Card payments aren’t on for this site yet.' }, 400);
     if (!(await judgeStage())) return json({ error: 'The demo account is for the judges’ gigs only.' }, 403);
     if (await stripeAccount()) return json({ error: 'This stage already has a Stripe account.' }, 409);
-    await kv.set('stripe', { account: DEMO_ACCOUNT, on: true, demo: true, made: new Date().toISOString() });
+    await demoOn(); // stages made before 26 Nov's afternoon: one press, as before
     return json({ state: 'on', demo: true });
   });
 

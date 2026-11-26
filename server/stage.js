@@ -11,6 +11,7 @@ import { useStream, stopPractice, closeStream } from './live.js';
 import { makeHandoff } from './handoff.js';
 import { closeNights } from './closing.js';
 import { setlist } from './setlist.js';
+import { demoOn } from './stripe.js';
 import { currentShow, stageNow } from './shows.js';
 import { inviteInfo, joinCrew, crewCode } from './crew.js';
 
@@ -55,6 +56,7 @@ export class Stage extends DurableObject {
     this.db = null;
     const db = this.ready();
     await withStage(db, () => setlist(this.env, only)); // the example gigs (or the one), this stage's own copies
+    if (only) await withStage(db, () => demoOn()); // a judge's gig: card tips on, on the demo account (session 63b)
     return this.handoff();
   }
   // Back to your stage: a fresh one-time code (5 minutes, once), traded on the stage's page for the setup key.

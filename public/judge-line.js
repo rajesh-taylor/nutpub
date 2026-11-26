@@ -53,16 +53,7 @@ export async function judgeLine(r, page) {
   }
   if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  // Gig 2's card step (session 63, Rajesh 26 Nov): Cellar's Try it with the demo account first, then the pin; only
-  // when this site has Stripe keys (otherwise gig 2 is as before). Asked once a page, then kept once it's on.
-  let stripe = null;
-  const card = async () => {
-    if (stripe?.off || stripe?.state === 'on') return stripe;
-    let k = ''; try { k = localStorage.getItem('nutpub-admin') || ''; } catch {}
-    return (stripe = await fetch('/api/admin/stripe', { headers: { 'X-Admin': k } }).then((x) => x.json()).catch(() => null));
-  };
-  const c = g2 && !(await card())?.off ? 1 : 0;
-  const steps = pickle ? 8 : g2 ? 7 + c : tv ? 10 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
+  const steps = pickle ? 8 : g2 ? 7 : tv ? 10 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
   const o = tv ? 2 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
     const key = n + [].concat(story, text).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note;
@@ -111,8 +102,6 @@ export async function judgeLine(r, page) {
   } : list.at === 'frankie' ? {
     setup: 'Frankie’s at The Fickle Pickle, and fans at home pay as they watch: 60 sats a minute.',
     pinned: 'Pinned over the chat, for every fan watching.',
-    card: 'Frankie takes cards as well as sats: Stripe Connect sends card tips straight to his own Stripe account.',
-    carded: 'Card tips are on: fans see By card beside the sats tips.',
     start: 'Show time. Nobody pays until they press play.',
     fan: 'You’re a fan at home. The video comes in 10-second pieces.',
     end: 'You paid for the minutes you watched, straight to Frankie’s key.',
@@ -173,13 +162,6 @@ export async function judgeLine(r, page) {
       document.getElementById('head-fan')?.style.setProperty('display', 'none');
       // Gig 1 (Rajesh 21 Nov, session 47): a look at the 12 words, no typing, then on to Plan gig.
       if (tv) return say(cellarSeen() ? 2 : 1, cellarSeen() ? 'Now click 1 · Plan gig, up above.' : 'Press Write down your 12 words, have a look, then Not now.', '', '', { story: TOLD.cellar });
-      if (c) { // gig 2's card step: the demo account's button is the one next press (amber), brought into view once
-        if ((await card())?.state === 'on') return say(1, 'Now click 1 · Plan gig, up above.', '', '', { story: TOLD.carded });
-        document.querySelector('#words-line .btn.primary')?.classList.replace('primary', 'quiet'); // amber only on the next press
-        const demo = [...document.querySelectorAll('#stripe-line button')].find((b) => /demo account/.test(b.textContent));
-        if (demo && !demo.classList.contains('primary')) { demo.className = 'btn primary'; demo.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-        return say(1, 'Under Card payments, press Try it with the demo account: nothing to fill in.', '', '', { story: TOLD.card });
-      }
       return say('', 'Nothing to do here: carry on from the tabs above.', '', '', { story: `What ${name} sets once lives in Cellar: his 12 words, photos, stream, producers and moderators.` });
     }
     const s = await fetch('/api/stage').then((x) => x.json()).catch(() => null);
@@ -258,29 +240,28 @@ export async function judgeLine(r, page) {
     }
     if (g2) {
       if (page === 'setup') {
-        if (c && (await card())?.state !== 'on') return say(1, 'First, cards: click Cellar, up above, and press Try it with the demo account under Card payments.', '', '', { story: TOLD.card });
         const pin = document.getElementById('pin-text');
         // The pin's box is inside Comments and moderators: it only shows with comments on.
         if (!document.querySelector('[data-path="comments"]')?.checked) {
-          return say(1 + c, 'Turn on Comments in the live chat, under Comments: the Pinned message box is in there.', '', '', { story: TOLD.setup });
+          return say(1, 'Turn on Comments in the live chat, under Comments: the Pinned message box is in there.', '', '', { story: TOLD.setup });
         }
         const pinned = /fountain\.fm\//.test(pin?.value || '');
         pin?.classList.toggle('pin-hint', !pinned); // the empty box shimmers until the link's in (app.css)
         if (pin && !pinned) pin.placeholder = 'Paste in Frankie’s Fountain link here';
-        if (!pinned) return say(1 + c, `Paste Frankie’s Fountain link into Pinned message, under Comments: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(PIN, pin) });
-        return say(1 + c, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
+        if (!pinned) return say(1, `Paste Frankie’s Fountain link into Pinned message, under Comments: ${FOUNTAIN}`, '', '', { story: TOLD.setup, extra: copyBtn(PIN, pin) });
+        return say(1, 'Now click 2 · Show Time, up above.', '', '', { story: TOLD.pinned });
       }
       if (page === 'show') {
         if (closed && fanHome()) document.getElementById('head-fan')?.remove(); // nothing left on the fan's page
-        if (closed) return fanHome() ? say(5 + c, 'Click 3 · Your takings, at the top.')
-          : say(5 + c, 'Back on the fan’s page: press Move my sats, move them to Cashu.me, then close that tab.', '', '', { story: TOLD.home });
-        if (!on) return say(2 + c, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
-        if (!fanDone()) return say(3 + c, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
-        return say(4 + c, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
+        if (closed) return fanHome() ? say(5, 'Click 3 · Your takings, at the top.')
+          : say(5, 'Back on the fan’s page: press Move my sats, move them to Cashu.me, then close that tab.', '', '', { story: TOLD.home });
+        if (!on) return say(2, 'Press Start show, the yellow button below.', '', '', { story: TOLD.start });
+        if (!fanDone()) return say(3, 'Press Fan’s page ↗, top right, and follow the strip there. Then come back here.', '', '', { story: TOLD.fan });
+        return say(4, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
       }
-      if (!closed) return say(4 + c, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-      return movedAll() ? say(7 + c, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
-        : say(6 + c, 'Close the fan’s Cashu.me tab first: the demo works with one Cashu.me tab at a time. Then press Move to my own wallet.', '', '', { story: TOLD.takings });
+      if (!closed) return say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+      return movedAll() ? say(7, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
+        : say(6, 'Close the fan’s Cashu.me tab first: the demo works with one Cashu.me tab at a time. Then press Move to my own wallet.', '', '', { story: TOLD.takings });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
     // Fan's page ↗ only while the show's on (Rajesh 20 Nov): not on Plan gig, not before Start show, not after End night.
@@ -307,10 +288,6 @@ export async function judgeLine(r, page) {
   };
   await draw();
   // Show Time's line follows its buttons and the fan's tab; the others only change when the page is opened again.
-  if (c && page === 'cellar') { // the demo button pressed: the line moves on to Plan gig
-    document.getElementById('stripe-line')?.addEventListener('click', () => setTimeout(() => draw(), 1500));
-    setInterval(() => { if (!document.hidden && stripe?.state !== 'on') draw(); }, 4000);
-  }
   if (g2 && page === 'setup') {
     document.getElementById('pin-text')?.addEventListener('input', () => draw());
     document.querySelector('[data-path="comments"]')?.addEventListener('change', () => draw());

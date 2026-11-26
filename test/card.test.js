@@ -10,7 +10,7 @@ import { useDb, d1Stage, addColumns, kv, run, one, all } from '../server/db.js';
 import { addMessage } from '../server/door.js';
 import { keepGigLine } from '../server/closing.js';
 import { clearGig } from '../server/shows.js';
-import { cardState, tipPence, fee, fees, stripeOn } from '../server/stripe.js';
+import { cardState, tipPence, fee, fees, stripeOn, demoOn, DEMO_ACCOUNT } from '../server/stripe.js';
 
 let db;
 const asD1 = (d) => ({ batch: (list) => Promise.all(list.map((st) => st.run())), prepare: (text) => {
@@ -130,4 +130,22 @@ test('cards stay off without both keys, and with a live key', () => {
   keys('sk_live_x', 'pk_live_x'); assert.equal(stripeOn(), false); // test mode only
   keys('sk_test_x', 'pk_live_x'); assert.equal(stripeOn(), false);
   keys(undefined, undefined);
+});
+
+test("a judge's stage starts with card tips on the demo account; other stages and a stage with its own account don't", async () => {
+  const keys = (sk, pk) => configure({ MINT_URL: 'https://mint.test', MINT_TEST: '1', STRIPE_SECRET_KEY: sk, STRIPE_PUBLISHABLE_KEY: pk });
+  keys('sk_test_x', 'pk_test_x');
+  assert.equal(await demoOn(), false); // no setlist yet: not a judge's stage
+  await kv.set('setlist', { at: 'longy', done: [], only: false });
+  assert.equal(await demoOn(), false); // a real artist's stage
+  await kv.set('setlist', { at: 'frankie', done: [], only: true });
+  assert.equal(await demoOn(), true);
+  const saved = await kv.get('stripe', null);
+  assert.deepEqual([saved.account, saved.on, saved.demo], [DEMO_ACCOUNT, true, true]);
+  await kv.set('stripe', { account: 'acct_own', on: true });
+  assert.equal(await demoOn(), false); // its own account stays
+  assert.equal((await kv.get('stripe', null)).account, 'acct_own');
+  keys(undefined, undefined);
+  await kv.set('stripe', null);
+  assert.equal(await demoOn(), false); // no keys: cards stay off
 });

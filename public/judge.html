@@ -43,12 +43,6 @@
     .lines b { color: var(--cream); font-weight: 400; }
     .lines .lead { font: 400 19px/1.5 var(--body); letter-spacing: 0; } /* Rajesh 19 Nov: a reading face, not the code one */ /* the line the eye lands on first (Rajesh 15 Nov) */
     .lines .key { color: #e8a845; }
-    .judge main > .lines.intro { text-align: center; gap: 14px; }
-    .lines.intro .lead:first-child:not(.what) { max-width: 900px; justify-self: center; }
-    @media (min-width: 900px) { .lines.intro .ln { display: block; } } /* a sentence a line */
-    @media (min-width: 1150px) { .lines.intro .what { white-space: nowrap; } } /* one line, across the three posters (Rajesh 20 Nov) */
-    .lines.intro .lead { text-wrap: balance; }
-    .lines.intro .what { color: rgb(239 227 200 / .92); font-size: 17px; } /* cream, not gold (session 47): amber is for pressing */
     .wall { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 28px; padding-top: 34px; align-items: start; max-width: 1200px; width: 100%; justify-self: center; } /* three in a row (Rajesh 19 Nov: gigs 3 and 4 folded together) */
     @media (max-width: 1000px) { .wall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; } } /* two and one on smaller laptops */
     /* Weathered, lightly: paper grain and darker edges; the words stay sharp. */
@@ -80,18 +74,6 @@
     .again { margin-bottom: -4px !important; font: 600 13px/1 var(--body); letter-spacing: .02em; color: #c4521a; }
     .said { font-size: 14px; color: #8a2a0a; }
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 13px/1.5 var(--body); color: #4a3a1c; }
-    /* Two tiles under the posters (Rajesh 21 Nov, session 45): The Kitchen and the Pub Board, for after the gigs, or
-       for developers who skip them. A hairline and cream titles (session 47); side by side, stacked on a phone. */
-    .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; }
-    .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 16px 20px; background: transparent; border: 1px solid var(--line); border-radius: 6px; text-decoration: none; } /* session 58: no fill of its own, the page's lines run through */
-    .tile b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: var(--cream); padding-top: 3px; }
-    .tile span { grid-column: 1; font: 400 16px/1.45 var(--body); color: var(--smoke); }
-    .tile i { grid-column: 2; grid-row: 1 / span 2; font: 400 28px/1 var(--poster); font-style: normal; color: var(--cream); }
-    .tile:hover { border-color: rgb(239 227 200 / .45); background: rgb(239 227 200 / .04); }
-    .tile:hover i { color: var(--cream); }
-    .tile .chip { display: inline-block; margin-left: 10px; vertical-align: 3px; padding: 4px 7px; border: 1px solid rgb(239 227 200 / .4); border-radius: 3px; font: 600 12px/1 var(--body); letter-spacing: .02em; color: var(--cream); } /* MCP, plain (Rajesh 21 Nov) */
-    .tile:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
-    @media (max-width: 900px) { .tiles { grid-template-columns: minmax(0, 1fr); max-width: 420px; } }
     .judge footer { padding-block: 56px calc(40px + env(safe-area-inset-bottom, 0px)); }
     .judge footer p { margin: 0; text-align: center; padding-top: 22px; border-top: 1px solid rgb(239 227 200 / .12); font: 500 12px/1 var(--body); letter-spacing: .04em; }
     .judge footer a { color: var(--smoke); text-decoration: none; }
@@ -138,11 +120,6 @@
       .wreath-l { display: none; } .wreath-s { display: inline; }
     } /* closed in session 47: it was left open, so every rule after it only applied under 860 px */
     @media (max-width: 760px) { .lineup { display: none; } }
-    /* Line icons on the two tiles (session 47, Rajesh picked them from the A/B; the arrows stay). */
-    .tiles .tile { grid-template-columns: auto minmax(0, 1fr) auto; }
-    .tile-ico { display: block; grid-column: 1; grid-row: 1 / span 2; width: 52px; height: 52px; color: var(--cream); }
-    .tiles .tile b, .tiles .tile span { grid-column: 2; }
-    .tiles .tile i { grid-column: 3; }
     @media (max-width: 900px) { .wall { grid-template-columns: minmax(0, 1fr); max-width: 420px; gap: 40px; } .poster img { aspect-ratio: 4 / 5; } }
     /* Step 0 (session 53): the artist's passkey, before gig 1, as a judges' line of its own. Amber only on Make. */
     .step0 { width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; display: grid; gap: 12px; padding: 16px 20px 14px; border: 1px solid rgb(239 227 200 / .28); border-radius: 8px; background: rgb(17 28 51 / .92); color: var(--cream); }
@@ -175,28 +152,31 @@
     .step0 .s0-add-say { flex: 1 1 260px; display: grid; gap: 8px; justify-items: start; }
     .step0 .s0-code { margin: 0; font: 600 34px/1 var(--mono); letter-spacing: .08em; color: var(--cream); }
     @media (max-width: 700px) { .step0 { padding: 14px 14px 12px; } .step0 .s0-btns { margin-left: 0; } .step0 .s0-say { font-size: 16px; } }
-    /* Session 63b (Rajesh 26 Nov): step 0 as C, picked: a hairline box (as the tiles) with an artist's pass on a lanyard,
-       a Bebas title with its 0, the words then the button on the left. One bar with the Kitchen and the Pub Board: step 0
-       over posters 1 and 2, the two tiles stacked over poster 3. On a phone the tiles go after the posters. */
-    .front-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; align-items: stretch; }
-    .front-bar .step0 { grid-column: 1 / span 2; width: auto; max-width: none; margin: 0; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0 28px; padding: 0 24px 18px 22px; border: 1px solid rgb(239 227 200 / .3); border-radius: 6px; background: transparent; }
+    /* Session 63b (Rajesh 26 Nov): one bar under the sign, the line on the left (over poster 1) and step 0 on the right
+       (over posters 2 and 3): a hairline box with an artist's pass on a lanyard, a Bebas title with its 0. The Kitchen and
+       the Pub Board live in the menu. Step 0's lines in one order and three sizes: the title, the words, the small print. */
+    .front-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 10px; align-items: center; }
+    .front-bar .intro { grid-column: 1; text-align: left; background: none; border-radius: 0; }
+    .front-bar .intro-head { margin: 0 0 6px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: var(--cream); }
+    .front-bar .intro-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: 400 18px/1.5 var(--body); color: rgb(239 227 200 / .9); }
+    .front-bar .intro-list li::before { content: "–"; margin-right: 10px; color: var(--smoke); }
+    .front-bar .step0 { grid-column: 2 / span 2; width: auto; max-width: none; margin: 0; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0 28px; padding: 0 24px 20px 22px; border: 1px solid rgb(239 227 200 / .3); border-radius: 6px; background: transparent; }
     .step0 .s0-pass { display: block; width: 104px; }
     .step0 .s0-pass svg { display: block; width: 100%; height: auto; overflow: visible; }
     .step0 .s0-body { display: grid; gap: 12px; min-width: 0; padding-top: 20px; }
-    .step0 .s0-row { flex-direction: column; align-items: flex-start; }
-    .step0 .s0-say { flex: none; gap: 6px; }
+    .step0 .s0-row { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .step0 .s0-say { flex: none; gap: 6px; font-size: 16px; line-height: 1.45; }
+    .step0 .s0-fine { max-width: 62ch; }
+    .step0 .s0-story { font-size: 16px; }
     .step0 .s0-btns { margin-left: 0; }
+    .step0 .s0-fine, .step0 .s0-been { font-size: 14px; line-height: 1.45; }
+    .step0 .s0-been .s0-link { font-size: inherit; }
+    .step0 .s0-been.s0-also { margin-top: -8px; padding-top: 0; border-top: 0; }
     .step0 .s0-title { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; font: 400 34px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
     .step0 .s0-n { display: grid; place-items: center; flex: none; width: 36px; height: 36px; box-sizing: border-box; padding-top: 3px; border: 1px solid rgb(239 227 200 / .55); border-radius: 50%; font: 400 24px/1 var(--poster); letter-spacing: 0; color: var(--cream); }
     .step0 .s0-chip .here { color: var(--cream); }
-    .front-bar .tiles { grid-column: 3; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 1fr; gap: 18px; max-width: none; margin: 0; }
-    .front-bar .tile { gap: 4px 14px; padding: 14px 16px; align-content: center; }
-    .front-bar .tile-ico { width: 40px; height: 40px; }
-    .front-bar .tile b { font-size: 24px; }
-    .front-bar .tile span { font-size: 15px; line-height: 1.4; }
-    .front-bar .tile i { font-size: 24px; }
-    @media (max-width: 900px) { .front-bar { display: contents; } .front-bar .step0 { grid-column: auto; width: 100%; max-width: 640px; justify-self: center; margin-top: 18px; } .front-bar .tiles { grid-column: auto; order: 1; width: 100%; max-width: 420px; justify-self: center; grid-template-rows: none; } .lineup { order: 2; } }
-    @media (max-width: 700px) { .step0 .s0-title { font-size: 28px; letter-spacing: .04em; } }
+    @media (max-width: 900px) { .front-bar { display: contents; } .front-bar .intro, .front-bar .step0 { grid-column: auto; width: 100%; max-width: 640px; justify-self: center; } .front-bar .intro { text-align: center; } .front-bar .intro-list { display: block; font-size: 17px; } .front-bar .intro-list li { display: inline; white-space: nowrap; } .front-bar .intro-list li::before { content: none; } .front-bar .intro-list li + li::before { content: "·"; margin: 0 8px; } }
+    @media (max-width: 700px) { .step0 .s0-title { font-size: 28px; letter-spacing: .04em; } .front-bar .intro-head { font-size: 28px; } .front-bar .intro-list { font-size: 16px; } }
     @media (max-width: 560px) { .front-bar .step0 { grid-template-columns: minmax(0, 1fr); } .step0 .s0-pass { display: none; } .step0 .s0-body { padding-top: 14px; } }
   </style>
 </head>
@@ -285,19 +265,18 @@
     <p class="home-byline">Pay by the minute. Leave when it gets bad.</p>
     <!-- Rajesh 20 Nov: the middlemen line gone; who it's for, then what it is, centred under the sign. -->
     <h1 class="sr">The NutPub</h1>
-    <div class="lines intro">
-      <!-- Rajesh 20 Nov (late): the gold line alone; "Artists & Musicians • Fans • Pubs" gone too (evening). -->
-      <p class="lead what">A night out using Cashu. From the ticket, door entry, first round, 402 streaming payments, comments &amp; tips and takings back to your own wallet.</p>
-    </div>
 
     <!-- Step 0 (session 53, Rajesh 22 Nov): the artist's passkey, as real artists will get it. Drawn by the script below.
-         Session 63b (Rajesh 26 Nov): one bar with the Kitchen and the Pub Board; "Each gig builds on the last" gone. -->
+         Session 63b (Rajesh 26 Nov): one bar, the line on the left and step 0 on the right; the Kitchen and the Pub Board
+         in the menu only; "Each gig builds on the last" gone. -->
     <div class="front-bar">
-    <section class="step0" id="step0" aria-label="Your artist passkey" hidden></section>
-    <nav class="tiles" aria-label="More">
-      <a class="tile" href="/kitchen"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 31 C9 31 8 23 13.5 21 C12.5 14 20 11 24 15.5 C26 10 34 10.5 35 17 C41 17 42.5 25 36 27.5 V31 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="15" y="31" width="21" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20.5 31 V39 M25.5 31 V39 M30.5 31 V39" stroke="currentColor" stroke-width="1.2" opacity=".6"/></svg><b>The Kitchen</b><span>What’s served, what’s on order.</span><i aria-hidden="true">→</i></a>
-      <a class="tile" href="/board"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="29" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 36 L11 43 M35 36 L37 43" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="10" y="12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-5 16.5 17.5)"/><rect x="26" y="13" width="12" height="15" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(4 32 20.5)"/><path d="M13 27 H20 M28 18 H35 M28 21.5 H35 M28 25 H33" stroke="currentColor" stroke-width="1.2" opacity=".6"/><circle cx="16.5" cy="12.5" r="1.9" fill="#c4521a"/><circle cx="32" cy="13.4" r="1.9" fill="#c4521a"/></svg><b>Pub Board <small class="chip">402</small></b><span>An agent can buy a ticket, gig search coming soon.</span><i aria-hidden="true">→</i></a>
-    </nav>
+      <div class="intro">
+        <!-- Rajesh 20 Nov (late): the gold line alone; "Artists & Musicians • Fans • Pubs" gone too (evening). -->
+        <!-- Session 63b (Rajesh 26 Nov): a heading and the night's parts, one a line, in place of the long sentence. -->
+        <h2 class="intro-head">A night out using Cashu</h2>
+        <ul class="intro-list"><li>The ticket</li><li>Door entry</li><li>First round</li><li>402 streaming payments</li><li>Comments &amp; tips</li><li>Takings back to your own wallet</li></ul>
+      </div>
+      <section class="step0" id="step0" aria-label="Your artist passkey" hidden></section>
     </div>
     <div class="wall">
       <article class="poster" data-gig="longy">
@@ -308,9 +287,9 @@
           <h2 class="who">Longy</h2>
           <p class="where">Peggy Sue’s Music Bar</p>
           <dl><dt>Venue</dt><dd>–</dd><dt>Online</dt><dd>£20</dd></dl>
-          <p class="does">Buy the online ticket, say hello in the chat, then tip with a comment and watch the stretch goal move.</p>
+          <p class="does">Buy the online ticket, say hello in the chat, then tip with a comment, in sats or by card, and watch the stretch goal move.</p>
           <div class="btns"></div>
-          <p class="small-print">Watch online is one 402 (NUT-24); each tip is another, or a Nutzap signed with your Nostr key (NIP-61). Every payment is ecash locked to Longy's key (NUT-11): the server checks it, and can't spend it.</p>
+          <p class="small-print">Watch online is one 402 (NUT-24); each tip is another, or a Nutzap signed with your Nostr key (NIP-61). Every payment is ecash locked to Longy's key (NUT-11): the server checks it, and can't spend it. Fans can tip in pounds too, by card: Stripe Connect (test mode), straight to the artist’s own Stripe account.</p>
         </div>
       </article>
 
@@ -322,9 +301,9 @@
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">The Devils Train · The Fickle Pickle</p>
           <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
-          <p class="does">Turn on card tips with the demo Stripe account and pin Frankie’s Fountain link, then pay by the minute: play, stop, play again. Tip in sats or by card, then take the fan’s change home.</p>
+          <p class="does">Pin Frankie’s Fountain link, then pay by the minute: play, stop, play again. Tip, then take the fan’s change home.</p>
           <div class="btns"></div>
-          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged. Open DevTools → Network to watch each 402. Fans can tip by card too: Stripe Connect (test mode), straight to the artist’s own Stripe account.</p>
+          <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged. Open DevTools → Network to watch each 402.</p>
         </div>
       </article>
 
@@ -521,9 +500,10 @@
       gigs = out.stages?.length ? gigsList(out.stages, opened) : null;
       if (!out.stages?.length) note = 'No gigs open on this passkey now: practice gigs close 7 days after they’re made.';
     });
-    const been = (now) => el('p', { className: 's0-been' }, 'Been before? ', el('button', { type: 'button', className: 's0-link', id: 'come-back', textContent: 'Back to your gigs', onclick: back }),
-      ...(now === 'new' || now === 'skipped' ? [' · Have a code from your other device? ',
-        el('button', { type: 'button', className: 's0-link', id: 'add-here', textContent: 'Add this device', onclick: () => { startAdding(); draw(); document.getElementById('add-code')?.focus(); } })] : []));
+    // Two lines (Rajesh 26 Nov): been before on this passkey, and a code from another device, one under the other.
+    const been = (now) => frag(el('p', { className: 's0-been' }, 'Been before? ', el('button', { type: 'button', className: 's0-link', id: 'come-back', textContent: 'Back to your gigs', onclick: back })),
+      ...(now === 'new' || now === 'skipped' ? [el('p', { className: 's0-been s0-also' }, 'Have a code from your other device? ',
+        el('button', { type: 'button', className: 's0-link', id: 'add-here', textContent: 'Add this device', onclick: () => { startAdding(); draw(); document.getElementById('add-code')?.focus(); } }))] : []));
     function draw() {
       const now = state();
       box.dataset.state = now;
@@ -561,7 +541,7 @@
             : now === 'added' ? `Saved as “${name}”. It opens the same gigs as your other passkey.`
               : `Signed in with “${name}”. Gigs you start here join it too.`)), shown ? '' : addPanel()), ...(shown ? [addPanel()] : []));
       } else if (now === 'skipped') {
-        kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'Not now. Your gigs stay in this browser.' })),
+        kids.push(el('div', { className: 's0-row' }, el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'No passkey generated so this browser keeps your gigs for now.' })),
           el('div', { className: 's0-btns' }, el('button', { type: 'button', className: 's0-link', id: 'make-passkey', textContent: 'Make one', onclick: make }))));
       } else {
         kids.push(el('div', { className: 's0-say' }, chip(false), el('span', { textContent: 'This browser can’t keep a passkey: your gigs stay in this browser.' })));

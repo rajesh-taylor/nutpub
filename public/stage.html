@@ -239,11 +239,6 @@
       // Gig 1 opens on Cellar the first time (Rajesh 21 Nov, session 47); after that, Plan gig as before.
       let cellar = false;
       try { cellar = list.at === 'longy' && !localStorage.getItem('nutpub-cellar-seen'); } catch {}
-      // Gig 2 opens on Cellar while card tips are off (session 63, Rajesh 26 Nov): its first step is the demo account.
-      if (list.at === 'frankie' && st?.stage !== 'closed' && st?.stage !== 'on') {
-        const card = await fetch('/api/admin/stripe', { headers: { 'X-Admin': key || '' } }).then((x) => x.json()).catch(() => null);
-        cellar = !!card && !card.off && card.state !== 'on';
-      }
       location.replace(st?.stage === 'closed' ? '/takings' : st?.stage === 'on' ? '/show' : cellar ? '/cellar' : '/setup');
     } else if (list) {
       for (const li of document.querySelectorAll('[data-step]')) {
