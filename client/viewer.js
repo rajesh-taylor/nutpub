@@ -912,6 +912,18 @@ if (top !== self) { // inside a host page: it has its own way out, and its own t
 const WALLET_CARD = ONE; // the venue's page too, since one screen (15 Nov)
 if (WALLET_CARD) {
   body.classList.add('wallet-card');
+  // Session 63b (Rajesh 26 Nov): on a laptop the chat ends at the first screen's bottom, so its comment box sits beside
+  // the whole player, as on a video site; scrolled, it stays in view (sticky). Measured from where the columns start
+  // (under the Judges strip), never from the chat itself, which moves once it sticks.
+  const main = document.querySelector('main');
+  const fitChat = () => {
+    if (!main) return;
+    const top = main.getBoundingClientRect().top + scrollY + parseFloat(getComputedStyle(main).paddingTop);
+    body.style.setProperty('--chat-h', `${Math.max(380, Math.round(innerHeight - top - 16))}px`);
+  };
+  fitChat();
+  addEventListener('resize', fitChat);
+  if (window.ResizeObserver) new ResizeObserver(fitChat).observe(document.body); // the Judges strip changing height
   // The wallet card: the wallet, what this costs, what just happened, the stretch goal.
   document.querySelector('.purse').append($('goal'));
   // The show's line under the picture, as on a video site: the artist and the date.

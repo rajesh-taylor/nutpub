@@ -257,6 +257,10 @@
     .board aside .cap { margin: 0 0 10px; text-align: center; font: 500 13px/1.2 var(--body); letter-spacing: .02em; color: var(--smoke); }
     .board .phone-frame { width: 390px; height: 844px; box-sizing: border-box; border: 10px solid #1b2131; border-radius: 52px; overflow: hidden; background: var(--deep); box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
     .board .phone-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+    /* Session 63b (Rajesh 26 Nov): the picture ends as a phone's screen does, not mid-line: a soft fade and the home bar. */
+    .board .phone-frame { position: relative; }
+    .board .phone-frame::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 84px; pointer-events: none; background: linear-gradient(to bottom, rgb(5 9 20 / 0), var(--deep) 78%); }
+    .board .phone-frame::before { content: ""; position: absolute; z-index: 1; left: 50%; bottom: 10px; width: 120px; height: 5px; margin-left: -60px; border-radius: 3px; background: rgb(239 227 200 / .55); }
     .board-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; padding: 0 40px; border-bottom: 1px solid rgb(239 227 200 / .14); }
     .board-head .mark { font: 400 34px/1 var(--poster); letter-spacing: .08em; margin: 0; padding: 14px 0 10px; }
     .board-head .head-back { font-size: 15px; padding: 8px 12px; }
