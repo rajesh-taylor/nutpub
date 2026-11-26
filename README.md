@@ -4,8 +4,8 @@
 
 ## Try it
 
-1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop. A phone helps in gig 3, but isn't needed.
-2. Make your artist passkey (or press Not now), then **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet. The passkey opens all three gigs on another laptop: **Back to your gigs**.
+1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop, in Chrome or Safari, with the browser window full size (not beside another app). A phone helps in gig 3, but isn't needed.
+2. Make your artist passkey if you like (it's optional: **Skip, start with gig 1**), then **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet. The passkey opens all three gigs on another laptop: **Back to your gigs**.
 3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3: each builds on the last.
 
 Test mint, test sats: they have no value. I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.
@@ -19,7 +19,7 @@ Each poster on the home page opens a practice stage of its own (`<id>.thenutpub.
 | | Gig | You'll see | Device |
 |---|---|---|---|
 | 1 | **Longy, online** | Cellar and the 12 words, a £20 Watch online ticket (one 402), a tip with a comment that meets both stretch goals, Pub TV | Laptop |
-| 2 | **Frankie Peroni, pay as you watch** | 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it. Stop and nothing more is charged. Then the fan's leftover sats go home | Laptop |
+| 2 | **Frankie Peroni, pay as you watch** | 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it. Stop and nothing more is charged. Then the fan's leftover sats go home, and Frankie's receipt saves as a PDF | Laptop |
 | 3 | **Longy at The Fickle Pickle** | A £35 venue ticket, blind-signed, with a free drink; a 30-second door QR; your phone as the Doorman's List; the drink handed over as an animated QR | Laptop, phone optional |
 
 Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](https://cashu.me) in one tap, then **Finish gig**. No phone? Every phone step has a laptop button. The demo never uses the laptop's camera.
