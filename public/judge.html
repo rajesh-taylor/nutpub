@@ -82,7 +82,6 @@
     .small-print { margin-top: 2px !important; padding-top: 10px; border-top: 1px dashed rgb(26 20 8 / .4); font: 13px/1.5 var(--body); color: #4a3a1c; }
     /* Two tiles under the posters (Rajesh 21 Nov, session 45): The Kitchen and the Pub Board, for after the gigs, or
        for developers who skip them. A hairline and cream titles (session 47); side by side, stacked on a phone. */
-    .in-order { margin: 6px 0 -4px; text-align: center; font: 400 17px/1.4 var(--body); color: var(--smoke); }
     .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; }
     .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 16px 20px; background: transparent; border: 1px solid var(--line); border-radius: 6px; text-decoration: none; } /* session 58: no fill of its own, the page's lines run through */
     .tile b { font: 400 26px/1 var(--poster); letter-spacing: .12em; color: var(--cream); padding-top: 3px; }
@@ -176,6 +175,29 @@
     .step0 .s0-add-say { flex: 1 1 260px; display: grid; gap: 8px; justify-items: start; }
     .step0 .s0-code { margin: 0; font: 600 34px/1 var(--mono); letter-spacing: .08em; color: var(--cream); }
     @media (max-width: 700px) { .step0 { padding: 14px 14px 12px; } .step0 .s0-btns { margin-left: 0; } .step0 .s0-say { font-size: 16px; } }
+    /* Session 63b (Rajesh 26 Nov): step 0 as C, picked: a hairline box (as the tiles) with an artist's pass on a lanyard,
+       a Bebas title with its 0, the words then the button on the left. One bar with the Kitchen and the Pub Board: step 0
+       over posters 1 and 2, the two tiles stacked over poster 3. On a phone the tiles go after the posters. */
+    .front-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 18px; align-items: stretch; }
+    .front-bar .step0 { grid-column: 1 / span 2; width: auto; max-width: none; margin: 0; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0 28px; padding: 0 24px 18px 22px; border: 1px solid rgb(239 227 200 / .3); border-radius: 6px; background: transparent; }
+    .step0 .s0-pass { display: block; width: 104px; }
+    .step0 .s0-pass svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .step0 .s0-body { display: grid; gap: 12px; min-width: 0; padding-top: 20px; }
+    .step0 .s0-row { flex-direction: column; align-items: flex-start; }
+    .step0 .s0-say { flex: none; gap: 6px; }
+    .step0 .s0-btns { margin-left: 0; }
+    .step0 .s0-title { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; font: 400 34px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
+    .step0 .s0-n { display: grid; place-items: center; flex: none; width: 36px; height: 36px; box-sizing: border-box; padding-top: 3px; border: 1px solid rgb(239 227 200 / .55); border-radius: 50%; font: 400 24px/1 var(--poster); letter-spacing: 0; color: var(--cream); }
+    .step0 .s0-chip .here { color: var(--cream); }
+    .front-bar .tiles { grid-column: 3; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 1fr; gap: 18px; max-width: none; margin: 0; }
+    .front-bar .tile { gap: 4px 14px; padding: 14px 16px; align-content: center; }
+    .front-bar .tile-ico { width: 40px; height: 40px; }
+    .front-bar .tile b { font-size: 24px; }
+    .front-bar .tile span { font-size: 15px; line-height: 1.4; }
+    .front-bar .tile i { font-size: 24px; }
+    @media (max-width: 900px) { .front-bar { display: contents; } .front-bar .step0 { grid-column: auto; width: 100%; max-width: 640px; justify-self: center; margin-top: 18px; } .front-bar .tiles { grid-column: auto; order: 1; width: 100%; max-width: 420px; justify-self: center; grid-template-rows: none; } .lineup { order: 2; } }
+    @media (max-width: 700px) { .step0 .s0-title { font-size: 28px; letter-spacing: .04em; } }
+    @media (max-width: 560px) { .front-bar .step0 { grid-template-columns: minmax(0, 1fr); } .step0 .s0-pass { display: none; } .step0 .s0-body { padding-top: 14px; } }
   </style>
 </head>
 <body class="judge">
@@ -268,11 +290,15 @@
       <p class="lead what">A night out using Cashu. From the ticket, door entry, first round, 402 streaming payments, comments &amp; tips and takings back to your own wallet.</p>
     </div>
 
-    <!-- Step 0 (session 53, Rajesh 22 Nov): the artist's passkey, as real artists will get it. Drawn by the script below. -->
+    <!-- Step 0 (session 53, Rajesh 22 Nov): the artist's passkey, as real artists will get it. Drawn by the script below.
+         Session 63b (Rajesh 26 Nov): one bar with the Kitchen and the Pub Board; "Each gig builds on the last" gone. -->
+    <div class="front-bar">
     <section class="step0" id="step0" aria-label="Your artist passkey" hidden></section>
-
-    <!-- Session 58 (Rajesh 23 Nov): gigs 2 and 3 build on gig 1. -->
-    <p class="in-order">Each gig builds on the last: run them in order.</p>
+    <nav class="tiles" aria-label="More">
+      <a class="tile" href="/kitchen"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 31 C9 31 8 23 13.5 21 C12.5 14 20 11 24 15.5 C26 10 34 10.5 35 17 C41 17 42.5 25 36 27.5 V31 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="15" y="31" width="21" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20.5 31 V39 M25.5 31 V39 M30.5 31 V39" stroke="currentColor" stroke-width="1.2" opacity=".6"/></svg><b>The Kitchen</b><span>What’s served, what’s on order.</span><i aria-hidden="true">→</i></a>
+      <a class="tile" href="/board"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="29" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 36 L11 43 M35 36 L37 43" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="10" y="12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-5 16.5 17.5)"/><rect x="26" y="13" width="12" height="15" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(4 32 20.5)"/><path d="M13 27 H20 M28 18 H35 M28 21.5 H35 M28 25 H33" stroke="currentColor" stroke-width="1.2" opacity=".6"/><circle cx="16.5" cy="12.5" r="1.9" fill="#c4521a"/><circle cx="32" cy="13.4" r="1.9" fill="#c4521a"/></svg><b>Pub Board <small class="chip">402</small></b><span>An agent can buy a ticket, gig search coming soon.</span><i aria-hidden="true">→</i></a>
+    </nav>
+    </div>
     <div class="wall">
       <article class="poster" data-gig="longy">
         <span class="tape" style="left: 22px; transform: rotate(-8deg);" aria-hidden="true"></span><span class="tape" style="right: 22px; transform: rotate(7deg);" aria-hidden="true"></span>
@@ -318,10 +344,6 @@
 
     </div>
     <!-- Session 45 (Rajesh 21 Nov): the way on after the gigs, under the posters so judges head to gig 1 first. -->
-    <nav class="tiles" aria-label="More">
-      <a class="tile" href="/kitchen"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 31 C9 31 8 23 13.5 21 C12.5 14 20 11 24 15.5 C26 10 34 10.5 35 17 C41 17 42.5 25 36 27.5 V31 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="15" y="31" width="21" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20.5 31 V39 M25.5 31 V39 M30.5 31 V39" stroke="currentColor" stroke-width="1.2" opacity=".6"/></svg><b>The Kitchen</b><span>What’s served, what’s on order.</span><i aria-hidden="true">→</i></a>
-      <a class="tile" href="/board"><svg class="tile-ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="29" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 36 L11 43 M35 36 L37 43" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="10" y="12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-5 16.5 17.5)"/><rect x="26" y="13" width="12" height="15" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(4 32 20.5)"/><path d="M13 27 H20 M28 18 H35 M28 21.5 H35 M28 25 H33" stroke="currentColor" stroke-width="1.2" opacity=".6"/><circle cx="16.5" cy="12.5" r="1.9" fill="#c4521a"/><circle cx="32" cy="13.4" r="1.9" fill="#c4521a"/></svg><b>Pub Board <small class="chip">402</small></b><span>Pinned by the bar: a bot buys a ticket today, gig search coming soon.</span><i aria-hidden="true">→</i></a>
-    </nav>
     <section class="lineup" aria-label="Built with">
       <p class="billing">Supporting Acts</p>
       <div class="acts">
@@ -391,6 +413,23 @@
 
     // ---- Step 0. Words: Rajesh edits them (the drawing "NutPub Passkey Plan").
     const box = document.getElementById('step0');
+    const frag = (...kids) => { const f = document.createDocumentFragment(); f.append(...kids); return f; };
+    // Session 63b: an artist's pass on a lanyard, hung from the box's top edge. A picture, so it keeps the gold.
+    const PASS = `<svg viewBox="0 0 110 178" aria-hidden="true">
+      <defs><linearGradient id="s0-paper" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#fbf4e2"/><stop offset=".6" stop-color="#efe3c8"/><stop offset="1" stop-color="#cdbb94"/></linearGradient></defs>
+      <path d="M34 0 L50 64 M76 0 L60 64" stroke="#9a5e1a" stroke-width="9" fill="none"/>
+      <path d="M34 0 L50 64 M76 0 L60 64" stroke="#e8a845" stroke-width="1.6" fill="none" opacity=".7"/>
+      <rect x="47" y="60" width="16" height="13" rx="3" fill="#8b8f99"/><rect x="51" y="64" width="8" height="5" rx="1.5" fill="#050b17"/>
+      <g transform="rotate(-5 55 124)">
+        <rect x="15" y="72" width="80" height="102" rx="6" fill="url(#s0-paper)" stroke="rgb(0 0 0 / .25)"/>
+        <rect x="44" y="78" width="22" height="5" rx="2.5" fill="#050b17" opacity=".55"/>
+        <rect x="15" y="90" width="80" height="22" fill="#0b1426"/>
+        <text x="55" y="105" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="10.5" letter-spacing=".5" fill="#e8a845">THE NUTPU<tspan fill="#f7931a">₿</tspan></text>
+        <text x="55" y="147" text-anchor="middle" font-family="'Bebas Neue', 'Arial Narrow', sans-serif" font-size="34" letter-spacing="1" fill="#1a1408">ARTIST</text>
+        <g fill="none" stroke="#1a1408" stroke-width="2.2" stroke-linecap="round"><circle cx="43" cy="161" r="5"/><path d="M48 161 H70 M64 161 V166 M69 161 V165"/></g>
+        <path d="M15 128 L95 84 V100 L15 144Z" fill="#fff" opacity=".1"/>
+      </g>
+    </svg>`;
     let gigs = null; // Back to your gigs' answer, with more than one gig: listed here
     let note = '';
     // Session 54b, another device: adding (this one types a code), shown (this one shows a code), another (Cellar's link).
@@ -488,7 +527,9 @@
     function draw() {
       const now = state();
       box.dataset.state = now;
-      const chip = (start) => el('span', { className: 's0-chip' }, start ? '0 · ' : '0 · Your artist passkey', ...(start ? [el('span', { className: 'here', textContent: 'Start here' })] : []));
+      // Session 63b: Start here as the kicker (as on the posters), then a title with its 0.
+      const chip = (start, title = 'Your artist passkey') => frag(...(start ? [el('span', { className: 's0-chip' }, el('span', { className: 'here', textContent: 'Start here' }))] : []),
+        el('h2', { className: 's0-title' }, el('span', { className: 's0-n', textContent: '0' }), title));
       const kids = [];
       if (now === 'add') {
         const input = el('input', { type: 'text', id: 'add-code', className: 's0-input', value: typed, placeholder: 'K7QX-3MPA', maxLength: 12,
@@ -496,7 +537,7 @@
         input.addEventListener('input', () => { typed = input.value; typedOk = null; const code = tidyCode(typed); const said = document.getElementById('add-said'); if (said) said.hidden = true; if (codeOk(code)) check(code); });
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') makeAdded(); });
         kids.push(el('div', { className: 's0-row' },
-          el('div', { className: 's0-say' }, el('span', { className: 's0-chip', textContent: '0 · Add this device' }),
+          el('div', { className: 's0-say' }, chip(false, 'Add this device'),
             el('span', { className: 's0-act', textContent: 'Type the code your other device shows, then press Make your artist passkey.' }), input),
           el('div', { className: 's0-btns' },
             el('button', { type: 'button', className: 'btn primary', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: makeAdded }),
@@ -531,7 +572,7 @@
       // From Cellar's link on a browser that doesn't know its passkey yet: the same button, under the rest.
       if ((now === 'new' || now === 'skipped') && (another || shown)) kids.push(addPanel());
       if (now !== 'none' && now !== 'add') kids.push(been(now));
-      box.replaceChildren(...kids);
+      box.replaceChildren(el('span', { className: 's0-pass', innerHTML: PASS }), el('div', { className: 's0-body' }, ...kids));
       box.hidden = false;
       // Gig 1 says Start here once step 0 is done or skipped.
       document.querySelector('[data-gig="longy"] .start-here').hidden = now === 'new' || now === 'add';
