@@ -34,10 +34,10 @@
     .key .all[hidden] { display: none; }
     .chip { flex: none; white-space: nowrap; font: 600 12px/1 var(--body); letter-spacing: .02em; padding: 4px 8px; border-radius: 3px; }
     /* Session 47 (Rajesh 21 Nov): the status reads at a glance. Built: solid sage (the "done" colour, not one to press);
-       After 27 Nov: a cream outline; Proposed: dashed and dim. */
+       Session 63c (Rajesh 26 Nov): every chip solid, so none fades into the page. Planned: steel blue; Proposed: warm grey. */
     .chip.built { border: 1px solid var(--ok); color: var(--deep); background: var(--ok); }
-    .chip.after { border: 1px solid rgb(239 227 200 / .4); color: var(--cream); }
-    .chip.proposed { border: 1px dashed rgb(186 181 167 / .7); color: var(--smoke); }
+    .chip.after { border: 1px solid #9fb3cf; color: var(--deep); background: #9fb3cf; }
+    .chip.proposed { border: 1px solid var(--smoke); color: var(--deep); background: var(--smoke); }
     .part { margin-top: 34px; }
     .part h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font: 400 22px/1 var(--poster); letter-spacing: .3em; color: var(--cream); }
     .part h2::before, .part h2::after { content: ""; flex: 1; height: 1px; background: rgb(239 227 200 / .25); }
@@ -105,7 +105,7 @@
             <p>Sealed to your passkey, where your password manager can. The NutPub keeps a copy it can’t open.</p><p class="specs">WebAuthn PRF · HKDF-SHA256 · AES-GCM</p></li>
         </ul>
         <ul class="soon-row" aria-label="Not built yet">
-          <li class="soon-tile"><span class="chip after">Mid Jan</span><b>Give a ticket away</b><span class="specs">NUT-00 · NUT-12</span></li>
+          <li class="soon-tile"><span class="chip after">Mid Jan</span><b>Gift Purchase</b><span class="specs">NUT-00 · NUT-12</span></li>
         </ul>
       </section>
 

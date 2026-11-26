@@ -1,63 +1,67 @@
 # The NutPub
 
-**Live music paid in Cashu ecash: tickets, the door, the bar, the stream and tips, each an HTTP 402, from a wallet in the browser. No app, no account.**
+**Live music paid in Cashu ecash, from a wallet in the browser. No app, no account.**
+
+<img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: Let the Nutter in, 1 in of 1 sold" width="240" align="right">
+
+### Pay by the minute
+
+Every 10 seconds of the stream is an HTTP 402, paid from the fan's browser wallet before it plays: 60 sats a minute on gig 2. Stop watching and the paying stops.
+
+### A ticket with no name on it
+
+No name, no email, no account: tickets are paid in ecash, so there's no list of fans to mine, and far less to know about a fan than a usual ticket. A venue ticket goes further: the gig signs it blind, so at the door any phone knows it's real and used once, never who bought it. Artists and show producers sell tickets without holding anyone's details; venues later. *(Gig 3.)*
 
 ## Try it
 
-1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop, in Chrome or Safari, with the browser window full size (not beside another app). A phone helps in gig 3, but isn't needed.
-2. Make your artist passkey if you like (it's optional: **Skip, start with gig 1**), then **Start Longy's gig**. You're Longy and one of his fans, in two tabs; test sats are already in the wallet. The passkey opens all three gigs on another laptop: **Back to your gigs**.
-3. Follow the **Judges** line at the top of each page. Then gigs 2 and 3: each builds on the last.
+1. Open **[thenutpub.com](https://thenutpub.com)** on a laptop, in Chrome or Safari, in window full size. A phone is optional.
+2. Press **Start Longy's gig**. You're Longy and one of his fans, in two tabs, with test sats in the wallet. The artist passkey is optional (**Skip, start with gig 1**); with one, your gigs open on another laptop.
+3. Follow the **Judges** line at the top of each page, then gigs 2 and 3, in order.
 
-Test mint, test sats: they have no value. I'm one person, building this with Anthropic's Claude as my coding agent. A [Refueler Labs](https://refueler.io) project, entered in [NutNovember](https://nutnovember.org) 2026.
-
----
-
-## The three gigs
-
-Each poster on the home page opens a practice stage of its own (`<id>.thenutpub.com`), as the artist. The **Judges** line tells one line of the story and the one thing to do next; you press the artist's own buttons. Run them in order.
-
-| | Gig | You'll see | Device |
-|---|---|---|---|
-| 1 | **Longy, online** | Cellar and the 12 words, a £20 Watch online ticket (one 402), a tip with a comment that meets both stretch goals, Pub TV | Laptop |
-| 2 | **Frankie Peroni, pay as you watch** | 60 sats a minute: each 10-second piece answers 402 until the browser wallet pays for it. Stop and nothing more is charged. Then the fan's leftover sats go home, and Frankie's receipt saves as a PDF | Laptop |
-| 3 | **Longy at The Fickle Pickle** | A £35 venue ticket, blind-signed, with a free drink; a 30-second door QR; your phone as the Doorman's List; the drink handed over as an animated QR | Laptop, phone optional |
-
-Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](https://cashu.me) in one tap, then **Finish gig**. No phone? Every phone step has a laptop button. The demo never uses the laptop's camera.
-
-**Gig 1:** the fan's page after the 50,000-sat encore tip, both goals met.
-![Gig 1: Longy's fan page, the live chat and a 50,000-sat tip](docs/img/gig-1.jpg)
-
-**Gig 3:** Show Time, with the fan's phone holding the door QR. It changes every 30 seconds.
-![Gig 3: Show Time with the fan's phone showing its 30-second door QR](docs/img/gig-3.jpg)
-
-**Producers and moderators:** invited from Cellar with a link that works once, for 7 days. Each signs in with a passkey of their own (a moderator can use Nostr instead), and neither can reach the takings. A moderator has a page of their own, the Mod page: the chat at full height with Quiet and Undo, Slow mode and the pin, beside the stream as fans see it.
-
-**A safer chat:** an artist alone on a free stream can't watch the chat, so comments go with a tip while none of their mods is on, slurs and the artist's own words are kept out, a busy chat slows itself, and Quiet keeps a phone out for the night (Undo lets it back). People on the artist's Nostr mute list are kept out too.
-
-**The gig, live on Nostr:** while it's on, Nostr apps that list live streams show it, with a link to the gig page. The artist's browser signs it; the stream itself stays behind the ticket. Off on the three practice gigs: Plan gig's switch turns it on.
-
-<img src="docs/img/doormans-list.jpg" alt="The Doorman's List on a phone: Let the Nutter in, 1 in of 1 sold" width="260" align="right">
-
-**The Doorman's List:** any phone becomes the door scanner. It knows a ticket is real and unused, never who bought it.
-
-**Sealed tickets:** a venue ticket saved as a passkey is sealed to it, where the password manager can. The NutPub keeps a copy it can't open.
-
-Everything the NutPub does, ticked off with its specs, is on [The Kitchen](https://thenutpub.com/kitchen). The [Pub Board](https://thenutpub.com/board): a bot buys a ticket. No browser, no account.
+Test mint, test sats: they have no value. I'm one person, building this with Claude. Started at the btc++ Berlin hackathon (October 2026), but not entered: with no domain or Cloudflare yet, the tunnel kept dropping, and the real mint I tested with kept losing its connection. Reworked in November and entered for [NutNovember](https://nutnovember.org) 2026; the October work is tagged `before-nutnovember`.
 
 <br clear="right">
 
 ---
 
+## The three gigs
+
+Each poster opens a practice stage of its own (`<id>.thenutpub.com`), as the artist. The **Judges** line says what to press; the buttons are the artist's own.
+
+| | Gig | You'll see | Device |
+|---|---|---|---|
+| 1 | **Longy, online** | Cellar and the 12 words; a £20 Watch online ticket; a tip with a comment, in sats or by card, that meets both goals; Pub TV | Laptop |
+| 2 | **Frankie Peroni, pay as you watch** | 60 sats a minute, each 10-second piece a 402; stop and the paying stops; the fan's leftover sats go home; Frankie's receipt as a PDF | Laptop |
+| 3 | **Longy at The Fickle Pickle** | A £35 venue ticket, signed blind, with a free drink; a door QR that changes every 30 seconds; a phone as the Doorman's List; the drink handed over as an animated QR | Laptop, phone optional |
+
+Every gig ends on **Your takings**: the night's earnings move to [Cashu.me](https://cashu.me) in one tap, then **Finish gig**. Every phone step has a laptop button; the laptop's camera is never used.
+
+**Gig 1:** the fan's page after the 50,000-sat encore tip, both goals met.
+![Gig 1: Longy's fan page, the live chat and a 50,000-sat tip](docs/img/gig-1.jpg)
+
+**Gig 3:** Show Time, with the fan's phone holding its door QR.
+![Gig 3: Show Time with the fan's phone showing its 30-second door QR](docs/img/gig-3.jpg)
+
+**Also built:**
+- **Producers and moderators**, invited from Cellar by a link that works once. Each signs in with their own passkey (a moderator can use Nostr too), and neither sees the takings. Moderators get the Mod page.
+- **A safer chat:** comments come with a tip while no moderator is on; slurs, words the artist lists and their Nostr mute list are kept out; a busy chat slows itself.
+- **The gig live on Nostr** (NIP-53), linking to the gig page; the stream stays behind the ticket. Off on the practice gigs.
+- **Sealed tickets:** a venue ticket saved as a passkey is sealed to it, where the password manager can. The NutPub keeps a copy it can't open.
+
+Everything built, with its specs: [the Kitchen](https://thenutpub.com/kitchen). [The Pub Board](https://thenutpub.com/board): an agent buys a ticket, no browser, no account.
+
+---
+
 ## An agent buys a ticket
 
-Every price is a plain HTTP 402, so a script can pay one as well as a browser. This one buys gig 1's Watch online ticket with test ecash. Start gig 1 first; your stage's address is in the address bar. Needs Node.js 22 or later.
+An AI agent can buy a ticket on its own, with no checkout page: the gig names its price, the agent pays in ecash, and it's in. This one buys gig 1's Watch online ticket with test ecash: start gig 1, then give it your stage's address from the address bar. Needs Node.js 22 or later.
 
 ```bash
 git clone https://github.com/rajesh-taylor/nutpub && cd nutpub && npm install
 npm run agent -- https://<your stage>.thenutpub.com
 ```
 
-A fresh run, 21 Nov 2026:
+A run, 21 Nov 2026:
 
 ```
 The NutPub · an agent buys a ticket · test sats, no account
@@ -74,13 +78,13 @@ The NutPub · an agent buys a ticket · test sats, no account
   On your stage, after End night: Your takings counts it under Tickets. (31 sats of test change left behind.)
 ```
 
-The script is [`scripts/agent.js`](scripts/agent.js).
+The script: [`scripts/agent.js`](scripts/agent.js).
 
 ---
 
 ## How it works
 
-Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet answers with ecash **locked to the recipient's public key** (NUT-11): the artist for tickets, minutes and tips; the bar for the drink. The artist's keys are made in the artist's own browser.
+Every price is an HTTP 402 (NUT-24). The browser wallet pays with ecash locked to whoever is owed (NUT-11): the artist for tickets, minutes and tips, the bar for the drink. The server checks each payment and can't spend it; the artist's keys are made in the artist's own browser.
 
 | Spec | Used for |
 |---|---|
@@ -102,7 +106,7 @@ Every price is an HTTP **402 Payment Required** (NUT-24). The browser wallet ans
 | Ed25519 · HKDF-SHA256 | The 12 words win a gig back after a lost or stolen device |
 | Stripe Connect *(test mode)* | Card tips, straight to the artist's own Stripe account; the NutPub's 5% as Stripe's application fee |
 
-Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, copied unchanged from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309) into `vendor/cashu-ts-nut16`, with the spec's test vectors as tests.
+Built on [Coco](https://github.com/cashubtc/coco) and [cashu-ts](https://github.com/cashubtc/cashu-ts). The NUT-16 encoder is cashu-ts's own, from pull request [#1309](https://github.com/cashubtc/cashu-ts/pull/1309), unchanged in `vendor/cashu-ts-nut16`, with the spec's test vectors as tests.
 
 ```
 client/    browser code: the fan's page, Show Time, wallets, NUT-16 QR
@@ -117,7 +121,7 @@ vendor/    cashu-ts's NUT-16 encoder, unchanged
 
 ## Run it yourself
 
-It runs on a Cloudflare Worker (free plan). Each practice stage is a SQLite Durable Object and the main site uses D1. Video runs on Cloudflare Stream. There's no mint of its own: the demo uses the public test mint. Requires Node.js 22 or later and a Cloudflare account.
+A Cloudflare Worker on the free plan: each practice stage is a SQLite Durable Object, the main site uses D1, and video runs on Cloudflare Stream. No mint of its own: the public test mint. Needs Node.js 22 or later and a Cloudflare account.
 
 ```bash
 npm install
@@ -127,10 +131,10 @@ npm start                                                     # http://localhost
 npm run deploy
 ```
 
-- **Media:** the example clips and photos aren't in the repo. Cut a video into 10-second pieces with `scripts/cut-set.sh <video> [name]` and put photos in `public/img/`.
-- **Secrets:** set with `npx wrangler secret put <NAME>`. See `wrangler.jsonc`.
+- **Media:** the clips and photos aren't in the repo. `scripts/cut-set.sh <video> [name]` cuts a video into 10-second pieces; photos go in `public/img/`.
+- **Secrets:** `npx wrangler secret put <NAME>`; the names are in `wrangler.jsonc`.
 
-The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/nutpub-btcppberlin26](https://github.com/rajesh-taylor/nutpub-btcppberlin26).
+The btc++ Berlin hackathon build (October 2026): [rajesh-taylor/nutpub-btcppberlin26](https://github.com/rajesh-taylor/nutpub-btcppberlin26).
 
 ---
 
@@ -138,16 +142,17 @@ The original hackathon build (btc++ Berlin, October 2026) is at [rajesh-taylor/n
 
 **It can:**
 - answer each price with a 402, check that the payment is locked to the right key and unspent (NUT-07), and record it
-- sign a venue ticket blind, and tell at the door that a ticket is tonight's, fresh and used once
+- sign a venue ticket blind, and tell at the door that it's tonight's, fresh and used once
 - delete everything from a night 7 days after it ends, except one line of totals
-- keep slurs and the artist's own words out of the chat before anyone sees them
+- keep slurs and words the artist lists out of the chat before anyone sees them
 - change a gig's settings, as its artist can: it keeps each stage's setup key, which a passkey or the 12 words hand to the artist's browser
 
 **It can't:**
 - spend a payment: it never holds the artist's or the bar's private key
+- hold card money: a card tip goes straight to the artist's own Stripe account
 - tell which purchase a ticket at the door came from, or who came in: no name, email or address is asked for
 - see the artist's 12 words, or bring them back: they never leave the artist's browser, which forgets them once they're checked
-- let anyone else in as the artist: that takes one of their passkeys or the gig's 12 words (they sign a one-time challenge); a new device gets a code from one with a passkey, good once, for 5 minutes
+- let anyone else in as the artist: that takes one of their passkeys or the gig's 12 words; a new device needs a one-time code from one with a passkey, good for 5 minutes
 
 ---
 
@@ -162,16 +167,17 @@ The NutPub is a working concept on a test mint, not a production service.
 **Limits:**
 - Test sats only. They leave by Move to Cashu.me, on the same test mint; sending to a Lightning wallet isn't built yet.
 - Ecash is a claim on its mint. The NutPub never holds the sats, but if a mint fails, sats not yet moved go with it.
-- A ticket's passkey is renamed or forgotten only when the fan opens that gig's page again. A closed stage nobody revisits leaves its passkey in the password manager, and Firefox can't be told at all.
-- The Nostr listing is signed in the artist's browser, so it changes (live, ended) only while Show Time is open. Seen on relay.primal.net and nos.lol; relay.damus.io turned the connection away (503) from two networks.
+- The web host sees each visitor's internet address, as with any site; the NutPub keeps no record of it. A VPN hides it.
+- A ticket's passkey is renamed or forgotten only when the fan opens that gig's page again; Firefox can't be told at all.
+- The Nostr listing is signed in the artist's browser, so it changes only while Show Time is open. relay.damus.io turned the connection away (503).
+- A card tip whose tab closes before the NutPub checks it reaches the artist's Stripe account, but not the chat or Takings.
+- Free to watch, paid up front, is built but switched off until it's redesigned.
 
 **What went wrong on the way:**
-- **Move to my phone** (21 Nov) was drawn, built and deployed before anyone timed it. A phone wallet took 15 to 25 seconds to read the animated QR, and one wallet refused it. It came out the same day and waits on the Kitchen; Move to Cashu.me does the job in one tap.
-- **The first server ran on my laptop behind a tunnel** (October), so it was down whenever the laptop slept. It moved to Cloudflare's free plan on 29 Oct.
-- **A DLEQ check was too slow for the free plan** (29 Oct: 10 ms of CPU per request, about 10 ms per note). The gate asks the mint whether each coin is spent (NUT-07) instead.
-- **A reload started the stream again at piece 0** (6 Oct) and replayed pieces already paid for, against an empty wallet. It looked exactly like a broken gate. A reload now carries on at the next unpaid piece.
-- **Two Nostr NIPs were listed before they were built** (21 Nov). Built and planned now sit apart on the Kitchen; NIP-53 was built on 23 Nov. Free to watch, paid up front, is built but switched off (19 Nov) until it's redesigned.
-- **Undo didn't bring a line back** on fans' chats (23 Nov): each chat asks only for lines newer than its last. Lines that come back are now sent again.
+- **Move to my phone** (21 Nov) was built and deployed before I timed it: a phone wallet took 15 to 25 seconds to read the animated QR, and one refused it. It came out the same day and waits on the Kitchen; Move to Cashu.me does the job in one tap.
+- **Two Nostr NIPs were listed before they were built** (21 Nov). Built and planned now sit apart on the Kitchen; NIP-53 was built on 23 Nov.
+- **Undo didn't bring a line back** on fans' chats (23 Nov): each chat asked only for lines newer than its last. Lines that come back are now sent again.
+- **Cellar sent an artist through Stripe's pages twice** (26 Nov): it read Stripe's minute of checking as unfinished. It now waits while Stripe checks.
 
 ---
 
