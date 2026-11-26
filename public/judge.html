@@ -156,10 +156,23 @@
        (over posters 2 and 3): a hairline box with an artist's pass on a lanyard, a Bebas title with its 0. The Kitchen and
        the Pub Board live in the menu. Step 0's lines in one order and three sizes: the title, the words, the small print. */
     .front-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; width: 100%; max-width: 1200px; justify-self: center; margin-top: 10px; align-items: center; }
-    .front-bar .intro { grid-column: 1; text-align: left; background: none; border-radius: 0; }
-    .front-bar .intro-head { margin: 0 0 6px; font: 400 32px/1 var(--poster); letter-spacing: .08em; color: var(--cream); }
-    .front-bar .intro-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: 400 18px/1.5 var(--body); color: rgb(239 227 200 / .9); }
-    .front-bar .intro-list li::before { content: "–"; margin-right: 10px; color: var(--smoke); }
+    /* The chalkboard (Rajesh 26 Nov): what's on, chalked up as pubs do. A slate in a worn wooden frame, chalk dust and
+       grain, a little tilt and a stub of chalk; Bebas and Plex in chalk white, worn with the laurels' specks (no
+       handwriting face). */
+    .front-bar .intro { grid-column: 1; position: relative; box-sizing: border-box; text-align: left; padding: 24px 26px 30px; transform: rotate(-.8deg);
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23c)'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse 55% 30% at 28% 22%, rgb(255 255 255 / .07), transparent 70%),
+        radial-gradient(ellipse 45% 30% at 78% 78%, rgb(255 255 255 / .05), transparent 70%),
+        linear-gradient(100deg, transparent 20%, rgb(255 255 255 / .035) 35%, transparent 50%),
+        linear-gradient(160deg, #27302c, #1c2421 55%, #171e1b);
+      border: 12px solid #4a2f17; border-image: linear-gradient(135deg, #7b5332, #4a2f17 30%, #6c4626 55%, #3d2612 80%, #5a3a1e) 1;
+      box-shadow: inset 0 0 36px rgb(0 0 0 / .55), 0 14px 30px rgb(0 0 0 / .6); }
+    .front-bar .intro::after { content: ""; position: absolute; right: 22px; bottom: 9px; width: 32px; height: 7px; border-radius: 2px; background: #e8e4d8; opacity: .85; transform: rotate(-7deg); box-shadow: 0 1px 1px rgb(0 0 0 / .5); } /* a stub of chalk */
+    .front-bar .intro-head, .front-bar .intro-list { filter: url(#worn); text-shadow: 0 0 1px rgb(255 255 255 / .4), 0 0 8px rgb(255 255 255 / .08); }
+    .front-bar .intro-head { margin: 0 0 10px; font: 400 30px/1 var(--poster); letter-spacing: .08em; color: rgb(240 237 228 / .95); }
+    .front-bar .intro-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: 400 18px/1.5 var(--body); color: rgb(236 233 222 / .88); }
+    .front-bar .intro-list li::before { content: "–"; margin-right: 10px; color: rgb(236 233 222 / .6); }
     .front-bar .step0 { grid-column: 2 / span 2; width: auto; max-width: none; margin: 0; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0 28px; padding: 0 24px 20px 22px; border: 1px solid rgb(239 227 200 / .3); border-radius: 6px; background: transparent; }
     .step0 .s0-pass { display: block; width: 104px; }
     .step0 .s0-pass svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -175,7 +188,7 @@
     .step0 .s0-title { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; font: 400 34px/1 var(--poster); letter-spacing: .1em; color: var(--cream); }
     .step0 .s0-n { display: grid; place-items: center; flex: none; width: 36px; height: 36px; box-sizing: border-box; padding-top: 3px; border: 1px solid rgb(239 227 200 / .55); border-radius: 50%; font: 400 24px/1 var(--poster); letter-spacing: 0; color: var(--cream); }
     .step0 .s0-chip .here { color: var(--cream); }
-    @media (max-width: 900px) { .front-bar { display: contents; } .front-bar .intro, .front-bar .step0 { grid-column: auto; width: 100%; max-width: 640px; justify-self: center; } .front-bar .intro { text-align: center; } .front-bar .intro-list { display: block; font-size: 17px; } .front-bar .intro-list li { display: inline; white-space: nowrap; } .front-bar .intro-list li::before { content: none; } .front-bar .intro-list li + li::before { content: "·"; margin: 0 8px; } }
+    @media (max-width: 900px) { .front-bar { display: contents; } .front-bar .intro, .front-bar .step0 { grid-column: auto; width: 100%; max-width: 640px; justify-self: center; } .front-bar .intro { text-align: center; } .front-bar .intro-list { display: block; font-size: 17px; } .front-bar .intro-list li { display: inline-block; white-space: nowrap; } .front-bar .intro-list li::before { content: none; } .front-bar .intro-list li + li::before { content: "·"; margin: 0 8px; } }
     @media (max-width: 700px) { .step0 .s0-title { font-size: 28px; letter-spacing: .04em; } .front-bar .intro-head { font-size: 28px; } .front-bar .intro-list { font-size: 16px; } }
     @media (max-width: 560px) { .front-bar .step0 { grid-template-columns: minmax(0, 1fr); } .step0 .s0-pass { display: none; } .step0 .s0-body { padding-top: 14px; } }
   </style>
@@ -301,7 +314,7 @@
           <h2 class="who">Frankie Peroni</h2>
           <p class="where">The Devils Train · The Fickle Pickle</p>
           <dl><dt>Venue</dt><dd>£30</dd><dt>Online</dt><dd>60 sats a minute</dd></dl>
-          <p class="does">Pin Frankie’s Fountain link, then pay by the minute: play, stop, play again. Tip, then take the fan’s change home.</p>
+          <p class="does">Pin Frankie’s Fountain link, then pay by the minute: play, stop, play again. Tip, take the fan’s change home, then save Frankie’s receipt.</p>
           <div class="btns"></div>
           <p class="small-print">Each 10-second piece is its own 402: 10 sats (NUT-24), locked to Frankie's key (NUT-11). Stop the video and nothing more is charged. Open DevTools → Network to watch each 402.</p>
         </div>
@@ -393,6 +406,8 @@
     // ---- Step 0. Words: Rajesh edits them (the drawing "NutPub Passkey Plan").
     const box = document.getElementById('step0');
     const frag = (...kids) => { const f = document.createDocumentFragment(); f.append(...kids); return f; };
+    // Skip: gig 1's poster in view, its Start button ready for the press (session 63b).
+    const toGig1 = () => { const g = document.querySelector('[data-gig="longy"]'); g?.scrollIntoView({ block: 'center', behavior: 'smooth' }); g?.querySelector('.go')?.focus({ preventScroll: true }); };
     // Session 63b: an artist's pass on a lanyard, hung from the box's top edge. A picture, so it keeps the gold.
     const PASS = `<svg viewBox="0 0 110 178" aria-hidden="true">
       <defs><linearGradient id="s0-paper" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#fbf4e2"/><stop offset=".6" stop-color="#efe3c8"/><stop offset="1" stop-color="#cdbb94"/></linearGradient></defs>
@@ -507,8 +522,8 @@
     function draw() {
       const now = state();
       box.dataset.state = now;
-      // Session 63b: Start here as the kicker (as on the posters), then a title with its 0.
-      const chip = (start, title = 'Your artist passkey') => frag(...(start ? [el('span', { className: 's0-chip' }, el('span', { className: 'here', textContent: 'Start here' }))] : []),
+      // Session 63b: Optional as the kicker (Rajesh 26 Nov), then a title with its 0.
+      const chip = (start, title = 'Your artist passkey') => frag(...(start ? [el('span', { className: 's0-chip' }, el('span', { className: 'here', textContent: 'Optional' }))] : []),
         el('h2', { className: 's0-title' }, el('span', { className: 's0-n', textContent: '0' }), title));
       const kids = [];
       if (now === 'add') {
@@ -527,11 +542,12 @@
       } else if (now === 'new') {
         kids.push(el('div', { className: 's0-row' },
           el('div', { className: 's0-say' }, chip(true),
-            el('span', { className: 's0-story', textContent: 'Every artist starts here. No email, no password: one passkey opens all your gigs.' }),
+            el('span', { className: 's0-story', textContent: 'Not needed for the gigs. With one, you can come back to your gigs later, on any phone or laptop.' }),
             el('span', { className: 's0-act', textContent: 'Press Make your artist passkey, then Continue.' })),
           el('div', { className: 's0-btns' },
-            el('button', { type: 'button', className: 'btn primary', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: make }),
-            el('button', { type: 'button', className: 's0-link', textContent: 'Not now & continue', onclick: () => { skip(); note = ''; draw(); } }))),
+            // Session 63b (Rajesh 26 Nov): optional, so no amber here; the next press is gig 1's Start.
+            el('button', { type: 'button', className: 'btn quiet', id: 'make-passkey', textContent: 'Make your artist passkey', onclick: make }),
+            el('button', { type: 'button', className: 'btn quiet', textContent: 'Skip, start with gig 1', onclick: () => { skip(); note = ''; draw(); toGig1(); } }))),
           el('p', { className: 's0-fine', textContent: 'A passkey for thenutpub.com, kept by your password manager. The NutPub keeps its public key and which gigs it opens.' }));
       } else if (now === 'made' || now === 'back' || now === 'added') {
         const name = artistHere().name || 'The NutPub · Artist';
@@ -555,7 +571,7 @@
       box.replaceChildren(el('span', { className: 's0-pass', innerHTML: PASS }), el('div', { className: 's0-body' }, ...kids));
       box.hidden = false;
       // Gig 1 says Start here once step 0 is done or skipped.
-      document.querySelector('[data-gig="longy"] .start-here').hidden = now === 'new' || now === 'add';
+      // Gig 1 always says Start here (session 63b: step 0 is optional).
     }
     if (passkeysWork()) warm(); // a challenge ahead, so the passkey sheet opens straight from the tap
     // Session 54b: the QR's link (#add=CODE) fills the code in; Cellar's Add a passkey on another device (#another).

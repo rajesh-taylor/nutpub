@@ -53,7 +53,7 @@ export async function judgeLine(r, page) {
   }
   if (tv && page !== 'cellar') seeCellar();
   document.getElementById('screen-open')?.addEventListener('click', () => { try { localStorage.setItem('nutpub-tv-seen', '1'); } catch {} });
-  const steps = pickle ? 8 : g2 ? 7 : tv ? 10 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
+  const steps = pickle ? 8 : g2 ? 8 : tv ? 10 : 5; // gig 1: 1 the 12 words, 2 on to Plan gig, 3 Plan gig, 4 Start show, 5–7 the fan's page, 8 End night, 9 Takings (session 47)
   const o = tv ? 2 : 0; // gig 1's Cellar step (session 47) comes first: its later steps move up one
   const say = (n, text, btn, href, { story = '', note = '', extra = null } = {}) => {
     const key = n + [].concat(story, text).map((x) => (typeof x === 'string' ? x : x.textContent)).join('') + note;
@@ -108,6 +108,7 @@ export async function judgeLine(r, page) {
     home: 'What the fan didn’t spend is the fan’s: it goes home to their own wallet.',
     takings: 'He’s able to earn income in 3 ways: venue tickets, per minute streaming and tips.', // Rajesh 20 Nov: shorter; the NUT-heavy line opens gig 3
     paid: 'Paid out: from Frankie’s browser to his own wallet, nobody in between.',
+    receipt: 'Frankie keeps the night’s receipt. Finish gig folds it and stamps it PAID OUT.',
   } : {};
   let key = '';
   try { key = localStorage.getItem('nutpub-admin') || ''; } catch {}
@@ -156,6 +157,9 @@ export async function judgeLine(r, page) {
   // The fan's leftover sats went home (viewer.js marks it in this browser), and Takings' Move is done (its own page).
   const fanHome = () => ['nutpub-todo', 'nutpub-todo-home'].some((k) => { try { return !!JSON.parse(localStorage.getItem(k) || 'null')?.home; } catch { return false; } });
   const movedAll = () => { const m = document.getElementById('done-moved'); return !!m && !m.hidden; };
+  // Gig 2's receipt (session 63b, Rajesh 26 Nov): Save receipt pressed on this stage, in this browser.
+  const RECEIPT = `nutpub-receipt-saved:${location.hostname}`;
+  const receiptSaved = () => { try { return !!localStorage.getItem(RECEIPT); } catch { return false; } };
   const draw = async () => {
     // Cellar (session 46): not a step of the night; a judge who looks in is told so.
     if (page === 'cellar') {
@@ -260,7 +264,8 @@ export async function judgeLine(r, page) {
         return say(4, 'The fan’s list is all ticked: press End night, the yellow button below.', '', '', { story: TOLD.end });
       }
       if (!closed) return say(4, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
-      return movedAll() ? say(7, 'Close the Cashu.me tab, then press Finish gig.', '', '', { story: TOLD.paid })
+      if (movedAll() && receiptSaved()) return say(8, 'Now press Finish gig.', '', '', { story: TOLD.receipt });
+      return movedAll() ? say(7, 'Close the Cashu.me tab, then press Save receipt and choose Save as PDF in your browser’s Print box.', '', '', { story: TOLD.paid })
         : say(6, 'Close the fan’s Cashu.me tab first: the demo works with one Cashu.me tab at a time. Then press Move to my own wallet.', '', '', { story: TOLD.takings });
     }
     // Rajesh 18 Nov: the judges press the artist's own tabs, at the top, from the first gig on.
@@ -293,6 +298,7 @@ export async function judgeLine(r, page) {
     document.querySelector('[data-path="comments"]')?.addEventListener('change', () => draw());
   }
   if (pickle && page === 'takings') document.addEventListener('nutpub:finished', () => draw());
+  if (g2 && page === 'takings') document.getElementById('wrap-save')?.addEventListener('click', () => { try { localStorage.setItem(RECEIPT, '1'); } catch {} setTimeout(draw, 300); });
   if (page === 'show' || (pickle && page === 'setup') || (g2 && ['setup', 'takings'].includes(page))) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);
