@@ -26,6 +26,7 @@
     "@scure/base": "2.4.0",
     "@scure/bip32": "2.4.0",
     "@scure/bip39": "2.4.0",
+    "cashu-ts-next": "npm:@cashu/cashu-ts@5.0.0-rc.14",
     "esbuild": "0.28.2",
     "fflate": "0.8.3",
     "hls.js": "1.6.19",

@@ -2,7 +2,7 @@
 // itself. Only Takings (/takings), in the browser that holds the key, can collect them. The server only ever learns
 // the public key, and marks a payment collected only when the mint says it's spent.
 import { replayNow } from './replay.js';
-import { getDecodedToken } from '@cashu/cashu-ts';
+import { getDecodedToken } from 'cashu-ts-next';
 import { one, all, run, kv } from './db.js';
 import { keysetIds, proofStates } from './gate.js';
 import { showOf, lastOrdersAt, gigOver, current } from './shows.js';

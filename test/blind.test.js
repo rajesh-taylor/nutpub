@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { hkdfSync } from 'node:crypto';
-import { hashToCurve, blindMessage, createBlindSignature, createDLEQProof, verifyDLEQProof, pointFromHex } from '@cashu/cashu-ts';
+import { hashToCurve, blindMessage, createBlindSignature, createDLEQProof, verifyDLEQProof, pointFromHex } from 'cashu-ts-next';
 import { derive, ticketFrom, makeGigKey, signBlind, unblind, doorProof, readProof, checkProof, fingerprint, shortY, hex, unhex } from '../server/blind.js';
 
 const big = (h) => BigInt(`0x${h}`);

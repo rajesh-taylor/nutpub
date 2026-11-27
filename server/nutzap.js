@@ -7,7 +7,7 @@
 //    coins, addressed to the artist. It comes here with the payment: the note is checked first, then the payment goes
 //    through the gate like any tip (gate.js), then it's in the chat, on the room's screen and in Takings. The fan's
 //    browser also sends the note to the artist's relays, where any Nostr app can see it.
-import { getDecodedToken } from '@cashu/cashu-ts';
+import { getDecodedToken } from 'cashu-ts-next';
 import { MINT_URL } from './config.js';
 import { kv, run } from './db.js';
 import { keysetIds } from './gate.js';
@@ -60,7 +60,7 @@ export async function checkNutzap(ev, { proofs, fan, artist, mint = MINT_URL, at
   if (ev.content.length > 280) return 'too_long';
   let inNote;
   try { inNote = tags(ev, 'proof').map((t) => JSON.parse(t[1])); } catch { return 'wrong_coins'; }
-  const key = (p) => `${p?.secret}|${String(p?.C || '').toLowerCase()}|${Number(p?.amount)}`;
+  const key = (p) => `${p?.secret}|${String(p?.C || '').toLowerCase()}|${String(p?.amount)}`; // a number or an Amount: both print the same
   const want = proofs.map(key).sort();
   const got = inNote.map(key).sort();
   if (want.length !== got.length || want.some((k, i) => k !== got[i])) return 'wrong_coins';

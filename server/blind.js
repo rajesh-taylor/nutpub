@@ -16,7 +16,7 @@
 import {
   blindMessage, createBlindSignature, unblindSignature, verifyUnblindedSignature, hashToCurve, createDLEQProof,
   verifyDLEQProof, schnorrSignMessage, schnorrVerifyMessage, pointFromHex, getPubKeyFromPrivKey, createRandomSecretKey,
-} from '@cashu/cashu-ts';
+} from 'cashu-ts-next';
 
 const utf8 = new TextEncoder();
 const N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n; // secp256k1's order

@@ -8,12 +8,12 @@
 //   5. the same GET again with the coins in X-Cashu (NUT-24): 200, and the ticket is the pass's.
 // Nothing is kept on this computer. Usage: npm run agent -- https://<your stage>.thenutpub.com
 import { request } from 'node:http';
-import { Wallet, decodePaymentRequest, getEncodedToken, sumProofs } from '@cashu/cashu-ts';
+import { Wallet, decodePaymentRequest, getEncodedToken, sumProofs, p2pkToLockOptions } from 'cashu-ts-next';
 
 const TTY = process.stdout.isTTY && !process.env.NO_COLOR;
 const paint = (code) => (s) => (TTY ? `\x1b[${code}m${s}\x1b[0m` : String(s));
 const [amber, green, grey, bold, red] = [paint('33'), paint('32'), paint('90'), paint('1'), paint('31')];
-const sats = (n) => `${Number(n).toLocaleString('en-GB')} sat${Number(n) === 1 ? '' : 's'}`;
+const sats = (n) => `${Number(String(n)).toLocaleString('en-GB')} sat${String(n) === '1' ? '' : 's'}`; // an Amount refuses Number()
 const short = (s) => `${String(s).slice(0, 4)}…${String(s).slice(-2)}`;
 const step = (n, what, detail) => console.log(`${amber(n)}  ${what.padEnd(24)} ${detail}`);
 const more = (line) => console.log(`   ${line}`);
@@ -78,7 +78,7 @@ async function main() {
   if (r2.status !== 402) stop(`Expected 402 Payment Required, got ${r2.status}: ${JSON.stringify(asked)}`);
   const creq = r2.headers.get('X-Cashu');
   const bill = decodePaymentRequest(creq);
-  const amount = Number(bill.amount);
+  const amount = bill.amount.toNumber();
   const mintUrl = bill.mints?.[0];
   const lock = bill.nut10;
   step(2, 'Ask for the ticket', `GET  ${ticket}  → ${bold('402 Payment Required')}`);
@@ -91,18 +91,19 @@ async function main() {
   const wallet = new Wallet(mintUrl, { unit: 'sat' });
   await wallet.loadMint();
   const want = amount + 32; // room for the mint's fee on the swap; the rest is change
-  let quote = await wallet.createMintQuoteBolt11(want);
+  const lockKey = await wallet.createQuoteLockKey(); // every mint quote is locked (NUT-20); minting signs with it
+  let quote = await wallet.createMintQuoteBolt11(want, lockKey.pubkey);
   for (let i = 0; quote.state !== 'PAID' && i < 20; i++) {
     await new Promise((ok) => setTimeout(ok, 500));
     quote = await wallet.checkMintQuoteBolt11(quote.quote);
   }
   if (quote.state !== 'PAID') stop(`${new URL(mintUrl).host} wants a Lightning invoice paid: this script only uses a test mint.`);
-  const minted = await wallet.mintProofsBolt11(want, quote.quote);
+  const minted = await wallet.mintProofsBolt11(want, quote.quote, { privkey: lockKey.privkey });
   step(3, 'Test sats from the mint', `NUT-04: a quote, paid by the test mint → ${sats(sumProofs(minted))}`);
 
   // 4. Swap them (NUT-03) into coins locked to the artist's key, with exactly the conditions the bill asks for.
-  const { send, keep } = await wallet.ops.send(amount, minted).asP2PK(bill.toP2PKOptions()).run();
-  const fee = Number(sumProofs(minted)) - Number(sumProofs(send)) - Number(sumProofs(keep));
+  const { send, keep } = await wallet.ops.send(amount, minted).asLocked(p2pkToLockOptions(bill.toP2PKOptions())).run();
+  const fee = sumProofs(minted).toNumber() - sumProofs(send).toNumber() - sumProofs(keep).toNumber();
   step(4, "Lock them to the artist", `NUT-03 swap into P2PK coins · mint fee ${sats(fee)}`);
 
   // 5. Pay: the same request again, the coins in X-Cashu (NUT-24).

@@ -5,7 +5,7 @@
 // -> exactly the conditions asked for -> not used here -> unspent at the mint, NUT-07. Each refusal has its own code.
 // No DLEQ check (NUT-12) since 29 Oct: at ~10 ms of CPU per note it doesn't fit Cloudflare's free plan. A forged
 // note gets no further than Collect, where the mint refuses it, and nothing is marked collected until it's spent.
-import { PaymentRequest, getTokenMetadata, getDecodedToken, hashToCurve, sumProofs } from '@cashu/cashu-ts';
+import { PaymentRequest, getTokenMetadata, getDecodedToken, hashToCurve, sumProofs } from 'cashu-ts-next';
 import { MINT_URL } from './config.js';
 import { one, sql, batch } from './db.js';
 import { showOf } from './shows.js';
@@ -104,7 +104,7 @@ export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner =
 
     if (!token) {
       const lock = { kind: 'P2PK', data: pubkey, tags: want }; // no tags: the owner's for good
-      const pr = new PaymentRequest(undefined, randomHex(8), amount, 'sat', [MINT_URL], await label(c), true, lock);
+      const pr = new PaymentRequest({ id: randomHex(8), amount, unit: 'sat', mints: [MINT_URL], description: await label(c), singleUse: true, nut10: lock });
       log(c, `402 ${amount} sats`);
       return json({ error: 'payment_required', amount, unit: 'sat', mints: [MINT_URL] }, 402,
         { 'X-Cashu': pr.toEncodedCreqA(), 'Access-Control-Expose-Headers': 'X-Cashu' });
@@ -114,12 +114,14 @@ export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner =
     try { meta = getTokenMetadata(token); } catch (e) { return refuse(c, 400, 'bad_token', e.message); }
     if (norm(meta.mint) !== MINT_URL) return refuse(c, 400, 'wrong_mint', `${meta.mint} is not this show's mint`);
     if ((meta.unit || 'sat') !== 'sat') return refuse(c, 400, 'wrong_unit', meta.unit);
-    if (Number(meta.amount) < amount) return refuse(c, 400, 'too_little', `${meta.amount} < ${amount} sats`);
+    if (meta.amount.toNumber() < amount) return refuse(c, 400, 'too_little', `${meta.amount} < ${amount} sats`);
 
     let proofs;
     try { proofs = getDecodedToken(token, await keysetIds()).proofs; } catch (e) {
       return refuse(c, 400, 'unknown_keyset', e.message);
     }
+    // The same coin twice counts twice in the total, and the mint would refuse the pair when the owner collects.
+    if (new Set(proofs.map((p) => p.secret)).size !== proofs.length) return refuse(c, 400, 'reused', 'the same coin twice in one token');
     for (const p of proofs) {
       const why = lockProblem(p.secret, pubkey, want);
       if (why) return refuse(c, 400, why, LOCK[why]);
@@ -140,7 +142,7 @@ export function cashuGate(price, label, { lockTo, kind, tags = () => [], owner =
     }
     if (states.some((s) => s !== 'UNSPENT')) return refuse(c, 400, 'reused', 'spent (or being spent) at the mint');
 
-    const sats = Number(sumProofs(proofs));
+    const sats = sumProofs(proofs).toNumber();
     const what = typeof kind === 'function' ? kind(c) : kind; // 'piece' or 'replay' on the set's sound (session 34)
     const id = await record(token, proofs, sats, what, pubkey);
     if (!id) return refuse(c, 400, 'reused', 'token already used here');

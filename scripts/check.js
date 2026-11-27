@@ -7,7 +7,7 @@
 //   SITE=https://thenutpub.com npm run check
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { Wallet, getEncodedToken, decodePaymentRequest, getPubKeyFromPrivKey, sumProofs } from '@cashu/cashu-ts';
+import { Wallet, getEncodedToken, decodePaymentRequest, getPubKeyFromPrivKey, sumProofs, p2pkToLockOptions } from 'cashu-ts-next';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 if (existsSync(`${ROOT}.env`)) process.loadEnvFile(`${ROOT}.env`);
@@ -34,20 +34,21 @@ check((await fetch(`${SITE}/no-such-artist`)).status === 404, 'another artist\'s
 const TOP_UP = 5000; // the tip is 2,100 today
 const wallet = new Wallet(MINT_URL, { unit: 'sat' });
 await wallet.loadMint();
-const quote = await wallet.createMintQuoteBolt11(TOP_UP);
+const lockKey = await wallet.createQuoteLockKey(); // every mint quote is locked (NUT-20)
+const quote = await wallet.createMintQuoteBolt11(TOP_UP, lockKey.pubkey);
 for (let i = 0; i < 20 && (await wallet.checkMintQuote('bolt11', quote.quote)).state !== 'PAID'; i += 1) {
   await new Promise((r) => setTimeout(r, 500));
 }
-let proofs = await wallet.mintProofsBolt11(TOP_UP, quote.quote);
-check(Number(sumProofs(proofs)) === TOP_UP, `topped up ${TOP_UP} test sats over fake Lightning`);
+let proofs = await wallet.mintProofsBolt11(TOP_UP, quote.quote, { privkey: lockKey.privkey });
+check(sumProofs(proofs).toNumber() === TOP_UP, `topped up ${TOP_UP} test sats over fake Lightning`);
 
 // Pay a 402: read the creqA, send exactly that amount locked as it asks (or as `lock` says: null for none, to test
 // the refusals), keep the change.
 async function pay(res, lock) {
   const req = decodePaymentRequest(res.headers.get('X-Cashu'));
   const p2pk = lock === undefined ? req.toP2PKOptions() : lock;
-  const send = wallet.ops.send(Number(req.amount), proofs);
-  const { keep, send: out } = await (p2pk ? send.asP2PK(p2pk) : send).run();
+  const send = wallet.ops.send(req.amount, proofs);
+  const { keep, send: out } = await (p2pk ? send.asLocked(p2pkToLockOptions({ kind: 'P2PK', ...p2pk })) : send).run();
   proofs = keep;
   sent.set(getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: out }), out);
   return [...sent.keys()].pop();
@@ -74,6 +75,10 @@ const get = (path, token) => fetch(`${SITE}${path}`, { headers: { 'X-Pass': pass
   check(await refusal(await get('/api/tip/21', stranger)) === 'wrong_lock', 'locked to another key: refused (wrong_lock)');
   const refundable = await pay(ask, { kind: 'P2PK', data: artistKey, locktime: Math.floor(Date.now() / 1000) + 3600, refundKeys: [randomKey()] });
   check(await refusal(await get('/api/tip/21', refundable)) === 'has_refund', 'locked with a locktime and refund: refused (has_refund)');
+  // The same coin twice would count twice towards the 21 (and the mint refuses the pair when the artist collects).
+  const good = sent.get(await pay(ask));
+  const twice = getEncodedToken({ mint: MINT_URL, unit: 'sat', proofs: [...good, good[0]] });
+  check(await refusal(await get('/api/tip/21', twice)) === 'reused', 'the same coin twice in one token: refused (reused)');
 }
 
 if (show.stream.mode === 'pay') {
@@ -109,7 +114,7 @@ if (show.tip.price) {
 check((await get('/api/tip/0')).status === 400, 'tip, your amount: 0 sats refused');
 check(await refusal(await get('/api/tip/20')) === 'too_small', 'tip, your amount: 20 sats refused (too_small, 21 or more)');
 const ask = await get('/api/tip/21');
-check(ask.status === 402 && Number(decodePaymentRequest(ask.headers.get('X-Cashu')).amount) === 21, 'tip, your amount: 402 for 21 sats');
+check(ask.status === 402 && decodePaymentRequest(ask.headers.get('X-Cashu')).amount?.toNumber() === 21, 'tip, your amount: 402 for 21 sats');
 const own = await get('/api/tip/21', await pay(ask));
 check(own.status === 200 && (await own.json()).tipped === 21, 'tip, your amount: 21 sats paid, locked to the artist');
 
