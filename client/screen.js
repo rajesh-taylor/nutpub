@@ -150,3 +150,7 @@ awake();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) awake(); }); // the lock goes when the tab hides
 $('full').addEventListener('click', () => { document.documentElement.requestFullscreen?.().catch(() => {}); awake(); });
 document.addEventListener('fullscreenchange', () => { $('full').hidden = !!document.fullscreenElement || !document.fullscreenEnabled; });
+
+// Branch only (session 66): ?prize=1 plays the test prize card for the NUT-16 distance test (prize-test.js).
+const params = new URLSearchParams(location.search);
+if (params.has('prize')) import('./prize-test.js').then((m) => m.prizeTest(params));

@@ -34,7 +34,7 @@ export function pintGlass({ artist = '', empty = false } = {}) {
 }
 
 // One frame's QR, drawn on the canvas: alphanumeric mode as one segment (as NUT-16 asks), error correction M.
-function drawFrame(canvas, text) {
+export function drawFrame(canvas, text) {
   const { modules } = QRCode.create([{ data: text, mode: 'alphanumeric' }], { errorCorrectionLevel: 'M' });
   const n = modules.size, quiet = 2, cells = n + quiet * 2;
   const px = Math.max(4, Math.floor((canvas.clientWidth || 220) * (devicePixelRatio || 1) / cells));
