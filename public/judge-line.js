@@ -5,6 +5,7 @@
 // the judge's own phone) and Pour by hand right in the line; the fan's phone sits on Show Time itself (Rajesh 18 Nov). No camera on the laptop.
 // r: /api/admin/setlist's answer; page: 'cellar', 'setup', 'show' or 'takings'.
 let toPlay = false; // gig 3: the fan's phone scrolled back to its player once, at step 6
+let toDrink = false; // and down to the drink once, at the pour (step 7)
 export async function judgeLine(r, page) {
   const list = r?.setlist;
   if (!list?.only) return;
@@ -19,6 +20,8 @@ export async function judgeLine(r, page) {
   document.getElementById('replay-card')?.style.setProperty('display', 'none');
   const name = { longy: 'Longy', frankie: 'Frankie', pickle: 'Longy', yours: 'Frankie' }[list.at] || 'the artist';
   const pickle = list.at === 'pickle';
+  // Gig 3 (Rajesh 27 Nov): the fan's phone sits on Show Time, so a Fan's page button only pulls a judge off its list.
+  if (pickle) document.getElementById('head-fan')?.remove();
   const line = Object.assign(document.createElement('div'), { className: 'judge-line' });
   line.setAttribute('role', 'status');
   document.querySelector('header').after(line);
@@ -178,8 +181,18 @@ export async function judgeLine(r, page) {
         return say('', 'Before you go, read the Pub Board: AI agents buy tickets here too.', 'Read the board →', judge.replace(/\/judge$/, '/board'),
           { story: ['Longy’s ', bread, ' is in his own wallet.'] });
       }
-      if (page === 'takings') return say(closed ? 8 : 7, closed ? 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.' : 'The night isn’t over yet: End night is on Show Time.',
-        closed ? '' : 'Back to Show Time →', '/show', { story: closed ? STORY[8] : '', note: closed ? STORY.takings : '' });
+      if (page === 'takings') {
+        // Rajesh 27 Nov: before End night a judge could Move from here and lose the thread: Move waits for End night.
+        for (const id of ['move-row', 'moved']) {
+          const el = document.getElementById(id);
+          if (closed) el?.style.removeProperty('display'); else el?.style.setProperty('display', 'none');
+        }
+        if (!closed) return say(7, 'The night isn’t over yet: End night is on Show Time.', 'Back to Show Time →', '/show');
+        // Rajesh 27 Nov: after Move, a look at the receipt (no printing), then Finish gig.
+        if (movedAll() && receiptSaved()) return say(8, 'Now press Finish gig.', '', '', { story: STORY[8] });
+        if (movedAll()) return say(8, 'Press Save receipt to see it, then close the Print box.', '', '', { story: STORY[8] });
+        return say(8, 'Close any Cashu.me tab first. Then flick through ₿ £ $ €, press Move to my own wallet and follow it to Finish gig.', '', '', { story: STORY[8], note: STORY.takings });
+      }
       const show = (await admin('/api/show'))?.show;
       if (!show) return;
       // Step 1 on Plan gig (Rajesh 19 Nov): the ticket's price, exactly £35 (the £5 pint in it), and the door on.
@@ -234,6 +247,8 @@ export async function judgeLine(r, page) {
         : 'On the fan’s phone, on the right: press play, then say hello with a 2,100-sat tip in its Chat tab.', '', '', { story: STORY[6] });
       // Step 7: the bar, then End night.
       const d = await drinks();
+      // Rajesh 27 Nov: the drink sits far below the fan's list; once, at the pour, the phone shows it.
+      if (!d.some((x) => x.poured) && !toDrink) { toDrink = true; try { document.getElementById('phone')?.contentDocument?.getElementById('drink')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {} }
       if (!d.some((x) => x.poured)) return say(7, 'Press Pour by hand: the bar’s key, kept in this browser, signs the coin and swaps it at the mint, as the bar’s scanner would. Then watch the fan’s phone.', '', '',
         { story: STORY[7], extra: pressBtn('Pour by hand', '#bar-drinks button', /^Pour by hand/, 'Pouring…') });
       // Session 58 (Rajesh 23 Nov): the cheeky second pint is a step of its own; DevTools optional, opened before it.
@@ -298,7 +313,7 @@ export async function judgeLine(r, page) {
     document.querySelector('[data-path="comments"]')?.addEventListener('change', () => draw());
   }
   if (pickle && page === 'takings') document.addEventListener('nutpub:finished', () => draw());
-  if (g2 && page === 'takings') document.getElementById('wrap-save')?.addEventListener('click', () => { try { localStorage.setItem(RECEIPT, '1'); } catch {} setTimeout(draw, 300); });
+  if ((g2 || pickle) && page === 'takings') document.getElementById('wrap-save')?.addEventListener('click', () => { try { localStorage.setItem(RECEIPT, '1'); } catch {} setTimeout(draw, 300); });
   if (page === 'show' || (pickle && page === 'setup') || (g2 && ['setup', 'takings'].includes(page))) { // gig 3's Plan gig: the price and the door move it on (session 36)
     setInterval(() => { if (!document.hidden) draw(); }, pickle ? 3000 : 5000);
     addEventListener('storage', draw);
